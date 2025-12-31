@@ -1,14 +1,17 @@
+# B2B Risk Monitoring - Docker Compose
+# Reclapp 2.1.0 Example
+
 services:
   # ===========================================================================
   # RECLAPP API
   # ===========================================================================
   reclapp-api:
     build:
-      context: ../..
-      dockerfile: examples/b2b-risk-monitoring/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     container_name: reclapp-risk-api
     ports:
-      - "8081:8080"
+      - "8080:8080"
     environment:
       - NODE_ENV=production
       - PORT=8080
@@ -29,7 +32,7 @@ services:
     networks:
       - reclapp-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -44,16 +47,14 @@ services:
       dockerfile: Dockerfile
     container_name: reclapp-risk-dashboard
     ports:
-      - "3002:80"
+      - "3000:80"
     environment:
-      - VITE_API_URL=http://localhost:8081
+      - VITE_API_URL=http://localhost:8080
     depends_on:
       - reclapp-api
     networks:
       - reclapp-network
     restart: unless-stopped
-    profiles:
-      - ui
 
   # ===========================================================================
   # EVENT STORE
@@ -62,8 +63,8 @@ services:
     image: eventstore/eventstore:23.10.0-bookworm-slim
     container_name: reclapp-eventstore
     ports:
-      - "2114:2113"  # HTTP/gRPC
-      - "1114:1113"  # TCP
+      - "2113:2113"  # HTTP/gRPC
+      - "1113:1113"  # TCP
     environment:
       - EVENTSTORE_CLUSTER_SIZE=1
       - EVENTSTORE_RUN_PROJECTIONS=All
@@ -88,7 +89,7 @@ services:
     image: postgres:16-alpine
     container_name: reclapp-postgres
     ports:
-      - "5433:5432"
+      - "5432:5432"
     environment:
       - POSTGRES_USER=reclapp
       - POSTGRES_PASSWORD=reclapp
@@ -112,7 +113,7 @@ services:
     image: redis:7-alpine
     container_name: reclapp-redis
     ports:
-      - "6380:6379"
+      - "6379:6379"
     volumes:
       - redis-data:/data
     networks:

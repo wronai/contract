@@ -1,8 +1,6 @@
 # Multi-Agent Orchestration - Docker Compose
 # Reclapp 2.1.0 Example
 
-version: '3.8'
-
 services:
   # ===========================================================================
   # ORCHESTRATOR AGENT
