@@ -257,6 +257,165 @@ make release           # Create release
 | [MCP Integration](articles/06-reclapp-mcp-integration.md) | Protocol integration |
 | [Causal Loop](articles/07-reclapp-causal-verification-loop.md) | Verification loop |
 
+## ✅ Reclapp 2.1.0 Complete - Z pełnymi przykładami Docker!
+
+### 📊 Finalne statystyki
+
+| Metryka | Wartość |
+|---------|---------|
+| Pliki TypeScript | 32 |
+| Pliki testów | 9 |
+| Przykłady Docker | 3 projekty |
+| Artykuły MD | 8 |
+| Pliki Docker | 7 |
+| Linie kodu | 14,556 |
+| Rozmiar ZIP | 201 KB |
+
+### 🐳 Przykłady Docker
+
+#### 1. B2B Risk Monitoring (`examples/b2b-risk-monitoring/`)
+
+```
+examples/b2b-risk-monitoring/
+├── Dockerfile
+├── docker-compose.yml
+├── init-db.sql
+├── .env.example
+├── README.md
+└── contracts/
+    └── risk-agent.ts
+```
+
+**Serwisy:**
+- **reclapp-api** - Główne API
+- **eventstore** - Event Store
+- **postgres** - Read models
+- **redis** - Cache
+- **dashboard** - React UI
+- **prometheus + grafana** (profile: `monitoring`)
+
+**Uruchomienie:**
+```bash
+cd examples/b2b-risk-monitoring
+docker compose up -d
+
+# Z monitoringiem
+docker compose --profile monitoring up -d
+```
+
+#### 2. IoT Monitoring (`examples/iot-monitoring/`)
+
+```
+examples/iot-monitoring/
+├── Dockerfile
+├── docker-compose.yml
+├── mosquitto/
+│   └── mosquitto.conf
+├── README.md
+└── contracts/
+    └── iot-agent.ts
+```
+
+**Serwisy:**
+- **reclapp-iot** - IoT API
+- **mosquitto** - MQTT Broker
+- **influxdb** - Time-series DB
+- **eventstore** - Event Store
+- **grafana** - Dashboards
+- **device-simulator** (profile: `simulation`)
+
+**Uruchomienie:**
+```bash
+cd examples/iot-monitoring
+docker compose up -d
+
+# Z symulacją urządzeń
+docker compose --profile simulation up -d
+```
+
+#### 3. Multi-Agent Orchestration (`examples/multi-agent/`)
+
+```
+examples/multi-agent/
+├── Dockerfile
+├── docker-compose.yml
+├── README.md
+└── contracts/
+    └── orchestrator-agent.ts
+```
+
+**Serwisy:**
+- **orchestrator** - Agent koordynujący
+- **risk-agent** - Agent ryzyka
+- **compliance-agent** - Agent compliance
+- **customer-agent** - Agent klienta
+- **eventstore** - Shared Event Store
+- **rabbitmq** - Message Queue
+- **redis** - Shared State
+- **postgres** - Read Models
+
+**Uruchomienie:**
+```bash
+cd examples/multi-agent
+docker compose up -d
+
+# Z monitoringiem
+docker compose --profile monitoring up -d
+```
+
+### 📁 Pełna struktura `examples/`
+
+```
+examples/
+├── b2b-risk-monitoring/        # Monitoring ryzyka B2B
+│   ├── Dockerfile
+│   ├── docker-compose.yml      # 8 serwisów
+│   ├── init-db.sql             # Schema PostgreSQL
+│   ├── .env.example
+│   ├── README.md
+│   └── contracts/
+│       └── risk-agent.ts       # ~400 linii kontraktu
+│
+├── iot-monitoring/             # Monitoring IoT
+│   ├── Dockerfile
+│   ├── docker-compose.yml      # 6 serwisów
+│   ├── mosquitto/
+│   │   └── mosquitto.conf
+│   ├── README.md
+│   └── contracts/
+│       └── iot-agent.ts        # ~350 linii kontraktu
+│
+├── multi-agent/                # Orkiestracja multi-agent
+│   ├── Dockerfile
+│   ├── docker-compose.yml      # 9 serwisów
+│   ├── README.md
+│   └── contracts/
+│       └── orchestrator-agent.ts # ~400 linii kontraktu
+│
+└── [legacy DSL examples]
+    ├── b2b-onboarding/
+    ├── monitoring/
+    └── reporting/
+```
+
+### 🚀 Quick Start
+
+```bash
+# Rozpakuj
+unzip reclapp-2.1.0-complete.zip
+cd reclapp
+
+# Zainstaluj
+make install
+
+# Uruchom testy
+make test
+
+# Wybierz przykład i uruchom
+cd examples/b2b-risk-monitoring
+docker compose up -d
+```
+
 ## 🏗️ Architecture
 
 ```
