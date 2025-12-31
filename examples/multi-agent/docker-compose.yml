@@ -11,19 +11,18 @@ services:
       dockerfile: examples/multi-agent/Dockerfile
       args:
         - AGENT_TYPE=orchestrator
-    container_name: reclapp-orchestrator
     ports:
-      - "8090:8080"
+      - "${AGENT_ORCHESTRATOR_PORT:-8090}:8080"
     environment:
-      - NODE_ENV=production
-      - AGENT_NAME=orchestrator
-      - AGENT_ROLE=coordinator
+      - NODE_ENV=${NODE_ENV:-production}
+      - AGENT_NAME=${AGENT_NAME:-orchestrator}
+      - AGENT_ROLE=${AGENT_ROLE:-coordinator}
       - PORT=8080
-      - EVENTSTORE_URL=esdb://eventstore:2113?tls=false
-      - REDIS_URL=redis://redis:6379
-      - RABBITMQ_URL=amqp://reclapp:reclapp@rabbitmq:5672
-      - AGENTS=risk-agent:8081,compliance-agent:8082,customer-agent:8083
-      - CONFLICT_RESOLUTION=weighted_voting
+      - EVENTSTORE_URL=${EVENTSTORE_URL:-esdb://eventstore:2113?tls=false}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - RABBITMQ_URL=${RABBITMQ_URL:-amqp://reclapp:reclapp@rabbitmq:5672}
+      - AGENTS=${AGENTS:-risk-agent:8081,compliance-agent:8082,customer-agent:8083}
+      - CONFLICT_RESOLUTION=${CONFLICT_RESOLUTION:-weighted_voting}
     depends_on:
       eventstore:
         condition: service_healthy
@@ -49,20 +48,19 @@ services:
       dockerfile: examples/multi-agent/Dockerfile
       args:
         - AGENT_TYPE=risk
-    container_name: reclapp-risk-agent
     ports:
-      - "8091:8081"
+      - "${AGENT_RISK_PORT:-8091}:8081"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV:-production}
       - AGENT_NAME=risk-agent
       - AGENT_ROLE=risk_assessment
       - PORT=8081
-      - EVENTSTORE_URL=esdb://eventstore:2113?tls=false
-      - REDIS_URL=redis://redis:6379
-      - RABBITMQ_URL=amqp://reclapp:reclapp@rabbitmq:5672
-      - ORCHESTRATOR_URL=http://orchestrator:8080
-      - AI_CONFIDENCE_THRESHOLD=0.7
-      - CAUSAL_DECAY_RATE=0.01
+      - EVENTSTORE_URL=${EVENTSTORE_URL:-esdb://eventstore:2113?tls=false}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - RABBITMQ_URL=${RABBITMQ_URL:-amqp://reclapp:reclapp@rabbitmq:5672}
+      - ORCHESTRATOR_URL=${ORCHESTRATOR_URL:-http://orchestrator:8080}
+      - AI_CONFIDENCE_THRESHOLD=${AI_CONFIDENCE_THRESHOLD:-0.7}
+      - CAUSAL_DECAY_RATE=${CAUSAL_DECAY_RATE:-0.01}
     depends_on:
       - eventstore
       - redis
@@ -80,18 +78,17 @@ services:
       dockerfile: examples/multi-agent/Dockerfile
       args:
         - AGENT_TYPE=compliance
-    container_name: reclapp-compliance-agent
     ports:
-      - "8092:8082"
+      - "${AGENT_COMPLIANCE_PORT:-8092}:8082"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV:-production}
       - AGENT_NAME=compliance-agent
       - AGENT_ROLE=compliance_check
       - PORT=8082
-      - EVENTSTORE_URL=esdb://eventstore:2113?tls=false
-      - REDIS_URL=redis://redis:6379
-      - RABBITMQ_URL=amqp://reclapp:reclapp@rabbitmq:5672
-      - ORCHESTRATOR_URL=http://orchestrator:8080
+      - EVENTSTORE_URL=${EVENTSTORE_URL:-esdb://eventstore:2113?tls=false}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - RABBITMQ_URL=${RABBITMQ_URL:-amqp://reclapp:reclapp@rabbitmq:5672}
+      - ORCHESTRATOR_URL=${ORCHESTRATOR_URL:-http://orchestrator:8080}
       - REGULATIONS=GDPR,AML,KYC
     depends_on:
       - eventstore
@@ -110,18 +107,17 @@ services:
       dockerfile: examples/multi-agent/Dockerfile
       args:
         - AGENT_TYPE=customer
-    container_name: reclapp-customer-agent
     ports:
-      - "8093:8083"
+      - "${AGENT_CUSTOMER_PORT:-8093}:8083"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV:-production}
       - AGENT_NAME=customer-agent
       - AGENT_ROLE=customer_management
       - PORT=8083
-      - EVENTSTORE_URL=esdb://eventstore:2113?tls=false
-      - REDIS_URL=redis://redis:6379
-      - RABBITMQ_URL=amqp://reclapp:reclapp@rabbitmq:5672
-      - ORCHESTRATOR_URL=http://orchestrator:8080
+      - EVENTSTORE_URL=${EVENTSTORE_URL:-esdb://eventstore:2113?tls=false}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - RABBITMQ_URL=${RABBITMQ_URL:-amqp://reclapp:reclapp@rabbitmq:5672}
+      - ORCHESTRATOR_URL=${ORCHESTRATOR_URL:-http://orchestrator:8080}
     depends_on:
       - eventstore
       - redis
@@ -135,9 +131,8 @@ services:
   # ===========================================================================
   eventstore:
     image: eventstore/eventstore:23.10.0-bookworm-slim
-    container_name: reclapp-multi-eventstore
     ports:
-      - "2115:2113"
+      - "${AGENT_EVENTSTORE_HTTP_PORT:-2115}:2113"
     environment:
       - EVENTSTORE_CLUSTER_SIZE=1
       - EVENTSTORE_RUN_PROJECTIONS=All
@@ -155,9 +150,8 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: reclapp-multi-redis
     ports:
-      - "6381:6379"
+      - "${AGENT_REDIS_PORT:-6381}:6379"
     volumes:
       - redis-data:/data
     networks:
@@ -171,10 +165,9 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.12-management-alpine
-    container_name: reclapp-multi-rabbitmq
     ports:
-      - "5673:5672"   # AMQP
-      - "15673:15672" # Management UI
+      - "${AGENT_RABBITMQ_PORT:-5673}:5672"   # AMQP
+      - "${AGENT_RABBITMQ_MGMT_PORT:-15673}:15672" # Management UI
     environment:
       - RABBITMQ_DEFAULT_USER=reclapp
       - RABBITMQ_DEFAULT_PASS=reclapp
@@ -191,9 +184,8 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    container_name: reclapp-multi-postgres
     ports:
-      - "5434:5432"
+      - "${AGENT_POSTGRES_PORT:-5434}:5432"
     environment:
       - POSTGRES_USER=reclapp
       - POSTGRES_PASSWORD=reclapp
@@ -214,11 +206,10 @@ services:
   # ===========================================================================
   grafana:
     image: grafana/grafana:10.1.0
-    container_name: reclapp-multi-grafana
     ports:
-      - "3003:3000"
+      - "${AGENT_GRAFANA_PORT:-3003}:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
     volumes:
       - grafana-data:/var/lib/grafana
     depends_on:
@@ -231,9 +222,8 @@ services:
 
   prometheus:
     image: prom/prometheus:v2.47.0
-    container_name: reclapp-multi-prometheus
     ports:
-      - "9091:9090"
+      - "${AGENT_PROMETHEUS_PORT:-9091}:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus

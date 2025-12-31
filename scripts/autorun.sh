@@ -16,9 +16,10 @@ TARGET_UP=$1
 TARGET_DOWN=$2
 TARGET_HEALTH=$3
 SERVICE_NAME=$4
+PORT_PREFIXES=$5
 
 if [ -z "$TARGET_UP" ] || [ -z "$TARGET_DOWN" ] || [ -z "$TARGET_HEALTH" ]; then
-    echo -e "${RED}Usage: $0 <make-target-up> <make-target-down> <make-target-health> [service-name]${NC}"
+    echo -e "${RED}Usage: $0 <make-target-up> <make-target-down> <make-target-health> [service-name] [port-prefixes]${NC}"
     exit 1
 fi
 
@@ -28,6 +29,7 @@ log() {
     echo -e "${BLUE}[AutoRunner] $1${NC}"
 }
 
+# ... (colors/logging functions omitted for brevity if unchanged, but context requires them)
 success() {
     echo -e "${GREEN}✓ $1${NC}"
 }
@@ -40,7 +42,40 @@ error() {
     echo -e "${RED}✗ $1${NC}"
 }
 
-# 1. Attempt initial startup
+# Construct portenv command with prefixes if provided
+PORTENV_CMD="./scripts/portenv.py"
+if [ -n "$PORT_PREFIXES" ]; then
+    # Split comma-separated prefixes and add --prefix flag for each
+    IFS=',' read -ra ADDR <<< "$PORT_PREFIXES"
+    for prefix in "${ADDR[@]}"; do
+        PORTENV_CMD="$PORTENV_CMD --prefix $prefix"
+    done
+fi
+
+# 1. Pre-flight checks
+log "Running pre-flight diagnostics..."
+PORT_CHECK_CMD=""
+if [ -f scripts/portenv.py ]; then
+    PORT_CHECK_CMD="$PORTENV_CMD --mode free"
+else
+    PORT_CHECK_CMD="make docker-check-ports"
+fi
+
+if ! $PORT_CHECK_CMD; then
+    warn "Port conflict detected. Initiating cleanup..."
+    make $TARGET_DOWN
+    log "Waiting for ports to clear..."
+    sleep 5
+    
+    if ! $PORT_CHECK_CMD; then
+        error "Ports are still blocked after cleanup. Manual intervention required."
+        exit 1
+    else
+        success "Ports cleared. Proceeding..."
+    fi
+fi
+
+# 2. Attempt initial startup
 log "Starting $SERVICE_NAME ($TARGET_UP)..."
 if make $TARGET_UP; then
     success "$SERVICE_NAME started successfully."
@@ -49,19 +84,30 @@ else
     FAIL_REASON="startup"
 fi
 
-# 2. Check health if startup "seemed" successful (make exit code 0)
+# 3. Post-start verification and monitoring
 if [ -z "$FAIL_REASON" ]; then
-    log "Verifying health ($TARGET_HEALTH)..."
-    if make $TARGET_HEALTH; then
-        success "$SERVICE_NAME is healthy and running!"
+    log "Verifying health and ports..."
+    
+    # Check if ports are listening (using python script if available)
+    if [ -f scripts/portenv.py ]; then
+        log "Verifying ports are listening..."
+        # We don't exit here if it fails, we let monitor check health, 
+        # but it's good diagnostic info
+        $PORTENV_CMD --mode used || warn "Some expected ports are not listening yet."
+    fi
+
+    # Run periodic monitor (health check loop)
+    log "Starting periodic health monitor ($TARGET_HEALTH)..."
+    if ./scripts/monitor.sh "$TARGET_HEALTH"; then
+        success "$SERVICE_NAME is fully healthy and running!"
         exit 0
     else
-        warn "Health check failed."
+        warn "Health monitor timed out."
         FAIL_REASON="health"
     fi
 fi
 
-# 3. Auto-healing procedure
+# 4. Auto-healing procedure (if startup or health failed)
 log "Initiating auto-healing procedure for $SERVICE_NAME..."
 
 # Step 3a: Stop services

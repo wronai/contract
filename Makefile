@@ -283,7 +283,7 @@ docker-build: ## Build Docker images
 
 docker-up: docker-check-ports ## Start Docker services
 	@echo "$(BLUE)🐳 Starting Docker services...$(NC)"
-	docker compose up -d
+	docker compose up -d --build --remove-orphans
 	@echo "$(GREEN)✓ Services started$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Services available at:$(NC)"
@@ -348,6 +348,8 @@ docker-restart: docker-down docker-up ## Restart Docker services
 up: docker-up ## Alias for docker-up
 
 down: docker-down ## Alias for docker-down
+
+logs: docker-logs ## Alias for docker-logs
 
 docker-full: ## Start all services including hardware and monitoring
 	@echo "$(BLUE)🐳 Starting full stack...$(NC)"

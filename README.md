@@ -45,20 +45,28 @@ npm run dev
 ### Using Docker
 
 ```bash
-# Start all services
-make docker-up
+# Start Docker services (with auto-diagnostics)
+make auto-up
 
-# View logs
-make docker-logs
+# Or use standard commands
+make up              # Start services
+make logs            # View logs
+make down            # Stop services
 
-# Stop services
-make docker-down
+# Run tests
+make test
 ```
+
+**Data Source:** The dashboard displays mock data generated in-memory by `modules/mock/index.ts`. On startup, the API seeds 20 customers, 15 contractors, and ~68 risk events. Data is stored in `InMemoryReadModel` and refreshes every 30 seconds in the frontend.
 
 ## 📁 Project Structure
 
 ```
 reclapp/
+├── api/                 # REST API Server
+│   └── src/
+│       └── server.ts    # Express server with DSL endpoints
+│
 ├── contracts/           # TypeScript AI Contracts System
 │   ├── types.ts         # Type definitions (450+ types)
 │   ├── validator.ts     # Zod validation schemas
@@ -81,6 +89,18 @@ reclapp/
 │   ├── ast/             # AST types
 │   └── validator/       # Semantic validator
 │
+├── frontend/            # React Dashboard
+│   └── src/
+│       └── main.tsx     # Single-page dashboard with URL routing
+│
+├── modules/             # Business Modules
+│   └── mock/            # Mock data generator (in-memory seed data)
+│
+├── scripts/             # Automation Scripts
+│   ├── autorun.sh       # Auto-start with diagnostics
+│   ├── monitor.sh       # Health check monitoring
+│   └── portenv.py       # Port validation
+│
 ├── tests/               # Test Suite
 │   ├── unit/            # Unit tests
 │   ├── integration/     # Integration tests
@@ -88,7 +108,7 @@ reclapp/
 │
 ├── articles/            # Documentation (WordPress-ready)
 ├── docker/              # Docker configurations
-├── examples/            # DSL examples
+├── examples/            # Docker example projects
 ├── AGENTS.md            # MCP/Agent specification
 ├── Makefile             # Build automation
 └── package.json
@@ -232,9 +252,20 @@ make lint              # Run linter
 make typecheck         # Type checking
 
 # Docker
+make up                # Start services (alias)
+make down              # Stop services (alias)
+make logs              # View logs (alias)
 make docker-up         # Start services
 make docker-down       # Stop services
 make docker-logs       # View logs
+make docker-health     # Check service health
+make docker-clean      # Remove containers and volumes
+
+# Auto-runner (with diagnostics)
+make auto-up           # Auto-start main stack
+make auto-b2b          # Auto-start B2B example
+make auto-iot          # Auto-start IoT example
+make auto-agent        # Auto-start Agent example
 
 # Publishing
 make publish-check     # Check if ready

@@ -10,17 +10,17 @@ services:
       context: ../..
       dockerfile: examples/b2b-risk-monitoring/Dockerfile
     ports:
-      - "8081:8080"
+      - "${B2B_API_PORT:-8081}:8080"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV:-production}
       - PORT=8080
-      - EVENTSTORE_URL=esdb://eventstore:2113?tls=false
-      - DATABASE_URL=postgresql://reclapp:reclapp@postgres:5432/reclapp
-      - REDIS_URL=redis://redis:6379
-      - AI_CONFIDENCE_THRESHOLD=0.7
-      - AI_SANDBOX_MODE=true
-      - CAUSAL_DECAY_RATE=0.01
-      - LOG_LEVEL=info
+      - EVENTSTORE_URL=${EVENTSTORE_URL:-esdb://eventstore:2113?tls=false}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://reclapp:reclapp@postgres:5432/reclapp}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - AI_CONFIDENCE_THRESHOLD=${AI_CONFIDENCE_THRESHOLD:-0.7}
+      - AI_SANDBOX_MODE=${AI_SANDBOX_MODE:-true}
+      - CAUSAL_DECAY_RATE=${CAUSAL_DECAY_RATE:-0.01}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
     depends_on:
       eventstore:
         condition: service_healthy
@@ -48,7 +48,7 @@ services:
       dockerfile: docker/Dockerfile.frontend
       target: production
     ports:
-      - "3001:3000"
+      - "${B2B_DASHBOARD_PORT:-3001}:3000"
     depends_on:
       - reclapp-risk-api
     networks:
@@ -60,10 +60,9 @@ services:
   # ===========================================================================
   eventstore:
     image: eventstore/eventstore:23.10.0-bookworm-slim
-    container_name: reclapp-eventstore
     ports:
-      - "2114:2113"  # HTTP/gRPC
-      - "1114:1113"  # TCP
+      - "${B2B_EVENTSTORE_HTTP_PORT:-2114}:2113"  # HTTP/gRPC
+      - "${B2B_EVENTSTORE_TCP_PORT:-1114}:1113"  # TCP
     environment:
       - EVENTSTORE_CLUSTER_SIZE=1
       - EVENTSTORE_RUN_PROJECTIONS=All
@@ -86,9 +85,8 @@ services:
   # ===========================================================================
   postgres:
     image: postgres:16-alpine
-    container_name: reclapp-postgres
     ports:
-      - "5433:5432"
+      - "${B2B_POSTGRES_PORT:-5433}:5432"
     environment:
       - POSTGRES_USER=reclapp
       - POSTGRES_PASSWORD=reclapp
@@ -110,9 +108,8 @@ services:
   # ===========================================================================
   redis:
     image: redis:7-alpine
-    container_name: reclapp-redis
     ports:
-      - "6380:6379"
+      - "${B2B_REDIS_PORT:-6380}:6379"
     volumes:
       - redis-data:/data
     networks:
@@ -129,7 +126,6 @@ services:
   # ===========================================================================
   data-simulator:
     image: alpine:3.20
-    container_name: reclapp-simulator
     command: ["sh", "-c", "echo 'data-simulator is not included in this repository version'; sleep infinity"]
     environment:
       - API_URL=http://reclapp-risk-api:8080
@@ -148,9 +144,8 @@ services:
   # ===========================================================================
   prometheus:
     image: prom/prometheus:v2.47.0
-    container_name: reclapp-prometheus
     ports:
-      - "9092:9090"
+      - "${B2B_PROMETHEUS_PORT:-9092}:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
@@ -165,9 +160,8 @@ services:
   # ===========================================================================
   grafana:
     image: grafana/grafana:10.1.0
-    container_name: reclapp-grafana
     ports:
-      - "3002:3000"
+      - "${B2B_GRAFANA_PORT:-3002}:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false

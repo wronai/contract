@@ -30,6 +30,16 @@ DOCKER_IMAGE := reclapp/platform
 # ENV (load .env if present)
 # ============================================================================
 
+ifneq (,$(wildcard ../.env.examples))
+include ../.env.examples
+export $(shell sed -n 's/^\([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p' ../.env.examples)
+endif
+
+ifneq (,$(wildcard .env.examples))
+include .env.examples
+export $(shell sed -n 's/^\([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p' .env.examples)
+endif
+
 ifneq (,$(wildcard .env))
 include .env
 export $(shell sed -n 's/^\([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p' .env)

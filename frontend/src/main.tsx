@@ -130,7 +130,29 @@ function Dashboard() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [riskEvents, setRiskEvents] = useState<RiskEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
+  
+  // Get initial tab from URL hash or default to 'overview'
+  const getTabFromURL = () => {
+    const hash = window.location.hash.slice(1);
+    return hash || 'overview';
+  };
+  
+  const [activeTab, setActiveTab] = useState(getTabFromURL());
+
+  // Update URL when tab changes
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    window.history.pushState(null, '', `#${tab}`);
+  };
+
+  // Listen for browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      setActiveTab(getTabFromURL());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     async function loadData() {
@@ -189,7 +211,7 @@ function Dashboard() {
             {['overview', 'customers', 'risk-events', 'dsl-editor'].map(tab => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => handleTabChange(tab)}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab
                     ? 'border-blue-500 text-blue-600'

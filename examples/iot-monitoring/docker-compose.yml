@@ -9,20 +9,19 @@ services:
     build:
       context: ../..
       dockerfile: examples/iot-monitoring/Dockerfile
-    container_name: reclapp-iot-api
     ports:
-      - "8082:8080"
+      - "${IOT_API_PORT:-8082}:8080"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV:-production}
       - PORT=8080
-      - MQTT_BROKER=mqtt://mosquitto:1883
-      - INFLUXDB_URL=http://influxdb:8086
+      - MQTT_BROKER=${MQTT_BROKER:-mqtt://mosquitto:1883}
+      - INFLUXDB_URL=${INFLUXDB_URL:-http://influxdb:8086}
       - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-reclapp-token}
-      - INFLUXDB_ORG=reclapp
-      - INFLUXDB_BUCKET=iot_metrics
-      - EVENTSTORE_URL=esdb://eventstore:2113?tls=false
-      - AI_CONFIDENCE_THRESHOLD=0.7
-      - ANOMALY_DETECTION_ENABLED=true
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-reclapp}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-iot_metrics}
+      - EVENTSTORE_URL=${EVENTSTORE_URL:-esdb://eventstore:2113?tls=false}
+      - AI_CONFIDENCE_THRESHOLD=${AI_CONFIDENCE_THRESHOLD:-0.7}
+      - ANOMALY_DETECTION_ENABLED=${ANOMALY_DETECTION_ENABLED:-true}
     depends_on:
       mosquitto:
         condition: service_started
@@ -44,10 +43,9 @@ services:
   # ===========================================================================
   mosquitto:
     image: eclipse-mosquitto:2.0
-    container_name: reclapp-mosquitto
     ports:
-      - "1884:1883"   # MQTT
-      - "9002:9001"   # WebSocket
+      - "${IOT_MQTT_PORT:-1884}:1883"   # MQTT
+      - "${IOT_MQTT_WS_PORT:-9002}:9001"   # WebSocket
     volumes:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
       - mosquitto-data:/mosquitto/data
@@ -61,15 +59,14 @@ services:
   # ===========================================================================
   influxdb:
     image: influxdb:2.7-alpine
-    container_name: reclapp-influxdb
     ports:
-      - "8087:8086"
+      - "${IOT_INFLUXDB_PORT:-8087}:8086"
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=admin
-      - DOCKER_INFLUXDB_INIT_PASSWORD=adminpassword
-      - DOCKER_INFLUXDB_INIT_ORG=reclapp
-      - DOCKER_INFLUXDB_INIT_BUCKET=iot_metrics
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_ADMIN_USER:-admin}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_ADMIN_PASSWORD:-adminpassword}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG:-reclapp}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET:-iot_metrics}
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN:-reclapp-token}
     volumes:
       - influxdb-data:/var/lib/influxdb2
@@ -88,9 +85,8 @@ services:
   # ===========================================================================
   eventstore:
     image: eventstore/eventstore:23.10.0-bookworm-slim
-    container_name: reclapp-iot-eventstore
     ports:
-      - "2116:2113"
+      - "${IOT_EVENTSTORE_HTTP_PORT:-2116}:2113"
     environment:
       - EVENTSTORE_CLUSTER_SIZE=1
       - EVENTSTORE_RUN_PROJECTIONS=All
@@ -111,9 +107,8 @@ services:
   # ===========================================================================
   grafana:
     image: grafana/grafana:10.1.0
-    container_name: reclapp-iot-grafana
     ports:
-      - "3004:3000"
+      - "${IOT_GRAFANA_PORT:-3004}:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
@@ -133,7 +128,6 @@ services:
   # ===========================================================================
   device-simulator:
     image: alpine:3.20
-    container_name: reclapp-device-simulator
     command:
       - sh
       - -c
@@ -166,9 +160,8 @@ services:
   # ===========================================================================
   mqtt-explorer:
     image: smeagolworms4/mqtt-explorer:latest
-    container_name: reclapp-mqtt-explorer
     ports:
-      - "4001:4000"
+      - "${IOT_MQTT_EXPLORER_PORT:-4001}:4000"
     environment:
       - HTTP_PORT=4000
     depends_on:

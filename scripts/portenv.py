@@ -1,124 +1,116 @@
-import re
+#!/usr/bin/env python3
+import os
+import sys
 import socket
-from pathlib import Path
-from copy import deepcopy
+import argparse
+from typing import Dict, List, Tuple
 
-ENV_PATH = Path(".env")
+def load_env(env_path: str = '.env') -> Dict[str, str]:
+    """Load environment variables from a file."""
+    env_vars = {}
+    if not os.path.exists(env_path):
+        return env_vars
+    
+    with open(env_path, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            try:
+                key, value = line.split('=', 1)
+                env_vars[key.strip()] = value.strip()
+            except ValueError:
+                pass
+    return env_vars
 
-PORT_RANGE_MIN = 1024
-PORT_RANGE_MAX = 65535
-
-PORT_NAME_RE = re.compile(r"PORT", re.IGNORECASE)
-URL_PORT_RE = re.compile(r":(\d{2,5})(?!\d)")
-
-
-def is_port_free(port: int) -> bool:
+def check_port(host: str, port: int) -> bool:
+    """Check if a port is in use (listening). Returns True if in use."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        try:
-            s.bind(("0.0.0.0", port))
-            return True
-        except OSError:
-            return False
+        s.settimeout(1.0)
+        return s.connect_ex((host, port)) == 0
 
-
-def find_free_port(start_port: int) -> int:
-    port = start_port + 1
-    while port <= PORT_RANGE_MAX:
-        if is_port_free(port):
-            return port
-        port += 1
-    raise RuntimeError("Brak wolnych portów")
-
-
-def extract_ports(key: str, value: str):
-    ports = []
-
-    if PORT_NAME_RE.search(key) and value.isdigit():
-        p = int(value)
-        if 1 <= p <= 65535:
-            ports.append(("plain", p))
-
-    for match in URL_PORT_RE.finditer(value):
-        p = int(match.group(1))
-        if 1 <= p <= 65535:
-            ports.append(("url", p))
-
-    return ports
-
-
-def replace_port(value: str, old: int, new: int):
-    return re.sub(rf":{old}(?!\d)", f":{new}", value)
-
-
-def process_env(lines):
-    updated_lines = []
-    port_map = {}        # stary_port -> nowy_port
-    change_log = []     # szczegóły zmian
-
-    for line in lines:
-        stripped = line.strip()
-
-        if not stripped or stripped.startswith("#") or "=" not in stripped:
-            updated_lines.append(line)
+def scan_ports(env_vars: Dict[str, str], mode: str, prefixes: List[str] = None) -> bool:
+    """Scan ports defined in env vars.
+    mode: 'free' (expect ports to be free) or 'used' (expect ports to be in use)
+    prefixes: list of prefixes to filter variables (e.g. ['B2B_', 'PORT'])
+    Returns True if all checks pass.
+    """
+    
+    # Filter for port variables
+    port_vars = {}
+    for k, v in env_vars.items():
+        if not v.isdigit():
             continue
+        if not (k.endswith('_PORT') or k == 'PORT'):
+            continue
+            
+        # Apply prefix filter if provided
+        if prefixes:
+            matched = False
+            for p in prefixes:
+                if k.startswith(p) or k == p:
+                    matched = True
+                    break
+            if not matched:
+                continue
+        
+        port_vars[k] = int(v)
+    
+    if not port_vars:
+        print("No matching port definitions found in .env")
+        return True
 
-        key, value = stripped.split("=", 1)
-        ports = extract_ports(key, value)
-        new_value = value
+    print(f"Checking {len(port_vars)} ports in '{mode}' mode...")
+    
+    all_passed = True
+    host = 'localhost' # Default host to check
+    
+    # Special case for HOST env var
+    if 'HOST' in env_vars:
+        host = env_vars['HOST'].replace('0.0.0.0', '127.0.0.1')
 
-        for kind, port in ports:
-            if not is_port_free(port):
-                if port not in port_map:
-                    port_map[port] = find_free_port(port)
+    print(f"{'VARIABLE':<30} {'PORT':<10} {'STATUS':<10} {'RESULT'}")
+    print("-" * 65)
 
-                new_port = port_map[port]
+    for name, port in port_vars.items():
+        is_used = check_port(host, port)
+        
+        status = "FREE" if not is_used else "LISTENING"
+        
+        if mode == 'free':
+            passed = not is_used
+            expect = "FREE"
+        else: # mode == 'used'
+            passed = is_used
+            expect = "LISTENING"
+            
+        res_str = "✓ OK" if passed else f"✗ FAIL (Expected {expect})"
+        color = "\033[92m" if passed else "\033[91m"
+        reset = "\033[0m"
+        
+        print(f"{name:<30} {port:<10} {status:<10} {color}{res_str}{reset}")
+        
+        if not passed:
+            all_passed = False
 
-                if kind == "plain":
-                    new_value = str(new_port)
-                else:
-                    new_value = replace_port(new_value, port, new_port)
+    return all_passed
 
-                change_log.append({
-                    "variable": key,
-                    "type": kind,
-                    "old": port,
-                    "new": new_port
-                })
-
-                print(f"[ZMIANA] {key} ({kind}): {port} → {new_port}")
-
-        updated_lines.append(f"{key}={new_value}\n")
-
-    return updated_lines, change_log
-
-
-def print_summary(changes):
-    if not changes:
-        print("\n✔ Brak kolizji portów")
-        return
-
-    print("\n=== PODSUMOWANIE ZMIAN ===")
-    for c in changes:
-        print(
-            f"{c['variable']:<30} "
-            f"{c['old']:<6} → {c['new']}"
-        )
-
-
-def main():
-    original = ENV_PATH.read_text().splitlines(keepends=True)
-    updated, changes = process_env(deepcopy(original))
-
-    backup = ENV_PATH.with_suffix(".env.bak")
-    backup.write_text("".join(original))
-    ENV_PATH.write_text("".join(updated))
-
-    print(f"\n✔ Zaktualizowano .env")
-    print(f"✔ Backup zapisany jako: {backup.name}")
-
-    print_summary(changes)
-
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Check port availability based on .env')
+    parser.add_argument('--mode', choices=['free', 'used'], default='free',
+                        help='Check if ports are free (pre-start) or used (post-start)')
+    parser.add_argument('--env', default='.env', help='Path to .env file')
+    parser.add_argument('--prefix', action='append', help='Filter variables by prefix (can be used multiple times)')
+    
+    args = parser.parse_args()
+    
+    # Print header
+    print("=================================================================")
+    print(" RECLAPP PORT DIAGNOSTIC")
+    print("=================================================================")
+    
+    env = load_env(args.env)
+    success = scan_ports(env, args.mode, args.prefix)
+    
+    print("=================================================================")
+    sys.exit(0 if success else 1)
