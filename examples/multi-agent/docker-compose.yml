@@ -1,0 +1,264 @@
+# Multi-Agent Orchestration - Docker Compose
+# Reclapp 2.1.0 Example
+
+version: '3.8'
+
+services:
+  # ===========================================================================
+  # ORCHESTRATOR AGENT
+  # ===========================================================================
+  orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - AGENT_TYPE=orchestrator
+    container_name: reclapp-orchestrator
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - AGENT_NAME=orchestrator
+      - AGENT_ROLE=coordinator
+      - PORT=8080
+      - EVENTSTORE_URL=esdb://eventstore:2113?tls=false
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://reclapp:reclapp@rabbitmq:5672
+      - AGENTS=risk-agent:8081,compliance-agent:8082,customer-agent:8083
+      - CONFLICT_RESOLUTION=weighted_voting
+    depends_on:
+      eventstore:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - agent-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # ===========================================================================
+  # RISK AGENT
+  # ===========================================================================
+  risk-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - AGENT_TYPE=risk
+    container_name: reclapp-risk-agent
+    ports:
+      - "8081:8081"
+    environment:
+      - NODE_ENV=production
+      - AGENT_NAME=risk-agent
+      - AGENT_ROLE=risk_assessment
+      - PORT=8081
+      - EVENTSTORE_URL=esdb://eventstore:2113?tls=false
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://reclapp:reclapp@rabbitmq:5672
+      - ORCHESTRATOR_URL=http://orchestrator:8080
+      - AI_CONFIDENCE_THRESHOLD=0.7
+      - CAUSAL_DECAY_RATE=0.01
+    depends_on:
+      - eventstore
+      - redis
+      - rabbitmq
+    networks:
+      - agent-network
+    restart: unless-stopped
+
+  # ===========================================================================
+  # COMPLIANCE AGENT
+  # ===========================================================================
+  compliance-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - AGENT_TYPE=compliance
+    container_name: reclapp-compliance-agent
+    ports:
+      - "8082:8082"
+    environment:
+      - NODE_ENV=production
+      - AGENT_NAME=compliance-agent
+      - AGENT_ROLE=compliance_check
+      - PORT=8082
+      - EVENTSTORE_URL=esdb://eventstore:2113?tls=false
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://reclapp:reclapp@rabbitmq:5672
+      - ORCHESTRATOR_URL=http://orchestrator:8080
+      - REGULATIONS=GDPR,AML,KYC
+    depends_on:
+      - eventstore
+      - redis
+      - rabbitmq
+    networks:
+      - agent-network
+    restart: unless-stopped
+
+  # ===========================================================================
+  # CUSTOMER AGENT
+  # ===========================================================================
+  customer-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - AGENT_TYPE=customer
+    container_name: reclapp-customer-agent
+    ports:
+      - "8083:8083"
+    environment:
+      - NODE_ENV=production
+      - AGENT_NAME=customer-agent
+      - AGENT_ROLE=customer_management
+      - PORT=8083
+      - EVENTSTORE_URL=esdb://eventstore:2113?tls=false
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://reclapp:reclapp@rabbitmq:5672
+      - ORCHESTRATOR_URL=http://orchestrator:8080
+    depends_on:
+      - eventstore
+      - redis
+      - rabbitmq
+    networks:
+      - agent-network
+    restart: unless-stopped
+
+  # ===========================================================================
+  # SHARED INFRASTRUCTURE
+  # ===========================================================================
+  eventstore:
+    image: eventstore/eventstore:23.10.0-bookworm-slim
+    container_name: reclapp-multi-eventstore
+    ports:
+      - "2113:2113"
+    environment:
+      - EVENTSTORE_CLUSTER_SIZE=1
+      - EVENTSTORE_RUN_PROJECTIONS=All
+      - EVENTSTORE_INSECURE=true
+    volumes:
+      - eventstore-data:/var/lib/eventstore
+    networks:
+      - agent-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2113/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: reclapp-multi-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - agent-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: reclapp-multi-rabbitmq
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=reclapp
+      - RABBITMQ_DEFAULT_PASS=reclapp
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - agent-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: reclapp-multi-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=reclapp
+      - POSTGRES_PASSWORD=reclapp
+      - POSTGRES_DB=reclapp
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - agent-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reclapp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ===========================================================================
+  # MONITORING
+  # ===========================================================================
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: reclapp-multi-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - agent-network
+    profiles:
+      - monitoring
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: reclapp-multi-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    networks:
+      - agent-network
+    profiles:
+      - monitoring
+    restart: unless-stopped
+
+# ===========================================================================
+# NETWORKS
+# ===========================================================================
+networks:
+  agent-network:
+    driver: bridge
+
+# ===========================================================================
+# VOLUMES
+# ===========================================================================
+volumes:
+  eventstore-data:
+  redis-data:
+  rabbitmq-data:
+  postgres-data:
+  grafana-data:
+  prometheus-data:

@@ -1,0 +1,188 @@
+# IoT Device Monitoring - Docker Compose
+# Reclapp 2.1.0 Example
+
+version: '3.8'
+
+services:
+  # ===========================================================================
+  # RECLAPP IOT API
+  # ===========================================================================
+  reclapp-iot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: reclapp-iot-api
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - MQTT_BROKER=mqtt://mosquitto:1883
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-reclapp-token}
+      - INFLUXDB_ORG=reclapp
+      - INFLUXDB_BUCKET=iot_metrics
+      - EVENTSTORE_URL=esdb://eventstore:2113?tls=false
+      - AI_CONFIDENCE_THRESHOLD=0.7
+      - ANOMALY_DETECTION_ENABLED=true
+    depends_on:
+      mosquitto:
+        condition: service_started
+      influxdb:
+        condition: service_healthy
+      eventstore:
+        condition: service_healthy
+    networks:
+      - iot-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # ===========================================================================
+  # MQTT BROKER (Mosquitto)
+  # ===========================================================================
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: reclapp-mosquitto
+    ports:
+      - "1883:1883"   # MQTT
+      - "9001:9001"   # WebSocket
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
+    networks:
+      - iot-network
+    restart: unless-stopped
+
+  # ===========================================================================
+  # INFLUXDB (Time Series)
+  # ===========================================================================
+  influxdb:
+    image: influxdb:2.7-alpine
+    container_name: reclapp-influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=adminpassword
+      - DOCKER_INFLUXDB_INIT_ORG=reclapp
+      - DOCKER_INFLUXDB_INIT_BUCKET=iot_metrics
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN:-reclapp-token}
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+      - influxdb-config:/etc/influxdb2
+    networks:
+      - iot-network
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ===========================================================================
+  # EVENT STORE
+  # ===========================================================================
+  eventstore:
+    image: eventstore/eventstore:23.10.0-bookworm-slim
+    container_name: reclapp-iot-eventstore
+    ports:
+      - "2113:2113"
+    environment:
+      - EVENTSTORE_CLUSTER_SIZE=1
+      - EVENTSTORE_RUN_PROJECTIONS=All
+      - EVENTSTORE_INSECURE=true
+    volumes:
+      - eventstore-data:/var/lib/eventstore
+    networks:
+      - iot-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2113/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ===========================================================================
+  # GRAFANA (Dashboards)
+  # ===========================================================================
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: reclapp-iot-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - influxdb
+    networks:
+      - iot-network
+    restart: unless-stopped
+
+  # ===========================================================================
+  # DEVICE SIMULATOR
+  # ===========================================================================
+  device-simulator:
+    build:
+      context: ./simulator
+      dockerfile: Dockerfile
+    container_name: reclapp-device-simulator
+    environment:
+      - MQTT_BROKER=mqtt://mosquitto:1883
+      - DEVICE_COUNT=10
+      - PUBLISH_INTERVAL=5000
+      - ANOMALY_PROBABILITY=0.05
+    depends_on:
+      - mosquitto
+    networks:
+      - iot-network
+    profiles:
+      - simulation
+    restart: unless-stopped
+
+  # ===========================================================================
+  # MQTT EXPLORER (Debug Tool)
+  # ===========================================================================
+  mqtt-explorer:
+    image: smeagolworms4/mqtt-explorer:latest
+    container_name: reclapp-mqtt-explorer
+    ports:
+      - "4000:4000"
+    environment:
+      - HTTP_PORT=4000
+    depends_on:
+      - mosquitto
+    networks:
+      - iot-network
+    profiles:
+      - debug
+    restart: unless-stopped
+
+# ===========================================================================
+# NETWORKS
+# ===========================================================================
+networks:
+  iot-network:
+    driver: bridge
+
+# ===========================================================================
+# VOLUMES
+# ===========================================================================
+volumes:
+  mosquitto-data:
+  mosquitto-log:
+  influxdb-data:
+  influxdb-config:
+  eventstore-data:
+  grafana-data:
