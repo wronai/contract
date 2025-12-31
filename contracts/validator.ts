@@ -17,6 +17,26 @@ import type {
   SafetyRails
 } from './types';
 
+type FieldRefineInput = {
+  type: 'string' | 'number' | 'boolean' | 'datetime' | 'uuid' | 'json' | 'money';
+  min?: number;
+  max?: number;
+};
+
+type InterventionRefineInput = {
+  expectedEffect: Record<string, number>;
+};
+
+type WorkflowRefineInput = {
+  steps: Array<{ id: string; onSuccess?: string; onFailure?: string }>;
+};
+
+type ContractRefineInput = {
+  canAutonomously: Array<{ action: string; resources: string[] }>;
+  prohibited: Array<{ action: string; resources: string[] }>;
+  entities: Array<{ name: string }>;
+};
+
 // ============================================================================
 // ZOD SCHEMAS
 // ============================================================================
@@ -34,7 +54,7 @@ const FieldSchema = z.object({
   default: z.any().optional(),
   description: z.string().optional()
 }).refine(
-  (field) => {
+  (field: FieldRefineInput) => {
     // Validate min/max only for number type
     if (field.type !== 'number' && (field.min !== undefined || field.max !== undefined)) {
       return false;
@@ -75,7 +95,7 @@ const InterventionSchema = z.object({
   prerequisites: z.array(z.string()).optional(),
   contraindications: z.array(z.string()).optional()
 }).refine(
-  (intervention) => Object.keys(intervention.expectedEffect).length > 0,
+  (intervention: InterventionRefineInput) => Object.keys(intervention.expectedEffect).length > 0,
   { message: 'Intervention must have at least one expected effect' }
 );
 
@@ -143,7 +163,7 @@ const WorkflowSchema = z.object({
   })).optional(),
   schedule: z.string().optional()
 }).refine(
-  (workflow) => {
+  (workflow: WorkflowRefineInput) => {
     // Validate step references
     const stepIds = new Set(workflow.steps.map(s => s.id));
     for (const step of workflow.steps) {
@@ -286,7 +306,7 @@ export const AgentContractSchema = z.object({
   
   extensions: z.record(z.any()).optional()
 }).refine(
-  (contract) => {
+  (contract: ContractRefineInput) => {
     // Ensure no permission conflicts
     const autonomous = new Set(contract.canAutonomously.map(p => `${p.action}:${p.resources.join(',')}`));
     const prohibited = contract.prohibited.map(p => `${p.action}:${p.resources.join(',')}`);
@@ -298,7 +318,7 @@ export const AgentContractSchema = z.object({
   },
   { message: 'Permission conflict: same action is both autonomous and prohibited' }
 ).refine(
-  (contract) => {
+  (contract: ContractRefineInput) => {
     // Validate entity references in interventions
     const entityNames = new Set(contract.entities.map(e => e.name));
     // Add more cross-reference validations as needed
@@ -423,7 +443,7 @@ export function validateEntity(entity: unknown): ValidationResult {
   
   return {
     valid: result.success,
-    errors: result.success ? [] : result.error.issues.map(issue => ({
+    errors: result.success ? [] : result.error.issues.map((issue: z.ZodIssue) => ({
       path: issue.path.join('.'),
       code: `ENTITY_${issue.code.toUpperCase()}`,
       message: issue.message
@@ -440,7 +460,7 @@ export function validateWorkflow(workflow: unknown): ValidationResult {
   
   return {
     valid: result.success,
-    errors: result.success ? [] : result.error.issues.map(issue => ({
+    errors: result.success ? [] : result.error.issues.map((issue: z.ZodIssue) => ({
       path: issue.path.join('.'),
       code: `WORKFLOW_${issue.code.toUpperCase()}`,
       message: issue.message
@@ -479,7 +499,7 @@ export function validateSafetyRails(rails: unknown): ValidationResult {
   
   return {
     valid: result.success,
-    errors: result.success ? [] : result.error.issues.map(issue => ({
+    errors: result.success ? [] : result.error.issues.map((issue: z.ZodIssue) => ({
       path: issue.path.join('.'),
       code: `SAFETY_${issue.code.toUpperCase()}`,
       message: issue.message

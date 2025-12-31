@@ -11,6 +11,8 @@ import {
   waitFor
 } from './setup';
 
+import type { ExecutionNode, ExecutionPlan, ExecutionResult } from '../../core/planner';
+
 describe('E2E: B2B Customer Onboarding Flow', () => {
   describe('Complete Onboarding DSL Processing', () => {
     it('should parse and validate onboarding DSL', async () => {
@@ -121,9 +123,13 @@ describe('E2E: B2B Customer Onboarding Flow', () => {
         timestamp: new Date()
       };
 
-      const mockPlan = {
+      const nodes = new Map<string, ExecutionNode>([
+        ['node-1', { id: 'node-1', type: 'transform', name: 'Test', config: {}, dependencies: [], outputs: [], status: 'pending' }]
+      ]);
+
+      const mockPlan: ExecutionPlan = {
         graph: {
-          nodes: new Map([['node-1', { id: 'node-1', type: 'transform', name: 'Test', config: {}, dependencies: [], outputs: [], status: 'pending' }]]),
+          nodes,
           edges: [],
           entryPoints: ['node-1'],
           metadata: { name: 'test', version: '1.0', createdAt: new Date(), hash: 'abc' }
@@ -131,7 +137,7 @@ describe('E2E: B2B Customer Onboarding Flow', () => {
         stages: [{ order: 0, nodes: ['node-1'], parallel: false }]
       };
 
-      const mockResult = {
+      const mockResult: ExecutionResult = {
         success: true,
         results: [{ nodeId: 'node-1', status: 'completed' as const, data: {} }],
         errors: []

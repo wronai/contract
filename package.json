@@ -10,7 +10,7 @@
     "start": "node dist/api/src/server.js",
     "test": "jest",
     "test:unit": "jest --selectProjects unit",
-    "test:integration": "jest --selectProjects integration", 
+    "test:integration": "jest --selectProjects integration",
     "test:e2e": "jest --selectProjects e2e",
     "test:coverage": "jest --coverage",
     "test:watch": "jest --watch",
@@ -42,7 +42,8 @@
     "express": "^4.18.2",
     "peggy": "^4.0.2",
     "uuid": "^9.0.0",
-    "ws": "^8.16.0"
+    "ws": "^8.16.0",
+    "zod": "^4.3.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
