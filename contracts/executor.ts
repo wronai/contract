@@ -192,7 +192,7 @@ export class ContractExecutor {
       }
 
       // Execute workflow steps
-      let currentStepId = this.contract.workflow.steps[0]?.id;
+      let currentStepId: string | undefined = this.contract.workflow.steps[0]?.id;
       
       while (currentStepId && this.isRunning) {
         const step = this.contract.workflow.steps.find(s => s.id === currentStepId);
@@ -202,7 +202,8 @@ export class ContractExecutor {
         
         // Determine next step based on result
         if (result.success) {
-          currentStepId = step.onSuccess || this.getNextStepId(step.id);
+          const nextStepId = step.onSuccess ?? this.getNextStepId(step.id);
+          currentStepId = nextStepId;
         } else {
           currentStepId = step.onFailure;
           

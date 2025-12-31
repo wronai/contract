@@ -123,13 +123,19 @@ describe('E2E: B2B Customer Onboarding Flow', () => {
         timestamp: new Date()
       };
 
-      const nodes = new Map<string, ExecutionNode>([
-        ['node-1', { id: 'node-1', type: 'transform', name: 'Test', config: {}, dependencies: [], outputs: [], status: 'pending' }]
-      ]);
+      const node: ExecutionNode = {
+        id: 'node-1',
+        type: 'transform',
+        name: 'Test',
+        config: {},
+        dependencies: [],
+        outputs: [],
+        status: 'pending'
+      };
 
       const mockPlan: ExecutionPlan = {
         graph: {
-          nodes,
+          nodes: new Map<string, ExecutionNode>([['node-1', node]]),
           edges: [],
           entryPoints: ['node-1'],
           metadata: { name: 'test', version: '1.0', createdAt: new Date(), hash: 'abc' }

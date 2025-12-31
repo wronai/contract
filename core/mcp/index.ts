@@ -98,9 +98,9 @@ export interface MCPServerConfig {
 
 export interface MCPCapabilities {
   resources?: { listChanged?: boolean };
-  tools?: {};
+  tools?: Record<string, unknown>;
   prompts?: { listChanged?: boolean };
-  logging?: {};
+  logging?: Record<string, unknown>;
 }
 
 export class ReclappMCPServer {

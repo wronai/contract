@@ -165,14 +165,14 @@ check-all: lint typecheck test ## Run all checks (lint, typecheck, test)
 # DOCKER
 # ============================================================================
 
-docker-build: ## Build Docker images
+build: ## Build Docker images
 	@echo "$(BLUE)🐳 Building Docker images...$(NC)"
 	docker compose build
 	@echo "$(GREEN)✓ Docker images built$(NC)"
 
-docker-up: ## Start Docker services
+up: ## Start Docker services
 	@echo "$(BLUE)🐳 Starting Docker services...$(NC)"
-	docker compose up -d
+	docker compose up --build
 	@echo "$(GREEN)✓ Services started$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Services available at:$(NC)"
@@ -180,15 +180,15 @@ docker-up: ## Start Docker services
 	@echo "  Frontend:   http://localhost:3000"
 	@echo "  EventStore: http://localhost:2113"
 
-docker-down: ## Stop Docker services
+down: ## Stop Docker services
 	@echo "$(BLUE)🐳 Stopping Docker services...$(NC)"
 	docker compose down
 	@echo "$(GREEN)✓ Services stopped$(NC)"
 
-docker-logs: ## Show Docker logs
+logs: ## Show Docker logs
 	docker compose logs -f
 
-docker-restart: docker-down docker-up ## Restart Docker services
+restart: down up ## Restart Docker services
 
 docker-full: ## Start all services including hardware and monitoring
 	@echo "$(BLUE)🐳 Starting full stack...$(NC)"

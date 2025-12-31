@@ -1,13 +1,12 @@
 /**
  * Reclapp AI Contract Validator
  * 
- * Runtime validation of AI Contracts using Zod schemas.
+ * Runtime validation of AI Contracts using internal schema objects.
  * Ensures contracts are valid before execution.
  * 
  * @version 2.1.0
  */
 
-import { z } from 'zod';
 import type { 
   AgentContract, 
   Entity, 
@@ -17,315 +16,505 @@ import type {
   SafetyRails
 } from './types';
 
+type Issue = {
+  path: (string | number)[];
+  code: string;
+  message: string;
+};
+
+type SafeParseResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: { issues: Issue[] } };
+
+interface Schema<T> {
+  safeParse(value: unknown): SafeParseResult<T>;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function fail<T>(issues: Issue[]): SafeParseResult<T> {
+  return { success: false, error: { issues } };
+}
+
+function ok<T>(data: T): SafeParseResult<T> {
+  return { success: true, data };
+}
+
+function addIssue(issues: Issue[], path: (string | number)[], message: string, code: string = 'custom'): void {
+  issues.push({ path, code, message });
+}
+
+function asNumber(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+}
+
+function asString(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}
+
+function asBoolean(value: unknown): boolean | undefined {
+  return typeof value === 'boolean' ? value : undefined;
+}
+
 type FieldRefineInput = {
   type: 'string' | 'number' | 'boolean' | 'datetime' | 'uuid' | 'json' | 'money';
   min?: number;
   max?: number;
 };
 
-type InterventionRefineInput = {
-  expectedEffect: Record<string, number>;
-};
-
-type WorkflowRefineInput = {
-  steps: Array<{ id: string; onSuccess?: string; onFailure?: string }>;
-};
-
-type ContractRefineInput = {
-  canAutonomously: Array<{ action: string; resources: string[] }>;
-  prohibited: Array<{ action: string; resources: string[] }>;
-  entities: Array<{ name: string }>;
-};
-
 // ============================================================================
-// ZOD SCHEMAS
+// SCHEMAS
 // ============================================================================
 
 // Field Schema
-const FieldSchema = z.object({
-  name: z.string().min(1),
-  type: z.enum(['string', 'number', 'boolean', 'datetime', 'uuid', 'json', 'money']),
-  required: z.boolean().optional(),
-  unique: z.boolean().optional(),
-  min: z.number().optional(),
-  max: z.number().optional(),
-  pattern: z.string().optional(),
-  enum: z.array(z.string()).optional(),
-  default: z.any().optional(),
-  description: z.string().optional()
-}).refine(
-  (field: FieldRefineInput) => {
-    // Validate min/max only for number type
-    if (field.type !== 'number' && (field.min !== undefined || field.max !== undefined)) {
-      return false;
+const FieldSchema: Schema<unknown> = {
+  safeParse(value: unknown): SafeParseResult<unknown> {
+    const issues: Issue[] = [];
+
+    if (!isRecord(value)) {
+      addIssue(issues, [], 'Expected object');
+      return fail(issues);
     }
-    // Validate min <= max
-    if (field.min !== undefined && field.max !== undefined && field.min > field.max) {
-      return false;
+
+    const name = asString(value.name);
+    if (!name || name.length < 1) {
+      addIssue(issues, ['name'], 'Expected non-empty string');
     }
-    return true;
-  },
-  { message: 'Invalid field constraints' }
-);
+
+    const type = asString(value.type);
+    const allowedTypes = ['string', 'number', 'boolean', 'datetime', 'uuid', 'json', 'money'];
+    if (!type || !allowedTypes.includes(type)) {
+      addIssue(issues, ['type'], `Expected one of: ${allowedTypes.join(', ')}`);
+    }
+
+    const min = value.min !== undefined ? asNumber(value.min) : undefined;
+    const max = value.max !== undefined ? asNumber(value.max) : undefined;
+    if (value.min !== undefined && min === undefined) {
+      addIssue(issues, ['min'], 'Expected number');
+    }
+    if (value.max !== undefined && max === undefined) {
+      addIssue(issues, ['max'], 'Expected number');
+    }
+
+    if (type && type !== 'number' && (value.min !== undefined || value.max !== undefined)) {
+      addIssue(issues, ['min'], 'min/max allowed only for number type');
+    }
+
+    if (min !== undefined && max !== undefined && min > max) {
+      addIssue(issues, ['min'], 'min must be <= max');
+    }
+
+    return issues.length > 0 ? fail(issues) : ok(value);
+  }
+};
 
 // Causal Influence Schema
-const CausalInfluenceSchema = z.object({
-  field: z.string().min(1),
-  weight: z.number().min(-1).max(1),
-  decay: z.number().min(0).max(1),
-  mechanism: z.string().optional(),
-  conditions: z.array(z.object({
-    field: z.string(),
-    operator: z.enum(['eq', 'ne', 'gt', 'lt', 'gte', 'lte', 'in', 'contains']),
-    value: z.any()
-  })).optional()
-});
+const CausalInfluenceSchema: Schema<unknown> = {
+  safeParse(value: unknown): SafeParseResult<unknown> {
+    const issues: Issue[] = [];
+
+    if (!isRecord(value)) {
+      addIssue(issues, [], 'Expected object');
+      return fail(issues);
+    }
+
+    const field = asString(value.field);
+    if (!field || field.length < 1) {
+      addIssue(issues, ['field'], 'Expected non-empty string');
+    }
+
+    const weight = asNumber(value.weight);
+    if (weight === undefined || weight < -1 || weight > 1) {
+      addIssue(issues, ['weight'], 'Expected number between -1 and 1');
+    }
+
+    const decay = asNumber(value.decay);
+    if (decay === undefined || decay < 0 || decay > 1) {
+      addIssue(issues, ['decay'], 'Expected number between 0 and 1');
+    }
+
+    return issues.length > 0 ? fail(issues) : ok(value);
+  }
+};
 
 // Intervention Schema
-const InterventionSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().optional(),
-  adjust: z.record(z.any()),
-  expectedEffect: z.record(z.number()),
-  confidence: z.number().min(0).max(1),
-  sandbox: z.boolean(),
-  cost: z.number().optional(),
-  cooldownMs: z.number().optional(),
-  maxApplications: z.number().optional(),
-  prerequisites: z.array(z.string()).optional(),
-  contraindications: z.array(z.string()).optional()
-}).refine(
-  (intervention: InterventionRefineInput) => Object.keys(intervention.expectedEffect).length > 0,
-  { message: 'Intervention must have at least one expected effect' }
-);
+const InterventionSchema: Schema<unknown> = {
+  safeParse(value: unknown): SafeParseResult<unknown> {
+    const issues: Issue[] = [];
+
+    if (!isRecord(value)) {
+      addIssue(issues, [], 'Expected object');
+      return fail(issues);
+    }
+
+    const name = asString(value.name);
+    if (!name || name.length < 1) {
+      addIssue(issues, ['name'], 'Expected non-empty string');
+    }
+
+    if (!isRecord(value.adjust)) {
+      addIssue(issues, ['adjust'], 'Expected object');
+    }
+
+    if (!isRecord(value.expectedEffect)) {
+      addIssue(issues, ['expectedEffect'], 'Expected object');
+    } else if (Object.keys(value.expectedEffect).length === 0) {
+      addIssue(issues, ['expectedEffect'], 'Intervention must have at least one expected effect');
+    }
+
+    const confidence = asNumber(value.confidence);
+    if (confidence === undefined || confidence < 0 || confidence > 1) {
+      addIssue(issues, ['confidence'], 'Expected number between 0 and 1');
+    }
+
+    const sandbox = asBoolean(value.sandbox);
+    if (sandbox === undefined) {
+      addIssue(issues, ['sandbox'], 'Expected boolean');
+    }
+
+    return issues.length > 0 ? fail(issues) : ok(value);
+  }
+};
 
 // Entity Schema
-const EntitySchema = z.object({
-  name: z.string().min(1).regex(/^[A-Z][a-zA-Z0-9]*$/, 'Entity name must be PascalCase'),
-  description: z.string().optional(),
-  fields: z.array(FieldSchema).min(1),
-  causalInfluences: z.array(CausalInfluenceSchema),
-  interventions: z.array(InterventionSchema),
-  events: z.array(z.object({
-    name: z.string(),
-    fields: z.array(FieldSchema),
-    description: z.string().optional()
-  })).optional(),
-  computed: z.array(z.object({
-    name: z.string(),
-    formula: z.string(),
-    dependencies: z.array(z.string())
-  })).optional()
-});
+const EntitySchema: Schema<Entity> = {
+  safeParse(value: unknown): SafeParseResult<Entity> {
+    const issues: Issue[] = [];
+
+    if (!isRecord(value)) {
+      addIssue(issues, [], 'Expected object');
+      return fail(issues);
+    }
+
+    const name = asString(value.name);
+    if (!name || name.length < 1) {
+      addIssue(issues, ['name'], 'Expected non-empty string');
+    } else if (!/^[A-Z][a-zA-Z0-9]*$/.test(name)) {
+      addIssue(issues, ['name'], 'Entity name must be PascalCase');
+    }
+
+    const fields = Array.isArray(value.fields) ? value.fields : undefined;
+    if (!fields || fields.length < 1) {
+      addIssue(issues, ['fields'], 'Expected non-empty array');
+    } else {
+      for (let i = 0; i < fields.length; i++) {
+        const r = FieldSchema.safeParse(fields[i]);
+        if (!r.success) {
+          for (const issue of r.error.issues) {
+            addIssue(issues, ['fields', i, ...issue.path], issue.message, issue.code);
+          }
+        }
+      }
+    }
+
+    const causalInfluences = Array.isArray(value.causalInfluences) ? value.causalInfluences : undefined;
+    if (!causalInfluences) {
+      addIssue(issues, ['causalInfluences'], 'Expected array');
+    }
+
+    const interventions = Array.isArray(value.interventions) ? value.interventions : undefined;
+    if (!interventions) {
+      addIssue(issues, ['interventions'], 'Expected array');
+    }
+
+    if (issues.length > 0) {
+      return fail(issues);
+    }
+
+    return ok(value as unknown as Entity);
+  }
+};
 
 // Workflow Step Schema
-const WorkflowStepSchema = z.object({
-  id: z.string().min(1),
-  type: z.enum([
-    'fetch_data', 'transform', 'validate', 'compute',
-    'apply_intervention', 'verify', 'notify', 'log', 'decision', 'custom'
-  ]),
-  name: z.string().min(1),
-  description: z.string().optional(),
-  config: z.record(z.any()).optional(),
-  onSuccess: z.string().optional(),
-  onFailure: z.string().optional(),
-  timeout: z.number().positive().optional(),
-  retries: z.number().int().min(0).optional(),
-  conditions: z.array(z.object({
-    expression: z.string(),
-    description: z.string().optional()
-  })).optional()
-});
+const WorkflowStepSchema: Schema<unknown> = {
+  safeParse(value: unknown): SafeParseResult<unknown> {
+    const issues: Issue[] = [];
+
+    if (!isRecord(value)) {
+      addIssue(issues, [], 'Expected object');
+      return fail(issues);
+    }
+
+    const id = asString(value.id);
+    if (!id || id.length < 1) {
+      addIssue(issues, ['id'], 'Expected non-empty string');
+    }
+
+    const type = asString(value.type);
+    const allowedTypes = [
+      'fetch_data', 'transform', 'validate', 'compute',
+      'apply_intervention', 'verify', 'notify', 'log', 'decision', 'custom'
+    ];
+    if (!type || !allowedTypes.includes(type)) {
+      addIssue(issues, ['type'], `Expected one of: ${allowedTypes.join(', ')}`);
+    }
+
+    const name = asString(value.name);
+    if (!name || name.length < 1) {
+      addIssue(issues, ['name'], 'Expected non-empty string');
+    }
+
+    return issues.length > 0 ? fail(issues) : ok(value);
+  }
+};
 
 // Safety Rails Schema
-const SafetyRailsSchema = z.object({
-  maxAdjustmentPerCycle: z.number().min(0).max(1),
-  rollbackOnAnomaly: z.boolean(),
-  sandboxExperimental: z.boolean(),
-  maxIterations: z.number().int().positive(),
-  cooldownBetweenAdjustments: z.number().int().min(0),
-  requireHumanApprovalAbove: z.number().min(0).max(1),
-  freezeOnCriticalAnomaly: z.boolean(),
-  anomalyThreshold: z.number().min(0).max(1)
-});
+const SafetyRailsSchema: Schema<SafetyRails> = {
+  safeParse(value: unknown): SafeParseResult<SafetyRails> {
+    const issues: Issue[] = [];
+
+    if (!isRecord(value)) {
+      addIssue(issues, [], 'Expected object');
+      return fail(issues);
+    }
+
+    const maxAdjustmentPerCycle = asNumber(value.maxAdjustmentPerCycle);
+    if (maxAdjustmentPerCycle === undefined || maxAdjustmentPerCycle < 0 || maxAdjustmentPerCycle > 1) {
+      addIssue(issues, ['maxAdjustmentPerCycle'], 'Expected number between 0 and 1');
+    }
+
+    if (asBoolean(value.rollbackOnAnomaly) === undefined) addIssue(issues, ['rollbackOnAnomaly'], 'Expected boolean');
+    if (asBoolean(value.sandboxExperimental) === undefined) addIssue(issues, ['sandboxExperimental'], 'Expected boolean');
+    if (asNumber(value.maxIterations) === undefined) addIssue(issues, ['maxIterations'], 'Expected number');
+    if (asNumber(value.cooldownBetweenAdjustments) === undefined) addIssue(issues, ['cooldownBetweenAdjustments'], 'Expected number');
+    const requireHumanApprovalAbove = asNumber(value.requireHumanApprovalAbove);
+    if (requireHumanApprovalAbove === undefined || requireHumanApprovalAbove < 0 || requireHumanApprovalAbove > 1) {
+      addIssue(issues, ['requireHumanApprovalAbove'], 'Expected number between 0 and 1');
+    }
+    if (asBoolean(value.freezeOnCriticalAnomaly) === undefined) addIssue(issues, ['freezeOnCriticalAnomaly'], 'Expected boolean');
+    const anomalyThreshold = asNumber(value.anomalyThreshold);
+    if (anomalyThreshold === undefined || anomalyThreshold < 0 || anomalyThreshold > 1) {
+      addIssue(issues, ['anomalyThreshold'], 'Expected number between 0 and 1');
+    }
+
+    return issues.length > 0 ? fail(issues) : ok(value as unknown as SafetyRails);
+  }
+};
 
 // Workflow Schema
-const WorkflowSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().optional(),
-  version: z.string().regex(/^\d+\.\d+\.\d+$/, 'Version must be semver'),
-  steps: z.array(WorkflowStepSchema).min(1),
-  safety: SafetyRailsSchema,
-  triggers: z.array(z.object({
-    type: z.enum(['event', 'schedule', 'condition', 'manual']),
-    config: z.record(z.any())
-  })).optional(),
-  schedule: z.string().optional()
-}).refine(
-  (workflow: WorkflowRefineInput) => {
-    // Validate step references
-    const stepIds = new Set(workflow.steps.map(s => s.id));
-    for (const step of workflow.steps) {
-      if (step.onSuccess && !stepIds.has(step.onSuccess)) return false;
-      if (step.onFailure && !stepIds.has(step.onFailure)) return false;
+const WorkflowSchema: Schema<Workflow> = {
+  safeParse(value: unknown): SafeParseResult<Workflow> {
+    const issues: Issue[] = [];
+
+    if (!isRecord(value)) {
+      addIssue(issues, [], 'Expected object');
+      return fail(issues);
     }
-    return true;
-  },
-  { message: 'Workflow contains invalid step references' }
-);
+
+    const name = asString(value.name);
+    if (!name || name.length < 1) {
+      addIssue(issues, ['name'], 'Expected non-empty string');
+    }
+
+    const version = asString(value.version);
+    if (!version || !/^\d+\.\d+\.\d+$/.test(version)) {
+      addIssue(issues, ['version'], 'Version must be semver');
+    }
+
+    const steps = Array.isArray(value.steps) ? value.steps : undefined;
+    if (!steps || steps.length < 1) {
+      addIssue(issues, ['steps'], 'Expected non-empty array');
+    } else {
+      const stepIds = new Set<string>();
+      for (let i = 0; i < steps.length; i++) {
+        const step = steps[i];
+        const r = WorkflowStepSchema.safeParse(step);
+        if (!r.success) {
+          for (const issue of r.error.issues) {
+            addIssue(issues, ['steps', i, ...issue.path], issue.message, issue.code);
+          }
+        }
+        if (isRecord(step) && typeof step.id === 'string') {
+          stepIds.add(step.id);
+        }
+      }
+
+      for (let i = 0; i < steps.length; i++) {
+        const step = steps[i];
+        if (!isRecord(step)) continue;
+        if (typeof step.onSuccess === 'string' && !stepIds.has(step.onSuccess)) {
+          addIssue(issues, ['steps', i, 'onSuccess'], 'Workflow contains invalid step references');
+        }
+        if (typeof step.onFailure === 'string' && !stepIds.has(step.onFailure)) {
+          addIssue(issues, ['steps', i, 'onFailure'], 'Workflow contains invalid step references');
+        }
+      }
+    }
+
+    const safetyResult = SafetyRailsSchema.safeParse(value.safety);
+    if (!safetyResult.success) {
+      for (const issue of safetyResult.error.issues) {
+        addIssue(issues, ['safety', ...issue.path], issue.message, issue.code);
+      }
+    }
+
+    return issues.length > 0 ? fail(issues) : ok(value as unknown as Workflow);
+  }
+};
 
 // Permission Schema
-const PermissionSchema = z.object({
-  action: z.enum([
-    'generate_dsl', 'modify_entity', 'create_alert', 'update_dashboard',
-    'execute_pipeline', 'send_notification', 'access_external',
-    'delete_resource', 'modify_workflow', 'apply_intervention', 'query_data', '*'
-  ]),
-  resources: z.array(z.string()).min(1),
-  conditions: z.array(z.object({
-    field: z.string(),
-    operator: z.enum(['eq', 'ne', 'gt', 'lt', 'in', 'contains']),
-    value: z.any()
-  })).optional(),
-  riskLevel: z.enum(['low', 'medium', 'high', 'critical'])
-});
+const PermissionSchema: Schema<Permission> = {
+  safeParse(value: unknown): SafeParseResult<Permission> {
+    const issues: Issue[] = [];
+
+    if (!isRecord(value)) {
+      addIssue(issues, [], 'Expected object');
+      return fail(issues);
+    }
+
+    const action = asString(value.action);
+    const allowedActions = [
+      'generate_dsl', 'modify_entity', 'create_alert', 'update_dashboard',
+      'execute_pipeline', 'send_notification', 'access_external',
+      'delete_resource', 'modify_workflow', 'apply_intervention', 'query_data', '*'
+    ];
+    if (!action || !allowedActions.includes(action)) {
+      addIssue(issues, ['action'], `Expected one of: ${allowedActions.join(', ')}`);
+    }
+
+    const resources = Array.isArray(value.resources) ? value.resources : undefined;
+    if (!resources || resources.length < 1 || !resources.every(r => typeof r === 'string')) {
+      addIssue(issues, ['resources'], 'Expected non-empty array of strings');
+    }
+
+    const riskLevel = asString(value.riskLevel);
+    const allowedRisk = ['low', 'medium', 'high', 'critical'];
+    if (!riskLevel || !allowedRisk.includes(riskLevel)) {
+      addIssue(issues, ['riskLevel'], `Expected one of: ${allowedRisk.join(', ')}`);
+    }
+
+    return issues.length > 0 ? fail(issues) : ok(value as unknown as Permission);
+  }
+};
 
 // Verification Schema
-const VerificationSchema = z.object({
-  enabled: z.boolean(),
-  causalLoop: z.boolean(),
-  metrics: z.array(z.object({
-    name: z.string(),
-    description: z.string(),
-    formula: z.string().optional(),
-    threshold: z.number().optional(),
-    direction: z.enum(['higher_better', 'lower_better', 'target']).optional(),
-    target: z.number().optional()
-  })),
-  thresholds: z.object({
-    anomalyDetection: z.number().min(0).max(1),
-    intentMatch: z.number().min(0).max(1),
-    causalValidity: z.number().min(0).max(1),
-    confidenceDecay: z.boolean(),
-    confidenceDecayRate: z.number().min(0).max(1),
-    minConfidence: z.number().min(0).max(1),
-    maxConfidence: z.number().min(0).max(1)
-  }),
-  feedbackSources: z.array(z.object({
-    name: z.string(),
-    type: z.enum(['metric', 'event', 'human', 'external']),
-    config: z.record(z.any()),
-    weight: z.number().min(0).max(1)
-  })),
-  learningConfig: z.object({
-    enabled: z.boolean(),
-    minObservations: z.number().int().positive(),
-    learningRate: z.number().min(0).max(1),
-    lockedBeforeApproval: z.boolean(),
-    batchSize: z.number().int().positive(),
-    validationSplit: z.number().min(0).max(1)
-  })
-});
+const VerificationSchema: Schema<Verification> = {
+  safeParse(value: unknown): SafeParseResult<Verification> {
+    if (!isRecord(value)) {
+      return fail([{ path: [], code: 'custom', message: 'Expected object' }]);
+    }
+    return ok(value as unknown as Verification);
+  }
+};
 
 // Enforcement Schema
-const EnforcementSchema = z.object({
-  logAllDecisions: z.boolean(),
-  overrideRequiresApproval: z.boolean(),
-  feedbackLockedBeforeLearning: z.boolean(),
-  causalVerificationRequired: z.boolean(),
-  auditRetentionDays: z.number().int().positive(),
-  alertOnViolation: z.boolean(),
-  freezeOnRepeatedViolations: z.boolean(),
-  maxViolationsBeforeFreeze: z.number().int().positive()
-});
-
-// Rate Limits Schema
-const RateLimitsSchema = z.object({
-  actionsPerMinute: z.number().int().positive(),
-  actionsPerHour: z.number().int().positive(),
-  actionsPerDay: z.number().int().positive(),
-  concurrentActions: z.number().int().positive(),
-  costPerDay: z.number().positive().optional()
-});
-
-// Uncertainty Protocol Schema
-const UncertaintyProtocolSchema = z.object({
-  confidenceThreshold: z.number().min(0).max(1),
-  onLowConfidence: z.object({
-    askForClarification: z.boolean(),
-    provideAlternatives: z.boolean(),
-    maxAlternatives: z.number().int().positive(),
-    escalateAfterAttempts: z.number().int().positive()
-  }),
-  onMissingData: z.object({
-    listRequirements: z.boolean(),
-    suggestSources: z.boolean(),
-    proceedWithAssumptions: z.boolean(),
-    markAsUncertain: z.boolean()
-  })
-});
-
-// Negotiation Protocol Schema
-const NegotiationProtocolSchema = z.object({
-  maxIterations: z.number().int().positive(),
-  onRejection: z.object({
-    askForFeedback: z.boolean(),
-    proposeAlternative: z.boolean(),
-    explainReasoning: z.boolean()
-  }),
-  onPartialApproval: z.object({
-    executeApproved: z.boolean(),
-    queueRejected: z.boolean()
-  }),
-  timeoutSeconds: z.number().int().positive()
-});
+const EnforcementSchema: Schema<unknown> = {
+  safeParse(value: unknown): SafeParseResult<unknown> {
+    if (!isRecord(value)) {
+      return fail([{ path: [], code: 'custom', message: 'Expected object' }]);
+    }
+    return ok(value);
+  }
+};
 
 // Complete Agent Contract Schema
-export const AgentContractSchema = z.object({
-  name: z.string().min(1).max(100),
-  version: z.string().regex(/^\d+\.\d+\.\d+$/, 'Version must be semver'),
-  description: z.string().max(1000),
-  author: z.string().optional(),
-  created: z.date().optional(),
-  updated: z.date().optional(),
-  
-  entities: z.array(EntitySchema).min(1),
-  workflow: WorkflowSchema,
-  
-  canAutonomously: z.array(PermissionSchema),
-  requiresApproval: z.array(PermissionSchema),
-  prohibited: z.array(PermissionSchema),
-  
-  uncertaintyProtocol: UncertaintyProtocolSchema,
-  negotiationProtocol: NegotiationProtocolSchema,
-  
-  verification: VerificationSchema,
-  enforcement: EnforcementSchema,
-  rateLimits: RateLimitsSchema,
-  
-  extensions: z.record(z.any()).optional()
-}).refine(
-  (contract: ContractRefineInput) => {
-    // Ensure no permission conflicts
-    const autonomous = new Set(contract.canAutonomously.map(p => `${p.action}:${p.resources.join(',')}`));
-    const prohibited = contract.prohibited.map(p => `${p.action}:${p.resources.join(',')}`);
-    
-    for (const p of prohibited) {
-      if (autonomous.has(p)) return false;
+export const AgentContractSchema: Schema<AgentContract> = {
+  safeParse(value: unknown): SafeParseResult<AgentContract> {
+    const issues: Issue[] = [];
+
+    if (!isRecord(value)) {
+      addIssue(issues, [], 'Expected object');
+      return fail(issues);
     }
-    return true;
-  },
-  { message: 'Permission conflict: same action is both autonomous and prohibited' }
-).refine(
-  (contract: ContractRefineInput) => {
-    // Validate entity references in interventions
-    const entityNames = new Set(contract.entities.map(e => e.name));
-    // Add more cross-reference validations as needed
-    return true;
-  },
-  { message: 'Invalid entity reference in contract' }
-);
+
+    const data: Record<string, unknown> = { ...value };
+
+    const name = asString(data.name);
+    if (!name || name.length < 1 || name.length > 100) {
+      addIssue(issues, ['name'], 'Expected name (1-100 chars)');
+    }
+
+    const version = asString(data.version);
+    if (!version || !/^\d+\.\d+\.\d+$/.test(version)) {
+      addIssue(issues, ['version'], 'Version must be semver');
+    }
+
+    const description = asString(data.description);
+    if (!description || description.length > 1000) {
+      addIssue(issues, ['description'], 'Expected description (<= 1000 chars)');
+    }
+
+    const entities = Array.isArray(data.entities) ? data.entities : undefined;
+    if (!entities || entities.length < 1) {
+      addIssue(issues, ['entities'], 'Expected non-empty array');
+    } else {
+      for (let i = 0; i < entities.length; i++) {
+        const r = EntitySchema.safeParse(entities[i]);
+        if (!r.success) {
+          for (const issue of r.error.issues) {
+            addIssue(issues, ['entities', i, ...issue.path], issue.message, issue.code);
+          }
+        }
+      }
+    }
+
+    const workflowResult = WorkflowSchema.safeParse(data.workflow);
+    if (!workflowResult.success) {
+      for (const issue of workflowResult.error.issues) {
+        addIssue(issues, ['workflow', ...issue.path], issue.message, issue.code);
+      }
+    }
+
+    if (!Array.isArray(data.canAutonomously)) data.canAutonomously = [];
+    if (!Array.isArray(data.requiresApproval)) data.requiresApproval = [];
+    if (!Array.isArray(data.prohibited)) data.prohibited = [];
+
+    const canAutonomously = data.canAutonomously as unknown[];
+    for (let i = 0; i < canAutonomously.length; i++) {
+      const r = PermissionSchema.safeParse(canAutonomously[i]);
+      if (!r.success) {
+        for (const issue of r.error.issues) {
+          addIssue(issues, ['canAutonomously', i, ...issue.path], issue.message, issue.code);
+        }
+      }
+    }
+
+    const requiresApproval = data.requiresApproval as unknown[];
+    for (let i = 0; i < requiresApproval.length; i++) {
+      const r = PermissionSchema.safeParse(requiresApproval[i]);
+      if (!r.success) {
+        for (const issue of r.error.issues) {
+          addIssue(issues, ['requiresApproval', i, ...issue.path], issue.message, issue.code);
+        }
+      }
+    }
+
+    const prohibited = data.prohibited as unknown[];
+    for (let i = 0; i < prohibited.length; i++) {
+      const r = PermissionSchema.safeParse(prohibited[i]);
+      if (!r.success) {
+        for (const issue of r.error.issues) {
+          addIssue(issues, ['prohibited', i, ...issue.path], issue.message, issue.code);
+        }
+      }
+    }
+
+    if (!isRecord(data.uncertaintyProtocol)) addIssue(issues, ['uncertaintyProtocol'], 'Expected object');
+    if (!isRecord(data.negotiationProtocol)) addIssue(issues, ['negotiationProtocol'], 'Expected object');
+    if (!isRecord(data.verification)) addIssue(issues, ['verification'], 'Expected object');
+    if (!isRecord(data.enforcement)) addIssue(issues, ['enforcement'], 'Expected object');
+    if (!isRecord(data.rateLimits)) addIssue(issues, ['rateLimits'], 'Expected object');
+
+    const autonomousSet = new Set(
+      (data.canAutonomously as unknown[])
+        .map(p => (isRecord(p) ? `${String(p.action)}:${Array.isArray(p.resources) ? (p.resources as unknown[]).join(',') : ''}` : ''))
+        .filter(Boolean)
+    );
+    const prohibitedSet = (data.prohibited as unknown[])
+      .map(p => (isRecord(p) ? `${String(p.action)}:${Array.isArray(p.resources) ? (p.resources as unknown[]).join(',') : ''}` : ''))
+      .filter(Boolean);
+    for (const p of prohibitedSet) {
+      if (autonomousSet.has(p)) {
+        addIssue(issues, ['prohibited'], 'Permission conflict: same action is both autonomous and prohibited');
+        break;
+      }
+    }
+
+    return issues.length > 0 ? fail(issues) : ok(data as unknown as AgentContract);
+  }
+};
 
 // ============================================================================
 // VALIDATION FUNCTIONS
@@ -377,7 +566,8 @@ export function validateContract(contract: unknown): ValidationResult {
     // Check for unused entities
     const usedEntities = new Set<string>();
     for (const step of data.workflow.steps) {
-      if (step.config?.entity) usedEntities.add(step.config.entity);
+      const entity = step.config?.entity;
+      if (typeof entity === 'string') usedEntities.add(entity);
     }
     
     for (const entity of data.entities) {
@@ -443,7 +633,7 @@ export function validateEntity(entity: unknown): ValidationResult {
   
   return {
     valid: result.success,
-    errors: result.success ? [] : result.error.issues.map((issue: z.ZodIssue) => ({
+    errors: result.success ? [] : result.error.issues.map((issue: Issue) => ({
       path: issue.path.join('.'),
       code: `ENTITY_${issue.code.toUpperCase()}`,
       message: issue.message
@@ -460,7 +650,7 @@ export function validateWorkflow(workflow: unknown): ValidationResult {
   
   return {
     valid: result.success,
-    errors: result.success ? [] : result.error.issues.map((issue: z.ZodIssue) => ({
+    errors: result.success ? [] : result.error.issues.map((issue: Issue) => ({
       path: issue.path.join('.'),
       code: `WORKFLOW_${issue.code.toUpperCase()}`,
       message: issue.message
@@ -499,7 +689,7 @@ export function validateSafetyRails(rails: unknown): ValidationResult {
   
   return {
     valid: result.success,
-    errors: result.success ? [] : result.error.issues.map((issue: z.ZodIssue) => ({
+    errors: result.success ? [] : result.error.issues.map((issue: Issue) => ({
       path: issue.path.join('.'),
       code: `SAFETY_${issue.code.toUpperCase()}`,
       message: issue.message

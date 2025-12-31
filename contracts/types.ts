@@ -430,7 +430,12 @@ export class AgentContractBuilder {
   }
 
   workflow(workflow: Workflow): this {
-    this.contract.workflow = workflow;
+    this.contract.workflow = {
+      ...workflow,
+      steps: [...workflow.steps],
+      safety: { ...workflow.safety },
+      triggers: workflow.triggers ? [...workflow.triggers] : undefined
+    };
     return this;
   }
 
