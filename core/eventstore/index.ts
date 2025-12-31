@@ -26,6 +26,7 @@ export interface EventMetadata {
   causationId?: string;
   userId?: string;
   source?: string;
+  timestamp?: Date;
 }
 
 export interface AppendResult {
@@ -235,7 +236,7 @@ export class EventStoreDBClient implements IEventStore {
       throw new Error(`EventStore error: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as any;
     const events: StoredEvent[] = data.entries?.map((entry: any) => ({
       id: entry.eventId,
       streamId,
@@ -265,7 +266,7 @@ export class EventStoreDBClient implements IEventStore {
       throw new Error(`EventStore error: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as any;
     const events: StoredEvent[] = data.entries?.map((entry: any) => ({
       id: entry.eventId,
       streamId: entry.streamId,

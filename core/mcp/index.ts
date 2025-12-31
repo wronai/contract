@@ -106,8 +106,8 @@ export interface MCPCapabilities {
 export class ReclappMCPServer {
   private config: MCPServerConfig;
   private resources: Map<string, MCPResourceHandler> = new Map();
-  private tools: Map<string, MCPToolHandler> = new Map();
-  private prompts: Map<string, MCPPromptHandler> = new Map();
+  private tools: Map<string, MCPToolDefinition> = new Map();
+  private prompts: Map<string, MCPPromptDefinition> = new Map();
 
   constructor() {
     this.config = {
