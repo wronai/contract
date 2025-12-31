@@ -12,7 +12,7 @@
 #
 # ============================================================================
 
-.PHONY: help install dev build test lint clean docker-build up down docker-logs docker-restart publish release stop stop-docker stop-dev
+.PHONY: help install dev build test lint clean docker-build up down docker-logs logs docker-restart publish release stop stop-docker stop-dev
 
 # Colors for output
 BLUE := \033[0;34m
@@ -231,6 +231,8 @@ down: ## Stop Docker services
 
 docker-logs: ## Show Docker logs
 	docker compose logs -f
+
+logs: docker-logs ## Alias for docker-logs
 
 docker-restart: down up ## Restart Docker services
 

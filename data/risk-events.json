@@ -1,0 +1,129 @@
+{
+  "riskEvents": [
+    {
+      "id": "risk-001",
+      "entityId": "cust-007",
+      "entityType": "customer",
+      "eventType": "financial_decline",
+      "severity": "critical",
+      "description": "Significant drop in revenue (-45%) detected in quarterly report",
+      "timestamp": "2024-12-28T10:30:00Z",
+      "resolved": false
+    },
+    {
+      "id": "risk-002",
+      "entityId": "cont-005",
+      "entityType": "contractor",
+      "eventType": "payment_delay",
+      "severity": "high",
+      "description": "Multiple payment delays over 60 days in last quarter",
+      "timestamp": "2024-12-27T14:15:00Z",
+      "resolved": false
+    },
+    {
+      "id": "risk-003",
+      "entityId": "cust-004",
+      "entityType": "customer",
+      "eventType": "credit_downgrade",
+      "severity": "medium",
+      "description": "Credit rating downgraded from A to B by rating agency",
+      "timestamp": "2024-12-26T09:00:00Z",
+      "resolved": false
+    },
+    {
+      "id": "risk-004",
+      "entityId": "cont-003",
+      "entityType": "contractor",
+      "eventType": "board_change",
+      "severity": "medium",
+      "description": "CEO resignation announced, interim management appointed",
+      "timestamp": "2024-12-25T16:45:00Z",
+      "resolved": true
+    },
+    {
+      "id": "risk-005",
+      "entityId": "cust-009",
+      "entityType": "customer",
+      "eventType": "legal_issue",
+      "severity": "high",
+      "description": "Pending lawsuit filed regarding contract dispute",
+      "timestamp": "2024-12-24T11:20:00Z",
+      "resolved": false
+    },
+    {
+      "id": "risk-006",
+      "entityId": "cont-008",
+      "entityType": "contractor",
+      "eventType": "financial_decline",
+      "severity": "medium",
+      "description": "Profit margin decreased by 15% compared to previous year",
+      "timestamp": "2024-12-23T08:30:00Z",
+      "resolved": false
+    },
+    {
+      "id": "risk-007",
+      "entityId": "cust-003",
+      "entityType": "customer",
+      "eventType": "address_change",
+      "severity": "low",
+      "description": "Registered office address changed to new location",
+      "timestamp": "2024-12-22T13:00:00Z",
+      "resolved": true
+    },
+    {
+      "id": "risk-008",
+      "entityId": "cont-005",
+      "entityType": "contractor",
+      "eventType": "status_change",
+      "severity": "critical",
+      "description": "Company status changed to 'suspended' in KRS registry",
+      "timestamp": "2024-12-21T10:00:00Z",
+      "resolved": false
+    },
+    {
+      "id": "risk-009",
+      "entityId": "cust-006",
+      "entityType": "customer",
+      "eventType": "media_negative",
+      "severity": "low",
+      "description": "Minor negative press coverage regarding environmental compliance",
+      "timestamp": "2024-12-20T15:30:00Z",
+      "resolved": true
+    },
+    {
+      "id": "risk-010",
+      "entityId": "cont-004",
+      "entityType": "contractor",
+      "eventType": "payment_delay",
+      "severity": "medium",
+      "description": "Payment delay of 30 days on recent invoice",
+      "timestamp": "2024-12-19T09:45:00Z",
+      "resolved": false
+    },
+    {
+      "id": "risk-011",
+      "entityId": "cust-007",
+      "entityType": "customer",
+      "eventType": "legal_issue",
+      "severity": "critical",
+      "description": "Tax authority investigation initiated",
+      "timestamp": "2024-12-18T14:00:00Z",
+      "resolved": false
+    },
+    {
+      "id": "risk-012",
+      "entityId": "cont-006",
+      "entityType": "contractor",
+      "eventType": "board_change",
+      "severity": "low",
+      "description": "New CFO appointed, strengthening financial management",
+      "timestamp": "2024-12-17T11:15:00Z",
+      "resolved": true
+    }
+  ],
+  "meta": {
+    "source": "reclapp-api",
+    "version": "1.0.0",
+    "lastUpdated": "2024-12-31T00:00:00Z"
+  }
+}

@@ -24,6 +24,13 @@ import {
   Contractor,
   RiskEvent 
 } from '../../modules/mock';
+import { 
+  DataProvider, 
+  loadAllData,
+  Customer as DataCustomer,
+  Contractor as DataContractor,
+  RiskEvent as DataRiskEvent
+} from '../../modules/data-provider';
 
 // ============================================================================
 // TYPES
@@ -487,14 +494,56 @@ function setupWebSocket(wss: WebSocketServer, state: AppState): void {
 // DATA SEEDING
 // ============================================================================
 
-async function seedData(state: AppState, options?: { customers?: number; contractors?: number }): Promise<void> {
-  console.log('Seeding mock data...');
+async function seedData(state: AppState, options?: { customers?: number; contractors?: number; useMock?: boolean }): Promise<void> {
+  const useMock = options?.useMock ?? (process.env.USE_MOCK_DATA === 'true');
+  
+  if (useMock) {
+    console.log('Seeding mock data (random generation)...');
+    // Generate seed data
+    const seedData = generateSeedData({
+      customers: options?.customers || 20,
+      contractors: options?.contractors || 15
+    });
+    await storeSeedData(state, seedData);
+    return;
+  }
 
-  // Generate seed data
-  const seedData = generateSeedData({
-    customers: options?.customers || 20,
-    contractors: options?.contractors || 15
-  });
+  console.log('Loading data from JSON files...');
+  
+  try {
+    const data = await loadAllData();
+    
+    // Convert to expected format
+    const seedData = {
+      customers: data.customers.map(c => ({
+        ...c,
+        id: c.customerId,
+        createdAt: c.createdAt || new Date(),
+        status: c.status as any
+      })) as Customer[],
+      contractors: data.contractors.map(c => ({
+        ...c,
+        id: c.contractorId,
+        createdAt: c.createdAt || new Date()
+      })) as Contractor[],
+      riskEvents: data.riskEvents.map(e => ({
+        ...e,
+        timestamp: new Date(e.timestamp)
+      })) as RiskEvent[]
+    };
+    
+    await storeSeedData(state, seedData);
+  } catch (error: any) {
+    console.warn(`Failed to load from JSON: ${error.message}. Falling back to mock data.`);
+    const seedData = generateSeedData({
+      customers: options?.customers || 20,
+      contractors: options?.contractors || 15
+    });
+    await storeSeedData(state, seedData);
+  }
+}
+
+async function storeSeedData(state: AppState, seedData: { customers: Customer[]; contractors: Contractor[]; riskEvents: RiskEvent[] }): Promise<void> {
 
   // Store in read models
   for (const customer of seedData.customers) {
@@ -528,7 +577,7 @@ async function seedData(state: AppState, options?: { customers?: number; contrac
     }]);
   }
 
-  console.log(`Seeded: ${seedData.customers.length} customers, ${seedData.contractors.length} contractors, ${seedData.riskEvents.length} risk events`);
+  console.log(`Loaded: ${seedData.customers.length} customers, ${seedData.contractors.length} contractors, ${seedData.riskEvents.length} risk events`);
 }
 
 // ============================================================================

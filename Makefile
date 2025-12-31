@@ -145,7 +145,7 @@ dev: ## Start development server with hot reload
 stop: ## Stop all services (Docker + local dev)
 	@echo "$(BLUE)🛑 Stopping all services...$(NC)"
 	@$(MAKE) stop-docker
-	@$(MAKE) stop-dev
+	@$(MAKE) stop-dev || true
 	@echo "$(GREEN)✓ All services stopped$(NC)"
 
 stop-docker: ## Stop Docker services
@@ -157,24 +157,49 @@ stop-docker: ## Stop Docker services
 
 stop-dev: ## Stop local dev processes (API + frontend)
 	@echo "$(BLUE)🧹 Stopping local dev processes...$(NC)"
-	@pkill -f "[a]pi/src/server.ts" >/dev/null 2>&1 || true; \
-	pkill -f "[t]s-node-dev" >/dev/null 2>&1 || true; \
-	pkill -f "[v]ite" >/dev/null 2>&1 || true; \
-	pids=""; \
+	@self=$$$$; parent=$$PPID; \
+	pids=$$(pgrep -f "api/src/server.ts|ts-node-dev|vite" 2>/dev/null | sort -u || true); \
+	pids_by_port=""; \
 	if command -v ss >/dev/null 2>&1; then \
-		pids=$$(ss -ltnp 2>/dev/null | awk -v port="$(PORT)" 'NR>1 && $$4 ~ ":"port"$$" { if (match($$0, /pid=([0-9]+)/, m)) print m[1]; }' | sort -u); \
+		pids_by_port=$$(ss -ltnp 2>/dev/null | awk -v port="$(PORT)" 'NR>1 && $$4 ~ ":"port"$$" { if (match($$0, /pid=([0-9]+)/, m)) print m[1]; }' | sort -u); \
 	elif command -v lsof >/dev/null 2>&1; then \
-		pids=$$(lsof -tiTCP:$(PORT) -sTCP:LISTEN 2>/dev/null | sort -u); \
+		pids_by_port=$$(lsof -tiTCP:$(PORT) -sTCP:LISTEN 2>/dev/null | sort -u); \
 	fi; \
-	for pid in $$pids; do \
+	for pid in $$pids $$pids_by_port; do \
+		[ "$$pid" = "$$self" ] && continue; \
+		[ "$$pid" = "$$parent" ] && continue; \
 		args=$$(ps -p $$pid -o args= 2>/dev/null || true); \
-		echo "$$args" | grep -E "(node|ts-node|ts-node-dev|vite)" >/dev/null 2>&1 && kill -TERM $$pid >/dev/null 2>&1 || true; \
+		echo "$$args" | grep -E "(node|ts-node|ts-node-dev|vite)" >/dev/null 2>&1 || continue; \
+		kill -TERM $$pid >/dev/null 2>&1 || true; \
 	done; \
 	sleep 0.2; \
-	for pid in $$pids; do \
+	for pid in $$pids $$pids_by_port; do \
+		[ "$$pid" = "$$self" ] && continue; \
+		[ "$$pid" = "$$parent" ] && continue; \
 		args=$$(ps -p $$pid -o args= 2>/dev/null || true); \
-		echo "$$args" | grep -E "(node|ts-node|ts-node-dev|vite)" >/dev/null 2>&1 && kill -KILL $$pid >/dev/null 2>&1 || true; \
+		echo "$$args" | grep -E "(node|ts-node|ts-node-dev|vite)" >/dev/null 2>&1 || continue; \
+		kill -KILL $$pid >/dev/null 2>&1 || true; \
 	done
+
+# ============================================================================
+# AUTO (opinionated workflows)
+# ============================================================================
+
+auto-up: ## Stop everything, then start root Docker stack
+	@$(MAKE) stop
+	@$(MAKE) up
+
+auto-b2b: ## Stop everything, then start B2B example
+	@$(MAKE) stop
+	@$(MAKE) example-b2b-up
+
+auto-iot: ## Stop everything, then start IoT example
+	@$(MAKE) stop
+	@$(MAKE) example-iot-up
+
+auto-agent: ## Stop everything, then start Multi-Agent example
+	@$(MAKE) stop
+	@$(MAKE) example-agent-up
 
 dev-api: ## Start only API server
 	@echo "$(BLUE)🚀 Starting API server...$(NC)"

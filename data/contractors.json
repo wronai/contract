@@ -1,0 +1,159 @@
+{
+  "contractors": [
+    {
+      "contractorId": "cont-001",
+      "name": "BuildPro Construction Sp. z o.o.",
+      "nip": "6271234567",
+      "krs": "0001123456",
+      "regon": "111234567",
+      "address": {
+        "street": "ul. Budowlana 45",
+        "city": "Warszawa",
+        "postalCode": "02-100",
+        "country": "Polska"
+      },
+      "category": "construction",
+      "status": "active",
+      "rating": 8.5,
+      "riskScore": 25,
+      "totalOrders": 45,
+      "totalValue": 2500000
+    },
+    {
+      "contractorId": "cont-002",
+      "name": "IT Services Pro S.A.",
+      "nip": "6271234568",
+      "krs": "0001234567",
+      "regon": "222345678",
+      "address": {
+        "street": "ul. Informatyczna 12",
+        "city": "Kraków",
+        "postalCode": "31-100",
+        "country": "Polska"
+      },
+      "category": "it_services",
+      "status": "active",
+      "rating": 9.2,
+      "riskScore": 15,
+      "totalOrders": 120,
+      "totalValue": 4500000
+    },
+    {
+      "contractorId": "cont-003",
+      "name": "LogiTrans Sp. z o.o.",
+      "nip": "6271234569",
+      "krs": "0001345678",
+      "regon": "333456789",
+      "address": {
+        "street": "ul. Transportowa 80",
+        "city": "Gdynia",
+        "postalCode": "81-300",
+        "country": "Polska"
+      },
+      "category": "logistics",
+      "status": "active",
+      "rating": 7.8,
+      "riskScore": 35,
+      "totalOrders": 89,
+      "totalValue": 1800000
+    },
+    {
+      "contractorId": "cont-004",
+      "name": "CleanEnergy Solutions",
+      "nip": "6271234570",
+      "regon": "444567890",
+      "address": {
+        "street": "ul. Solarna 25",
+        "city": "Wrocław",
+        "postalCode": "51-200",
+        "country": "Polska"
+      },
+      "category": "energy",
+      "status": "active",
+      "rating": 8.0,
+      "riskScore": 40,
+      "totalOrders": 32,
+      "totalValue": 3200000
+    },
+    {
+      "contractorId": "cont-005",
+      "name": "SecureGuard Sp. z o.o.",
+      "nip": "6271234571",
+      "krs": "0001567890",
+      "regon": "555678901",
+      "address": {
+        "street": "ul. Bezpieczna 10",
+        "city": "Poznań",
+        "postalCode": "61-100",
+        "country": "Polska"
+      },
+      "category": "security",
+      "status": "suspended",
+      "rating": 6.5,
+      "riskScore": 70,
+      "totalOrders": 28,
+      "totalValue": 450000
+    },
+    {
+      "contractorId": "cont-006",
+      "name": "MediaPrint S.A.",
+      "nip": "6271234572",
+      "krs": "0001678901",
+      "regon": "666789012",
+      "address": {
+        "street": "ul. Drukarska 55",
+        "city": "Łódź",
+        "postalCode": "91-400",
+        "country": "Polska"
+      },
+      "category": "printing",
+      "status": "active",
+      "rating": 7.5,
+      "riskScore": 30,
+      "totalOrders": 156,
+      "totalValue": 890000
+    },
+    {
+      "contractorId": "cont-007",
+      "name": "FoodSupply Partners",
+      "nip": "6271234573",
+      "krs": "0001789012",
+      "regon": "777890123",
+      "address": {
+        "street": "ul. Spożywcza 100",
+        "city": "Lublin",
+        "postalCode": "20-100",
+        "country": "Polska"
+      },
+      "category": "food_supply",
+      "status": "active",
+      "rating": 8.8,
+      "riskScore": 20,
+      "totalOrders": 234,
+      "totalValue": 5600000
+    },
+    {
+      "contractorId": "cont-008",
+      "name": "TechRepair Services",
+      "nip": "6271234574",
+      "regon": "888901234",
+      "address": {
+        "street": "ul. Serwisowa 8",
+        "city": "Katowice",
+        "postalCode": "40-200",
+        "country": "Polska"
+      },
+      "category": "maintenance",
+      "status": "active",
+      "rating": 7.2,
+      "riskScore": 45,
+      "totalOrders": 67,
+      "totalValue": 320000
+    }
+  ],
+  "meta": {
+    "source": "reclapp-api",
+    "version": "1.0.0",
+    "lastUpdated": "2024-12-31T00:00:00Z"
+  }
+}

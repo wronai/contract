@@ -1,0 +1,197 @@
+{
+  "customers": [
+    {
+      "customerId": "cust-001",
+      "name": "TechCorp Sp. z o.o.",
+      "nip": "5271234567",
+      "krs": "0000123456",
+      "regon": "123456789",
+      "address": {
+        "street": "ul. Marszałkowska 100",
+        "city": "Warszawa",
+        "postalCode": "00-001",
+        "country": "Polska"
+      },
+      "segment": "enterprise",
+      "onboardingStatus": "verified",
+      "riskScore": 25,
+      "creditLimit": 500000,
+      "paymentTerms": 60,
+      "status": "active"
+    },
+    {
+      "customerId": "cust-002",
+      "name": "DataFlow Solutions S.A.",
+      "nip": "5271234568",
+      "krs": "0000234567",
+      "regon": "234567890",
+      "address": {
+        "street": "ul. Krakowska 50",
+        "city": "Kraków",
+        "postalCode": "30-001",
+        "country": "Polska"
+      },
+      "segment": "enterprise",
+      "onboardingStatus": "verified",
+      "riskScore": 35,
+      "creditLimit": 350000,
+      "paymentTerms": 45,
+      "status": "active"
+    },
+    {
+      "customerId": "cust-003",
+      "name": "SmartBuild Sp. z o.o.",
+      "nip": "5271234569",
+      "krs": "0000345678",
+      "regon": "345678901",
+      "address": {
+        "street": "ul. Wrocławska 25",
+        "city": "Wrocław",
+        "postalCode": "50-001",
+        "country": "Polska"
+      },
+      "segment": "sme",
+      "onboardingStatus": "verified",
+      "riskScore": 45,
+      "creditLimit": 150000,
+      "paymentTerms": 30,
+      "status": "active"
+    },
+    {
+      "customerId": "cust-004",
+      "name": "InnovateTech Startup",
+      "nip": "5271234570",
+      "regon": "456789012",
+      "address": {
+        "street": "ul. Gdańska 10",
+        "city": "Gdańsk",
+        "postalCode": "80-001",
+        "country": "Polska"
+      },
+      "segment": "startup",
+      "onboardingStatus": "pending",
+      "riskScore": 60,
+      "creditLimit": 25000,
+      "paymentTerms": 14,
+      "status": "pending"
+    },
+    {
+      "customerId": "cust-005",
+      "name": "LogiChain Sp. z o.o.",
+      "nip": "5271234571",
+      "krs": "0000567890",
+      "regon": "567890123",
+      "address": {
+        "street": "ul. Poznańska 75",
+        "city": "Poznań",
+        "postalCode": "60-001",
+        "country": "Polska"
+      },
+      "segment": "sme",
+      "onboardingStatus": "verified",
+      "riskScore": 40,
+      "creditLimit": 200000,
+      "paymentTerms": 30,
+      "status": "active"
+    },
+    {
+      "customerId": "cust-006",
+      "name": "CloudServices Pro S.A.",
+      "nip": "5271234572",
+      "krs": "0000678901",
+      "regon": "678901234",
+      "address": {
+        "street": "ul. Łódzka 120",
+        "city": "Łódź",
+        "postalCode": "90-001",
+        "country": "Polska"
+      },
+      "segment": "enterprise",
+      "onboardingStatus": "verified",
+      "riskScore": 20,
+      "creditLimit": 750000,
+      "paymentTerms": 60,
+      "status": "active"
+    },
+    {
+      "customerId": "cust-007",
+      "name": "MediTech Solutions",
+      "nip": "5271234573",
+      "krs": "0000789012",
+      "regon": "789012345",
+      "address": {
+        "street": "ul. Szpitalna 5",
+        "city": "Katowice",
+        "postalCode": "40-001",
+        "country": "Polska"
+      },
+      "segment": "sme",
+      "onboardingStatus": "rejected",
+      "riskScore": 85,
+      "creditLimit": 0,
+      "paymentTerms": 0,
+      "status": "rejected"
+    },
+    {
+      "customerId": "cust-008",
+      "name": "GreenEnergy Sp. z o.o.",
+      "nip": "5271234574",
+      "krs": "0000890123",
+      "regon": "890123456",
+      "address": {
+        "street": "ul. Ekologiczna 30",
+        "city": "Szczecin",
+        "postalCode": "70-001",
+        "country": "Polska"
+      },
+      "segment": "sme",
+      "onboardingStatus": "verified",
+      "riskScore": 30,
+      "creditLimit": 180000,
+      "paymentTerms": 30,
+      "status": "active"
+    },
+    {
+      "customerId": "cust-009",
+      "name": "FinTech Innovations",
+      "nip": "5271234575",
+      "regon": "901234567",
+      "address": {
+        "street": "ul. Bankowa 15",
+        "city": "Warszawa",
+        "postalCode": "00-100",
+        "country": "Polska"
+      },
+      "segment": "startup",
+      "onboardingStatus": "pending",
+      "riskScore": 55,
+      "creditLimit": 50000,
+      "paymentTerms": 14,
+      "status": "pending"
+    },
+    {
+      "customerId": "cust-010",
+      "name": "AutoParts Industries S.A.",
+      "nip": "5271234576",
+      "krs": "0001012345",
+      "regon": "012345678",
+      "address": {
+        "street": "ul. Przemysłowa 200",
+        "city": "Bielsko-Biała",
+        "postalCode": "43-300",
+        "country": "Polska"
+      },
+      "segment": "enterprise",
+      "onboardingStatus": "verified",
+      "riskScore": 15,
+      "creditLimit": 1000000,
+      "paymentTerms": 90,
+      "status": "active"
+    }
+  ],
+  "meta": {
+    "source": "reclapp-api",
+    "version": "1.0.0",
+    "lastUpdated": "2024-12-31T00:00:00Z"
+  }
+}
