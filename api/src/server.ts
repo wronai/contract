@@ -11,11 +11,11 @@ import { WebSocketServer, WebSocket } from 'ws';
 import http from 'http';
 import path from 'path';
 
-import { parse, parseFile, formatAST } from '../dsl/parser';
-import { validate } from '../dsl/validator';
-import { createEventStore, InMemoryEventStore } from '../core/eventstore';
-import { CQRSContainer, InMemoryReadModel } from '../core/cqrs';
-import { ExecutionPlanner, GraphExecutor } from '../core/planner';
+import { parse, parseFile, formatAST } from '../../dsl/parser';
+import { validate } from '../../dsl/validator';
+import { createEventStore, InMemoryEventStore } from '../../core/eventstore';
+import { CQRSContainer, InMemoryReadModel } from '../../core/cqrs';
+import { ExecutionPlanner, GraphExecutor } from '../../core/planner';
 import { 
   generateSeedData, 
   customerToEvents, 
@@ -23,7 +23,7 @@ import {
   Customer,
   Contractor,
   RiskEvent 
-} from '../modules/mock';
+} from '../../modules/mock';
 
 // ============================================================================
 // TYPES
@@ -60,7 +60,7 @@ export function createServer(port: number = 8080): { app: express.Application; s
   // Middleware
   app.use(cors());
   app.use(express.json({ limit: '10mb' }));
-  app.use(express.static(path.join(__dirname, '../frontend/public')));
+  app.use(express.static(path.join(__dirname, '../../frontend/public')));
 
   // Request logging
   app.use((req, res, next) => {
