@@ -1,0 +1,323 @@
+// SaaS Starter - Reclapp Contract
+// Multi-tenant SaaS application with subscriptions, billing, and user management
+// Version 2.1.0
+
+// =============================================================================
+// DATA SOURCES
+// =============================================================================
+
+SOURCE stripeApi {
+  TYPE rest
+  URL "https://api.stripe.com/v1"
+  AUTH bearer
+  CACHE_DURATION "5m"
+}
+
+SOURCE authProvider {
+  TYPE rest
+  URL "${AUTH_PROVIDER_URL}"
+  AUTH oauth2
+}
+
+// =============================================================================
+// ENTITIES
+// =============================================================================
+
+ENTITY Organization {
+  name: String
+  slug: String @unique
+  plan: String
+  status: String
+  ownerId: String
+  settings: JSON?
+  createdAt: DateTime @generated
+}
+
+ENTITY User {
+  email: String @unique
+  name: String
+  role: String
+  organizationId: String
+  avatarUrl: String?
+  lastLoginAt: DateTime?
+  isActive: Boolean
+  createdAt: DateTime @generated
+}
+
+ENTITY Subscription {
+  organizationId: String
+  stripeSubscriptionId: String @unique
+  plan: String
+  status: String
+  currentPeriodStart: DateTime
+  currentPeriodEnd: DateTime
+  cancelAtPeriodEnd: Boolean
+  quantity: Int
+}
+
+ENTITY Invoice {
+  organizationId: String
+  stripeInvoiceId: String @unique
+  subscriptionId: String?
+  amount: Decimal
+  currency: String
+  status: String
+  paidAt: DateTime?
+  dueDate: DateTime
+  invoiceUrl: String?
+}
+
+ENTITY Usage {
+  organizationId: String
+  metric: String
+  value: Int
+  period: String
+  recordedAt: DateTime @generated
+}
+
+ENTITY AuditLog {
+  organizationId: String
+  userId: String
+  action: String
+  resource: String
+  resourceId: String?
+  metadata: JSON?
+  ipAddress: String?
+  createdAt: DateTime @generated
+}
+
+// =============================================================================
+// EVENTS
+// =============================================================================
+
+EVENT UserSignedUp {
+  userId: String
+  email: String
+  organizationId: String
+  source: String
+  timestamp: DateTime
+}
+
+EVENT SubscriptionChanged {
+  organizationId: String
+  subscriptionId: String
+  previousPlan: String?
+  newPlan: String
+  changeType: String
+  timestamp: DateTime
+}
+
+EVENT PaymentReceived {
+  organizationId: String
+  invoiceId: String
+  amount: Decimal
+  currency: String
+  timestamp: DateTime
+}
+
+EVENT PaymentFailed {
+  organizationId: String
+  invoiceId: String
+  amount: Decimal
+  reason: String
+  timestamp: DateTime
+}
+
+EVENT UsageLimitApproaching {
+  organizationId: String
+  metric: String
+  currentUsage: Int
+  limit: Int
+  percentUsed: Float
+  timestamp: DateTime
+}
+
+// =============================================================================
+// PIPELINES
+// =============================================================================
+
+PIPELINE OnboardingFlow {
+  INPUT UserSignedUp.stream
+  TRANSFORM [createOrganization, setupDefaults, sendWelcomeEmail]
+  OUTPUT [dashboard, notifications]
+  SCHEDULE "immediate"
+}
+
+PIPELINE BillingSync {
+  INPUT stripeApi.webhooks
+  TRANSFORM [validateEvent, processPayment, updateSubscription]
+  OUTPUT [invoices, notifications]
+}
+
+PIPELINE UsageTracking {
+  INPUT Usage.stream
+  TRANSFORM [aggregate, checkLimits]
+  OUTPUT [metrics, alerts]
+  SCHEDULE "*/5 * * * *"
+}
+
+PIPELINE ChurnPrediction {
+  INPUT [Subscription.changes, Usage.stream, AuditLog.stream]
+  TRANSFORM [analyzeEngagement, calculateChurnRisk]
+  OUTPUT [dashboard, alerts]
+  SCHEDULE "0 0 * * *"
+}
+
+// =============================================================================
+// ALERTS
+// =============================================================================
+
+ALERT "Payment Failed" {
+  ENTITY Invoice
+  CONDITION status == "failed"
+  TARGET [email, slack]
+  SEVERITY critical
+  THROTTLE "1h"
+}
+
+ALERT "Subscription Cancelled" {
+  ENTITY Subscription
+  CONDITION cancelAtPeriodEnd == true
+  TARGET [email, slack]
+  SEVERITY high
+}
+
+ALERT "Usage Limit 80%" {
+  ENTITY Usage
+  CONDITION value > (limit * 0.8)
+  TARGET [email, dashboard]
+  SEVERITY medium
+}
+
+ALERT "Trial Expiring" {
+  ENTITY Subscription
+  CONDITION plan == "trial" AND daysUntilEnd < 3
+  TARGET [email]
+  SEVERITY medium
+}
+
+// =============================================================================
+// DASHBOARDS
+// =============================================================================
+
+DASHBOARD "SaaS Metrics" {
+  ENTITY Organization
+  METRICS [
+    "mrr",
+    "arr",
+    "activeOrganizations",
+    "trialConversions",
+    "churnRate",
+    "ltv",
+    "cac"
+  ]
+  LAYOUT grid
+  REFRESH_INTERVAL "1m"
+}
+
+DASHBOARD "Revenue Analytics" {
+  ENTITY Invoice
+  METRICS [
+    "totalRevenue",
+    "revenueByPlan",
+    "paymentSuccessRate",
+    "avgRevenuePerUser"
+  ]
+  STREAM_MODE polling
+  LAYOUT tabs
+}
+
+DASHBOARD "User Activity" {
+  ENTITY AuditLog
+  METRICS [
+    "dailyActiveUsers",
+    "weeklyActiveUsers",
+    "monthlyActiveUsers",
+    "topActions"
+  ]
+  STREAM_MODE realtime
+}
+
+// =============================================================================
+// WORKFLOWS
+// =============================================================================
+
+WORKFLOW TrialToSubscription {
+  TRIGGER Subscription.trialEnding
+  
+  STEP sendReminder {
+    ACTION sendEmail
+    ON_SUCCESS waitForResponse
+    ON_FAILURE logFailure
+  }
+  
+  STEP checkConversion {
+    ACTION checkSubscriptionStatus
+    ON_SUCCESS activateSubscription
+    ON_FAILURE sendFinalReminder
+  }
+  
+  STEP activateSubscription {
+    ACTION updateStatus
+    ON_SUCCESS sendWelcome
+  }
+}
+
+WORKFLOW DunningFlow {
+  TRIGGER PaymentFailed.event
+  
+  STEP retryPayment {
+    ACTION chargeCard
+    ON_SUCCESS confirmPayment
+    ON_FAILURE sendPaymentReminder
+    TIMEOUT "24h"
+  }
+  
+  STEP sendPaymentReminder {
+    ACTION sendEmail
+    ON_SUCCESS waitForPayment
+    ON_FAILURE escalate
+  }
+  
+  STEP escalate {
+    ACTION suspendAccount
+    ON_SUCCESS notifyAdmin
+  }
+}
+
+// =============================================================================
+// DEVICE INTEGRATIONS (for mobile/desktop apps)
+// =============================================================================
+
+DEVICE "Mobile App" {
+  TYPE mobile
+  PROTOCOL https
+  
+  SUBSCRIBE [
+    User.notifications,
+    Organization.updates
+  ]
+  
+  PUBLISH [
+    Usage.events,
+    AuditLog.entries
+  ]
+}
+
+// =============================================================================
+// CONFIG
+// =============================================================================
+
+CONFIG billing {
+  currency: "USD"
+  trialDays: 14
+  gracePeriodDays: 3
+  dunningRetries: 3
+}
+
+CONFIG limits {
+  free_apiCalls: 1000
+  starter_apiCalls: 10000
+  pro_apiCalls: 100000
+  enterprise_apiCalls: -1
+}

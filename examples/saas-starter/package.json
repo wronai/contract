@@ -1,0 +1,15 @@
+{
+  "name": "reclapp-saas-starter",
+  "version": "1.0.0",
+  "description": "SaaS Starter Example - Multi-tenant application with subscriptions",
+  "scripts": {
+    "generate": "cd ../.. && npx ts-node generator/cli.ts generate examples/saas-starter/contracts/main.reclapp -o examples/saas-starter/src -t full-stack",
+    "dev": "npm run generate && cd src && npm run dev",
+    "build": "npm run generate && cd src && npm run build",
+    "docker:up": "docker-compose up -d --build",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "keywords": ["reclapp", "saas", "subscription", "billing"],
+  "license": "MIT"
+}

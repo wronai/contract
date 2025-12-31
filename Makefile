@@ -155,9 +155,9 @@ stop-docker: ## Stop Docker services
 	@$(MAKE) example-iot-down >/dev/null 2>&1 || true
 	@$(MAKE) example-agent-down >/dev/null 2>&1 || true
 
-stop-dev: ## Stop local dev processes (API + frontend)
+stop-dev: ## Stop local dev processes (API + frontend). Use DEBUG=1 for verbose output.
 	@echo "$(BLUE)🧹 Stopping local dev processes...$(NC)"
-	@self=$$$$; parent=$$PPID; \
+	@self=$$$$; parent=$$PPID; make_pids=$$(pgrep -f "^make" 2>/dev/null | tr '\n' ' ' || true); \
 	pids=$$(pgrep -f "api/src/server.ts|ts-node-dev|vite" 2>/dev/null | sort -u || true); \
 	pids_by_port=""; \
 	if command -v ss >/dev/null 2>&1; then \
@@ -165,20 +165,30 @@ stop-dev: ## Stop local dev processes (API + frontend)
 	elif command -v lsof >/dev/null 2>&1; then \
 		pids_by_port=$$(lsof -tiTCP:$(PORT) -sTCP:LISTEN 2>/dev/null | sort -u); \
 	fi; \
+	[ "$(DEBUG)" = "1" ] && echo "[DEBUG] self=$$self parent=$$parent make_pids=$$make_pids"; \
+	[ "$(DEBUG)" = "1" ] && echo "[DEBUG] pids from pgrep: $$pids"; \
+	[ "$(DEBUG)" = "1" ] && echo "[DEBUG] pids from port $(PORT): $$pids_by_port"; \
 	for pid in $$pids $$pids_by_port; do \
-		[ "$$pid" = "$$self" ] && continue; \
-		[ "$$pid" = "$$parent" ] && continue; \
+		[ -z "$$pid" ] && continue; \
+		[ "$$pid" = "$$self" ] && { [ "$(DEBUG)" = "1" ] && echo "[DEBUG] skip self $$pid"; continue; }; \
+		[ "$$pid" = "$$parent" ] && { [ "$(DEBUG)" = "1" ] && echo "[DEBUG] skip parent $$pid"; continue; }; \
+		echo " $$make_pids " | grep -q " $$pid " && { [ "$(DEBUG)" = "1" ] && echo "[DEBUG] skip make $$pid"; continue; }; \
 		args=$$(ps -p $$pid -o args= 2>/dev/null || true); \
-		echo "$$args" | grep -E "(node|ts-node|ts-node-dev|vite)" >/dev/null 2>&1 || continue; \
-		kill -TERM $$pid >/dev/null 2>&1 || true; \
+		echo "$$args" | grep -qE "(node|ts-node|ts-node-dev|vite)" || { [ "$(DEBUG)" = "1" ] && echo "[DEBUG] skip non-node $$pid: $$args"; continue; }; \
+		echo "$$args" | grep -qE "(make|Makefile)" && { [ "$(DEBUG)" = "1" ] && echo "[DEBUG] skip make-related $$pid: $$args"; continue; }; \
+		[ "$(DEBUG)" = "1" ] && echo "[DEBUG] killing $$pid: $$args"; \
+		kill -TERM $$pid 2>/dev/null || true; \
 	done; \
 	sleep 0.2; \
 	for pid in $$pids $$pids_by_port; do \
+		[ -z "$$pid" ] && continue; \
 		[ "$$pid" = "$$self" ] && continue; \
 		[ "$$pid" = "$$parent" ] && continue; \
+		echo " $$make_pids " | grep -q " $$pid " && continue; \
 		args=$$(ps -p $$pid -o args= 2>/dev/null || true); \
-		echo "$$args" | grep -E "(node|ts-node|ts-node-dev|vite)" >/dev/null 2>&1 || continue; \
-		kill -KILL $$pid >/dev/null 2>&1 || true; \
+		echo "$$args" | grep -qE "(node|ts-node|ts-node-dev|vite)" || continue; \
+		echo "$$args" | grep -qE "(make|Makefile)" && continue; \
+		kill -KILL $$pid 2>/dev/null || true; \
 	done
 
 # ============================================================================

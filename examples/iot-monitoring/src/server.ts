@@ -73,33 +73,55 @@ interface TelemetryData {
   timestamp: string;
 }
 
-function connectMQTT() {
-  mqttClient = mqtt.connect(config.mqtt.broker);
-  
-  mqttClient.on('connect', () => {
-    console.log('✓ MQTT connected');
+function connectMQTT(retries = 5, delay = 3000): Promise<void> {
+  return new Promise((resolve) => {
+    let attempt = 0;
     
-    // Subscribe to device topics
-    mqttClient.subscribe('devices/+/telemetry');
-    mqttClient.subscribe('devices/+/status');
-    mqttClient.subscribe('devices/+/alerts');
-  });
-  
-  mqttClient.on('message', async (topic: string, message: Buffer) => {
-    try {
-      const parts = topic.split('/');
-      const deviceId = parts[1];
-      const messageType = parts[2];
-      const payload = JSON.parse(message.toString());
+    const tryConnect = () => {
+      attempt++;
+      console.log(`MQTT connecting (attempt ${attempt}/${retries})...`);
       
-      await handleDeviceMessage(deviceId, messageType, payload);
-    } catch (error) {
-      console.error('Error processing MQTT message:', error);
-    }
-  });
-  
-  mqttClient.on('error', (error) => {
-    console.error('MQTT error:', error);
+      mqttClient = mqtt.connect(config.mqtt.broker, {
+        reconnectPeriod: 5000,
+        connectTimeout: 10000
+      });
+      
+      mqttClient.on('connect', () => {
+        console.log('✓ MQTT connected');
+        
+        // Subscribe to device topics
+        mqttClient.subscribe('devices/+/telemetry');
+        mqttClient.subscribe('devices/+/status');
+        mqttClient.subscribe('devices/+/alerts');
+        resolve();
+      });
+      
+      mqttClient.on('message', async (topic: string, message: Buffer) => {
+        try {
+          const parts = topic.split('/');
+          const deviceId = parts[1];
+          const messageType = parts[2];
+          const payload = JSON.parse(message.toString());
+          
+          await handleDeviceMessage(deviceId, messageType, payload);
+        } catch (error) {
+          console.error('Error processing MQTT message:', error);
+        }
+      });
+      
+      mqttClient.on('error', (error) => {
+        console.error('MQTT error:', error);
+        if (attempt < retries) {
+          mqttClient.end(true);
+          setTimeout(tryConnect, delay);
+        } else {
+          console.warn('MQTT connection failed after max retries, continuing without MQTT');
+          resolve();
+        }
+      });
+    };
+    
+    tryConnect();
   });
 }
 
@@ -383,8 +405,8 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
 async function start() {
   try {
-    // Connect to MQTT
-    connectMQTT();
+    // Connect to MQTT (with retries)
+    await connectMQTT();
     
     app.listen(config.port, () => {
       console.log(`

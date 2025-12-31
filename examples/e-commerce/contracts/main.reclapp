@@ -1,0 +1,437 @@
+// E-Commerce Platform - Reclapp Contract
+// Full e-commerce solution with products, orders, inventory, and payments
+// Version 2.1.0
+
+// =============================================================================
+// DATA SOURCES
+// =============================================================================
+
+SOURCE inventoryApi {
+  TYPE rest
+  URL "${INVENTORY_API_URL}"
+  AUTH apiKey
+  CACHE_DURATION "1m"
+}
+
+SOURCE paymentGateway {
+  TYPE rest
+  URL "https://api.stripe.com/v1"
+  AUTH bearer
+}
+
+SOURCE shippingProvider {
+  TYPE rest
+  URL "${SHIPPING_API_URL}"
+  AUTH apiKey
+}
+
+// =============================================================================
+// ENTITIES
+// =============================================================================
+
+ENTITY Product {
+  sku: String @unique
+  name: String
+  description: String?
+  price: Decimal
+  compareAtPrice: Decimal?
+  cost: Decimal?
+  categoryId: String
+  brandId: String?
+  images: JSON
+  attributes: JSON?
+  status: String
+  publishedAt: DateTime?
+  createdAt: DateTime @generated
+}
+
+ENTITY Category {
+  name: String
+  slug: String @unique
+  parentId: String?
+  description: String?
+  imageUrl: String?
+  sortOrder: Int
+}
+
+ENTITY Inventory {
+  productId: String
+  warehouseId: String
+  quantity: Int
+  reservedQuantity: Int
+  lowStockThreshold: Int
+  updatedAt: DateTime @generated
+}
+
+ENTITY Customer {
+  email: String @unique
+  firstName: String
+  lastName: String
+  phone: String?
+  defaultAddressId: String?
+  tags: String[]?
+  totalOrders: Int
+  totalSpent: Decimal
+  lastOrderAt: DateTime?
+  createdAt: DateTime @generated
+}
+
+ENTITY Address {
+  customerId: String
+  type: String
+  firstName: String
+  lastName: String
+  company: String?
+  address1: String
+  address2: String?
+  city: String
+  state: String
+  postalCode: String
+  country: String
+  phone: String?
+  isDefault: Boolean
+}
+
+ENTITY Order {
+  orderNumber: String @unique @generated
+  customerId: String
+  email: String
+  status: String
+  fulfillmentStatus: String
+  paymentStatus: String
+  subtotal: Decimal
+  shippingTotal: Decimal
+  taxTotal: Decimal
+  discountTotal: Decimal
+  total: Decimal
+  currency: String
+  shippingAddressId: String
+  billingAddressId: String
+  notes: String?
+  metadata: JSON?
+  placedAt: DateTime @generated
+}
+
+ENTITY OrderItem {
+  orderId: String
+  productId: String
+  sku: String
+  name: String
+  quantity: Int
+  unitPrice: Decimal
+  total: Decimal
+  fulfillmentStatus: String
+}
+
+ENTITY Cart {
+  sessionId: String @unique
+  customerId: String?
+  items: JSON
+  subtotal: Decimal
+  currency: String
+  expiresAt: DateTime
+  updatedAt: DateTime @generated
+}
+
+ENTITY Coupon {
+  code: String @unique
+  type: String
+  value: Decimal
+  minOrderAmount: Decimal?
+  maxUses: Int?
+  usedCount: Int
+  startsAt: DateTime?
+  expiresAt: DateTime?
+  isActive: Boolean
+}
+
+ENTITY Review {
+  productId: String
+  customerId: String
+  orderId: String?
+  rating: Int @min(1) @max(5)
+  title: String?
+  content: String?
+  isVerified: Boolean
+  status: String
+  createdAt: DateTime @generated
+}
+
+ENTITY Shipment {
+  orderId: String
+  carrier: String
+  trackingNumber: String?
+  status: String
+  shippedAt: DateTime?
+  deliveredAt: DateTime?
+  items: JSON
+}
+
+// =============================================================================
+// EVENTS
+// =============================================================================
+
+EVENT ProductViewed {
+  productId: String
+  customerId: String?
+  sessionId: String
+  source: String
+  timestamp: DateTime
+}
+
+EVENT CartUpdated {
+  cartId: String
+  customerId: String?
+  action: String
+  productId: String
+  quantity: Int
+  timestamp: DateTime
+}
+
+EVENT OrderPlaced {
+  orderId: String
+  customerId: String
+  total: Decimal
+  itemCount: Int
+  timestamp: DateTime
+}
+
+EVENT PaymentProcessed {
+  orderId: String
+  paymentId: String
+  amount: Decimal
+  status: String
+  method: String
+  timestamp: DateTime
+}
+
+EVENT InventoryChanged {
+  productId: String
+  warehouseId: String
+  previousQuantity: Int
+  newQuantity: Int
+  reason: String
+  timestamp: DateTime
+}
+
+EVENT ShipmentUpdated {
+  shipmentId: String
+  orderId: String
+  status: String
+  location: String?
+  timestamp: DateTime
+}
+
+// =============================================================================
+// PIPELINES
+// =============================================================================
+
+PIPELINE OrderProcessing {
+  INPUT OrderPlaced.stream
+  TRANSFORM [
+    validateOrder,
+    processPayment,
+    reserveInventory,
+    sendConfirmation
+  ]
+  OUTPUT [fulfillment, notifications, analytics]
+}
+
+PIPELINE InventorySync {
+  INPUT inventoryApi.changes
+  TRANSFORM [validate, updateStock, checkReorderPoints]
+  OUTPUT [inventory, alerts]
+  SCHEDULE "*/15 * * * *"
+}
+
+PIPELINE RecommendationEngine {
+  INPUT [ProductViewed.stream, OrderPlaced.stream]
+  TRANSFORM [analyzePatterns, generateRecommendations]
+  OUTPUT [recommendations, personalization]
+  SCHEDULE "0 */6 * * *"
+}
+
+PIPELINE AbandonedCartRecovery {
+  INPUT Cart.stale
+  FILTER expiresAt < now() AND customerId != null
+  TRANSFORM [createReminder, calculateDiscount]
+  OUTPUT [email, notifications]
+  SCHEDULE "0 * * * *"
+}
+
+PIPELINE FraudDetection {
+  INPUT [OrderPlaced.stream, PaymentProcessed.stream]
+  TRANSFORM [analyzeRisk, scoreTransaction]
+  OUTPUT [alerts, orderHold]
+}
+
+// =============================================================================
+// ALERTS
+// =============================================================================
+
+ALERT "Low Stock" {
+  ENTITY Inventory
+  CONDITION quantity <= lowStockThreshold
+  TARGET [email, slack, dashboard]
+  SEVERITY medium
+}
+
+ALERT "Out of Stock" {
+  ENTITY Inventory
+  CONDITION quantity == 0
+  TARGET [email, slack]
+  SEVERITY high
+}
+
+ALERT "High Value Order" {
+  ENTITY Order
+  CONDITION total > 1000
+  TARGET [slack]
+  SEVERITY low
+}
+
+ALERT "Payment Failed" {
+  ENTITY Order
+  CONDITION paymentStatus == "failed"
+  TARGET [email, slack]
+  SEVERITY critical
+}
+
+ALERT "Fraud Risk" {
+  ENTITY Order
+  CONDITION fraudScore > 0.8
+  TARGET [slack, email]
+  SEVERITY critical
+  THROTTLE "5m"
+}
+
+ALERT "Delivery Exception" {
+  ENTITY Shipment
+  CONDITION status == "exception"
+  TARGET [email, slack]
+  SEVERITY high
+}
+
+// =============================================================================
+// DASHBOARDS
+// =============================================================================
+
+DASHBOARD "Sales Overview" {
+  ENTITY Order
+  METRICS [
+    "totalRevenue",
+    "orderCount",
+    "avgOrderValue",
+    "conversionRate",
+    "revenueByDay",
+    "topProducts"
+  ]
+  STREAM_MODE realtime
+  LAYOUT grid
+  REFRESH_INTERVAL "30s"
+}
+
+DASHBOARD "Inventory Health" {
+  ENTITY Inventory
+  METRICS [
+    "totalProducts",
+    "lowStockCount",
+    "outOfStockCount",
+    "inventoryValue",
+    "turnoverRate"
+  ]
+  LAYOUT grid
+}
+
+DASHBOARD "Customer Insights" {
+  ENTITY Customer
+  METRICS [
+    "totalCustomers",
+    "newCustomers",
+    "repeatCustomerRate",
+    "customerLifetimeValue",
+    "topCustomers"
+  ]
+  LAYOUT tabs
+}
+
+DASHBOARD "Fulfillment Status" {
+  ENTITY Order
+  METRICS [
+    "pendingOrders",
+    "processingOrders",
+    "shippedOrders",
+    "deliveredOrders",
+    "avgFulfillmentTime"
+  ]
+  STREAM_MODE realtime
+}
+
+// =============================================================================
+// WORKFLOWS
+// =============================================================================
+
+WORKFLOW OrderFulfillment {
+  TRIGGER OrderPlaced.event
+  
+  STEP validateInventory {
+    ACTION checkStock
+    ON_SUCCESS allocateStock
+    ON_FAILURE notifyOutOfStock
+  }
+  
+  STEP allocateStock {
+    ACTION reserveInventory
+    ON_SUCCESS processPayment
+    ON_FAILURE releaseHold
+  }
+  
+  STEP processPayment {
+    ACTION chargeCustomer
+    ON_SUCCESS createShipment
+    ON_FAILURE handlePaymentFailure
+  }
+  
+  STEP createShipment {
+    ACTION generateLabel
+    ON_SUCCESS notifyCustomer
+  }
+}
+
+WORKFLOW ReturnProcessing {
+  TRIGGER ReturnRequested.event
+  
+  STEP validateReturn {
+    ACTION checkReturnPolicy
+    ON_SUCCESS approveReturn
+    ON_FAILURE rejectReturn
+  }
+  
+  STEP approveReturn {
+    ACTION createReturnLabel
+    ON_SUCCESS trackReturn
+  }
+  
+  STEP processRefund {
+    ACTION issueRefund
+    ON_SUCCESS restockInventory
+    ON_FAILURE escalateToSupport
+  }
+}
+
+// =============================================================================
+// CONFIG
+// =============================================================================
+
+CONFIG store {
+  currency: "USD"
+  timezone: "America/New_York"
+  taxIncluded: false
+  freeShippingThreshold: 50
+}
+
+CONFIG inventory {
+  defaultLowStockThreshold: 10
+  reservationTimeout: 900
+  autoReorderEnabled: true
+}

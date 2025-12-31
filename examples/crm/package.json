@@ -1,0 +1,15 @@
+{
+  "name": "reclapp-crm",
+  "version": "1.0.0",
+  "description": "CRM Example - Customer Relationship Management with contacts and deals",
+  "scripts": {
+    "generate": "cd ../.. && npx ts-node generator/cli.ts generate examples/crm/contracts/main.reclapp -o examples/crm/src -t full-stack",
+    "dev": "npm run generate && cd src && npm run dev",
+    "build": "npm run generate && cd src && npm run build",
+    "docker:up": "docker-compose up -d --build",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "keywords": ["reclapp", "crm", "sales", "contacts"],
+  "license": "MIT"
+}

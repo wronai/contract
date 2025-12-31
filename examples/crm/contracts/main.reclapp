@@ -1,0 +1,428 @@
+// CRM System - Reclapp Contract
+// Customer Relationship Management with contacts, deals, and activities
+// Version 2.1.0
+
+// =============================================================================
+// DATA SOURCES
+// =============================================================================
+
+SOURCE linkedInApi {
+  TYPE rest
+  URL "https://api.linkedin.com/v2"
+  AUTH oauth2
+  CACHE_DURATION "1h"
+}
+
+SOURCE emailProvider {
+  TYPE rest
+  URL "${EMAIL_API_URL}"
+  AUTH apiKey
+}
+
+SOURCE calendarApi {
+  TYPE rest
+  URL "https://www.googleapis.com/calendar/v3"
+  AUTH oauth2
+}
+
+// =============================================================================
+// ENTITIES
+// =============================================================================
+
+ENTITY Contact {
+  email: String @unique
+  firstName: String
+  lastName: String
+  phone: String?
+  company: String?
+  jobTitle: String?
+  linkedInUrl: String?
+  source: String
+  status: String
+  ownerId: String
+  tags: String[]?
+  customFields: JSON?
+  lastContactedAt: DateTime?
+  createdAt: DateTime @generated
+}
+
+ENTITY Company {
+  name: String
+  domain: String? @unique
+  industry: String?
+  size: String?
+  revenue: String?
+  website: String?
+  phone: String?
+  address: JSON?
+  ownerId: String
+  status: String
+  createdAt: DateTime @generated
+}
+
+ENTITY Deal {
+  name: String
+  companyId: String?
+  contactId: String?
+  ownerId: String
+  stage: String
+  amount: Decimal
+  currency: String
+  probability: Int
+  expectedCloseDate: DateTime?
+  actualCloseDate: DateTime?
+  lostReason: String?
+  notes: String?
+  customFields: JSON?
+  createdAt: DateTime @generated
+}
+
+ENTITY Activity {
+  type: String
+  subject: String
+  description: String?
+  contactId: String?
+  companyId: String?
+  dealId: String?
+  ownerId: String
+  dueDate: DateTime?
+  completedAt: DateTime?
+  outcome: String?
+  createdAt: DateTime @generated
+}
+
+ENTITY Email {
+  contactId: String
+  dealId: String?
+  subject: String
+  body: String
+  direction: String
+  status: String
+  openedAt: DateTime?
+  clickedAt: DateTime?
+  repliedAt: DateTime?
+  sentAt: DateTime @generated
+}
+
+ENTITY Meeting {
+  title: String
+  description: String?
+  contactIds: String[]
+  dealId: String?
+  ownerId: String
+  startTime: DateTime
+  endTime: DateTime
+  location: String?
+  meetingUrl: String?
+  status: String
+  outcome: String?
+  notes: String?
+}
+
+ENTITY Task {
+  title: String
+  description: String?
+  contactId: String?
+  dealId: String?
+  assignedTo: String
+  dueDate: DateTime
+  priority: String
+  status: String
+  completedAt: DateTime?
+}
+
+ENTITY Note {
+  content: String
+  contactId: String?
+  companyId: String?
+  dealId: String?
+  authorId: String
+  isPinned: Boolean
+  createdAt: DateTime @generated
+}
+
+ENTITY Pipeline {
+  name: String
+  stages: JSON
+  defaultStage: String
+  isDefault: Boolean
+  createdAt: DateTime @generated
+}
+
+ENTITY Team {
+  name: String
+  managerId: String
+  memberIds: String[]
+  quota: Decimal?
+  createdAt: DateTime @generated
+}
+
+// =============================================================================
+// EVENTS
+// =============================================================================
+
+EVENT ContactCreated {
+  contactId: String
+  source: String
+  ownerId: String
+  timestamp: DateTime
+}
+
+EVENT DealStageChanged {
+  dealId: String
+  previousStage: String
+  newStage: String
+  ownerId: String
+  timestamp: DateTime
+}
+
+EVENT DealWon {
+  dealId: String
+  amount: Decimal
+  ownerId: String
+  daysInPipeline: Int
+  timestamp: DateTime
+}
+
+EVENT DealLost {
+  dealId: String
+  amount: Decimal
+  reason: String
+  ownerId: String
+  timestamp: DateTime
+}
+
+EVENT EmailOpened {
+  emailId: String
+  contactId: String
+  dealId: String?
+  timestamp: DateTime
+}
+
+EVENT MeetingScheduled {
+  meetingId: String
+  contactIds: String[]
+  dealId: String?
+  ownerId: String
+  timestamp: DateTime
+}
+
+EVENT TaskCompleted {
+  taskId: String
+  assignedTo: String
+  dealId: String?
+  timestamp: DateTime
+}
+
+// =============================================================================
+// PIPELINES
+// =============================================================================
+
+PIPELINE LeadScoring {
+  INPUT [ContactCreated.stream, Activity.stream, Email.stream]
+  TRANSFORM [calculateEngagement, scoreLeads, rankContacts]
+  OUTPUT [dashboard, recommendations]
+  SCHEDULE "0 * * * *"
+}
+
+PIPELINE DealForecasting {
+  INPUT [Deal.changes, DealStageChanged.stream]
+  TRANSFORM [analyzeHistory, predictOutcome, updateForecast]
+  OUTPUT [dashboard, reports]
+  SCHEDULE "0 0 * * *"
+}
+
+PIPELINE ActivityTracking {
+  INPUT [Email.stream, Meeting.stream, Activity.stream]
+  TRANSFORM [aggregate, enrichContact, updateTimeline]
+  OUTPUT [contactProfile, analytics]
+}
+
+PIPELINE EmailSequencing {
+  INPUT Email.scheduled
+  TRANSFORM [personalize, schedule, track]
+  OUTPUT [emailProvider, analytics]
+}
+
+// =============================================================================
+// ALERTS
+// =============================================================================
+
+ALERT "Deal Stalled" {
+  ENTITY Deal
+  CONDITION daysInStage > 14 AND stage != "Closed Won" AND stage != "Closed Lost"
+  TARGET [email, slack]
+  SEVERITY medium
+}
+
+ALERT "High Value Deal at Risk" {
+  ENTITY Deal
+  CONDITION amount > 50000 AND probability < 30
+  TARGET [slack, email]
+  SEVERITY high
+}
+
+ALERT "No Activity Warning" {
+  ENTITY Contact
+  CONDITION daysSinceLastContact > 30 AND status == "active"
+  TARGET [email]
+  SEVERITY low
+}
+
+ALERT "Meeting Starting" {
+  ENTITY Meeting
+  CONDITION startTime - now() < 15m
+  TARGET [push, email]
+  SEVERITY low
+}
+
+ALERT "Task Overdue" {
+  ENTITY Task
+  CONDITION dueDate < now() AND status != "completed"
+  TARGET [email, push]
+  SEVERITY medium
+}
+
+ALERT "Quota Achievement" {
+  ENTITY Team
+  CONDITION monthlyRevenue >= quota
+  TARGET [slack]
+  SEVERITY low
+}
+
+// =============================================================================
+// DASHBOARDS
+// =============================================================================
+
+DASHBOARD "Sales Pipeline" {
+  ENTITY Deal
+  METRICS [
+    "totalPipelineValue",
+    "dealsByStage",
+    "avgDealSize",
+    "winRate",
+    "avgSalesCycle"
+  ]
+  STREAM_MODE realtime
+  LAYOUT grid
+}
+
+DASHBOARD "Sales Forecast" {
+  ENTITY Deal
+  METRICS [
+    "forecastedRevenue",
+    "bestCase",
+    "worstCase",
+    "committed",
+    "upside"
+  ]
+  LAYOUT grid
+}
+
+DASHBOARD "Team Performance" {
+  ENTITY Team
+  METRICS [
+    "revenueByRep",
+    "activitiesByRep",
+    "quotaAttainment",
+    "leaderboard"
+  ]
+  LAYOUT tabs
+}
+
+DASHBOARD "Activity Analytics" {
+  ENTITY Activity
+  METRICS [
+    "callsMade",
+    "emailsSent",
+    "meetingsHeld",
+    "activityTrend"
+  ]
+  STREAM_MODE realtime
+}
+
+DASHBOARD "Contact Insights" {
+  ENTITY Contact
+  METRICS [
+    "totalContacts",
+    "leadsBySource",
+    "conversionRate",
+    "topLeads"
+  ]
+  LAYOUT grid
+}
+
+// =============================================================================
+// WORKFLOWS
+// =============================================================================
+
+WORKFLOW LeadNurturing {
+  TRIGGER ContactCreated.event
+  
+  STEP assignOwner {
+    ACTION roundRobinAssign
+    ON_SUCCESS sendWelcome
+  }
+  
+  STEP sendWelcome {
+    ACTION sendEmail
+    ON_SUCCESS scheduleFollowUp
+  }
+  
+  STEP scheduleFollowUp {
+    ACTION createTask
+    ON_SUCCESS monitorEngagement
+  }
+  
+  STEP monitorEngagement {
+    ACTION trackActivity
+    ON_SUCCESS qualifyLead
+    ON_FAILURE sendReengagement
+    TIMEOUT "7d"
+  }
+}
+
+WORKFLOW DealClosing {
+  TRIGGER Deal.stageChanged
+  FILTER newStage == "Negotiation"
+  
+  STEP prepareProposal {
+    ACTION generateProposal
+    ON_SUCCESS sendProposal
+  }
+  
+  STEP sendProposal {
+    ACTION sendEmail
+    ON_SUCCESS trackProposal
+  }
+  
+  STEP followUp {
+    ACTION scheduleCall
+    ON_SUCCESS closeOrLose
+    TIMEOUT "3d"
+  }
+}
+
+// =============================================================================
+// CONFIG
+// =============================================================================
+
+CONFIG sales {
+  defaultCurrency: "USD"
+  fiscalYearStart: "01-01"
+  quotaPeriod: "monthly"
+}
+
+CONFIG pipeline {
+  defaultStages: ["Lead", "Qualified", "Proposal", "Negotiation", "Closed Won", "Closed Lost"]
+  staleDealDays: 14
+  autoArchiveDays: 90
+}
+
+CONFIG scoring {
+  emailOpenWeight: 5
+  emailClickWeight: 10
+  meetingWeight: 20
+  callWeight: 15
+  websiteVisitWeight: 3
+}
