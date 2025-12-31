@@ -19,7 +19,8 @@
 	example-iot-build example-iot-up example-iot-down example-iot-logs example-iot-check-ports example-iot-health \
 	example-agent-build example-agent-up example-agent-down example-agent-logs example-agent-check-ports example-agent-health \
 	examples-build-all examples-down-all \
-	env-check env-show env-init
+	env-check env-show env-init \
+	auto-up auto-b2b auto-iot auto-agent
 
 # Colors for output
 BLUE := \033[0;34m
