@@ -43,8 +43,7 @@ module.exports = {
       transform: {
         '^.+\\.tsx?$': tsJestTransform
       },
-      setupFilesAfterEnv: ['<rootDir>/tests/e2e/setup.ts'],
-      testTimeout: 60000
+      setupFilesAfterEnv: ['<rootDir>/tests/e2e/setup.ts']
     }
   ]
 };

@@ -33,12 +33,11 @@ import {
 
 const createTestCausalModel = (): CausalModel => ({
   name: 'TestRiskModel',
-  version: '1.0',
   nodes: [
-    { id: 'revenue', label: 'Revenue', type: 'observable' },
-    { id: 'paymentDelays', label: 'Payment Delays', type: 'observable' },
-    { id: 'riskScore', label: 'Risk Score', type: 'outcome' },
-    { id: 'creditLimit', label: 'Credit Limit', type: 'controllable' }
+    { id: 'revenue', name: 'Revenue', type: 'variable' },
+    { id: 'paymentDelays', name: 'Payment Delays', type: 'variable' },
+    { id: 'riskScore', name: 'Risk Score', type: 'outcome' },
+    { id: 'creditLimit', name: 'Credit Limit', type: 'intervention' }
   ],
   edges: [
     { from: 'revenue', to: 'riskScore', strength: -0.3, confidence: 0.8 },
@@ -51,6 +50,7 @@ const createTestCausalModel = (): CausalModel => ({
       name: 'reduceLimit',
       description: 'Reduce credit limit',
       target: 'creditLimit',
+      action: { type: 'decrease', amount: 1000 },
       expectedEffects: [
         { target: 'riskScore', direction: 'decrease', magnitude: 0.15, confidence: 0.8 }
       ]
@@ -60,12 +60,13 @@ const createTestCausalModel = (): CausalModel => ({
       name: 'increaseMonitoring',
       description: 'Increase monitoring frequency',
       target: 'monitoringLevel',
+      action: { type: 'set', value: 'high' },
       expectedEffects: [
         { target: 'riskScore', direction: 'decrease', magnitude: 0.05, confidence: 0.9 }
       ]
     }
   ],
-  constraints: []
+  observations: []
 });
 
 // ============================================================================
@@ -118,6 +119,7 @@ describe('E2E: Causal Verification Loop', () => {
         name: 'testIntervention',
         description: 'Test intervention',
         target: 'creditLimit',
+        action: { type: 'decrease', amount: 1000 },
         expectedEffects: [
           { target: 'riskScore', direction: 'decrease', magnitude: 0.15, confidence: 0.8 }
         ]
@@ -140,6 +142,7 @@ describe('E2E: Causal Verification Loop', () => {
         name: 'storeTest',
         description: 'Store test',
         target: 'creditLimit',
+        action: { type: 'decrease', amount: 1000 },
         expectedEffects: [
           { target: 'riskScore', direction: 'decrease', magnitude: 0.1, confidence: 0.7 }
         ]
@@ -160,6 +163,7 @@ describe('E2E: Causal Verification Loop', () => {
           name: `intervention-${i}`,
           description: `Intervention ${i}`,
           target: 'creditLimit',
+          action: { type: 'decrease', amount: 1000 },
           expectedEffects: [
             { target: 'riskScore', direction: 'decrease', magnitude: 0.1, confidence: 0.7 }
           ]
@@ -176,6 +180,7 @@ describe('E2E: Causal Verification Loop', () => {
         name: 'effectTest',
         description: 'Effect test',
         target: 'creditLimit',
+        action: { type: 'decrease', amount: 1000 },
         expectedEffects: [
           { target: 'riskScore', direction: 'decrease', magnitude: 0.2, confidence: 0.85, timeframe: '24h' }
         ]
@@ -202,6 +207,7 @@ describe('E2E: Causal Verification Loop', () => {
         name: 'observationTest',
         description: 'Observation test',
         target: 'creditLimit',
+        action: { type: 'decrease', amount: 1000 },
         expectedEffects: [
           { target: 'riskScore', direction: 'decrease', magnitude: 0.15, confidence: 0.8 }
         ]
@@ -253,6 +259,7 @@ describe('E2E: Causal Verification Loop', () => {
         name: 'verifyTest',
         description: 'Verification test',
         target: 'creditLimit',
+        action: { type: 'decrease', amount: 1000 },
         expectedEffects: [
           { target: 'riskScore', direction: 'decrease', magnitude: 0.15, confidence: 0.8 }
         ]
@@ -333,6 +340,7 @@ describe('E2E: Causal Verification Loop', () => {
         name: 'learnTest',
         description: 'Learning test',
         target: 'creditLimit',
+        action: { type: 'decrease', amount: 1000 },
         expectedEffects: [
           { target: 'riskScore', direction: 'decrease', magnitude: 0.15, confidence: 0.8 }
         ]
@@ -356,6 +364,7 @@ describe('E2E: Causal Verification Loop', () => {
           name: `learnTest-${i}`,
           description: 'Learning test',
           target: 'creditLimit',
+          action: { type: 'decrease', amount: 1000 },
           expectedEffects: [
             { target: 'riskScore', direction: 'decrease', magnitude: 0.15, confidence: 0.8 }
           ]
@@ -395,6 +404,7 @@ describe('E2E: Causal Verification Loop', () => {
         name: 'decayTest',
         description: 'Decay test',
         target: 'creditLimit',
+        action: { type: 'decrease', amount: 1000 },
         expectedEffects: [
           { target: 'riskScore', direction: 'decrease', magnitude: 0.15, confidence: 0.8 }
         ]
@@ -410,6 +420,7 @@ describe('E2E: Causal Verification Loop', () => {
         name: 'confidenceTest',
         description: 'Confidence test',
         target: 'creditLimit',
+        action: { type: 'decrease', amount: 1000 },
         expectedEffects: [
           { target: 'riskScore', direction: 'decrease', magnitude: 0.15, confidence: 0.8 }
         ]
@@ -437,6 +448,7 @@ describe('E2E: Causal Verification Loop', () => {
         name: 'missingTest',
         description: 'Missing effect test',
         target: 'creditLimit',
+        action: { type: 'decrease', amount: 1000 },
         expectedEffects: [
           { target: 'riskScore', direction: 'decrease', magnitude: 0.15, confidence: 0.8 }
         ]
@@ -455,6 +467,7 @@ describe('E2E: Causal Verification Loop', () => {
         name: 'severityTest',
         description: 'Severity test',
         target: 'creditLimit',
+        action: { type: 'decrease', amount: 1000 },
         expectedEffects: [
           { target: 'riskScore', direction: 'decrease', magnitude: 0.15, confidence: 0.8 }
         ]
@@ -477,6 +490,7 @@ describe('E2E: Causal Verification Loop', () => {
         name: 'actionTest',
         description: 'Action test',
         target: 'creditLimit',
+        action: { type: 'decrease', amount: 1000 },
         expectedEffects: [
           { target: 'riskScore', direction: 'decrease', magnitude: 0.15, confidence: 0.8 }
         ]
@@ -502,6 +516,7 @@ describe('E2E: Causal Verification Loop', () => {
         name: 'fullCycleTest',
         description: 'Full cycle integration test',
         target: 'creditLimit',
+        action: { type: 'decrease', amount: 1000 },
         expectedEffects: [
           { target: 'riskScore', direction: 'decrease', magnitude: 0.15, confidence: 0.8, timeframe: '24h' }
         ]

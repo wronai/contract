@@ -444,7 +444,7 @@ export class AIContractEnforcer {
    */
   private createApprovalRequest(action: AIAction): ApprovalRequest {
     return {
-      id: `approval_${Date.now()}`,
+      id: `approval_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
       action,
       requiredApprovers: this.contract.escalationProtocol.defaultEscalationPath,
       expiresAt: new Date(Date.now() + this.contract.negotiationProtocol.timeoutSeconds * 1000),

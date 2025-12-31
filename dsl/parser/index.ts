@@ -131,16 +131,18 @@ export function getSuggestions(source: string, position: number): string[] {
 
   // Simple prefix matching
   const beforeCursor = source.slice(Math.max(0, position - 20), position);
-  const lastWord = beforeCursor.match(/\w+$/)?.[0]?.toUpperCase() || '';
+  const lastToken = beforeCursor.match(/@?\w+$/)?.[0] || '';
+  const lastWord = lastToken.toUpperCase();
 
   const suggestions: string[] = [];
 
   if (beforeCursor.includes(':')) {
     // After colon, suggest types
     suggestions.push(...types.filter(t => t.toUpperCase().startsWith(lastWord)));
-  } else if (beforeCursor.includes('@') || lastWord.startsWith('@')) {
+  } else if (beforeCursor.includes('@') || lastToken.startsWith('@')) {
     // Suggest annotations
-    suggestions.push(...annotations.filter(a => a.toUpperCase().startsWith(lastWord)));
+    const annotationPrefix = lastWord.startsWith('@') ? lastWord : `@${lastWord}`;
+    suggestions.push(...annotations.filter(a => a.toUpperCase().startsWith(annotationPrefix)));
   } else {
     // Suggest keywords
     suggestions.push(...keywords.filter(k => k.startsWith(lastWord)));
