@@ -7,12 +7,12 @@
 #   make install       - Install dependencies
 #   make dev           - Start development server
 #   make test          - Run all tests
-#   make docker-up     - Start Docker services
+#   make up     - Start Docker services
 #   make publish       - Publish to npm
 #
 # ============================================================================
 
-.PHONY: help install dev build test lint clean docker-build docker-up docker-down docker-logs docker-restart publish release stop stop-docker stop-dev up down
+.PHONY: help install dev build test lint clean docker-build up down docker-logs docker-restart publish release stop stop-docker stop-dev
 
 # Colors for output
 BLUE := \033[0;34m
@@ -204,9 +204,9 @@ docker-build: ## Build Docker images
 	docker compose build
 	@echo "$(GREEN)✓ Docker images built$(NC)"
 
-docker-up: ## Start Docker services
+up: ## Start Docker services
 	@echo "$(BLUE)🐳 Starting Docker services...$(NC)"
-	docker compose up -d
+	docker compose up -d --build
 	@echo "$(GREEN)✓ Services started$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Services available at:$(NC)"
@@ -214,7 +214,7 @@ docker-up: ## Start Docker services
 	@echo "  Frontend:   $(FRONTEND_URL)"
 	@echo "  EventStore: $(EVENTSTORE_HTTP_URL)"
 
-docker-down: ## Stop Docker services
+down: ## Stop Docker services
 	@echo "$(BLUE)🐳 Stopping Docker services...$(NC)"
 	docker compose down
 	@echo "$(GREEN)✓ Services stopped$(NC)"
@@ -222,11 +222,7 @@ docker-down: ## Stop Docker services
 docker-logs: ## Show Docker logs
 	docker compose logs -f
 
-docker-restart: docker-down docker-up ## Restart Docker services
-
-up: docker-up ## Alias for docker-up
-
-down: docker-down ## Alias for docker-down
+docker-restart: down up ## Restart Docker services
 
 docker-full: ## Start all services including hardware and monitoring
 	@echo "$(BLUE)🐳 Starting full stack...$(NC)"

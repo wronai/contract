@@ -44,7 +44,7 @@ interface DashboardSummary {
 }
 
 // API functions
-const API_BASE = 'http://localhost:8080/api';
+const API_BASE = import.meta.env.DEV ? 'http://localhost:8080/api' : '/api';
 
 async function fetchSummary(): Promise<DashboardSummary> {
   const res = await fetch(`${API_BASE}/dashboard/summary`);

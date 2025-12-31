@@ -5,13 +5,13 @@ services:
   # ===========================================================================
   # RECLAPP API
   # ===========================================================================
-  reclapp-api:
+  reclapp-risk-api:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: examples/b2b-risk-monitoring/Dockerfile
     container_name: reclapp-risk-api
     ports:
-      - "8080:8080"
+      - "8081:8080"
     environment:
       - NODE_ENV=production
       - PORT=8080
@@ -30,9 +30,11 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - reclapp-network
+      reclapp-network:
+        aliases:
+          - api
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8080/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1));"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -43,15 +45,15 @@ services:
   # ===========================================================================
   dashboard:
     build:
-      context: ./dashboard
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: docker/Dockerfile.frontend
     container_name: reclapp-risk-dashboard
     ports:
-      - "3000:80"
+      - "3001:3000"
     environment:
       - VITE_API_URL=http://localhost:8080
     depends_on:
-      - reclapp-api
+      - reclapp-risk-api
     networks:
       - reclapp-network
     restart: unless-stopped
@@ -63,8 +65,8 @@ services:
     image: eventstore/eventstore:23.10.0-bookworm-slim
     container_name: reclapp-eventstore
     ports:
-      - "2113:2113"  # HTTP/gRPC
-      - "1113:1113"  # TCP
+      - "2114:2113"  # HTTP/gRPC
+      - "1114:1113"  # TCP
     environment:
       - EVENTSTORE_CLUSTER_SIZE=1
       - EVENTSTORE_RUN_PROJECTIONS=All
@@ -89,7 +91,7 @@ services:
     image: postgres:16-alpine
     container_name: reclapp-postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       - POSTGRES_USER=reclapp
       - POSTGRES_PASSWORD=reclapp
@@ -113,7 +115,7 @@ services:
     image: redis:7-alpine
     container_name: reclapp-redis
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis-data:/data
     networks:
@@ -129,16 +131,15 @@ services:
   # DATA SIMULATOR (Mock External Data)
   # ===========================================================================
   data-simulator:
-    build:
-      context: ./simulator
-      dockerfile: Dockerfile
+    image: alpine:3.20
     container_name: reclapp-simulator
+    command: ["sh", "-c", "echo 'data-simulator is not included in this repository version'; sleep infinity"]
     environment:
-      - API_URL=http://reclapp-api:8080
+      - API_URL=http://reclapp-risk-api:8080
       - SIMULATION_INTERVAL=60000
       - CUSTOMER_COUNT=100
     depends_on:
-      - reclapp-api
+      - reclapp-risk-api
     networks:
       - reclapp-network
     restart: unless-stopped
@@ -152,7 +153,7 @@ services:
     image: prom/prometheus:v2.47.0
     container_name: reclapp-prometheus
     ports:
-      - "9090:9090"
+      - "9092:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
@@ -169,7 +170,7 @@ services:
     image: grafana/grafana:10.1.0
     container_name: reclapp-grafana
     ports:
-      - "3001:3000"
+      - "3002:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false

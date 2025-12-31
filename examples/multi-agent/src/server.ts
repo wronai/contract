@@ -4,7 +4,7 @@
  */
 
 import express, { Request, Response, NextFunction } from 'express';
-import amqplib, { Connection, Channel } from 'amqplib';
+import amqplib, { ChannelModel, Channel, ConsumeMessage } from 'amqplib';
 import Redis from 'ioredis';
 
 // ============================================================================
@@ -45,13 +45,15 @@ export interface AgentMessage {
 }
 
 export class MessageQueue {
-  private connection: Connection | null = null;
+  private connection: ChannelModel | null = null;
   private channel: Channel | null = null;
   private handlers: Map<string, (msg: AgentMessage) => Promise<void>> = new Map();
 
   async connect(): Promise<void> {
-    this.connection = await amqplib.connect(config.rabbitmq.url);
-    this.channel = await this.connection.createChannel();
+    const connection = await amqplib.connect(config.rabbitmq.url);
+    this.connection = connection;
+
+    this.channel = await connection.createChannel();
     
     // Declare exchanges
     await this.channel.assertExchange('agents', 'topic', { durable: true });
@@ -68,7 +70,7 @@ export class MessageQueue {
     
     this.handlers.set(queue, handler);
     
-    this.channel.consume(queue, async (msg) => {
+    this.channel.consume(queue, async (msg: ConsumeMessage | null) => {
       if (msg) {
         try {
           const content: AgentMessage = JSON.parse(msg.content.toString());
@@ -94,8 +96,12 @@ export class MessageQueue {
   }
 
   async close(): Promise<void> {
-    await this.channel?.close();
-    await this.connection?.close();
+    if (this.channel) {
+      await this.channel.close();
+    }
+    if (this.connection) {
+      await this.connection.close();
+    }
   }
 }
 
@@ -134,7 +140,7 @@ export class SharedState {
   async subscribe(channel: string, handler: (message: any) => void): Promise<void> {
     const subscriber = this.redis.duplicate();
     await subscriber.subscribe(channel);
-    subscriber.on('message', (ch, msg) => {
+    subscriber.on('message', (ch: string, msg: string) => {
       if (ch === channel) {
         handler(JSON.parse(msg));
       }

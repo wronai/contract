@@ -7,11 +7,11 @@ services:
   # ===========================================================================
   reclapp-iot:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: examples/iot-monitoring/Dockerfile
     container_name: reclapp-iot-api
     ports:
-      - "8080:8080"
+      - "8082:8080"
     environment:
       - NODE_ENV=production
       - PORT=8080
@@ -33,7 +33,7 @@ services:
     networks:
       - iot-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8080/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1));"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -46,8 +46,8 @@ services:
     image: eclipse-mosquitto:2.0
     container_name: reclapp-mosquitto
     ports:
-      - "1883:1883"   # MQTT
-      - "9001:9001"   # WebSocket
+      - "1884:1883"   # MQTT
+      - "9002:9001"   # WebSocket
     volumes:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
       - mosquitto-data:/mosquitto/data
@@ -63,7 +63,7 @@ services:
     image: influxdb:2.7-alpine
     container_name: reclapp-influxdb
     ports:
-      - "8086:8086"
+      - "8087:8086"
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=admin
@@ -90,7 +90,7 @@ services:
     image: eventstore/eventstore:23.10.0-bookworm-slim
     container_name: reclapp-iot-eventstore
     ports:
-      - "2113:2113"
+      - "2116:2113"
     environment:
       - EVENTSTORE_CLUSTER_SIZE=1
       - EVENTSTORE_RUN_PROJECTIONS=All
@@ -113,7 +113,7 @@ services:
     image: grafana/grafana:10.1.0
     container_name: reclapp-iot-grafana
     ports:
-      - "3000:3000"
+      - "3004:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
@@ -132,10 +132,22 @@ services:
   # DEVICE SIMULATOR
   # ===========================================================================
   device-simulator:
-    build:
-      context: ./simulator
-      dockerfile: Dockerfile
+    image: alpine:3.20
     container_name: reclapp-device-simulator
+    command:
+      - sh
+      - -c
+      - |
+        apk add --no-cache mosquitto-clients >/dev/null 2>&1;
+        i=0;
+        while true; do
+          i=$$((i+1));
+          id=$${DEVICE_ID_PREFIX:-sensor}-$$i;
+          ts=$$(date -Iseconds);
+          temp=$$(awk 'BEGIN{srand(); printf "%.1f", 20+rand()*15 }');
+          mosquitto_pub -h mosquitto -p 1883 -t "devices/$$id/telemetry" -m "{\"deviceId\":\"$$id\",\"sensorType\":\"temperature\",\"value\":$$temp,\"unit\":\"C\",\"timestamp\":\"$$ts\"}" || true;
+          sleep $${PUBLISH_INTERVAL:-5};
+        done
     environment:
       - MQTT_BROKER=mqtt://mosquitto:1883
       - DEVICE_COUNT=10
@@ -156,7 +168,7 @@ services:
     image: smeagolworms4/mqtt-explorer:latest
     container_name: reclapp-mqtt-explorer
     ports:
-      - "4000:4000"
+      - "4001:4000"
     environment:
       - HTTP_PORT=4000
     depends_on:
