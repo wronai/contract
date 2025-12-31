@@ -8,6 +8,9 @@ ENV_PATH = Path(".env")
 PORT_RANGE_MIN = 1024
 PORT_RANGE_MAX = 65535
 
+PORT_NAME_RE = re.compile(r"PORT", re.IGNORECASE)
+URL_PORT_RE = re.compile(r":(\d{2,5})(?!\d)")
+
 
 def is_port_free(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -25,24 +28,17 @@ def find_free_port(start_port: int) -> int:
         if is_port_free(port):
             return port
         port += 1
-    raise RuntimeError("Brak wolnych portów w zakresie")
-
-
-PORT_NAME_RE = re.compile(r"PORT", re.IGNORECASE)
-URL_PORT_RE = re.compile(r":(\d{2,5})(?!\d)")
+    raise RuntimeError("Brak wolnych portów")
 
 
 def extract_ports(key: str, value: str):
-    """Zwraca listę portów znalezionych w danej zmiennej"""
     ports = []
 
-    # 1. PORT w nazwie i wartość liczbowa
     if PORT_NAME_RE.search(key) and value.isdigit():
         p = int(value)
         if 1 <= p <= 65535:
             ports.append(("plain", p))
 
-    # 2. URL z portem
     for match in URL_PORT_RE.finditer(value):
         p = int(match.group(1))
         if 1 <= p <= 65535:
@@ -57,7 +53,8 @@ def replace_port(value: str, old: int, new: int):
 
 def process_env(lines):
     updated_lines = []
-    port_map = {}  # old -> new
+    port_map = {}        # stary_port -> nowy_port
+    change_log = []     # szczegóły zmian
 
     for line in lines:
         stripped = line.strip()
@@ -68,7 +65,6 @@ def process_env(lines):
 
         key, value = stripped.split("=", 1)
         ports = extract_ports(key, value)
-
         new_value = value
 
         for kind, port in ports:
@@ -83,16 +79,36 @@ def process_env(lines):
                 else:
                     new_value = replace_port(new_value, port, new_port)
 
-                print(f"[PORT ZAJĘTY] {key}: {port} → {new_port}")
+                change_log.append({
+                    "variable": key,
+                    "type": kind,
+                    "old": port,
+                    "new": new_port
+                })
+
+                print(f"[ZMIANA] {key} ({kind}): {port} → {new_port}")
 
         updated_lines.append(f"{key}={new_value}\n")
 
-    return updated_lines
+    return updated_lines, change_log
+
+
+def print_summary(changes):
+    if not changes:
+        print("\n✔ Brak kolizji portów")
+        return
+
+    print("\n=== PODSUMOWANIE ZMIAN ===")
+    for c in changes:
+        print(
+            f"{c['variable']:<30} "
+            f"{c['old']:<6} → {c['new']}"
+        )
 
 
 def main():
     original = ENV_PATH.read_text().splitlines(keepends=True)
-    updated = process_env(deepcopy(original))
+    updated, changes = process_env(deepcopy(original))
 
     backup = ENV_PATH.with_suffix(".env.bak")
     backup.write_text("".join(original))
@@ -100,6 +116,8 @@ def main():
 
     print(f"\n✔ Zaktualizowano .env")
     print(f"✔ Backup zapisany jako: {backup.name}")
+
+    print_summary(changes)
 
 
 if __name__ == "__main__":
