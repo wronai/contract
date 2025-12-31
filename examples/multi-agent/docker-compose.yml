@@ -7,13 +7,13 @@ services:
   # ===========================================================================
   orchestrator:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: examples/multi-agent/Dockerfile
       args:
         - AGENT_TYPE=orchestrator
     container_name: reclapp-orchestrator
     ports:
-      - "8080:8080"
+      - "8090:8080"
     environment:
       - NODE_ENV=production
       - AGENT_NAME=orchestrator
@@ -34,7 +34,7 @@ services:
     networks:
       - agent-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -45,13 +45,13 @@ services:
   # ===========================================================================
   risk-agent:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: examples/multi-agent/Dockerfile
       args:
         - AGENT_TYPE=risk
     container_name: reclapp-risk-agent
     ports:
-      - "8081:8081"
+      - "8091:8081"
     environment:
       - NODE_ENV=production
       - AGENT_NAME=risk-agent
@@ -76,13 +76,13 @@ services:
   # ===========================================================================
   compliance-agent:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: examples/multi-agent/Dockerfile
       args:
         - AGENT_TYPE=compliance
     container_name: reclapp-compliance-agent
     ports:
-      - "8082:8082"
+      - "8092:8082"
     environment:
       - NODE_ENV=production
       - AGENT_NAME=compliance-agent
@@ -106,13 +106,13 @@ services:
   # ===========================================================================
   customer-agent:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: examples/multi-agent/Dockerfile
       args:
         - AGENT_TYPE=customer
     container_name: reclapp-customer-agent
     ports:
-      - "8083:8083"
+      - "8093:8083"
     environment:
       - NODE_ENV=production
       - AGENT_NAME=customer-agent
@@ -137,7 +137,7 @@ services:
     image: eventstore/eventstore:23.10.0-bookworm-slim
     container_name: reclapp-multi-eventstore
     ports:
-      - "2113:2113"
+      - "2115:2113"
     environment:
       - EVENTSTORE_CLUSTER_SIZE=1
       - EVENTSTORE_RUN_PROJECTIONS=All
@@ -157,7 +157,7 @@ services:
     image: redis:7-alpine
     container_name: reclapp-multi-redis
     ports:
-      - "6379:6379"
+      - "6381:6379"
     volumes:
       - redis-data:/data
     networks:
@@ -173,8 +173,8 @@ services:
     image: rabbitmq:3.12-management-alpine
     container_name: reclapp-multi-rabbitmq
     ports:
-      - "5672:5672"   # AMQP
-      - "15672:15672" # Management UI
+      - "5673:5672"   # AMQP
+      - "15673:15672" # Management UI
     environment:
       - RABBITMQ_DEFAULT_USER=reclapp
       - RABBITMQ_DEFAULT_PASS=reclapp
@@ -193,7 +193,7 @@ services:
     image: postgres:16-alpine
     container_name: reclapp-multi-postgres
     ports:
-      - "5432:5432"
+      - "5434:5432"
     environment:
       - POSTGRES_USER=reclapp
       - POSTGRES_PASSWORD=reclapp
@@ -216,7 +216,7 @@ services:
     image: grafana/grafana:10.1.0
     container_name: reclapp-multi-grafana
     ports:
-      - "3000:3000"
+      - "3003:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
@@ -233,7 +233,7 @@ services:
     image: prom/prometheus:v2.47.0
     container_name: reclapp-multi-prometheus
     ports:
-      - "9090:9090"
+      - "9091:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus

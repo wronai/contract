@@ -507,7 +507,7 @@ async function seedData(state: AppState, options?: { customers?: number; contrac
         streamId: `customer-${customer.customerId}`,
         type: event.type,
         data: event.data,
-        metadata: { timestamp: event.metadata.timestamp }
+        metadata: { source: 'seed' }
       }]);
     }
   }
@@ -524,7 +524,7 @@ async function seedData(state: AppState, options?: { customers?: number; contrac
       streamId: `risk-${riskEvent.entityId}`,
       type: domainEvent.type,
       data: domainEvent.data,
-      metadata: { timestamp: domainEvent.metadata.timestamp }
+      metadata: { source: 'seed' }
     }]);
   }
 

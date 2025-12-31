@@ -7,12 +7,12 @@
 #   make install       - Install dependencies
 #   make dev           - Start development server
 #   make test          - Run all tests
-#   make docker-up     - Start Docker services
+#   make up     - Start Docker services
 #   make publish       - Publish to npm
 #
 # ============================================================================
 
-.PHONY: help install dev build test lint clean docker-up docker-down publish release
+.PHONY: help install dev build test lint clean docker-build up down docker-logs docker-restart publish release stop stop-docker stop-dev
 
 # Colors for output
 BLUE := \033[0;34m
@@ -25,6 +25,24 @@ NC := \033[0m # No Color
 PROJECT_NAME := reclapp
 VERSION := 2.1.0
 DOCKER_IMAGE := reclapp/platform
+
+# ============================================================================
+# ENV (load .env if present)
+# ============================================================================
+
+ifneq (,$(wildcard .env))
+include .env
+export $(shell sed -n 's/^\([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p' .env)
+endif
+
+# Defaults (can be overridden by .env or environment)
+PORT ?= 8080
+FRONTEND_PORT ?= 3000
+EVENTSTORE_HTTP_PORT ?= 2113
+
+API_URL ?= http://localhost:$(PORT)
+FRONTEND_URL ?= $(if $(CORS_ORIGIN),$(CORS_ORIGIN),http://localhost:$(FRONTEND_PORT))
+EVENTSTORE_HTTP_URL ?= http://localhost:$(EVENTSTORE_HTTP_PORT)
 
 # ============================================================================
 # HELP
@@ -64,6 +82,30 @@ install-ci: ## Install dependencies for CI (no optional deps)
 dev: ## Start development server with hot reload
 	@echo "$(BLUE)🚀 Starting development server...$(NC)"
 	npm run dev
+
+stop: ## Stop all services (Docker + local dev)
+	@echo "$(BLUE)🛑 Stopping all services...$(NC)"
+	@$(MAKE) stop-docker
+	@$(MAKE) stop-dev
+	@echo "$(GREEN)✓ All services stopped$(NC)"
+
+stop-docker: ## Stop Docker services
+	@echo "$(BLUE)🐳 Stopping Docker services...$(NC)"
+	@docker compose down --remove-orphans >/dev/null 2>&1 || true
+
+stop-dev: ## Stop local dev processes (API + frontend)
+	@echo "$(BLUE)🧹 Stopping local dev processes...$(NC)"
+	@API_PORT=$${PORT:-$(PORT)}; \
+	FRONT_PORT=$${FRONTEND_PORT:-$(FRONTEND_PORT)}; \
+	if command -v fuser >/dev/null 2>&1; then \
+	  fuser -k $$API_PORT/tcp >/dev/null 2>&1 || true; \
+	  fuser -k $$FRONT_PORT/tcp >/dev/null 2>&1 || true; \
+	else \
+	  echo "fuser not found; skipping port-based shutdown"; \
+	fi; \
+	pkill -f "api/src/server.ts" >/dev/null 2>&1 || true; \
+	pkill -f "ts-node-dev" >/dev/null 2>&1 || true; \
+	pkill -f "vite" >/dev/null 2>&1 || true
 
 dev-api: ## Start only API server
 	@echo "$(BLUE)🚀 Starting API server...$(NC)"
@@ -165,30 +207,30 @@ check-all: lint typecheck test ## Run all checks (lint, typecheck, test)
 # DOCKER
 # ============================================================================
 
-build: ## Build Docker images
+docker-build: ## Build Docker images
 	@echo "$(BLUE)🐳 Building Docker images...$(NC)"
 	docker compose build
 	@echo "$(GREEN)✓ Docker images built$(NC)"
 
 up: ## Start Docker services
 	@echo "$(BLUE)🐳 Starting Docker services...$(NC)"
-	docker compose up --build
+	docker compose up -d
 	@echo "$(GREEN)✓ Services started$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Services available at:$(NC)"
-	@echo "  API:        http://localhost:8080"
-	@echo "  Frontend:   http://localhost:3000"
-	@echo "  EventStore: http://localhost:2113"
+	@echo "  API:        $(API_URL)"
+	@echo "  Frontend:   $(FRONTEND_URL)"
+	@echo "  EventStore: $(EVENTSTORE_HTTP_URL)"
 
 down: ## Stop Docker services
 	@echo "$(BLUE)🐳 Stopping Docker services...$(NC)"
 	docker compose down
 	@echo "$(GREEN)✓ Services stopped$(NC)"
 
-logs: ## Show Docker logs
+docker-logs: ## Show Docker logs
 	docker compose logs -f
 
-restart: down up ## Restart Docker services
+docker-restart: down up ## Restart Docker services
 
 docker-full: ## Start all services including hardware and monitoring
 	@echo "$(BLUE)🐳 Starting full stack...$(NC)"
