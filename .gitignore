@@ -1,5 +1,6 @@
 .idea
 venv
+package-lock.json
 # Logs
 logs
 *.log
