@@ -12,7 +12,14 @@
 #
 # ============================================================================
 
-.PHONY: help install dev build test lint clean docker-build docker-up docker-down docker-logs docker-restart publish release stop stop-docker stop-dev up down
+.PHONY: help install dev build test lint clean publish release stop stop-docker stop-dev up down \
+	docker-build docker-up docker-down docker-logs docker-restart docker-full docker-clean docker-shell \
+	docker-check-ports docker-health \
+	example-b2b-build example-b2b-up example-b2b-down example-b2b-logs example-b2b-check-ports example-b2b-health \
+	example-iot-build example-iot-up example-iot-down example-iot-logs example-iot-check-ports example-iot-health \
+	example-agent-build example-agent-up example-agent-down example-agent-logs example-agent-check-ports example-agent-health \
+	examples-build-all examples-down-all \
+	env-check env-show env-init
 
 # Colors for output
 BLUE := \033[0;34m
@@ -36,13 +43,63 @@ export $(shell sed -n 's/^\([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p' .env)
 endif
 
 # Defaults (can be overridden by .env or environment)
+NODE_ENV ?= development
 PORT ?= 8080
+HOST ?= 0.0.0.0
 FRONTEND_PORT ?= 3000
 EVENTSTORE_HTTP_PORT ?= 2113
+REDIS_PORT ?= 6379
+POSTGRES_PORT ?= 5432
 
-API_URL ?= http://localhost:$(PORT)
-FRONTEND_URL ?= $(if $(CORS_ORIGIN),$(CORS_ORIGIN),http://localhost:$(FRONTEND_PORT))
-EVENTSTORE_HTTP_URL ?= http://localhost:$(EVENTSTORE_HTTP_PORT)
+# Docker port defaults
+DOCKER_API_PORT ?= $(PORT)
+DOCKER_FRONTEND_PORT ?= $(FRONTEND_PORT)
+DOCKER_EVENTSTORE_HTTP_PORT ?= $(EVENTSTORE_HTTP_PORT)
+DOCKER_REDIS_PORT ?= $(REDIS_PORT)
+DOCKER_GRAFANA_PORT ?= 3001
+DOCKER_PROMETHEUS_PORT ?= 9090
+
+# Example port defaults
+B2B_API_PORT ?= 8081
+IOT_API_PORT ?= 8082
+AGENT_ORCHESTRATOR_PORT ?= 8090
+
+# URLs
+API_URL ?= http://localhost:$(DOCKER_API_PORT)
+FRONTEND_URL ?= $(if $(CORS_ORIGIN),$(CORS_ORIGIN),http://localhost:$(DOCKER_FRONTEND_PORT))
+EVENTSTORE_HTTP_URL ?= http://localhost:$(DOCKER_EVENTSTORE_HTTP_PORT)
+GRAFANA_URL ?= http://localhost:$(DOCKER_GRAFANA_PORT)
+PROMETHEUS_URL ?= http://localhost:$(DOCKER_PROMETHEUS_PORT)
+
+# ============================================================================
+# HELPER FUNCTIONS
+# ============================================================================
+
+# Check if a port is in use (returns 0 if in use, 1 if free)
+define check_port
+	@if ss -tuln 2>/dev/null | grep -q ":$(1) " || netstat -tuln 2>/dev/null | grep -q ":$(1) "; then \
+		echo "$(RED)✗ Port $(1) is already in use$(NC)"; \
+		exit 1; \
+	else \
+		echo "$(GREEN)✓ Port $(1) is available$(NC)"; \
+	fi
+endef
+
+# Check if a URL is healthy (with retries)
+define check_health
+	@echo "$(BLUE)  Checking $(1)...$(NC)"; \
+	for i in 1 2 3 4 5 6 7 8 9 10; do \
+		if curl -sf "$(1)" >/dev/null 2>&1; then \
+			echo "$(GREEN)  ✓ $(1) is healthy$(NC)"; \
+			break; \
+		fi; \
+		if [ $$i -eq 10 ]; then \
+			echo "$(YELLOW)  ⚠ $(1) not responding (may still be starting)$(NC)"; \
+		else \
+			sleep 2; \
+		fi; \
+	done
+endef
 
 # ============================================================================
 # HELP
@@ -81,6 +138,7 @@ install-ci: ## Install dependencies for CI (no optional deps)
 
 dev: ## Start development server with hot reload
 	@echo "$(BLUE)🚀 Starting development server...$(NC)"
+	@$(MAKE) stop-dev >/dev/null 2>&1 || true
 	npm run dev
 
 stop: ## Stop all services (Docker + local dev)
@@ -92,12 +150,30 @@ stop: ## Stop all services (Docker + local dev)
 stop-docker: ## Stop Docker services
 	@echo "$(BLUE)🐳 Stopping Docker services...$(NC)"
 	@docker compose down --remove-orphans >/dev/null 2>&1 || true
+	@$(MAKE) example-b2b-down >/dev/null 2>&1 || true
+	@$(MAKE) example-iot-down >/dev/null 2>&1 || true
+	@$(MAKE) example-agent-down >/dev/null 2>&1 || true
 
 stop-dev: ## Stop local dev processes (API + frontend)
 	@echo "$(BLUE)🧹 Stopping local dev processes...$(NC)"
 	@pkill -f "[a]pi/src/server.ts" >/dev/null 2>&1 || true; \
 	pkill -f "[t]s-node-dev" >/dev/null 2>&1 || true; \
-	pkill -f "[v]ite" >/dev/null 2>&1 || true
+	pkill -f "[v]ite" >/dev/null 2>&1 || true; \
+	pids=""; \
+	if command -v ss >/dev/null 2>&1; then \
+		pids=$$(ss -ltnp 2>/dev/null | awk -v port="$(PORT)" 'NR>1 && $$4 ~ ":"port"$$" { if (match($$0, /pid=([0-9]+)/, m)) print m[1]; }' | sort -u); \
+	elif command -v lsof >/dev/null 2>&1; then \
+		pids=$$(lsof -tiTCP:$(PORT) -sTCP:LISTEN 2>/dev/null | sort -u); \
+	fi; \
+	for pid in $$pids; do \
+		args=$$(ps -p $$pid -o args= 2>/dev/null || true); \
+		echo "$$args" | grep -E "(node|ts-node|ts-node-dev|vite)" >/dev/null 2>&1 && kill -TERM $$pid >/dev/null 2>&1 || true; \
+	done; \
+	sleep 0.2; \
+	for pid in $$pids; do \
+		args=$$(ps -p $$pid -o args= 2>/dev/null || true); \
+		echo "$$args" | grep -E "(node|ts-node|ts-node-dev|vite)" >/dev/null 2>&1 && kill -KILL $$pid >/dev/null 2>&1 || true; \
+	done
 
 dev-api: ## Start only API server
 	@echo "$(BLUE)🚀 Starting API server...$(NC)"
@@ -204,7 +280,7 @@ docker-build: ## Build Docker images
 	docker compose build
 	@echo "$(GREEN)✓ Docker images built$(NC)"
 
-docker-up: ## Start Docker services
+docker-up: docker-check-ports ## Start Docker services
 	@echo "$(BLUE)🐳 Starting Docker services...$(NC)"
 	docker compose up -d
 	@echo "$(GREEN)✓ Services started$(NC)"
@@ -213,11 +289,55 @@ docker-up: ## Start Docker services
 	@echo "  API:        $(API_URL)"
 	@echo "  Frontend:   $(FRONTEND_URL)"
 	@echo "  EventStore: $(EVENTSTORE_HTTP_URL)"
+	@echo "  Grafana:    $(GRAFANA_URL) (with --profile monitoring)"
+	@echo "  Prometheus: $(PROMETHEUS_URL) (with --profile monitoring)"
+	@echo ""
+	@$(MAKE) docker-health
+
+docker-check-ports: ## Check if required ports are available
+	@echo "$(BLUE)🔍 Checking port availability...$(NC)"
+	@PORTS_IN_USE=""; \
+	for port in $(DOCKER_API_PORT) $(DOCKER_FRONTEND_PORT) $(DOCKER_EVENTSTORE_HTTP_PORT) $(DOCKER_REDIS_PORT); do \
+		if ss -tuln 2>/dev/null | grep -q ":$$port " || netstat -tuln 2>/dev/null | grep -q ":$$port "; then \
+			PORTS_IN_USE="$$PORTS_IN_USE $$port"; \
+		fi; \
+	done; \
+	if [ -n "$$PORTS_IN_USE" ]; then \
+		echo "$(RED)✗ Ports in use:$$PORTS_IN_USE$(NC)"; \
+		echo "$(YELLOW)  Run 'make stop' to free ports or change ports in .env$(NC)"; \
+		exit 1; \
+	else \
+		echo "$(GREEN)✓ All ports available$(NC)"; \
+	fi
+
+docker-health: ## Check health of running Docker services
+	@echo "$(BLUE)🏥 Checking service health...$(NC)"
+	@sleep 2
+	@for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do \
+		API_OK=$$(curl -sf "http://localhost:$(DOCKER_API_PORT)/api/health" >/dev/null 2>&1 && echo "1" || echo "0"); \
+		ES_OK=$$(curl -sf "http://localhost:$(DOCKER_EVENTSTORE_HTTP_PORT)/health/live" >/dev/null 2>&1 && echo "1" || echo "0"); \
+		REDIS_OK=$$(docker compose exec -T redis redis-cli ping 2>/dev/null | grep -q PONG && echo "1" || echo "0"); \
+		if [ "$$API_OK" = "1" ] && [ "$$ES_OK" = "1" ] && [ "$$REDIS_OK" = "1" ]; then \
+			echo "$(GREEN)✓ API:        healthy$(NC)"; \
+			echo "$(GREEN)✓ EventStore: healthy$(NC)"; \
+			echo "$(GREEN)✓ Redis:      healthy$(NC)"; \
+			exit 0; \
+		fi; \
+		if [ $$i -eq 15 ]; then \
+			echo "$(YELLOW)Health status after 30s:$(NC)"; \
+			[ "$$API_OK" = "1" ] && echo "$(GREEN)✓ API:        healthy$(NC)" || echo "$(RED)✗ API:        not ready$(NC)"; \
+			[ "$$ES_OK" = "1" ] && echo "$(GREEN)✓ EventStore: healthy$(NC)" || echo "$(RED)✗ EventStore: not ready$(NC)"; \
+			[ "$$REDIS_OK" = "1" ] && echo "$(GREEN)✓ Redis:      healthy$(NC)" || echo "$(RED)✗ Redis:      not ready$(NC)"; \
+		else \
+			sleep 2; \
+		fi; \
+	done
 
 docker-down: ## Stop Docker services
 	@echo "$(BLUE)🐳 Stopping Docker services...$(NC)"
-	docker compose down
+	docker compose down --remove-orphans
 	@echo "$(GREEN)✓ Services stopped$(NC)"
+	@$(MAKE) docker-check-ports
 
 docker-logs: ## Show Docker logs
 	docker compose logs -f
@@ -237,9 +357,167 @@ docker-clean: ## Remove Docker containers and volumes
 	@echo "$(RED)🗑️ Cleaning Docker resources...$(NC)"
 	docker compose down -v --remove-orphans
 	@echo "$(GREEN)✓ Docker resources cleaned$(NC)"
+	@$(MAKE) docker-check-ports
 
 docker-shell: ## Open shell in API container
 	docker compose exec api sh
+
+# ============================================================================
+# EXAMPLES
+# ============================================================================
+
+example-b2b-build: ## Build B2B Risk Monitoring example
+	@echo "$(BLUE)🔨 Building B2B Risk Monitoring example...$(NC)"
+	cd examples/b2b-risk-monitoring && docker compose build
+	@echo "$(GREEN)✓ B2B example built$(NC)"
+
+example-b2b-check-ports: ## Check B2B example ports
+	@echo "$(BLUE)🔍 Checking B2B ports...$(NC)"
+	@PORTS_IN_USE=""; \
+	for port in $(B2B_API_PORT) $(B2B_EVENTSTORE_HTTP_PORT) $(B2B_POSTGRES_PORT) $(B2B_REDIS_PORT); do \
+		if ss -tuln 2>/dev/null | grep -q ":$$port " || netstat -tuln 2>/dev/null | grep -q ":$$port "; then \
+			PORTS_IN_USE="$$PORTS_IN_USE $$port"; \
+		fi; \
+	done; \
+	if [ -n "$$PORTS_IN_USE" ]; then \
+		echo "$(RED)✗ Ports in use:$$PORTS_IN_USE$(NC)"; \
+		exit 1; \
+	else \
+		echo "$(GREEN)✓ All B2B ports available$(NC)"; \
+	fi
+
+example-b2b-up: example-b2b-check-ports ## Start B2B Risk Monitoring example
+	@echo "$(BLUE)🚀 Starting B2B Risk Monitoring example...$(NC)"
+	cd examples/b2b-risk-monitoring && docker compose up -d
+	@echo "$(GREEN)✓ B2B example started$(NC)"
+	@echo "  API: http://localhost:$(B2B_API_PORT)"
+	@$(MAKE) example-b2b-health
+
+example-b2b-health: ## Check B2B example health
+	@echo "$(BLUE)🏥 Checking B2B health...$(NC)"
+	@for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do \
+		API_OK=$$(curl -sf "http://localhost:$(B2B_API_PORT)/health" >/dev/null 2>&1 && echo "1" || echo "0"); \
+		if [ "$$API_OK" = "1" ]; then \
+			echo "$(GREEN)✓ B2B API: healthy$(NC)"; \
+			exit 0; \
+		fi; \
+		if [ $$i -eq 15 ]; then \
+			echo "$(YELLOW)⚠ B2B API: not ready after 30s$(NC)"; \
+		else \
+			sleep 2; \
+		fi; \
+	done
+
+example-b2b-down: ## Stop B2B Risk Monitoring example
+	@cd examples/b2b-risk-monitoring && docker compose down --remove-orphans
+	@$(MAKE) example-b2b-check-ports
+
+example-b2b-logs: ## Show B2B example logs
+	cd examples/b2b-risk-monitoring && docker compose logs -f
+
+example-iot-build: ## Build IoT Monitoring example
+	@echo "$(BLUE)🔨 Building IoT Monitoring example...$(NC)"
+	cd examples/iot-monitoring && docker compose build
+	@echo "$(GREEN)✓ IoT example built$(NC)"
+
+example-iot-check-ports: ## Check IoT example ports
+	@echo "$(BLUE)🔍 Checking IoT ports...$(NC)"
+	@PORTS_IN_USE=""; \
+	for port in $(IOT_API_PORT) $(IOT_MQTT_PORT) $(IOT_INFLUXDB_PORT) $(IOT_EVENTSTORE_HTTP_PORT); do \
+		if ss -tuln 2>/dev/null | grep -q ":$$port " || netstat -tuln 2>/dev/null | grep -q ":$$port "; then \
+			PORTS_IN_USE="$$PORTS_IN_USE $$port"; \
+		fi; \
+	done; \
+	if [ -n "$$PORTS_IN_USE" ]; then \
+		echo "$(RED)✗ Ports in use:$$PORTS_IN_USE$(NC)"; \
+		exit 1; \
+	else \
+		echo "$(GREEN)✓ All IoT ports available$(NC)"; \
+	fi
+
+example-iot-up: example-iot-check-ports ## Start IoT Monitoring example
+	@echo "$(BLUE)🚀 Starting IoT Monitoring example...$(NC)"
+	cd examples/iot-monitoring && docker compose up -d
+	@echo "$(GREEN)✓ IoT example started$(NC)"
+	@echo "  API: http://localhost:$(IOT_API_PORT)"
+	@$(MAKE) example-iot-health
+
+example-iot-health: ## Check IoT example health
+	@echo "$(BLUE)🏥 Checking IoT health...$(NC)"
+	@for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do \
+		API_OK=$$(curl -sf "http://localhost:$(IOT_API_PORT)/health" >/dev/null 2>&1 && echo "1" || echo "0"); \
+		if [ "$$API_OK" = "1" ]; then \
+			echo "$(GREEN)✓ IoT API: healthy$(NC)"; \
+			exit 0; \
+		fi; \
+		if [ $$i -eq 15 ]; then \
+			echo "$(YELLOW)⚠ IoT API: not ready after 30s$(NC)"; \
+		else \
+			sleep 2; \
+		fi; \
+	done
+
+example-iot-down: ## Stop IoT Monitoring example
+	@cd examples/iot-monitoring && docker compose down --remove-orphans
+	@$(MAKE) example-iot-check-ports
+
+example-iot-logs: ## Show IoT example logs
+	cd examples/iot-monitoring && docker compose logs -f
+
+example-agent-build: ## Build Multi-Agent example
+	@echo "$(BLUE)🔨 Building Multi-Agent example...$(NC)"
+	cd examples/multi-agent && docker compose build
+	@echo "$(GREEN)✓ Multi-Agent example built$(NC)"
+
+example-agent-check-ports: ## Check Multi-Agent example ports
+	@echo "$(BLUE)🔍 Checking Multi-Agent ports...$(NC)"
+	@PORTS_IN_USE=""; \
+	for port in $(AGENT_ORCHESTRATOR_PORT) $(AGENT_RISK_PORT) $(AGENT_COMPLIANCE_PORT) $(AGENT_CUSTOMER_PORT) $(AGENT_EVENTSTORE_HTTP_PORT) $(AGENT_REDIS_PORT) $(AGENT_RABBITMQ_PORT); do \
+		if ss -tuln 2>/dev/null | grep -q ":$$port " || netstat -tuln 2>/dev/null | grep -q ":$$port "; then \
+			PORTS_IN_USE="$$PORTS_IN_USE $$port"; \
+		fi; \
+	done; \
+	if [ -n "$$PORTS_IN_USE" ]; then \
+		echo "$(RED)✗ Ports in use:$$PORTS_IN_USE$(NC)"; \
+		exit 1; \
+	else \
+		echo "$(GREEN)✓ All Multi-Agent ports available$(NC)"; \
+	fi
+
+example-agent-up: example-agent-check-ports ## Start Multi-Agent example
+	@echo "$(BLUE)🚀 Starting Multi-Agent example...$(NC)"
+	cd examples/multi-agent && docker compose up -d
+	@echo "$(GREEN)✓ Multi-Agent example started$(NC)"
+	@echo "  Orchestrator: http://localhost:$(AGENT_ORCHESTRATOR_PORT)"
+	@$(MAKE) example-agent-health
+
+example-agent-health: ## Check Multi-Agent example health
+	@echo "$(BLUE)🏥 Checking Multi-Agent health...$(NC)"
+	@for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do \
+		ORCH_OK=$$(curl -sf "http://localhost:$(AGENT_ORCHESTRATOR_PORT)/health" >/dev/null 2>&1 && echo "1" || echo "0"); \
+		if [ "$$ORCH_OK" = "1" ]; then \
+			echo "$(GREEN)✓ Orchestrator: healthy$(NC)"; \
+			exit 0; \
+		fi; \
+		if [ $$i -eq 15 ]; then \
+			echo "$(YELLOW)⚠ Orchestrator: not ready after 30s$(NC)"; \
+		else \
+			sleep 2; \
+		fi; \
+	done
+
+example-agent-down: ## Stop Multi-Agent example
+	@cd examples/multi-agent && docker compose down --remove-orphans
+	@$(MAKE) example-agent-check-ports
+
+example-agent-logs: ## Show Multi-Agent example logs
+	cd examples/multi-agent && docker compose logs -f
+
+examples-build-all: example-b2b-build example-iot-build example-agent-build ## Build all examples
+	@echo "$(GREEN)✓ All examples built$(NC)"
+
+examples-down-all: example-b2b-down example-iot-down example-agent-down ## Stop all examples
+	@echo "$(GREEN)✓ All examples stopped$(NC)"
 
 # ============================================================================
 # PUBLISHING
@@ -378,6 +656,42 @@ env-check: ## Check environment setup
 	@echo "npm:     $$(npm --version)"
 	@echo "Docker:  $$(docker --version 2>/dev/null || echo 'Not installed')"
 	@echo "Git:     $$(git --version)"
+
+env-show: ## Show current environment variables
+	@echo "$(BLUE)🔧 Current Environment Configuration$(NC)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "$(YELLOW)General:$(NC)"
+	@echo "  NODE_ENV:              $(NODE_ENV)"
+	@echo "  PORT:                  $(PORT)"
+	@echo "  HOST:                  $(HOST)"
+	@echo ""
+	@echo "$(YELLOW)Docker Ports (main stack):$(NC)"
+	@echo "  API:                   $(DOCKER_API_PORT)"
+	@echo "  Frontend:              $(DOCKER_FRONTEND_PORT)"
+	@echo "  EventStore:            $(DOCKER_EVENTSTORE_HTTP_PORT)"
+	@echo "  Redis:                 $(DOCKER_REDIS_PORT)"
+	@echo "  Grafana:               $(DOCKER_GRAFANA_PORT)"
+	@echo "  Prometheus:            $(DOCKER_PROMETHEUS_PORT)"
+	@echo ""
+	@echo "$(YELLOW)Example Ports:$(NC)"
+	@echo "  B2B API:               $(B2B_API_PORT)"
+	@echo "  IoT API:               $(IOT_API_PORT)"
+	@echo "  Multi-Agent:           $(AGENT_ORCHESTRATOR_PORT)"
+	@echo ""
+	@echo "$(YELLOW)URLs:$(NC)"
+	@echo "  API_URL:               $(API_URL)"
+	@echo "  FRONTEND_URL:          $(FRONTEND_URL)"
+	@echo "  EVENTSTORE_HTTP_URL:   $(EVENTSTORE_HTTP_URL)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+env-init: ## Initialize .env from .env.example
+	@if [ -f .env ]; then \
+		echo "$(YELLOW)⚠️  .env already exists. Backup created as .env.backup$(NC)"; \
+		cp .env .env.backup; \
+	fi
+	cp .env.example .env
+	@echo "$(GREEN)✓ .env initialized from .env.example$(NC)"
+	@echo "$(YELLOW)Edit .env to customize your configuration$(NC)"
 
 # ============================================================================
 # PACKAGE CREATION

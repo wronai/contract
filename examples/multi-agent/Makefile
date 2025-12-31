@@ -206,7 +206,7 @@ docker-build: ## Build Docker images
 
 up: ## Start Docker services
 	@echo "$(BLUE)🐳 Starting Docker services...$(NC)"
-	docker compose up -d --build
+	docker compose up -d --build --remove-orphans
 	@echo "$(GREEN)✓ Services started$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Services available at:$(NC)"
@@ -216,7 +216,7 @@ up: ## Start Docker services
 
 down: ## Stop Docker services
 	@echo "$(BLUE)🐳 Stopping Docker services...$(NC)"
-	docker compose down
+	docker compose down --remove-orphans
 	@echo "$(GREEN)✓ Services stopped$(NC)"
 
 docker-logs: ## Show Docker logs

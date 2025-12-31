@@ -9,13 +9,22 @@ services:
       context: .
       dockerfile: docker/Dockerfile.api
     ports:
-      - "8080:8080"
+      - "${DOCKER_API_PORT:-8080}:8080"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=${NODE_ENV:-development}
       - PORT=8080
+      - HOST=${HOST:-0.0.0.0}
+      - API_PREFIX=${API_PREFIX:-/api/v1}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
       - EVENTSTORE_URL=esdb://eventstore:2113?tls=false
+      - DATABASE_URL=${DATABASE_URL:-postgresql://reclapp:reclapp@postgres:5432/reclapp}
       - REDIS_URL=redis://redis:6379
       - MQTT_BROKER=mqtt://mqtt:1883
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - JWT_SECRET=${JWT_SECRET:-dev-secret}
+      - AI_CONFIDENCE_THRESHOLD=${AI_CONFIDENCE_THRESHOLD:-0.7}
+      - AI_SANDBOX_MODE=${AI_SANDBOX_MODE:-true}
+      - CAUSAL_DECAY_RATE=${CAUSAL_DECAY_RATE:-0.01}
     volumes:
       - ./examples:/app/examples:ro
     depends_on:
@@ -34,8 +43,9 @@ services:
       context: .
       dockerfile: docker/Dockerfile.frontend
     ports:
-      - "3000:3000"
+      - "${DOCKER_FRONTEND_PORT:-3000}:3000"
     environment:
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8080}
       - API_URL=http://api:8080
       - WS_URL=ws://api:8080/ws
     depends_on:
@@ -50,14 +60,14 @@ services:
   eventstore:
     image: eventstore/eventstore:23.10.0-bookworm-slim
     ports:
-      - "2113:2113"  # HTTP/gRPC
-      - "1113:1113"  # TCP
+      - "${DOCKER_EVENTSTORE_HTTP_PORT:-2113}:2113"  # HTTP/gRPC
+      - "${DOCKER_EVENTSTORE_TCP_PORT:-1113}:1113"   # TCP
     environment:
       - EVENTSTORE_CLUSTER_SIZE=1
       - EVENTSTORE_RUN_PROJECTIONS=All
       - EVENTSTORE_START_STANDARD_PROJECTIONS=true
       - EVENTSTORE_HTTP_PORT=2113
-      - EVENTSTORE_INSECURE=true
+      - EVENTSTORE_INSECURE=${EVENTSTORE_INSECURE:-true}
       - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
     volumes:
       - eventstore-data:/var/lib/eventstore
@@ -73,7 +83,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "${DOCKER_REDIS_PORT:-6379}:6379"
     volumes:
       - redis-data:/data
     command: redis-server --appendonly yes
@@ -92,8 +102,8 @@ services:
   mqtt:
     image: eclipse-mosquitto:2
     ports:
-      - "1883:1883"   # MQTT
-      - "9001:9001"   # WebSocket
+      - "${DOCKER_MQTT_PORT:-1883}:1883"      # MQTT
+      - "${DOCKER_MQTT_WS_PORT:-9001}:9001"   # WebSocket
     volumes:
       - ./docker/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
       - mqtt-data:/mosquitto/data
@@ -121,9 +131,10 @@ services:
   grafana:
     image: grafana/grafana:10-alpine
     ports:
-      - "3001:3000"
+      - "${DOCKER_GRAFANA_PORT:-3001}:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana-data:/var/lib/grafana
@@ -138,7 +149,7 @@ services:
   prometheus:
     image: prom/prometheus:v2.48.0
     ports:
-      - "9090:9090"
+      - "${DOCKER_PROMETHEUS_PORT:-9090}:9090"
     volumes:
       - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus

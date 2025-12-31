@@ -9,7 +9,6 @@ services:
     build:
       context: ../..
       dockerfile: examples/b2b-risk-monitoring/Dockerfile
-    container_name: reclapp-risk-api
     ports:
       - "8081:8080"
     environment:
@@ -47,11 +46,9 @@ services:
     build:
       context: ../..
       dockerfile: docker/Dockerfile.frontend
-    container_name: reclapp-risk-dashboard
+      target: production
     ports:
       - "3001:3000"
-    environment:
-      - VITE_API_URL=http://localhost:8080
     depends_on:
       - reclapp-risk-api
     networks:
