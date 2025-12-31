@@ -1,0 +1,287 @@
+# =============================================================================
+# Reclapp DSL: B2B Customer Onboarding
+# 
+# This program defines a complete B2B customer onboarding workflow including:
+# - Customer entity with automatic KRS/CEIDG verification
+# - Onboarding workflow with approval steps
+# - Dashboard for monitoring onboarding status
+# - Alerts for pending and rejected customers
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# DATA SOURCES
+# -----------------------------------------------------------------------------
+
+SOURCE krs {
+  TYPE rest
+  URL "https://api.krs.pl/v1/company"
+  AUTH api_key
+  CACHE "1h"
+  MAPPING {
+    response.nazwa -> name
+    response.nip -> nip
+    response.krs -> krs
+    response.regon -> regon
+    response.adres -> address
+    response.status -> registryStatus
+  }
+}
+
+SOURCE ceidg {
+  TYPE rest
+  URL "https://api.ceidg.gov.pl/v1/business"
+  AUTH api_key
+  CACHE "1h"
+  MAPPING {
+    response.firma -> name
+    response.nip -> nip
+    response.adres -> address
+  }
+}
+
+# -----------------------------------------------------------------------------
+# ENTITIES
+# -----------------------------------------------------------------------------
+
+ENTITY Customer {
+  FIELD id: UUID @generated
+  FIELD name: String @required
+  FIELD nip: String @required @unique @pattern("[0-9]{10}")
+  FIELD krs: String @pattern("[0-9]{10}")
+  FIELD regon: String @pattern("[0-9]{9,14}")
+  FIELD address: JSON @required
+  FIELD email: Email @required
+  FIELD phone: String
+  FIELD segment: String @enum("enterprise", "sme", "startup") = "sme"
+  FIELD status: String @enum("pending", "verified", "rejected", "active", "suspended") = "pending"
+  FIELD registryStatus: String
+  FIELD creditLimit: Money = 0
+  FIELD paymentTerms: Int = 30
+  FIELD riskScore: Int = 50
+  FIELD verifiedAt: DateTime
+  FIELD verifiedBy: String
+  FIELD createdAt: DateTime @generated
+  FIELD updatedAt: DateTime @generated
+}
+
+ENTITY OnboardingDocument {
+  FIELD id: UUID @generated
+  FIELD customerId: UUID @required
+  FIELD documentType: String @enum("registration", "financial", "identity", "contract")
+  FIELD fileName: String @required
+  FIELD fileUrl: URL
+  FIELD status: String @enum("pending", "approved", "rejected") = "pending"
+  FIELD reviewedBy: String
+  FIELD reviewedAt: DateTime
+  FIELD notes: String
+  FIELD createdAt: DateTime @generated
+}
+
+# -----------------------------------------------------------------------------
+# EVENTS
+# -----------------------------------------------------------------------------
+
+EVENT CustomerRegistered {
+  customerId: UUID
+  name: String
+  nip: String
+  email: Email
+  segment: String
+  timestamp: DateTime
+}
+
+EVENT CustomerVerified {
+  customerId: UUID
+  verifiedBy: String
+  creditLimit: Money
+  paymentTerms: Int
+  timestamp: DateTime
+}
+
+EVENT CustomerRejected {
+  customerId: UUID
+  rejectedBy: String
+  reason: String
+  timestamp: DateTime
+}
+
+EVENT RegistryCheckCompleted {
+  customerId: UUID
+  source: String
+  status: String
+  data: JSON
+  timestamp: DateTime
+}
+
+EVENT DocumentUploaded {
+  documentId: UUID
+  customerId: UUID
+  documentType: String
+  timestamp: DateTime
+}
+
+EVENT DocumentReviewed {
+  documentId: UUID
+  customerId: UUID
+  status: String
+  reviewedBy: String
+  notes: String
+  timestamp: DateTime
+}
+
+EVENT CreditLimitSet {
+  customerId: UUID
+  previousLimit: Money
+  newLimit: Money
+  reason: String
+  setBy: String
+  timestamp: DateTime
+}
+
+# -----------------------------------------------------------------------------
+# WORKFLOWS
+# -----------------------------------------------------------------------------
+
+WORKFLOW CustomerOnboarding {
+  TRIGGER CustomerRegistered
+
+  VerifyRegistry {
+    ACTION checkKRS
+    ON_SUCCESS: GOTO VerifyDocuments
+    ON_FAILURE: GOTO ManualReview
+    TIMEOUT "5m"
+  }
+
+  VerifyDocuments {
+    ACTION validateDocuments
+    ON_SUCCESS: GOTO CalculateRisk
+    ON_FAILURE: GOTO ManualReview
+    TIMEOUT "24h"
+  }
+
+  CalculateRisk {
+    ACTION calculateRiskScore
+    ON_SUCCESS: GOTO SetCreditLimit
+    ON_FAILURE: GOTO ManualReview
+  }
+
+  SetCreditLimit {
+    ACTION determineCreditLimit
+    ON_SUCCESS: GOTO ApproveCustomer
+    ON_FAILURE: GOTO ManualReview
+  }
+
+  ManualReview {
+    ACTION notifyReviewer
+    ON_SUCCESS: GOTO ApproveCustomer
+    ON_FAILURE: GOTO RejectCustomer
+    TIMEOUT "48h"
+  }
+
+  ApproveCustomer {
+    ACTION activateCustomer
+    ON_SUCCESS: GOTO SendWelcome
+  }
+
+  RejectCustomer {
+    ACTION deactivateCustomer
+    ON_SUCCESS: GOTO NotifyRejection
+  }
+
+  SendWelcome {
+    ACTION sendWelcomeEmail
+  }
+
+  NotifyRejection {
+    ACTION sendRejectionEmail
+  }
+}
+
+# -----------------------------------------------------------------------------
+# PIPELINES
+# -----------------------------------------------------------------------------
+
+PIPELINE OnboardingMetrics {
+  INPUT Customer.events
+  TRANSFORM aggregate, calculate
+  OUTPUT dashboard, analytics
+  SCHEDULE "*/5 * * * *"
+}
+
+PIPELINE RegistrySync {
+  INPUT customers.pending
+  TRANSFORM enrichFromKRS, enrichFromCEIDG
+  OUTPUT customers.update
+  SCHEDULE "0 */6 * * *"
+}
+
+# -----------------------------------------------------------------------------
+# ALERTS
+# -----------------------------------------------------------------------------
+
+ALERT "Pending Onboarding Too Long" {
+  ENTITY Customer
+  CONDITION status == "pending" AND createdAt < now() - 48h
+  TARGET email, slack
+  SEVERITY high
+  THROTTLE "4h"
+}
+
+ALERT "High Risk Customer" {
+  ENTITY Customer
+  CONDITION riskScore > 80 AND status == "active"
+  TARGET email, slack, mqtt:alerts/risk
+  SEVERITY critical
+}
+
+ALERT "Document Review Pending" {
+  ENTITY OnboardingDocument
+  CONDITION status == "pending" AND createdAt < now() - 24h
+  TARGET email
+  SEVERITY medium
+}
+
+# -----------------------------------------------------------------------------
+# DASHBOARDS
+# -----------------------------------------------------------------------------
+
+DASHBOARD "Onboarding Overview" {
+  ENTITY Customer
+  METRICS totalCount, pendingCount, verifiedCount, rejectedCount, avgProcessingTime
+  STREAM real_time
+  LAYOUT grid
+}
+
+DASHBOARD "Onboarding Funnel" {
+  ENTITY Customer
+  METRICS 
+    registeredToday,
+    pendingVerification,
+    documentsUploaded,
+    documentsApproved,
+    fullyVerified,
+    conversionRate
+  STREAM hourly
+}
+
+DASHBOARD "Risk Distribution" {
+  ENTITY Customer
+  METRICS riskScoreDistribution, riskBySegment, highRiskTrend
+  STREAM daily
+}
+
+# -----------------------------------------------------------------------------
+# DEVICES (optional hardware integration)
+# -----------------------------------------------------------------------------
+
+DEVICE "onboarding-display" {
+  TYPE led_matrix
+  PROTOCOL mqtt
+  TOPIC "onboarding/status"
+  SUBSCRIBE Customer.verified, Customer.rejected
+  CONFIG {
+    width: 64
+    height: 32
+    brightness: 80
+  }
+}

@@ -1,0 +1,199 @@
+version: '3.8'
+
+services:
+  # ==========================================================================
+  # CORE SERVICES
+  # ==========================================================================
+  
+  # Main API Server
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=development
+      - PORT=8080
+      - EVENTSTORE_URL=esdb://eventstore:2113?tls=false
+      - REDIS_URL=redis://redis:6379
+      - MQTT_BROKER=mqtt://mqtt:1883
+    volumes:
+      - ./examples:/app/examples:ro
+    depends_on:
+      - eventstore
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend Dashboard
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=http://api:8080
+      - WS_URL=ws://api:8080/ws
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # ==========================================================================
+  # EVENT SOURCING & MESSAGING
+  # ==========================================================================
+
+  # EventStoreDB - Event Sourcing
+  eventstore:
+    image: eventstore/eventstore:23.10.0-bookworm-slim
+    ports:
+      - "2113:2113"  # HTTP/gRPC
+      - "1113:1113"  # TCP
+    environment:
+      - EVENTSTORE_CLUSTER_SIZE=1
+      - EVENTSTORE_RUN_PROJECTIONS=All
+      - EVENTSTORE_START_STANDARD_PROJECTIONS=true
+      - EVENTSTORE_HTTP_PORT=2113
+      - EVENTSTORE_INSECURE=true
+      - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
+    volumes:
+      - eventstore-data:/var/lib/eventstore
+      - eventstore-logs:/var/log/eventstore
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2113/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis - Caching & Pub/Sub
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================================================
+  # HARDWARE INTEGRATION (Optional)
+  # ==========================================================================
+
+  # MQTT Broker - IoT/Hardware Communication
+  mqtt:
+    image: eclipse-mosquitto:2
+    ports:
+      - "1883:1883"   # MQTT
+      - "9001:9001"   # WebSocket
+    volumes:
+      - ./docker/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mqtt-data:/mosquitto/data
+      - mqtt-logs:/mosquitto/log
+    restart: unless-stopped
+    profiles:
+      - hardware
+
+  # MQTT Explorer (Development UI)
+  mqtt-explorer:
+    image: smeagolworms4/mqtt-explorer
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mqtt
+    profiles:
+      - hardware
+      - dev
+
+  # ==========================================================================
+  # MONITORING & OBSERVABILITY (Optional)
+  # ==========================================================================
+
+  # Grafana - Dashboards
+  grafana:
+    image: grafana/grafana:10-alpine
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # Prometheus - Metrics
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # ==========================================================================
+  # DEVELOPMENT TOOLS (Optional)
+  # ==========================================================================
+
+  # Adminer - Database UI
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8081:8080"
+    restart: unless-stopped
+    profiles:
+      - dev
+
+  # Swagger UI - API Documentation
+  swagger:
+    image: swaggerapi/swagger-ui
+    ports:
+      - "8082:8080"
+    environment:
+      - SWAGGER_JSON=/api/openapi.yaml
+    volumes:
+      - ./docs/openapi.yaml:/api/openapi.yaml:ro
+    profiles:
+      - dev
+
+# ==========================================================================
+# VOLUMES
+# ==========================================================================
+
+volumes:
+  eventstore-data:
+  eventstore-logs:
+  redis-data:
+  mqtt-data:
+  mqtt-logs:
+  grafana-data:
+  prometheus-data:
+
+# ==========================================================================
+# NETWORKS
+# ==========================================================================
+
+networks:
+  default:
+    name: reclapp-network
+    driver: bridge

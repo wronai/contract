@@ -1,0 +1,105 @@
+# =============================================================================
+# Reclapp API Server Dockerfile
+# Multi-stage build for optimized production image
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Stage 1: Build
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache python3 make g++
+
+# Copy package files
+COPY package*.json ./
+COPY tsconfig.json ./
+
+# Install all dependencies (including devDependencies for build)
+RUN npm ci
+
+# Copy source files
+COPY dsl/ ./dsl/
+COPY core/ ./core/
+COPY modules/ ./modules/
+COPY api/ ./api/
+COPY generators/ ./generators/
+COPY hardware/ ./hardware/
+
+# Build the parser
+RUN npm run build:parser || true
+
+# Build TypeScript
+RUN npm run build
+
+# -----------------------------------------------------------------------------
+# Stage 2: Production
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS production
+
+WORKDIR /app
+
+# Add labels
+LABEL maintainer="Reclapp Team"
+LABEL description="Reclapp Declarative Application Platform"
+LABEL version="1.0.0"
+
+# Install runtime dependencies only
+RUN apk add --no-cache curl
+
+# Copy package files
+COPY package*.json ./
+
+# Install production dependencies only
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy built files from builder
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/dsl/grammar ./dsl/grammar
+
+# Copy examples
+COPY examples/ ./examples/
+
+# Create non-root user
+RUN addgroup -g 1001 -S reclapp && \
+    adduser -S -D -H -u 1001 -s /sbin/nologin -G reclapp reclapp && \
+    chown -R reclapp:reclapp /app
+
+USER reclapp
+
+# Environment
+ENV NODE_ENV=production
+ENV PORT=8080
+
+# Expose port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8080/api/health || exit 1
+
+# Start server
+CMD ["node", "dist/api/src/server.js"]
+
+# -----------------------------------------------------------------------------
+# Stage 3: Development (optional, for docker compose dev)
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS development
+
+WORKDIR /app
+
+RUN apk add --no-cache python3 make g++ curl
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+
+ENV NODE_ENV=development
+ENV PORT=8080
+
+EXPOSE 8080
+
+CMD ["npm", "run", "dev"]

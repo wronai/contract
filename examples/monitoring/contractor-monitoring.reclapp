@@ -1,0 +1,357 @@
+# =============================================================================
+# Reclapp DSL: Contractor Monitoring
+# 
+# This program defines a contractor monitoring system including:
+# - Contractor entity with financial tracking
+# - Risk event detection and alerting
+# - Real-time dashboards for monitoring
+# - Integration with external data sources
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# DATA SOURCES
+# -----------------------------------------------------------------------------
+
+SOURCE financialData {
+  TYPE rest
+  URL "https://api.financial-data.pl/v1/company"
+  AUTH bearer
+  CACHE "24h"
+  MAPPING {
+    response.revenue -> financials.revenue
+    response.profit -> financials.profit
+    response.assets -> financials.assets
+    response.liabilities -> financials.liabilities
+    response.employees -> financials.employees
+  }
+}
+
+SOURCE legalRegistry {
+  TYPE rest
+  URL "https://api.legal-registry.pl/v1/cases"
+  AUTH api_key
+  CACHE "12h"
+}
+
+SOURCE mediaMonitor {
+  TYPE rest
+  URL "https://api.media-monitor.pl/v1/mentions"
+  AUTH api_key
+  CACHE "1h"
+}
+
+# -----------------------------------------------------------------------------
+# ENTITIES
+# -----------------------------------------------------------------------------
+
+ENTITY Contractor {
+  FIELD id: UUID @generated
+  FIELD contractorId: String @unique @generated
+  FIELD name: String @required
+  FIELD nip: String @required @unique @pattern("[0-9]{10}")
+  FIELD krs: String @pattern("[0-9]{10}")
+  FIELD regon: String @pattern("[0-9]{9,14}")
+  FIELD address: JSON @required
+  FIELD category: String @required
+  FIELD status: String @enum("active", "suspended", "liquidation", "bankrupt", "unknown") = "active"
+  FIELD rating: Float @min(0) @max(10) = 5.0
+  FIELD riskScore: Int @min(0) @max(100) = 50
+  FIELD creditLimit: Money = 0
+  FIELD totalOrders: Int = 0
+  FIELD totalValue: Money = 0
+  FIELD lastOrderDate: DateTime
+  FIELD lastCheckDate: DateTime
+  FIELD financials: JSON
+  FIELD board: JSON
+  FIELD notes: String
+  FIELD createdAt: DateTime @generated
+  FIELD updatedAt: DateTime @generated
+}
+
+ENTITY RiskEvent {
+  FIELD id: UUID @generated
+  FIELD contractorId: UUID @required
+  FIELD eventType: String @enum("financial_decline", "board_change", "legal_issue", "payment_delay", "credit_downgrade", "address_change", "status_change", "media_negative")
+  FIELD severity: String @enum("low", "medium", "high", "critical") = "medium"
+  FIELD description: String @required
+  FIELD source: String
+  FIELD data: JSON
+  FIELD resolved: Boolean = false
+  FIELD resolvedBy: String
+  FIELD resolvedAt: DateTime
+  FIELD resolvedNotes: String
+  FIELD timestamp: DateTime @generated
+}
+
+ENTITY MonitoringRule {
+  FIELD id: UUID @generated
+  FIELD name: String @required
+  FIELD description: String
+  FIELD condition: String @required
+  FIELD severity: String @enum("low", "medium", "high", "critical")
+  FIELD enabled: Boolean = true
+  FIELD targets: JSON
+  FIELD createdAt: DateTime @generated
+}
+
+ENTITY FinancialSnapshot {
+  FIELD id: UUID @generated
+  FIELD contractorId: UUID @required
+  FIELD year: Int @required
+  FIELD revenue: Money
+  FIELD profit: Money
+  FIELD assets: Money
+  FIELD liabilities: Money
+  FIELD employees: Int
+  FIELD profitMargin: Float
+  FIELD debtRatio: Float
+  FIELD createdAt: DateTime @generated
+}
+
+# -----------------------------------------------------------------------------
+# EVENTS
+# -----------------------------------------------------------------------------
+
+EVENT ContractorAdded {
+  contractorId: UUID
+  name: String
+  nip: String
+  category: String
+  timestamp: DateTime
+}
+
+EVENT ContractorUpdated {
+  contractorId: UUID
+  changes: JSON
+  updatedBy: String
+  timestamp: DateTime
+}
+
+EVENT RiskEventDetected {
+  riskEventId: UUID
+  contractorId: UUID
+  eventType: String
+  severity: String
+  description: String
+  source: String
+  timestamp: DateTime
+}
+
+EVENT RiskEventResolved {
+  riskEventId: UUID
+  contractorId: UUID
+  resolvedBy: String
+  notes: String
+  timestamp: DateTime
+}
+
+EVENT FinancialDataUpdated {
+  contractorId: UUID
+  year: Int
+  revenue: Money
+  profit: Money
+  previousRevenue: Money
+  previousProfit: Money
+  changePercent: Float
+  timestamp: DateTime
+}
+
+EVENT BoardChanged {
+  contractorId: UUID
+  changeType: String
+  memberName: String
+  role: String
+  timestamp: DateTime
+}
+
+EVENT StatusChanged {
+  contractorId: UUID
+  previousStatus: String
+  newStatus: String
+  reason: String
+  timestamp: DateTime
+}
+
+EVENT RatingChanged {
+  contractorId: UUID
+  previousRating: Float
+  newRating: Float
+  reason: String
+  timestamp: DateTime
+}
+
+# -----------------------------------------------------------------------------
+# PIPELINES
+# -----------------------------------------------------------------------------
+
+PIPELINE FinancialMonitoring {
+  INPUT contractors.active
+  TRANSFORM fetchFinancials, calculateMetrics, detectAnomalies
+  OUTPUT riskEvents, dashboard
+  SCHEDULE "0 6 * * *"
+}
+
+PIPELINE LegalMonitoring {
+  INPUT contractors.active
+  TRANSFORM fetchLegalCases, assessRisk
+  OUTPUT riskEvents, alerts
+  SCHEDULE "0 8 * * *"
+}
+
+PIPELINE MediaMonitoring {
+  INPUT contractors.active
+  TRANSFORM fetchMentions, sentimentAnalysis, filterNegative
+  OUTPUT riskEvents, dashboard
+  SCHEDULE "0 */4 * * *"
+}
+
+PIPELINE RiskScoreCalculation {
+  INPUT riskEvents.unresolved
+  TRANSFORM aggregateByContractor, calculateScore, updateContractor
+  OUTPUT contractors.update
+  SCHEDULE "*/30 * * * *"
+}
+
+PIPELINE BoardChangeDetection {
+  INPUT contractors.active
+  TRANSFORM fetchBoardData, compareWithPrevious, detectChanges
+  OUTPUT riskEvents, alerts
+  SCHEDULE "0 7 * * 1"
+}
+
+# -----------------------------------------------------------------------------
+# ALERTS
+# -----------------------------------------------------------------------------
+
+ALERT "Critical Risk Detected" {
+  ENTITY RiskEvent
+  CONDITION severity == "critical" AND resolved == false
+  TARGET email, slack, sms, mqtt:alerts/critical
+  SEVERITY critical
+}
+
+ALERT "Financial Decline" {
+  ENTITY Contractor
+  CONDITION riskScore > 70 AND financials.profitMargin < -0.1
+  TARGET email, slack
+  SEVERITY high
+  THROTTLE "24h"
+}
+
+ALERT "Status Change to Liquidation" {
+  ENTITY Contractor
+  CONDITION status == "liquidation" OR status == "bankrupt"
+  TARGET email, slack, sms
+  SEVERITY critical
+}
+
+ALERT "Multiple Risk Events" {
+  ENTITY Contractor
+  CONDITION unresolvedRiskEvents > 3
+  TARGET email, slack
+  SEVERITY high
+  THROTTLE "12h"
+}
+
+ALERT "Board Member Resignation" {
+  ENTITY RiskEvent
+  CONDITION eventType == "board_change" AND data.changeType == "resignation"
+  TARGET email
+  SEVERITY medium
+}
+
+ALERT "Payment Delay Pattern" {
+  ENTITY Contractor
+  CONDITION paymentDelayCount > 2 AND lastPaymentDelay < 30d
+  TARGET email
+  SEVERITY medium
+  THROTTLE "7d"
+}
+
+ALERT "Credit Limit Exceeded" {
+  ENTITY Contractor
+  CONDITION outstandingValue > creditLimit * 0.9
+  TARGET email, slack
+  SEVERITY high
+}
+
+# -----------------------------------------------------------------------------
+# DASHBOARDS
+# -----------------------------------------------------------------------------
+
+DASHBOARD "Contractor Overview" {
+  ENTITY Contractor
+  METRICS 
+    totalCount,
+    activeCount,
+    byCategory,
+    byRiskLevel,
+    avgRating,
+    totalOrderValue
+  STREAM real_time
+  LAYOUT grid
+}
+
+DASHBOARD "Risk Monitor" {
+  ENTITY RiskEvent
+  METRICS
+    totalEvents,
+    unresolvedCount,
+    bySeverity,
+    byType,
+    resolutionTime,
+    trendLast30Days
+  STREAM real_time
+  LAYOUT grid
+}
+
+DASHBOARD "Financial Health" {
+  ENTITY Contractor
+  METRICS
+    revenueDistribution,
+    profitMarginAvg,
+    debtRatioAvg,
+    financialTrend,
+    topByRevenue,
+    bottomByProfit
+  STREAM daily
+}
+
+DASHBOARD "Alert Center" {
+  ENTITY RiskEvent
+  METRICS
+    activeAlerts,
+    alertsByPriority,
+    responseTime,
+    acknowledgedRate
+  STREAM real_time
+  REFRESH "30s"
+}
+
+# -----------------------------------------------------------------------------
+# DEVICES
+# -----------------------------------------------------------------------------
+
+DEVICE "risk-display-main" {
+  TYPE led_matrix
+  PROTOCOL mqtt
+  TOPIC "monitoring/risk"
+  SUBSCRIBE RiskEvent.critical, RiskEvent.high
+  CONFIG {
+    width: 128
+    height: 64
+    scrollSpeed: 50
+  }
+}
+
+DEVICE "status-indicator" {
+  TYPE gpio
+  PROTOCOL mqtt
+  TOPIC "monitoring/status"
+  SUBSCRIBE Contractor.statusChanged
+  CONFIG {
+    greenPin: 17
+    yellowPin: 27
+    redPin: 22
+  }
+}

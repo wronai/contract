@@ -1,0 +1,355 @@
+# =============================================================================
+# Reclapp DSL: Analytics & Reporting
+# 
+# This program defines a comprehensive reporting and analytics system:
+# - Portfolio analysis and KPIs
+# - Trend detection and forecasting
+# - Automated report generation
+# - Industry benchmarking
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# DATA SOURCES
+# -----------------------------------------------------------------------------
+
+SOURCE industryBenchmarks {
+  TYPE rest
+  URL "https://api.industry-data.pl/v1/benchmarks"
+  AUTH api_key
+  CACHE "7d"
+}
+
+SOURCE marketData {
+  TYPE rest
+  URL "https://api.market-data.pl/v1/indicators"
+  AUTH bearer
+  CACHE "24h"
+}
+
+# -----------------------------------------------------------------------------
+# ENTITIES
+# -----------------------------------------------------------------------------
+
+ENTITY Report {
+  FIELD id: UUID @generated
+  FIELD name: String @required
+  FIELD type: String @enum("portfolio", "risk", "financial", "trend", "custom") @required
+  FIELD description: String
+  FIELD parameters: JSON
+  FIELD schedule: String
+  FIELD recipients: JSON
+  FIELD format: String @enum("pdf", "xlsx", "html", "json") = "pdf"
+  FIELD lastGeneratedAt: DateTime
+  FIELD status: String @enum("active", "paused", "archived") = "active"
+  FIELD createdBy: String
+  FIELD createdAt: DateTime @generated
+}
+
+ENTITY ReportExecution {
+  FIELD id: UUID @generated
+  FIELD reportId: UUID @required
+  FIELD status: String @enum("pending", "running", "completed", "failed") = "pending"
+  FIELD startedAt: DateTime
+  FIELD completedAt: DateTime
+  FIELD duration: Int
+  FIELD outputUrl: URL
+  FIELD error: String
+  FIELD metadata: JSON
+}
+
+ENTITY KPI {
+  FIELD id: UUID @generated
+  FIELD name: String @required @unique
+  FIELD description: String
+  FIELD formula: String @required
+  FIELD unit: String
+  FIELD target: Float
+  FIELD warningThreshold: Float
+  FIELD criticalThreshold: Float
+  FIELD category: String
+  FIELD enabled: Boolean = true
+}
+
+ENTITY KPIValue {
+  FIELD id: UUID @generated
+  FIELD kpiId: UUID @required
+  FIELD value: Float @required
+  FIELD period: String @required
+  FIELD periodStart: DateTime @required
+  FIELD periodEnd: DateTime @required
+  FIELD trend: String @enum("up", "down", "stable")
+  FIELD changePercent: Float
+  FIELD metadata: JSON
+  FIELD calculatedAt: DateTime @generated
+}
+
+ENTITY TrendAnalysis {
+  FIELD id: UUID @generated
+  FIELD entityType: String @required
+  FIELD metricName: String @required
+  FIELD periodType: String @enum("daily", "weekly", "monthly", "quarterly", "yearly")
+  FIELD direction: String @enum("increasing", "decreasing", "stable", "volatile")
+  FIELD strength: Float
+  FIELD confidence: Float
+  FIELD forecast: JSON
+  FIELD insights: JSON
+  FIELD calculatedAt: DateTime @generated
+}
+
+ENTITY Benchmark {
+  FIELD id: UUID @generated
+  FIELD industry: String @required
+  FIELD metricName: String @required
+  FIELD year: Int @required
+  FIELD percentile25: Float
+  FIELD percentile50: Float
+  FIELD percentile75: Float
+  FIELD percentile90: Float
+  FIELD average: Float
+  FIELD sampleSize: Int
+  FIELD source: String
+  FIELD updatedAt: DateTime @generated
+}
+
+# -----------------------------------------------------------------------------
+# EVENTS
+# -----------------------------------------------------------------------------
+
+EVENT ReportGenerated {
+  reportId: UUID
+  executionId: UUID
+  reportName: String
+  format: String
+  outputUrl: URL
+  duration: Int
+  timestamp: DateTime
+}
+
+EVENT ReportFailed {
+  reportId: UUID
+  executionId: UUID
+  error: String
+  timestamp: DateTime
+}
+
+EVENT KPICalculated {
+  kpiId: UUID
+  kpiName: String
+  value: Float
+  previousValue: Float
+  changePercent: Float
+  period: String
+  timestamp: DateTime
+}
+
+EVENT KPIThresholdBreached {
+  kpiId: UUID
+  kpiName: String
+  value: Float
+  threshold: Float
+  thresholdType: String
+  timestamp: DateTime
+}
+
+EVENT TrendDetected {
+  entityType: String
+  metricName: String
+  direction: String
+  strength: Float
+  insight: String
+  timestamp: DateTime
+}
+
+# -----------------------------------------------------------------------------
+# PIPELINES
+# -----------------------------------------------------------------------------
+
+PIPELINE DailyKPICalculation {
+  INPUT customers, contractors, riskEvents, orders
+  TRANSFORM calculateKPIs, compareToPrevious, detectThresholdBreaches
+  OUTPUT kpiValues, alerts, dashboard
+  SCHEDULE "0 1 * * *"
+}
+
+PIPELINE WeeklyTrendAnalysis {
+  INPUT kpiValues.last90days
+  TRANSFORM analyzeTrends, generateForecasts, extractInsights
+  OUTPUT trendAnalysis, reports
+  SCHEDULE "0 2 * * 1"
+}
+
+PIPELINE MonthlyBenchmarking {
+  INPUT customers, contractors, industryBenchmarks
+  TRANSFORM calculatePercentiles, compareToIndustry, generateInsights
+  OUTPUT benchmarkComparison, reports
+  SCHEDULE "0 3 1 * *"
+}
+
+PIPELINE ReportGeneration {
+  INPUT reports.scheduled
+  TRANSFORM fetchData, applyTemplate, renderOutput, distribute
+  OUTPUT reportExecutions, notifications
+}
+
+PIPELINE PortfolioAnalysis {
+  INPUT customers.active, contractors.active
+  TRANSFORM segmentAnalysis, riskDistribution, valueAnalysis
+  OUTPUT portfolioReport, dashboard
+  SCHEDULE "0 6 * * *"
+}
+
+# -----------------------------------------------------------------------------
+# ALERTS
+# -----------------------------------------------------------------------------
+
+ALERT "KPI Critical Threshold" {
+  ENTITY KPIValue
+  CONDITION value > kpi.criticalThreshold OR value < -kpi.criticalThreshold
+  TARGET email, slack
+  SEVERITY critical
+}
+
+ALERT "KPI Warning Threshold" {
+  ENTITY KPIValue
+  CONDITION value > kpi.warningThreshold OR value < -kpi.warningThreshold
+  TARGET email
+  SEVERITY medium
+  THROTTLE "24h"
+}
+
+ALERT "Negative Trend Detected" {
+  ENTITY TrendAnalysis
+  CONDITION direction == "decreasing" AND strength > 0.7 AND confidence > 0.8
+  TARGET email, slack
+  SEVERITY high
+}
+
+ALERT "Report Generation Failed" {
+  ENTITY ReportExecution
+  CONDITION status == "failed"
+  TARGET email
+  SEVERITY high
+}
+
+ALERT "Below Industry Benchmark" {
+  ENTITY KPIValue
+  CONDITION value < benchmark.percentile25
+  TARGET email
+  SEVERITY medium
+  THROTTLE "7d"
+}
+
+# -----------------------------------------------------------------------------
+# DASHBOARDS
+# -----------------------------------------------------------------------------
+
+DASHBOARD "Executive Summary" {
+  ENTITY KPIValue
+  METRICS
+    revenueGrowth,
+    customerAcquisition,
+    customerRetention,
+    contractorPerformance,
+    riskExposure,
+    profitMargin
+  STREAM daily
+  LAYOUT grid
+}
+
+DASHBOARD "KPI Tracker" {
+  ENTITY KPIValue
+  METRICS
+    allKPIs,
+    trendsLast30Days,
+    vsTargets,
+    vsLastPeriod,
+    topPerformers,
+    bottomPerformers
+  STREAM real_time
+  REFRESH "5m"
+}
+
+DASHBOARD "Trend Analysis" {
+  ENTITY TrendAnalysis
+  METRICS
+    trendsByMetric,
+    forecastAccuracy,
+    anomalyDetection,
+    seasonalPatterns
+  STREAM daily
+}
+
+DASHBOARD "Industry Comparison" {
+  ENTITY Benchmark
+  METRICS
+    vsIndustryAvg,
+    percentileRanking,
+    gapAnalysis,
+    improvementAreas
+  STREAM weekly
+}
+
+DASHBOARD "Report Center" {
+  ENTITY Report
+  METRICS
+    scheduledReports,
+    recentExecutions,
+    failureRate,
+    avgGenerationTime
+  STREAM real_time
+}
+
+# -----------------------------------------------------------------------------
+# REPORT TEMPLATES
+# -----------------------------------------------------------------------------
+
+CONFIG PortfolioReport {
+  template: "portfolio-analysis"
+  sections: [
+    "executive_summary",
+    "customer_overview",
+    "contractor_overview",
+    "risk_analysis",
+    "financial_metrics",
+    "trends",
+    "recommendations"
+  ]
+  charts: [
+    "revenue_trend",
+    "customer_segmentation",
+    "risk_distribution",
+    "contractor_performance"
+  ]
+}
+
+CONFIG RiskReport {
+  template: "risk-assessment"
+  sections: [
+    "risk_summary",
+    "high_risk_entities",
+    "risk_events",
+    "mitigation_actions",
+    "trend_analysis"
+  ]
+  charts: [
+    "risk_heatmap",
+    "severity_distribution",
+    "risk_trend"
+  ]
+}
+
+CONFIG FinancialReport {
+  template: "financial-overview"
+  sections: [
+    "financial_summary",
+    "revenue_analysis",
+    "profitability",
+    "cash_flow",
+    "benchmarking"
+  ]
+  charts: [
+    "revenue_chart",
+    "profit_margins",
+    "industry_comparison"
+  ]
+}
