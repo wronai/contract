@@ -1,0 +1,8 @@
+app "AutoGen" {
+  version: "1.0.0"
+}
+
+entity Product {
+  id uuid @unique
+  name text @required
+}

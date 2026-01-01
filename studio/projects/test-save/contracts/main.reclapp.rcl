@@ -1,0 +1,8 @@
+app "SaveTest" {
+  version: "1.0.0"
+}
+
+entity Item {
+  id uuid @unique @generated
+  name text @required
+}

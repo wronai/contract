@@ -313,6 +313,8 @@ export interface GeneratedCode {
   metadata: {
     /** Data generacji */
     generatedAt: Date;
+    /** Data korekty (jeśli kod był poprawiany) */
+    correctedAt?: Date;
     /** Cele generacji */
     targets: string[];
     /** Zużyte tokeny */
