@@ -40,29 +40,35 @@ const HELP = `
 Reclapp CLI - Generate applications from DSL contracts
 
 Usage:
-  reclapp generate <contract.reclapp.ts> [options]
-  reclapp dev <contract.reclapp.ts> [options]
-  reclapp validate <contract.reclapp.ts>
-  reclapp list
-  reclapp --help
+  reclapp <contract.reclapp.ts>              Generate application
+  reclapp run <contract.reclapp.ts>          Generate, install, and run
+  reclapp test <contract.reclapp.ts>         Generate, run, and test API
+  reclapp dev <contract.reclapp.ts>          Generate and start dev servers
+  reclapp deploy <contract.reclapp.ts>       Generate and deploy with Docker
+  reclapp validate <contract.reclapp.ts>     Validate contract
+  reclapp list                               List available contracts
 
 Commands:
-  generate    Generate full application from contract to target/ folder
+  generate    Generate full application to target/ folder
+  run         Generate, install dependencies, and start servers
+  test        Generate, run servers, and execute API tests
   dev         Generate and start development servers (API + Frontend)
+  deploy      Generate and deploy with Docker Compose
   validate    Validate contract without generating
   list        List all available contract files
 
 Options:
   --output, -o <dir>    Output directory (default: ./target)
   --only <part>         Generate only: api, frontend, database, docker
+  --port <port>         API port (default: 8080)
   --verbose, -v         Verbose output
   --help, -h            Show this help
 
 Examples:
-  reclapp generate examples/crm/contracts/main.reclapp.ts
-  reclapp generate contracts/app.reclapp.ts --output ./dist
-  reclapp dev examples/crm/contracts/main.reclapp.ts
-  reclapp validate contracts/app.reclapp.ts
+  reclapp examples/crm/contracts/main.reclapp.ts
+  reclapp run examples/crm/contracts/main.reclapp.ts
+  reclapp test examples/crm/contracts/main.reclapp.ts
+  reclapp deploy examples/crm/contracts/main.reclapp.ts
 `;
 
 // ============================================================================
@@ -204,7 +210,12 @@ export default router;
   }
 
   modelTemplate(entity) {
-    const fields = (entity.fields || []).map(f => `  ${f.name}${f.nullable ? '?' : ''}: ${this.tsType(f.type)};`).join('\n');
+    const entityFields = entity.fields || [];
+    const hasCreatedAt = entityFields.some(f => f.name === 'createdAt');
+    const hasUpdatedAt = entityFields.some(f => f.name === 'updatedAt');
+    const fields = entityFields
+      .filter(f => f.name !== 'createdAt' && f.name !== 'updatedAt')
+      .map(f => `  ${f.name}${f.nullable ? '?' : ''}: ${this.tsType(f.type)};`).join('\n');
     return `export interface ${entity.name} {\n  id: string;\n${fields}\n  createdAt: string;\n  updatedAt?: string;\n}\n`;
   }
 
@@ -539,6 +550,183 @@ async function cmdList() {
   console.log('');
 }
 
+async function cmdRun(contractPath, options) {
+  const { spawn, execSync } = require('child_process');
+  
+  // First generate
+  await cmdGenerate(contractPath, { ...options, verbose: false });
+  
+  const outputDir = options.output || path.join(path.dirname(contractPath), '..', 'target');
+  const apiDir = path.join(outputDir, 'api');
+
+  console.log('\n📦 Installing API dependencies...');
+  execSync('npm install', { cwd: apiDir, stdio: 'inherit' });
+
+  console.log('\n🚀 Starting API server...\n');
+  const apiProc = spawn('npm', ['run', 'dev'], { cwd: apiDir, stdio: 'inherit', shell: true });
+
+  // Wait for server to start
+  await new Promise(resolve => setTimeout(resolve, 3000));
+
+  console.log('\n✅ Server running at http://localhost:8080');
+  console.log('   Press Ctrl+C to stop\n');
+
+  process.on('SIGINT', () => {
+    apiProc.kill();
+    process.exit(0);
+  });
+
+  // Keep process alive
+  await new Promise(() => {});
+}
+
+async function cmdTest(contractPath, options) {
+  const { spawn, execSync } = require('child_process');
+  const http = require('http');
+  
+  // First generate
+  const contract = await loadContract(contractPath);
+  await cmdGenerate(contractPath, { ...options, verbose: false });
+  
+  const outputDir = options.output || path.join(path.dirname(contractPath), '..', 'target');
+  const apiDir = path.join(outputDir, 'api');
+
+  console.log('\n📦 Installing API dependencies...');
+  execSync('npm install', { cwd: apiDir, stdio: 'pipe' });
+
+  console.log('🚀 Starting API server for testing...');
+  const apiProc = spawn('npm', ['run', 'dev'], { cwd: apiDir, stdio: 'pipe', shell: true });
+
+  // Wait for server to start
+  await new Promise(resolve => setTimeout(resolve, 3000));
+
+  console.log('\n🧪 Running API tests...\n');
+
+  const entities = contract.entities || [];
+  let passed = 0;
+  let failed = 0;
+
+  const request = (method, path, body = null) => {
+    return new Promise((resolve, reject) => {
+      const options = {
+        hostname: 'localhost',
+        port: 8080,
+        path: path,
+        method: method,
+        headers: { 'Content-Type': 'application/json' }
+      };
+      
+      const req = http.request(options, (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          try {
+            resolve({ status: res.statusCode, data: JSON.parse(data) });
+          } catch {
+            resolve({ status: res.statusCode, data: data });
+          }
+        });
+      });
+      
+      req.on('error', reject);
+      if (body) req.write(JSON.stringify(body));
+      req.end();
+    });
+  };
+
+  const test = async (name, fn) => {
+    try {
+      await fn();
+      console.log(`  ✅ ${name}`);
+      passed++;
+    } catch (err) {
+      console.log(`  ❌ ${name}: ${err.message}`);
+      failed++;
+    }
+  };
+
+  const assert = (condition, message) => {
+    if (!condition) throw new Error(message);
+  };
+
+  // Test health endpoint
+  await test('GET /api/health returns 200', async () => {
+    const res = await request('GET', '/api/health');
+    assert(res.status === 200, `Expected 200, got ${res.status}`);
+    assert(res.data.status === 'healthy', 'Expected healthy status');
+  });
+
+  // Test each entity CRUD
+  for (const entity of entities) {
+    const kebab = entity.name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+    const endpoint = `/api/${kebab}s`;
+
+    await test(`GET ${endpoint} returns 200`, async () => {
+      const res = await request('GET', endpoint);
+      assert(res.status === 200, `Expected 200, got ${res.status}`);
+      assert(Array.isArray(res.data.data), 'Expected data array');
+    });
+
+    await test(`POST ${endpoint} creates item`, async () => {
+      const testData = { name: `Test ${entity.name}` };
+      const res = await request('POST', endpoint, testData);
+      assert(res.status === 201, `Expected 201, got ${res.status}`);
+      assert(res.data.data.id, 'Expected id in response');
+    });
+
+    await test(`GET ${endpoint}/1 returns created item`, async () => {
+      const res = await request('GET', `${endpoint}/1`);
+      assert(res.status === 200, `Expected 200, got ${res.status}`);
+    });
+
+    await test(`PUT ${endpoint}/1 updates item`, async () => {
+      const res = await request('PUT', `${endpoint}/1`, { name: 'Updated' });
+      assert(res.status === 200, `Expected 200, got ${res.status}`);
+    });
+
+    await test(`DELETE ${endpoint}/1 removes item`, async () => {
+      const res = await request('DELETE', `${endpoint}/1`);
+      assert(res.status === 204, `Expected 204, got ${res.status}`);
+    });
+  }
+
+  // Stop server
+  apiProc.kill();
+
+  console.log(`\n📊 Results: ${passed} passed, ${failed} failed\n`);
+
+  if (failed > 0) {
+    process.exit(1);
+  }
+}
+
+async function cmdDeploy(contractPath, options) {
+  const { execSync } = require('child_process');
+  
+  // First generate
+  await cmdGenerate(contractPath, { ...options, verbose: false });
+  
+  const outputDir = options.output || path.join(path.dirname(contractPath), '..', 'target');
+  
+  console.log('\n🐳 Building Docker containers...\n');
+  
+  try {
+    execSync('docker compose build', { cwd: outputDir, stdio: 'inherit' });
+    
+    console.log('\n🚀 Starting containers...\n');
+    execSync('docker compose up -d', { cwd: outputDir, stdio: 'inherit' });
+    
+    console.log('\n✅ Deployment complete!');
+    console.log('   API:      http://localhost:8080');
+    console.log('   Frontend: http://localhost:3000');
+    console.log('\n   View logs: docker compose logs -f');
+    console.log('   Stop:      docker compose down\n');
+  } catch (err) {
+    console.error('❌ Docker deployment failed. Make sure Docker is running.');
+    process.exit(1);
+  }
+}
+
 // ============================================================================
 // MAIN
 // ============================================================================
@@ -605,6 +793,32 @@ async function main() {
     case 'ls':
     case 'l':
       await cmdList();
+      break;
+
+    case 'run':
+    case 'r':
+      if (!contractPath) {
+        console.error('❌ Missing contract path. Usage: reclapp run <contract.reclapp.ts>');
+        process.exit(1);
+      }
+      await cmdRun(contractPath, options);
+      break;
+
+    case 'test':
+    case 't':
+      if (!contractPath) {
+        console.error('❌ Missing contract path. Usage: reclapp test <contract.reclapp.ts>');
+        process.exit(1);
+      }
+      await cmdTest(contractPath, options);
+      break;
+
+    case 'deploy':
+      if (!contractPath) {
+        console.error('❌ Missing contract path. Usage: reclapp deploy <contract.reclapp.ts>');
+        process.exit(1);
+      }
+      await cmdDeploy(contractPath, options);
       break;
 
     default:

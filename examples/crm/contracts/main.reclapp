@@ -1,6 +1,210 @@
 // CRM System - Reclapp Contract
 // Customer Relationship Management with contacts, deals, and activities
 // Version 2.1.0
+//
+// SELF-SUFFICIENT DSL - All source code generated from this definition
+// Generated files output to target/ folder
+
+// =============================================================================
+// METADATA
+// =============================================================================
+
+APP "CRM System" {
+  VERSION "2.1.0"
+  DESCRIPTION "Customer Relationship Management with contacts, deals, and activities"
+  AUTHOR "Reclapp Team"
+  LICENSE "MIT"
+}
+
+// =============================================================================
+// DEPLOYMENT
+// =============================================================================
+
+DEPLOYMENT web {
+  FRAMEWORK nextjs
+  
+  BUILD {
+    OUTPUT_DIR "target"
+    NODE_VERSION "18"
+  }
+  
+  HOSTING {
+    PROVIDER "${HOSTING_PROVIDER:docker}"
+    
+    DOMAIN {
+      PRIMARY "${APP_DOMAIN:localhost}"
+    }
+  }
+}
+
+// =============================================================================
+// BACKEND
+// =============================================================================
+
+BACKEND api {
+  RUNTIME node
+  FRAMEWORK express
+  PORT "${API_PORT:8080}"
+  
+  DATABASE {
+    TYPE postgres
+    URL "${DATABASE_URL}"
+    POOL_SIZE 10
+  }
+  
+  AUTH {
+    TYPE jwt
+    SECRET "${JWT_SECRET}"
+    EXPIRY "24h"
+  }
+  
+  CORS {
+    ORIGINS ["${FRONTEND_URL:http://localhost:3000}"]
+    CREDENTIALS true
+  }
+}
+
+// =============================================================================
+// FRONTEND
+// =============================================================================
+
+FRONTEND crm_ui {
+  FRAMEWORK react
+  BUNDLER vite
+  STYLE tailwindcss
+  COMPONENTS shadcn
+  
+  THEME {
+    MODE "light"
+    PRIMARY "#3b82f6"
+  }
+  
+  LAYOUT {
+    TYPE sidebar
+    NAVIGATION [
+      { ICON "home", LABEL "Dashboard", PATH "/" },
+      { ICON "users", LABEL "Contacts", PATH "/contacts" },
+      { ICON "building", LABEL "Companies", PATH "/companies" },
+      { ICON "dollar-sign", LABEL "Deals", PATH "/deals" },
+      { ICON "calendar", LABEL "Activities", PATH "/activities" },
+      { ICON "check-square", LABEL "Tasks", PATH "/tasks" },
+      { ICON "bar-chart", LABEL "Reports", PATH "/reports" }
+    ]
+  }
+}
+
+// =============================================================================
+// API ENDPOINTS
+// =============================================================================
+
+API v1 {
+  PREFIX "/api/v1"
+  
+  RESOURCE contacts {
+    ENTITY Contact
+    OPERATIONS [list, get, create, update, delete]
+    AUTH required
+  }
+  
+  RESOURCE companies {
+    ENTITY Company
+    OPERATIONS [list, get, create, update, delete]
+    AUTH required
+  }
+  
+  RESOURCE deals {
+    ENTITY Deal
+    OPERATIONS [list, get, create, update, delete]
+    AUTH required
+    
+    ACTION changeStage {
+      METHOD PATCH
+      PATH "/:id/stage"
+      INPUT { stage: String }
+    }
+  }
+  
+  RESOURCE activities {
+    ENTITY Activity
+    OPERATIONS [list, get, create, update]
+    AUTH required
+  }
+  
+  RESOURCE tasks {
+    ENTITY Task
+    OPERATIONS [list, get, create, update]
+    AUTH required
+    
+    ACTION complete {
+      METHOD PATCH
+      PATH "/:id/complete"
+    }
+  }
+  
+  RESOURCE pipeline {
+    ACTION overview {
+      METHOD GET
+      PATH "/"
+    }
+  }
+  
+  RESOURCE metrics {
+    ACTION dashboard {
+      METHOD GET
+      PATH "/"
+    }
+    
+    ACTION forecast {
+      METHOD GET
+      PATH "/forecast"
+    }
+  }
+}
+
+// =============================================================================
+// ENVIRONMENT VARIABLES
+// =============================================================================
+
+ENV {
+  API_PORT: Int = 8080
+  DATABASE_URL: String @secret
+  JWT_SECRET: String @secret
+  EMAIL_API_URL: String?
+  EMAIL_API_KEY: String? @secret
+  FRONTEND_URL: String = "http://localhost:3000"
+  APP_DOMAIN: String = "localhost"
+  HOSTING_PROVIDER: String = "docker"
+}
+
+// =============================================================================
+// DOCKER COMPOSE
+// =============================================================================
+
+DOCKER {
+  SERVICES [
+    {
+      NAME "api"
+      BUILD "./backend"
+      PORTS ["8080:8080"]
+      ENV_FILE ".env"
+      DEPENDS_ON ["postgres"]
+    },
+    {
+      NAME "dashboard"
+      BUILD "./frontend"
+      PORTS ["3000:3000"]
+      DEPENDS_ON ["api"]
+    },
+    {
+      NAME "postgres"
+      IMAGE "postgres:15-alpine"
+      VOLUMES ["postgres_data:/var/lib/postgresql/data"]
+      ENV { POSTGRES_DB: "crm", POSTGRES_USER: "crm", POSTGRES_PASSWORD: "${DB_PASSWORD}" }
+    }
+  ]
+  
+  VOLUMES ["postgres_data"]
+}
 
 // =============================================================================
 // DATA SOURCES
