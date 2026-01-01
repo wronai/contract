@@ -525,32 +525,23 @@ const User: Entity = {
 
 ## Migration Guide
 
-### From `.reclapp` to `.reclapp.ts`
+### From `.reclapp.rcl` to `.reclapp.ts`
 
-1. Run conversion:
-   ```bash
-   npx reclapp-loader convert contracts/main.reclapp --output=contracts/main.reclapp.ts
-   ```
-
-2. Review and add types:
-   ```typescript
-   // Add proper type imports
-   import type { Entity, Event } from '@reclapp/contracts/dsl-types';
-   ```
-
-3. Split into modules if needed
-
-4. Update imports in your code
-
-### From YAML to TypeScript
+Use the built-in converter:
 
 ```bash
-npx reclapp-loader convert contracts/main.yaml --format=yaml --output=contracts/main.reclapp.ts
+./bin/reclapp convert contracts/main.reclapp.rcl --format ts
+```
+
+### From `.rcl.md` to `.reclapp.ts`
+
+```bash
+./bin/reclapp convert contracts/main.rcl.md --format ts
 ```
 
 ## Related Documentation
 
-- [DSL Reference](./dsl-reference.md) - `.reclapp` format reference
+- [DSL Reference](./dsl-reference.md) - Full DSL (uppercase syntax) + Mini-DSL pointers
 - [DSL Generation Proposal](./DSL_GENERATION_PROPOSAL.md) - Full generation system
 - [Contract Types](../contracts/dsl-types.ts) - TypeScript type definitions
 - [Contract Loader](../contracts/dsl-loader.ts) - Loading and validation utilities
