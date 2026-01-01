@@ -144,11 +144,6 @@ def create_ui():
     """Create Gradio UI"""
     with gr.Blocks(
         title="Reclapp Studio",
-        theme=gr.themes.Soft(),
-        css="""
-        .container { max-width: 1200px; margin: auto; }
-        .code-preview { font-family: monospace; }
-        """
     ) as app:
         gr.Markdown("""
         # 🚀 Reclapp Studio
@@ -163,9 +158,7 @@ def create_ui():
             with gr.Column(scale=1):
                 chatbot = gr.Chatbot(
                     label="Conversation",
-                    height=500,
-                    show_copy_button=True,
-                    type="tuples"
+                    height=500
                 )
 
                 msg = gr.Textbox(
@@ -211,14 +204,21 @@ def create_ui():
         # Event handlers
         async def respond(message, history):
             history = history or []
+
+            # Normalize history for broad Gradio compatibility (list[tuple[str, str]])
+            normalized_history = []
+            for h in history:
+                if isinstance(h, (list, tuple)) and len(h) >= 2:
+                    normalized_history.append((h[0], h[1]))
+
             response = ""
-            async for chunk in studio.chat(message, history):
+            async for chunk in studio.chat(message, normalized_history):
                 response = chunk
-                yield history + [[message, response]], response if studio.current_contract else ""
+                yield normalized_history + [(message, response)], studio.current_contract or ""
             
             # Update contract preview if we have a contract
             if studio.current_contract:
-                yield history + [[message, response]], studio.current_contract
+                yield normalized_history + [(message, response)], studio.current_contract
 
         def clear_chat():
             studio.current_contract = ""
@@ -256,5 +256,10 @@ if __name__ == "__main__":
     app.launch(
         server_name="0.0.0.0",
         server_port=7860,
+        theme=gr.themes.Soft(),
+        css="""
+        .container { max-width: 1200px; margin: auto; }
+        .code-preview { font-family: monospace; }
+        """,
         share=False
     )

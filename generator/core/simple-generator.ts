@@ -46,6 +46,9 @@ export class SimpleGenerator {
 
   private generateApi(): void {
     const entities = this.contract.entities || [];
+    const api = this.contract.api;
+
+    const authEnabled = !!api?.resources?.some(r => r.auth === 'required');
     const ctx: templates.TemplateContext = {
       appName: this.contract.app.name,
       appVersion: this.contract.app.version,
@@ -58,15 +61,29 @@ export class SimpleGenerator {
     // Server
     this.addFile('api/src/server.ts', templates.serverTemplate(ctx));
 
+    if (authEnabled) {
+      this.addFile('api/src/middleware/auth.ts', templates.authMiddlewareTemplate());
+    }
+
     // Routes and Models
     for (const entity of entities) {
       const kebabName = templates.kebab(entity.name);
-      this.addFile(`api/src/routes/${kebabName}.ts`, templates.routeTemplate(entity.name, entity.fields || []));
+      const entityAuthRequired = !!api?.resources?.some(
+        r => r.entity === entity.name && r.auth === 'required'
+      );
+
+      this.addFile(
+        `api/src/routes/${kebabName}.ts`,
+        templates.routeTemplate(entity.name, entity.fields || [], entityAuthRequired)
+      );
       this.addFile(`api/src/models/${kebabName}.ts`, templates.modelTemplate(entity.name, entity.fields || []));
     }
 
     // Package files
-    this.addFile('api/package.json', templates.apiPackageJson(this.contract.app.name, this.contract.app.version));
+    this.addFile(
+      'api/package.json',
+      templates.apiPackageJson(this.contract.app.name, this.contract.app.version, authEnabled)
+    );
     this.addFile('api/tsconfig.json', templates.apiTsConfig());
   }
 

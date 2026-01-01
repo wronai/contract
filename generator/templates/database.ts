@@ -8,7 +8,7 @@ export function sqlMigration(
 ): string {
   const tables = entities.map(e => {
     const cols = e.fields
-      .filter(f => f.name !== 'createdAt' && f.name !== 'updatedAt')
+      .filter(f => f.name !== 'id' && f.name !== 'createdAt' && f.name !== 'updatedAt')
       .map(f => `  ${snake(f.name)} ${sqlType(f.type)}${f.nullable ? '' : ' NOT NULL'}`)
       .join(',\n');
 

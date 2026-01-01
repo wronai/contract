@@ -29,6 +29,44 @@ def check_port(host: str, port: int) -> bool:
         s.settimeout(1.0)
         return s.connect_ex((host, port)) == 0
 
+def find_free_port(host: str, start_port: int, max_port: int) -> int:
+    for port in range(start_port, max_port + 1):
+        if not check_port(host, port):
+            return port
+    raise RuntimeError(f"No free port found in range {start_port}..{max_port}")
+
+def update_env_file(env_path: str, updates: Dict[str, str]) -> None:
+    if not os.path.exists(env_path):
+        lines = []
+    else:
+        with open(env_path, 'r') as f:
+            lines = f.read().splitlines()
+
+    keys = set(updates.keys())
+    new_lines = []
+    seen = set()
+
+    for line in lines:
+        stripped = line.strip()
+        if not stripped or stripped.startswith('#') or '=' not in line:
+            new_lines.append(line)
+            continue
+
+        k, _ = line.split('=', 1)
+        key = k.strip()
+        if key in updates:
+            new_lines.append(f"{key}={updates[key]}")
+            seen.add(key)
+        else:
+            new_lines.append(line)
+
+    for key in keys:
+        if key not in seen:
+            new_lines.append(f"{key}={updates[key]}")
+
+    with open(env_path, 'w') as f:
+        f.write("\n".join(new_lines) + "\n")
+
 def scan_ports(env_vars: Dict[str, str], mode: str, prefixes: List[str] = None) -> bool:
     """Scan ports defined in env vars.
     mode: 'free' (expect ports to be free) or 'used' (expect ports to be in use)
@@ -101,6 +139,10 @@ if __name__ == '__main__':
                         help='Check if ports are free (pre-start) or used (post-start)')
     parser.add_argument('--env', default='.env', help='Path to .env file')
     parser.add_argument('--prefix', action='append', help='Filter variables by prefix (can be used multiple times)')
+
+    parser.add_argument('--pick-var', help='Env var name (ending with _PORT) to ensure is set to a free port')
+    parser.add_argument('--start-port', type=int, default=7860, help='Start port for --pick-var search')
+    parser.add_argument('--max-port', type=int, default=7960, help='Max port for --pick-var search')
     
     args = parser.parse_args()
     
@@ -108,8 +150,16 @@ if __name__ == '__main__':
     print("=================================================================")
     print(" RECLAPP PORT DIAGNOSTIC")
     print("=================================================================")
-    
+
     env = load_env(args.env)
+
+    if args.pick_var:
+        host = env.get('HOST', 'localhost').replace('0.0.0.0', '127.0.0.1')
+        picked = find_free_port(host, args.start_port, args.max_port)
+        update_env_file(args.env, {args.pick_var: str(picked)})
+        env = load_env(args.env)
+        print(f"Picked {args.pick_var}={picked} in {args.env}")
+
     success = scan_ports(env, args.mode, args.prefix)
     
     print("=================================================================")
