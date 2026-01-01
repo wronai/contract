@@ -188,11 +188,16 @@ export class ValidationPipelineOrchestrator {
     const startTime = Date.now();
     const timeout = stage.timeout || this.options.timeout;
 
+    let timeoutId: NodeJS.Timeout | undefined;
+
     try {
-      const result = await Promise.race([
-        stage.validator(context),
-        this.createTimeout(timeout, stage.name)
-      ]);
+      const timeoutPromise: Promise<StageResult> = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error(`Stage "${stage.name}" timed out after ${timeout}ms`));
+        }, timeout);
+      });
+
+      const result = await Promise.race([stage.validator(context), timeoutPromise]);
 
       return {
         ...result,
@@ -209,18 +214,11 @@ export class ValidationPipelineOrchestrator {
         warnings: [],
         timeMs: Date.now() - startTime
       };
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     }
-  }
-
-  /**
-   * Tworzy promise z timeout
-   */
-  private createTimeout(ms: number, stageName: string): Promise<StageResult> {
-    return new Promise((_, reject) => {
-      setTimeout(() => {
-        reject(new Error(`Stage "${stageName}" timed out after ${ms}ms`));
-      }, ms);
-    });
   }
 
   /**

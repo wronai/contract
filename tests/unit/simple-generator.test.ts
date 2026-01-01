@@ -165,7 +165,10 @@ describe('SimpleGenerator (bin/reclapp path)', () => {
     expect(routeFile).toBeDefined();
 
     expect(routeFile!.content).toContain('name: z.string()');
-    expect(routeFile!.content).not.toContain('name: z.string().optional()');
+
+    const createSchemaBlock = routeFile!.content.match(/const CreateThingSchema[\s\S]*?\)\.strict\(\);/);
+    expect(createSchemaBlock).toBeTruthy();
+    expect(createSchemaBlock![0]).not.toContain('name: z.string().optional()');
 
     expect(routeFile!.content).toContain('payload: z.record(z.string(), z.unknown())');
     expect(routeFile!.content).not.toMatch(/"payload"\s*:\s*"/);

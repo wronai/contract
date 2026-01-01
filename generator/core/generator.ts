@@ -1882,8 +1882,8 @@ clean:
   // ============================================================
 
   private fieldTypeToTs(type: any): string {
-    const base = type.baseType?.toLowerCase() || 'any';
-    const tsType = {
+    const base = String(type?.baseType || '').toLowerCase() || 'any';
+    const tsTypeMap: Record<string, string> = {
       string: 'string',
       int: 'number',
       integer: 'number',
@@ -1897,14 +1897,15 @@ clean:
       timestamp: 'string',
       uuid: 'string',
       json: 'Record<string, any>'
-    }[base] || 'any';
+    };
+    const tsType = tsTypeMap[base] || 'any';
     
     return type.isArray ? `${tsType}[]` : tsType;
   }
 
   private fieldTypeToSql(type: any): string {
-    const base = type.baseType?.toLowerCase() || 'text';
-    return {
+    const base = String(type?.baseType || '').toLowerCase() || 'text';
+    const sqlTypeMap: Record<string, string> = {
       string: 'TEXT',
       int: 'INTEGER',
       integer: 'INTEGER',
@@ -1918,12 +1919,13 @@ clean:
       timestamp: 'TIMESTAMPTZ',
       uuid: 'UUID',
       json: 'JSONB'
-    }[base] || 'TEXT';
+    };
+    return sqlTypeMap[base] || 'TEXT';
   }
 
   private fieldTypeToMongoose(type: any): string {
-    const base = type.baseType?.toLowerCase() || 'String';
-    return {
+    const base = String(type?.baseType || '').toLowerCase() || 'string';
+    const mongooseTypeMap: Record<string, string> = {
       string: 'String',
       int: 'Number',
       integer: 'Number',
@@ -1937,12 +1939,13 @@ clean:
       timestamp: 'Date',
       uuid: 'String',
       json: 'Object'
-    }[base] || 'String';
+    };
+    return mongooseTypeMap[base] || 'String';
   }
 
   private getInputType(type: any): string {
-    const base = type.baseType?.toLowerCase() || 'text';
-    return {
+    const base = String(type?.baseType || '').toLowerCase() || 'text';
+    const inputTypeMap: Record<string, string> = {
       string: 'text',
       int: 'number',
       integer: 'number',
@@ -1956,7 +1959,8 @@ clean:
       timestamp: 'datetime-local',
       email: 'email',
       url: 'url'
-    }[base] || 'text';
+    };
+    return inputTypeMap[base] || 'text';
   }
 
   private isSystemFieldName(name: string): boolean {
@@ -1981,8 +1985,8 @@ clean:
   }
 
   private fieldTypeToZod(type: any): string {
-    const base = type.baseType?.toLowerCase() || 'unknown';
-    const zodType = {
+    const base = String(type?.baseType || '').toLowerCase() || 'unknown';
+    const zodTypeMap: Record<string, string> = {
       string: 'z.string()',
       text: 'z.string()',
       int: 'z.number().int()',
@@ -2000,7 +2004,8 @@ clean:
       json: 'z.unknown()',
       email: 'z.string().email()',
       url: 'z.string().url()'
-    }[base] || 'z.unknown()';
+    };
+    const zodType = zodTypeMap[base] || 'z.unknown()';
 
     if (type.isArray) {
       return `z.array(${zodType})`;
