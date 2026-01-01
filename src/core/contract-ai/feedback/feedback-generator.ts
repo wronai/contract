@@ -290,7 +290,9 @@ For each fixed file, output in format:
       'UNBALANCED_PARENS': 'Count opening and closing parentheses ( ) and ensure they match',
       'MISSING_FILE': 'Generate this required file',
       'EVAL_USAGE': 'Replace eval() with a safer alternative',
-      'INVALID_JSON': 'Verify JSON syntax - check for trailing commas, missing quotes'
+      'INVALID_JSON': 'Verify JSON syntax - check for trailing commas, missing quotes',
+      'SCHEMA_CONTRACT': 'Adjust the Contract AI JSON to match the ContractAI JSON Schema (contracts/json/contracts/contractai.json)',
+      'SCHEMA_CODE': 'Adjust generated files structure to match the LLMCodeOutput schema (contracts/json/llm/llmcodeoutput.json)'
     };
 
     if (code && suggestions[code]) {

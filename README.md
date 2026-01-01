@@ -1,16 +1,19 @@
 ![reclapp.png](reclapp.png)
-# Reclapp 2.2.0 - AI-Native Declarative Platform
+# Reclapp 2.3.0 - AI-Native Declarative Platform
 
-[![Version](https://img.shields.io/badge/version-2.2.0-blue.svg)](https://github.com/wronai/reclapp)
+[![Version](https://img.shields.io/badge/version-2.3.0-blue.svg)](https://github.com/wronai/reclapp)
 [![License](https://img.shields.io/badge/license-Apache-green.svg)](LICENSE) 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
+[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org/)
 
 > **AI-Native Declarative Platform** for building autonomous B2B applications with causal reasoning, verification loops, and production-ready safety rails.
 
 ## 🌟 Key Features
 
-- **Contract AI 2.2** - 3-layer specification for LLM-driven code generation
+- **Contract AI 2.3** - 3-layer specification for LLM-driven code generation
+- **Full Lifecycle** - Single command from prompt to running service
+- **Pydantic Contracts** - Python-first contract definitions
 - **TypeScript AI Contracts** - Fully typed, compile-time validated contracts for AI agents
 - **Causal Verification Loop** - Closed-loop decision making with confidence decay
 - **MCP Protocol** - Model Context Protocol integration for AI interoperability
@@ -33,11 +36,50 @@
 git clone https://github.com/softreck/reclapp.git
 cd reclapp
 
-# Install dependencies
+# Install Node.js dependencies
 npm install
 
-# Link CLI globally (optional)
-npm link
+# Install Python CLI (recommended)
+pip install -e .
+
+# Or with venv
+python3 -m venv venv
+source venv/bin/activate
+pip install -e .
+```
+
+### Python CLI (NEW in 2.3.1)
+
+```bash
+# After pip install -e .
+reclapp --version                    # Show version
+reclapp --help                       # Show help
+reclapp --prompt "Create a notes app"  # Full lifecycle
+reclapp prompts                      # Show example prompts
+reclapp validate                     # Validate Pydantic contracts
+```
+
+### Full Lifecycle (NEW in 2.3)
+
+```bash
+# From prompt - generates contract, code, validates, and tests
+./bin/reclapp-full-lifecycle.sh --prompt "Create a notes app"
+
+# From contract file
+./bin/reclapp-full-lifecycle.sh examples/contract-ai/crm-contract.ts
+
+# With options
+./bin/reclapp-full-lifecycle.sh --prompt "Create a CRM" -o ./my-app --port 4000
+```
+
+### Contract AI Generation
+
+```bash
+# Generate from prompt
+./bin/reclapp generate-ai --prompt "Create a todo app with tasks"
+
+# Generate from contract
+./bin/reclapp generate-ai examples/contract-ai/crm-contract.ts -o ./generated
 ```
 
 ### Generate Application from Contract

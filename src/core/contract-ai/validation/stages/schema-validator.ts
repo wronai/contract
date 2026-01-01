@@ -7,6 +7,18 @@ export class SchemaValidator implements ValidationStage {
   critical = true;
   timeout = 30000;
 
+  private extractFileFromSchemaPath(
+    schemaPath: string,
+    files: Array<{ path: string }>
+  ): string | undefined {
+    const m = schemaPath.match(/^files\[(\d+)\]/);
+    if (!m) return undefined;
+    const idx = Number(m[1]);
+    if (!Number.isFinite(idx)) return undefined;
+    const f = files[idx];
+    return f?.path;
+  }
+
   async validator(context: ValidationContext): Promise<StageResult> {
     const errors: StageResult['errors'] = [];
     const warnings: StageResult['warnings'] = [];
@@ -64,10 +76,14 @@ export class SchemaValidator implements ValidationStage {
       const codeResult = schemaValidator.validate(llmCodeOutputSchemaName, llmOutputLike);
       if (!codeResult.valid) {
         errors.push(
-          ...codeResult.errors.map((e) => ({
-            message: `[GeneratedCode] ${e.path ? e.path + ': ' : ''}${e.message}`,
-            code: 'SCHEMA_CODE'
-          }))
+          ...codeResult.errors.map((e) => {
+            const file = e.path ? this.extractFileFromSchemaPath(e.path, filesProjected) : undefined;
+            return {
+              message: `[GeneratedCode] ${e.path ? e.path + ': ' : ''}${e.message}`,
+              ...(file ? { file } : {}),
+              code: 'SCHEMA_CODE'
+            };
+          })
         );
       }
     }

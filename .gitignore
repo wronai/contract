@@ -1,5 +1,5 @@
 test-verify/
-
+test-todo-prompt
 test-lifecycle
 test-lifecycle-*
 test-prompt-*
@@ -17,6 +17,8 @@ pycontracts/venv
 __pycache__/
 *.pyc
 generated/
+reclapp.egg-info/
+pycontracts.egg-info/
 package-lock.json
 # Logs
 logs
