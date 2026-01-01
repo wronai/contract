@@ -12,7 +12,7 @@
 #
 # ============================================================================
 
-.PHONY: help install dev build test lint clean publish release stop stop-docker stop-dev up down \
+.PHONY: help install dev build test lint clean publish release stop stop-docker stop-examples stop-dev up down \
 	docker-build docker-up docker-down docker-logs docker-restart docker-full docker-clean docker-shell \
 	docker-check-ports docker-health \
 	example-b2b-build example-b2b-up example-b2b-down example-b2b-logs example-b2b-check-ports example-b2b-health \
@@ -151,9 +151,13 @@ stop: ## Stop all services (Docker + local dev)
 stop-docker: ## Stop Docker services
 	@echo "$(BLUE)🐳 Stopping Docker services...$(NC)"
 	@docker compose down --remove-orphans >/dev/null 2>&1 || true
+	@$(MAKE) stop-examples >/dev/null 2>&1 || true
 	@$(MAKE) example-b2b-down >/dev/null 2>&1 || true
 	@$(MAKE) example-iot-down >/dev/null 2>&1 || true
 	@$(MAKE) example-agent-down >/dev/null 2>&1 || true
+
+stop-examples:
+	@bash ./scripts/stop-examples.sh
 
 stop-dev: ## Stop local dev processes (API + frontend). Use DEBUG=1 for verbose output.
 	@echo "$(BLUE)🧹 Stopping local dev processes...$(NC)"

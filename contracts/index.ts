@@ -70,3 +70,19 @@ export {
 
 // Re-export builder for convenience
 export { defineContract, AgentContractBuilder } from './types';
+
+// DSL Types (for self-sufficient contracts)
+// Use namespace to avoid conflicts with agent contract types
+export * as DSL from './dsl-types';
+export type { ReclappContract, ValidationResult as DslValidationResult } from './dsl-types';
+
+// DSL Loader & Converter
+export {
+  loadContract,
+  convertToTypeScript,
+  detectFormat,
+  type ContractFormat,
+  type LoadOptions,
+  type LoadResult,
+  type ConversionResult
+} from './dsl-loader';
