@@ -1,18 +1,20 @@
 # Reclapp CLI Reference
 
-Command-line interface for generating applications from `.reclapp.ts` contracts.
+Command-line interface for generating applications from:
+
+- `.reclapp.ts` (TypeScript)
+- `.reclapp.rcl` (Mini-DSL)
+- `.rcl.md` (Markdown with conversation)
 
 ## Installation
 
 ```bash
-# Global installation
-npm install -g reclapp
-
-# Or use npx
-npx reclapp <command>
-
 # Or run directly from repository
 ./bin/reclapp <command>
+
+# Interactive chat (from repo)
+./bin/reclapp chat
+./bin/reclapp-chat
 ```
 
 ## Commands
@@ -22,7 +24,7 @@ npx reclapp <command>
 Generate, install dependencies, and start the API server.
 
 ```bash
-reclapp run <contract.reclapp.ts> [options]
+reclapp run <contract.reclapp.ts|contract.reclapp.rcl|contract.rcl.md> [options]
 
 # Aliases: r
 ```
@@ -45,7 +47,7 @@ reclapp run examples/crm/contracts/main.reclapp.ts
 Generate, run, and automatically test all API endpoints.
 
 ```bash
-reclapp test <contract.reclapp.ts> [options]
+reclapp test <contract.reclapp.ts|contract.reclapp.rcl|contract.rcl.md> [options]
 
 # Aliases: t
 ```
@@ -78,7 +80,7 @@ reclapp test examples/crm/contracts/main.reclapp.ts
 Generate and deploy with Docker Compose.
 
 ```bash
-reclapp deploy <contract.reclapp.ts> [options]
+reclapp deploy <contract.reclapp.ts|contract.reclapp.rcl|contract.rcl.md> [options]
 ```
 
 **What it does:**
@@ -104,7 +106,7 @@ reclapp deploy examples/crm/contracts/main.reclapp.ts
 Generate a full application from a contract file.
 
 ```bash
-reclapp generate <contract.reclapp.ts> [options]
+reclapp generate <contract.reclapp.ts|contract.reclapp.rcl|contract.rcl.md> [options]
 
 # Aliases: gen, g
 ```
@@ -122,6 +124,12 @@ reclapp generate <contract.reclapp.ts> [options]
 ```bash
 # Generate CRM application
 reclapp generate examples/crm/contracts/main.reclapp.ts
+
+# Generate from Mini-DSL
+reclapp generate examples/crm/contracts/main.reclapp.rcl
+
+# Generate from Markdown
+reclapp generate examples/crm/contracts/main.rcl.md
 
 # Generate to custom directory
 reclapp generate contracts/app.reclapp.ts --output ./dist
@@ -165,7 +173,7 @@ target/
 Generate application and start development servers (API + Frontend).
 
 ```bash
-reclapp dev <contract.reclapp.ts> [options]
+reclapp dev <contract.reclapp.ts|contract.reclapp.rcl|contract.rcl.md> [options]
 
 # Aliases: d
 ```
@@ -199,7 +207,7 @@ This command will:
 Validate a contract file without generating code.
 
 ```bash
-reclapp validate <contract.reclapp.ts>
+reclapp validate <contract.reclapp.ts|contract.reclapp.rcl|contract.rcl.md>
 
 # Aliases: v
 ```

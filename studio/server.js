@@ -424,7 +424,12 @@ app.post('/api/save', (req, res) => {
     res.json({ 
       success: true, 
       path: savedFiles[0]?.path || projectDir,
-      files: savedFiles.map(f => ({ name: f.name, path: `projects/${name}/contracts/${f.name}`, ext: f.ext }))
+      files: savedFiles.map(f => ({
+        name: f.name,
+        path: `projects/${name}/contracts/${f.name}`,
+        absPath: f.path,
+        ext: f.ext
+      }))
     });
   } catch (error) {
     res.json({ success: false, error: error.message });
@@ -761,7 +766,15 @@ app.post('/api/run', async (req, res) => {
     const existingRun = runningProjects.get(name) || {};
     runningProjects.set(name, { ...existingRun, urls, command, uri });
 
-    res.json({ success: true, message: `Project ${name} running`, urls, command, uri });
+    res.json({
+      success: true,
+      message: `Project ${name} running`,
+      urls,
+      command,
+      uri,
+      contractPath,
+      targetDir
+    });
     
   } catch (error) {
     res.json({ success: false, error: error.message });

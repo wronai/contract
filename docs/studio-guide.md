@@ -7,8 +7,8 @@ Reclapp Studio to interaktywne narzędzie do projektowania kontraktów aplikacji
 - [Wymagania](#wymagania)
 - [Instalacja](#instalacja)
 - [Uruchamianie](#uruchamianie)
-- [Interfejs Web (Gradio)](#interfejs-web-gradio)
-- [Interfejs Terminal (CLI)](#interfejs-terminal-cli)
+- [Interfejs Web](#interfejs-web)
+- [Interfejs Terminal](#interfejs-terminal)
 - [Konfiguracja LLM](#konfiguracja-llm)
 - [Walidacja kontraktów](#walidacja-kontraktów)
 - [Przykłady użycia](#przykłady-użycia)
@@ -18,10 +18,8 @@ Reclapp Studio to interaktywne narzędzie do projektowania kontraktów aplikacji
 
 ## Wymagania
 
-- **Docker** i **Docker Compose**
 - **Ollama** uruchomiona lokalnie z modelem LLM
-- **Node.js** >= 18 (dla CLI)
-- **Python** >= 3.11 (dla Studio Web)
+- **Node.js** >= 18
 
 ## Instalacja
 
@@ -54,43 +52,36 @@ ollama pull qwen2:7b             # Dobra obsługa wielojęzyczna
 make studio-up
 
 # Lub ręcznie
-cd studio && docker compose up -d
+cd studio && npm install && node server.js
 ```
 
 ## Uruchamianie
 
-### Interfejs Web (Gradio)
+### Start/Stop
 
 ```bash
-# Automatyczne uruchomienie z diagnostyką portów
-make auto-studio
-
-# Lub standardowo
 make studio-up
-
-# Sprawdź status
-make studio-health
-
-# Logi
+make studio-status
 make studio-logs
-
-# Zatrzymaj
 make studio-down
 ```
 
-**Dostęp:** http://localhost:7860
+**Dostęp:** http://localhost:7861
 
-### Interfejs Terminal (CLI)
+### Chat w terminalu
 
 ```bash
 # Interaktywny chat z LLM
 ./bin/reclapp chat
 
-# Lub
-./bin/reclapp ai
+# Alternatywnie bezpośrednio:
+./bin/reclapp-chat
+
+# Chat powiązany ze Studiem (zapisuje do studio/projects/*):
+make studio-chat
 ```
 
-## Interfejs Web (Gradio)
+## Interfejs Web
 
 ### Główne funkcje
 
@@ -98,6 +89,7 @@ make studio-down
 2. **Contract Preview** - Podgląd wygenerowanego kontraktu RCL
 3. **Examples** - Ładowanie przykładowych kontraktów
 4. **Save** - Zapisywanie kontraktu do projektu
+5. **Run** - Podpowiedź komendy `reclapp generate` i uruchamianie usług z `target/`
 
 ### Przykładowe prompty
 
@@ -116,13 +108,14 @@ make studio-down
 - `add alerts for...` - Dodaj alerty
 - `add dashboard for...` - Dodaj panel
 
-## Interfejs Terminal (CLI)
+## Interfejs Terminal
 
 ### Komendy
 
 ```bash
 /save [dir]      # Zapisz kontrakt do katalogu
 /show            # Pokaż aktualny kontrakt
+/validate        # Waliduj kontrakt (parser Mini-DSL)
 /clear           # Wyczyść rozmowę
 /model [name]    # Pokaż/zmień model LLM
 /name <name>     # Ustaw nazwę projektu
@@ -132,35 +125,40 @@ make studio-down
 
 ### Przykładowa sesja
 
-```
+```text
 💬 You: Create a simple blog application
+```
 
+```text
 🤖 Assistant: I'll create a blog application with posts and comments...
+```
 
-{
-  "thinking": "Blog needs Post, Comment, Author entities...",
-  "contract": "app \"Blog\" {...}",
-  "summary": {"entities": ["Post", "Comment", "Author"]}
-}
-
-💬 You: /show
-
-📄 Current Contract:
+```rcl
 app "Blog" {
   version: "1.0.0"
 }
+
 entity Post {
   id uuid @unique @generated
   title text @required
-  ...
+  body text
+  createdAt datetime @generated
 }
 
-💬 You: /save ./apps/my-blog
-✅ Saved to ./apps/my-blog/contracts/main.reclapp.rcl
+entity Comment {
+  id uuid @unique @generated
+  post -> Post @required
+  body text @required
+  createdAt datetime @generated
+}
+```
 
-💬 You: /generate
-🚀 Generating application...
-✅ Generated 36 files to ./apps/my-blog/target
+```text
+💬 You: /save ./apps/my-blog
+✅ Saved 3 files to ./apps/my-blog/contracts/
+
+💬 You: /generate ./apps/my-blog
+✅ Saved and generated to ./apps/my-blog
 ```
 
 ## Konfiguracja LLM
@@ -168,10 +166,12 @@ entity Post {
 ### Zmienne środowiskowe
 
 ```bash
-# studio/.env
+# Studio
+STUDIO_PORT=7861
+
+# Ollama
 OLLAMA_HOST=http://localhost:11434
 OLLAMA_MODEL=deepseek-coder:6.7b
-CODE_MODEL=deepseek-coder:6.7b
 ```
 
 ### Zalecane modele (do 13B parametrów)
@@ -200,10 +200,10 @@ Studio automatycznie waliduje wygenerowane kontrakty:
 
 ### Pętla walidacji
 
-```
-User Request → LLM → JSON Schema → Parser Validation
-                ↑                          ↓
-                └──── Error Feedback ←─────┘
+```text
+User Request → LLM → Contract Extraction → Normalization → Mini-DSL Parser
+               ↑                                              ↓
+               └────────────── Error Feedback (max 2x) ───────┘
 ```
 
 ### Wykrywane błędy
@@ -276,14 +276,15 @@ ollama list
 ### Studio nie startuje
 
 ```bash
-# Sprawdź logi
+# Sprawdź status i logi
+make studio-status
 make studio-logs
 
-# Sprawdź porty
-make studio-check-ports
+# Jeśli port jest zajęty:
+fuser -k 7861/tcp
 
-# Restart z nowym portem
-make studio-pick-port
+# Restart
+make studio-down
 make studio-up
 ```
 
@@ -310,7 +311,8 @@ cat docs/dsl-reference.md
 
 - [DSL Reference](./dsl-reference.md) - Pełna składnia Mini-DSL
 - [CLI Reference](./cli-reference.md) - Wszystkie komendy CLI
-- [RCL.md Format](./rcl-md-format.md) - Format Markdown dla kontraktów
+- [FILE_MANIFEST.md](../FILE_MANIFEST.md) - Aktualna struktura repo i architektura
+- [AGENTS.md](../AGENTS.md) - Specyfikacja agenta / kontrakt bezpieczeństwa
 - [Examples](../examples/) - Przykładowe kontrakty
 - [Apps](../apps/) - Wygenerowane aplikacje
 
