@@ -1,0 +1,593 @@
+// Analytics Dashboard - Reclapp Contract
+// Web-based real-time analytics dashboard
+// Version 2.1.0
+//
+// Self-sufficient DSL - generates complete web application
+// All files output to target/ folder
+
+// =============================================================================
+// METADATA
+// =============================================================================
+
+APP "Analytics Dashboard" {
+  VERSION "1.0.0"
+  DESCRIPTION "Real-time analytics dashboard for business metrics"
+  AUTHOR "Reclapp Team"
+  LICENSE "MIT"
+}
+
+// =============================================================================
+// DEPLOYMENT - Web application deployment
+// =============================================================================
+
+DEPLOYMENT web {
+  FRAMEWORK nextjs
+  
+  BUILD {
+    OUTPUT_DIR "target"
+    NODE_VERSION "18"
+    BUILD_COMMAND "npm run build"
+    OUTPUT_MODE "standalone"
+  }
+  
+  HOSTING {
+    PROVIDER "${HOSTING_PROVIDER:vercel}"
+    REGION "${DEPLOY_REGION:eu-central-1}"
+    
+    DOMAIN {
+      PRIMARY "${APP_DOMAIN}"
+      REDIRECT_WWW true
+    }
+    
+    SSL {
+      ENABLED true
+      PROVIDER "auto"
+    }
+  }
+  
+  CDN {
+    ENABLED true
+    CACHE_STATIC "31536000"
+    CACHE_API "0"
+  }
+  
+  SCALING {
+    MIN_INSTANCES 1
+    MAX_INSTANCES 10
+    AUTO_SCALE true
+  }
+}
+
+// =============================================================================
+// BACKEND - API and services
+// =============================================================================
+
+BACKEND api {
+  RUNTIME node
+  FRAMEWORK "nextjs-api-routes"
+  
+  DATABASE {
+    TYPE postgres
+    URL "${DATABASE_URL}"
+    POOL_SIZE 10
+    SSL true
+  }
+  
+  CACHE {
+    TYPE redis
+    URL "${REDIS_URL}"
+    TTL_DEFAULT 300
+  }
+  
+  AUTH {
+    TYPE oauth2
+    PROVIDERS ["google", "github"]
+    SESSION_STRATEGY "jwt"
+    JWT_SECRET "${JWT_SECRET}"
+  }
+  
+  QUEUE {
+    TYPE redis
+    CONCURRENCY 5
+  }
+}
+
+// =============================================================================
+// FRONTEND - UI configuration
+// =============================================================================
+
+FRONTEND dashboard_ui {
+  FRAMEWORK react
+  BUNDLER nextjs
+  STYLE tailwindcss
+  COMPONENTS shadcn
+  
+  THEME {
+    MODE "dark"
+    PRIMARY "#6366f1"
+    ACCENT "#22c55e"
+    CHARTS ["#6366f1", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6"]
+  }
+  
+  LAYOUT {
+    TYPE "dashboard"
+    SIDEBAR true
+    HEADER true
+    
+    NAVIGATION [
+      { ICON "layout-dashboard", LABEL "Overview", PATH "/" },
+      { ICON "users", LABEL "Users", PATH "/users" },
+      { ICON "activity", LABEL "Events", PATH "/events" },
+      { ICON "bar-chart-3", LABEL "Reports", PATH "/reports" },
+      { ICON "bell", LABEL "Alerts", PATH "/alerts" },
+      { ICON "settings", LABEL "Settings", PATH "/settings" }
+    ]
+  }
+  
+  SSR true
+  STREAMING true
+  PREFETCH true
+}
+
+// =============================================================================
+// DATA SOURCES
+// =============================================================================
+
+SOURCE clickhouseDb {
+  TYPE clickhouse
+  URL "${CLICKHOUSE_URL}"
+  DATABASE "analytics"
+}
+
+SOURCE eventStream {
+  TYPE kafka
+  BROKERS "${KAFKA_BROKERS}"
+  TOPICS ["events", "page_views", "conversions"]
+}
+
+SOURCE externalApi {
+  TYPE rest
+  URL "${EXTERNAL_API_URL}"
+  AUTH bearer
+  CACHE_DURATION "5m"
+}
+
+// =============================================================================
+// ENTITIES
+// =============================================================================
+
+ENTITY Project {
+  name: String
+  apiKey: String @unique @generated
+  domain: String[]
+  ownerId: String
+  settings: JSON?
+  createdAt: DateTime @generated
+}
+
+ENTITY Event {
+  projectId: String @relation(Project)
+  name: String
+  properties: JSON?
+  userId: String?
+  sessionId: String
+  timestamp: DateTime
+  
+  @index(projectId, name, timestamp)
+  @partition(timestamp, "day")
+}
+
+ENTITY PageView {
+  projectId: String @relation(Project)
+  path: String
+  referrer: String?
+  userId: String?
+  sessionId: String
+  duration: Int?
+  timestamp: DateTime
+  
+  @index(projectId, path, timestamp)
+  @partition(timestamp, "day")
+}
+
+ENTITY User {
+  projectId: String @relation(Project)
+  externalId: String
+  properties: JSON?
+  firstSeen: DateTime
+  lastSeen: DateTime
+  sessionCount: Int
+  eventCount: Int
+  
+  @unique(projectId, externalId)
+}
+
+ENTITY Session {
+  projectId: String @relation(Project)
+  userId: String?
+  startTime: DateTime
+  endTime: DateTime?
+  pageViews: Int
+  events: Int
+  device: JSON?
+  location: JSON?
+  
+  @index(projectId, startTime)
+}
+
+ENTITY Funnel {
+  projectId: String @relation(Project)
+  name: String
+  steps: JSON
+  createdAt: DateTime @generated
+}
+
+ENTITY Report {
+  projectId: String @relation(Project)
+  name: String
+  type: String
+  config: JSON
+  schedule: String?
+  lastRun: DateTime?
+  createdAt: DateTime @generated
+}
+
+ENTITY AlertRule {
+  projectId: String @relation(Project)
+  name: String
+  metric: String
+  condition: String
+  threshold: Decimal
+  windowMinutes: Int
+  channels: String[]
+  isActive: Boolean
+  lastTriggered: DateTime?
+}
+
+// =============================================================================
+// EVENTS
+// =============================================================================
+
+EVENT EventReceived {
+  projectId: String
+  eventName: String
+  userId: String?
+  timestamp: DateTime
+}
+
+EVENT ThresholdBreached {
+  alertRuleId: String
+  metric: String
+  currentValue: Decimal
+  threshold: Decimal
+  timestamp: DateTime
+}
+
+EVENT ReportGenerated {
+  reportId: String
+  projectId: String
+  downloadUrl: String
+  timestamp: DateTime
+}
+
+// =============================================================================
+// PIPELINES
+// =============================================================================
+
+PIPELINE EventIngestion {
+  INPUT eventStream.events
+  TRANSFORM [validate, enrich, deduplicate, store]
+  OUTPUT [clickhouseDb, realtimeMetrics]
+  MODE streaming
+  PARALLELISM 4
+}
+
+PIPELINE MetricsAggregation {
+  INPUT [Event.stream, PageView.stream]
+  TRANSFORM [aggregate, rollup, materialize]
+  OUTPUT [metricsStore, dashboard]
+  SCHEDULE "*/1 * * * *"
+}
+
+PIPELINE FunnelAnalysis {
+  INPUT Funnel.definition
+  TRANSFORM [querySteps, calculateConversion, generateInsights]
+  OUTPUT [funnelResults, recommendations]
+  ON_DEMAND true
+}
+
+PIPELINE ReportGeneration {
+  INPUT Report.scheduled
+  TRANSFORM [fetchData, aggregate, format, export]
+  OUTPUT [reports, notifications]
+  SCHEDULE "0 8 * * *"
+}
+
+PIPELINE AlertEvaluation {
+  INPUT [metricsStore, AlertRule.active]
+  TRANSFORM [evaluateConditions, checkCooldown, notify]
+  OUTPUT [alerts, notifications]
+  SCHEDULE "*/5 * * * *"
+}
+
+// =============================================================================
+// ALERTS
+// =============================================================================
+
+ALERT "Traffic Spike" {
+  ENTITY PageView
+  CONDITION rate(5m) > avgRate(1h) * 2
+  TARGET [slack, email]
+  SEVERITY high
+  COOLDOWN "15m"
+}
+
+ALERT "Error Rate High" {
+  ENTITY Event
+  CONDITION name == "error" AND rate(5m) > 10
+  TARGET [slack, pagerduty]
+  SEVERITY critical
+  COOLDOWN "10m"
+}
+
+ALERT "Conversion Drop" {
+  ENTITY Funnel
+  CONDITION conversionRate(24h) < conversionRate(7d) * 0.8
+  TARGET [email]
+  SEVERITY medium
+}
+
+// =============================================================================
+// DASHBOARDS
+// =============================================================================
+
+DASHBOARD "Overview" {
+  METRICS [
+    "activeUsers",
+    "pageViews",
+    "events",
+    "sessions",
+    "avgSessionDuration",
+    "bounceRate"
+  ]
+  STREAM_MODE realtime
+  LAYOUT grid
+  
+  WIDGETS [
+    { TYPE "stat", TITLE "Active Users", METRIC "activeUsers", SPARKLINE true, COMPARE "yesterday" },
+    { TYPE "stat", TITLE "Page Views", METRIC "pageViews", SPARKLINE true, COMPARE "yesterday" },
+    { TYPE "stat", TITLE "Events", METRIC "events", SPARKLINE true },
+    { TYPE "stat", TITLE "Bounce Rate", METRIC "bounceRate", FORMAT "percent", INVERT_COLOR true },
+    { TYPE "chart", TITLE "Traffic", METRIC "trafficOverTime", CHART_TYPE "area", SPAN 2 },
+    { TYPE "chart", TITLE "Top Pages", METRIC "topPages", CHART_TYPE "bar" },
+    { TYPE "map", TITLE "Users by Location", METRIC "usersByCountry" },
+    { TYPE "table", TITLE "Live Feed", ENTITY "Event", STREAM true, LIMIT 10 }
+  ]
+  
+  FILTERS [
+    { NAME "dateRange", TYPE "date-range", DEFAULT "last7days" },
+    { NAME "device", TYPE "select", OPTIONS ["all", "desktop", "mobile", "tablet"] }
+  ]
+}
+
+DASHBOARD "Users" {
+  ENTITY User
+  METRICS [
+    "totalUsers",
+    "newUsers",
+    "returningUsers",
+    "userRetention",
+    "cohortAnalysis"
+  ]
+  LAYOUT tabs
+  
+  TABS [
+    { NAME "Overview", WIDGETS ["userGrowth", "userStats"] },
+    { NAME "Retention", WIDGETS ["retentionChart", "cohortTable"] },
+    { NAME "Segments", WIDGETS ["userSegments", "segmentComparison"] }
+  ]
+}
+
+DASHBOARD "Events" {
+  ENTITY Event
+  METRICS [
+    "totalEvents",
+    "uniqueEvents",
+    "eventsByName",
+    "eventTrend"
+  ]
+  STREAM_MODE realtime
+  
+  WIDGETS [
+    { TYPE "chart", TITLE "Events Over Time", METRIC "eventTrend", CHART_TYPE "line" },
+    { TYPE "table", TITLE "Event Breakdown", METRIC "eventsByName", SORTABLE true },
+    { TYPE "sankey", TITLE "Event Flow", METRIC "eventSequence" }
+  ]
+}
+
+DASHBOARD "Funnels" {
+  ENTITY Funnel
+  
+  WIDGETS [
+    { TYPE "funnel", TITLE "Conversion Funnel", INTERACTIVE true },
+    { TYPE "table", TITLE "Step Breakdown", COLUMNS ["step", "users", "conversion", "dropoff"] }
+  ]
+}
+
+// =============================================================================
+// API ENDPOINTS
+// =============================================================================
+
+API v1 {
+  PREFIX "/api/v1"
+  
+  RESOURCE projects {
+    ENTITY Project
+    OPERATIONS [list, get, create, update, delete]
+    AUTH required
+    RATE_LIMIT 100
+  }
+  
+  RESOURCE events {
+    ENTITY Event
+    
+    ACTION track {
+      METHOD POST
+      PATH "/track"
+      AUTH apiKey
+      RATE_LIMIT 10000
+      INPUT { name: String, properties: JSON?, userId: String?, timestamp: DateTime? }
+    }
+    
+    ACTION batch {
+      METHOD POST
+      PATH "/batch"
+      AUTH apiKey
+      RATE_LIMIT 1000
+      INPUT { events: Event[] }
+    }
+    
+    ACTION query {
+      METHOD POST
+      PATH "/query"
+      AUTH required
+      INPUT { query: String, params: JSON?, format: String? }
+    }
+  }
+  
+  RESOURCE metrics {
+    ACTION realtime {
+      METHOD GET
+      PATH "/realtime"
+      AUTH required
+      WEBSOCKET true
+    }
+    
+    ACTION aggregate {
+      METHOD POST
+      PATH "/aggregate"
+      AUTH required
+      INPUT { metrics: String[], groupBy: String[]?, filters: JSON?, dateRange: JSON }
+    }
+  }
+  
+  RESOURCE funnels {
+    ENTITY Funnel
+    OPERATIONS [list, get, create, update, delete]
+    AUTH required
+    
+    ACTION analyze {
+      METHOD POST
+      PATH "/:id/analyze"
+      INPUT { dateRange: JSON, filters: JSON? }
+    }
+  }
+  
+  RESOURCE reports {
+    ENTITY Report
+    OPERATIONS [list, get, create, update, delete]
+    AUTH required
+    
+    ACTION generate {
+      METHOD POST
+      PATH "/:id/generate"
+    }
+    
+    ACTION download {
+      METHOD GET
+      PATH "/:id/download"
+      OUTPUT file
+    }
+  }
+  
+  RESOURCE alerts {
+    ENTITY AlertRule
+    OPERATIONS [list, get, create, update, delete]
+    AUTH required
+  }
+}
+
+// =============================================================================
+// WEBSOCKET CHANNELS
+// =============================================================================
+
+WEBSOCKET realtime {
+  AUTH apiKey
+  
+  CHANNELS [
+    { NAME "metrics", SUBSCRIBE true, PUBLISH false, DATA { metric: String, value: Decimal, timestamp: DateTime } },
+    { NAME "events", SUBSCRIBE true, PUBLISH false, DATA Event },
+    { NAME "alerts", SUBSCRIBE true, PUBLISH false, DATA ThresholdBreached }
+  ]
+  
+  HEARTBEAT 30000
+  RECONNECT true
+}
+
+// =============================================================================
+// ENVIRONMENT VARIABLES
+// =============================================================================
+
+ENV {
+  DATABASE_URL: String @secret
+  REDIS_URL: String @secret
+  CLICKHOUSE_URL: String @secret
+  KAFKA_BROKERS: String
+  JWT_SECRET: String @secret
+  APP_DOMAIN: String
+  HOSTING_PROVIDER: String = "vercel"
+  DEPLOY_REGION: String = "eu-central-1"
+  EXTERNAL_API_URL: String?
+}
+
+// =============================================================================
+// CONFIG
+// =============================================================================
+
+CONFIG analytics {
+  retentionDays: 365
+  sampleRate: 1.0
+  sessionTimeout: 1800000
+  maxEventsPerSecond: 10000
+}
+
+CONFIG export {
+  formats: ["csv", "json", "pdf"]
+  maxRows: 1000000
+  compression: true
+}
+
+// =============================================================================
+// DOCKER COMPOSE (generated to target/docker-compose.yml)
+// =============================================================================
+
+DOCKER {
+  SERVICES [
+    {
+      NAME "app"
+      BUILD "."
+      PORTS ["3000:3000"]
+      ENV_FILE ".env"
+      DEPENDS_ON ["postgres", "redis"]
+    },
+    {
+      NAME "postgres"
+      IMAGE "postgres:15-alpine"
+      VOLUMES ["postgres_data:/var/lib/postgresql/data"]
+      ENV { POSTGRES_DB: "analytics", POSTGRES_USER: "app", POSTGRES_PASSWORD: "${DB_PASSWORD}" }
+    },
+    {
+      NAME "redis"
+      IMAGE "redis:7-alpine"
+      VOLUMES ["redis_data:/data"]
+    },
+    {
+      NAME "clickhouse"
+      IMAGE "clickhouse/clickhouse-server:latest"
+      PORTS ["8123:8123"]
+      VOLUMES ["clickhouse_data:/var/lib/clickhouse"]
+    }
+  ]
+  
+  VOLUMES ["postgres_data", "redis_data", "clickhouse_data"]
+}

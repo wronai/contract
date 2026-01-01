@@ -1,0 +1,581 @@
+// Investment Portfolio Manager - Reclapp Contract
+// Desktop Electron application for investment tracking and analysis
+// Version 2.1.0
+//
+// This DSL file is SELF-SUFFICIENT - no additional src/ files needed.
+// All backend, frontend, and deployment configs are generated from this definition.
+// Generated files go to target/ folder.
+
+// =============================================================================
+// METADATA
+// =============================================================================
+
+APP "Investment Portfolio Manager" {
+  VERSION "1.0.0"
+  DESCRIPTION "Desktop application for tracking investments, portfolios, and market analysis"
+  AUTHOR "Reclapp Team"
+  LICENSE "MIT"
+  REPOSITORY "https://github.com/reclapp/investment-manager"
+}
+
+// =============================================================================
+// DEPLOYMENT - Defines how the application is built and deployed
+// =============================================================================
+
+DEPLOYMENT desktop {
+  FRAMEWORK electron
+  PLATFORMS ["win", "mac", "linux"]
+  
+  BUILD {
+    OUTPUT_DIR "target"
+    BUNDLE_ID "com.reclapp.investment-manager"
+    APP_NAME "Investment Manager"
+    
+    ICONS {
+      WIN "assets/icon.ico"
+      MAC "assets/icon.icns"
+      LINUX "assets/icon.png"
+    }
+    
+    SIGNING {
+      WIN "${WIN_CERT_PATH}"
+      MAC "${MAC_CERT_ID}"
+    }
+  }
+  
+  AUTO_UPDATE {
+    ENABLED true
+    PROVIDER "github"
+    CHANNEL "stable"
+  }
+  
+  SECURITY {
+    SANDBOX true
+    CONTEXT_ISOLATION true
+    NODE_INTEGRATION false
+  }
+}
+
+// =============================================================================
+// BACKEND - API and data layer (generated to target/backend/)
+// =============================================================================
+
+BACKEND api {
+  RUNTIME node
+  FRAMEWORK express
+  PORT "${API_PORT:8080}"
+  
+  DATABASE {
+    TYPE sqlite
+    PATH "data/investments.db"
+    MIGRATIONS "target/migrations"
+  }
+  
+  AUTH {
+    TYPE local
+    SESSION_SECRET "${SESSION_SECRET}"
+    TOKEN_EXPIRY "24h"
+  }
+  
+  CORS {
+    ORIGINS ["http://localhost:*", "app://*"]
+    CREDENTIALS true
+  }
+  
+  RATE_LIMIT {
+    WINDOW_MS 60000
+    MAX_REQUESTS 100
+  }
+}
+
+// =============================================================================
+// FRONTEND - UI layer (generated to target/frontend/)
+// =============================================================================
+
+FRONTEND desktop_ui {
+  FRAMEWORK react
+  BUNDLER vite
+  STYLE tailwindcss
+  COMPONENTS shadcn
+  
+  THEME {
+    MODE "system"
+    PRIMARY "#3b82f6"
+    ACCENT "#10b981"
+  }
+  
+  LAYOUT {
+    TYPE sidebar
+    NAVIGATION [
+      { ICON "home", LABEL "Dashboard", PATH "/" },
+      { ICON "briefcase", LABEL "Portfolio", PATH "/portfolio" },
+      { ICON "trending-up", LABEL "Transactions", PATH "/transactions" },
+      { ICON "pie-chart", LABEL "Analytics", PATH "/analytics" },
+      { ICON "settings", LABEL "Settings", PATH "/settings" }
+    ]
+  }
+  
+  RESPONSIVE false
+  OFFLINE_SUPPORT true
+}
+
+// =============================================================================
+// DATA SOURCES
+// =============================================================================
+
+SOURCE marketDataApi {
+  TYPE rest
+  URL "${MARKET_DATA_URL:https://api.marketdata.example.com/v1}"
+  AUTH apiKey
+  CACHE_DURATION "5m"
+  RATE_LIMIT 100
+}
+
+SOURCE currencyApi {
+  TYPE rest
+  URL "https://api.exchangerate.host"
+  CACHE_DURATION "1h"
+}
+
+// =============================================================================
+// ENTITIES
+// =============================================================================
+
+ENTITY Portfolio {
+  name: String
+  description: String?
+  currency: String
+  ownerId: String
+  totalValue: Decimal @computed
+  totalCost: Decimal @computed
+  unrealizedGain: Decimal @computed
+  realizedGain: Decimal @computed
+  createdAt: DateTime @generated
+  updatedAt: DateTime @generated
+  
+  @index(name)
+  @relation(holdings: Holding[])
+}
+
+ENTITY Holding {
+  portfolioId: String @relation(Portfolio)
+  symbol: String
+  name: String
+  assetType: String
+  quantity: Decimal
+  avgCost: Decimal
+  currentPrice: Decimal?
+  currency: String
+  sector: String?
+  exchange: String?
+  lastUpdated: DateTime?
+  createdAt: DateTime @generated
+  
+  @index(portfolioId, symbol)
+  @unique(portfolioId, symbol)
+}
+
+ENTITY Transaction {
+  portfolioId: String @relation(Portfolio)
+  holdingId: String? @relation(Holding)
+  type: String
+  symbol: String
+  quantity: Decimal
+  price: Decimal
+  fees: Decimal
+  currency: String
+  exchangeRate: Decimal
+  notes: String?
+  executedAt: DateTime
+  createdAt: DateTime @generated
+  
+  @index(portfolioId, executedAt)
+}
+
+ENTITY Watchlist {
+  name: String
+  symbols: String[]
+  ownerId: String
+  isDefault: Boolean
+  createdAt: DateTime @generated
+}
+
+ENTITY PriceAlert {
+  symbol: String
+  condition: String
+  targetPrice: Decimal
+  isActive: Boolean
+  triggeredAt: DateTime?
+  createdAt: DateTime @generated
+}
+
+ENTITY DividendRecord {
+  holdingId: String @relation(Holding)
+  amount: Decimal
+  currency: String
+  exDate: DateTime
+  payDate: DateTime
+  reinvested: Boolean
+  createdAt: DateTime @generated
+}
+
+// =============================================================================
+// EVENTS
+// =============================================================================
+
+EVENT TransactionExecuted {
+  transactionId: String
+  portfolioId: String
+  type: String
+  symbol: String
+  quantity: Decimal
+  totalValue: Decimal
+  timestamp: DateTime
+}
+
+EVENT PriceAlertTriggered {
+  alertId: String
+  symbol: String
+  currentPrice: Decimal
+  targetPrice: Decimal
+  condition: String
+  timestamp: DateTime
+}
+
+EVENT PortfolioRebalanced {
+  portfolioId: String
+  adjustments: JSON
+  timestamp: DateTime
+}
+
+EVENT DividendReceived {
+  holdingId: String
+  symbol: String
+  amount: Decimal
+  timestamp: DateTime
+}
+
+EVENT MarketDataUpdated {
+  symbols: String[]
+  source: String
+  timestamp: DateTime
+}
+
+// =============================================================================
+// PIPELINES
+// =============================================================================
+
+PIPELINE PriceUpdate {
+  INPUT marketDataApi.stream
+  TRANSFORM [fetchPrices, updateHoldings, calculateValues, checkAlerts]
+  OUTPUT [holdings, alerts]
+  SCHEDULE "*/5 * * * *"
+}
+
+PIPELINE PortfolioValuation {
+  INPUT [Holding.changes, Transaction.stream]
+  TRANSFORM [aggregateHoldings, calculateMetrics, updatePortfolio]
+  OUTPUT [portfolio, dashboard]
+  SCHEDULE "0 * * * *"
+}
+
+PIPELINE DividendTracking {
+  INPUT marketDataApi.dividends
+  TRANSFORM [matchHoldings, recordDividend, notifyUser]
+  OUTPUT [dividends, notifications]
+  SCHEDULE "0 9 * * *"
+}
+
+PIPELINE PerformanceAnalysis {
+  INPUT [Portfolio.stream, Transaction.stream]
+  TRANSFORM [calculateReturns, benchmarkComparison, riskMetrics]
+  OUTPUT [analytics, reports]
+  SCHEDULE "0 0 * * *"
+}
+
+// =============================================================================
+// ALERTS
+// =============================================================================
+
+ALERT "Price Target Reached" {
+  ENTITY PriceAlert
+  CONDITION currentPrice >= targetPrice AND condition == "above"
+  TARGET [notification, sound]
+  SEVERITY medium
+}
+
+ALERT "Stop Loss Triggered" {
+  ENTITY PriceAlert
+  CONDITION currentPrice <= targetPrice AND condition == "below"
+  TARGET [notification, sound, email]
+  SEVERITY high
+}
+
+ALERT "Large Portfolio Movement" {
+  ENTITY Portfolio
+  CONDITION abs(dailyChange) > 5
+  TARGET [notification]
+  SEVERITY high
+}
+
+ALERT "Dividend Upcoming" {
+  ENTITY Holding
+  CONDITION daysUntilExDate <= 3
+  TARGET [notification]
+  SEVERITY low
+}
+
+// =============================================================================
+// DASHBOARDS
+// =============================================================================
+
+DASHBOARD "Portfolio Overview" {
+  ENTITY Portfolio
+  METRICS [
+    "totalValue",
+    "totalGain",
+    "totalGainPercent",
+    "dayChange",
+    "dayChangePercent",
+    "allocationByAsset",
+    "allocationBySector"
+  ]
+  STREAM_MODE realtime
+  LAYOUT grid
+  
+  WIDGETS [
+    { TYPE "stat", TITLE "Total Value", METRIC "totalValue", FORMAT "currency" },
+    { TYPE "stat", TITLE "Total Gain", METRIC "totalGain", FORMAT "currency", COLOR_CODED true },
+    { TYPE "chart", TITLE "Performance", METRIC "valueHistory", CHART_TYPE "line" },
+    { TYPE "pie", TITLE "Allocation", METRIC "allocationByAsset" },
+    { TYPE "table", TITLE "Holdings", ENTITY "Holding", COLUMNS ["symbol", "quantity", "currentPrice", "value", "gainPercent"] }
+  ]
+}
+
+DASHBOARD "Analytics" {
+  ENTITY Portfolio
+  METRICS [
+    "sharpeRatio",
+    "volatility",
+    "beta",
+    "maxDrawdown",
+    "cagr",
+    "benchmarkComparison"
+  ]
+  LAYOUT tabs
+  
+  TABS [
+    { NAME "Performance", WIDGETS ["returns", "benchmarkChart"] },
+    { NAME "Risk", WIDGETS ["volatilityChart", "drawdownChart"] },
+    { NAME "Dividends", WIDGETS ["dividendHistory", "dividendYield"] }
+  ]
+}
+
+DASHBOARD "Watchlist" {
+  ENTITY Watchlist
+  METRICS [
+    "symbolPrices",
+    "dayChanges",
+    "volumes"
+  ]
+  STREAM_MODE realtime
+  
+  WIDGETS [
+    { TYPE "table", TITLE "Watch", COLUMNS ["symbol", "price", "change", "volume"] },
+    { TYPE "mini-chart", PER_ROW true }
+  ]
+}
+
+// =============================================================================
+// API ENDPOINTS (auto-generated)
+// =============================================================================
+
+API v1 {
+  PREFIX "/api/v1"
+  
+  RESOURCE portfolios {
+    ENTITY Portfolio
+    OPERATIONS [list, get, create, update, delete]
+    AUTH required
+    
+    NESTED holdings {
+      ENTITY Holding
+      OPERATIONS [list, get, create, update, delete]
+    }
+    
+    NESTED transactions {
+      ENTITY Transaction
+      OPERATIONS [list, get, create]
+    }
+    
+    ACTION rebalance {
+      METHOD POST
+      PATH "/:id/rebalance"
+      INPUT { targetAllocations: JSON }
+      OUTPUT { adjustments: JSON }
+    }
+    
+    ACTION export {
+      METHOD GET
+      PATH "/:id/export"
+      QUERY { format: String, dateFrom: DateTime?, dateTo: DateTime? }
+      OUTPUT file
+    }
+  }
+  
+  RESOURCE watchlists {
+    ENTITY Watchlist
+    OPERATIONS [list, get, create, update, delete]
+    AUTH required
+  }
+  
+  RESOURCE alerts {
+    ENTITY PriceAlert
+    OPERATIONS [list, get, create, update, delete]
+    AUTH required
+  }
+  
+  RESOURCE market {
+    ACTION quotes {
+      METHOD GET
+      PATH "/quotes"
+      QUERY { symbols: String[] }
+      CACHE "1m"
+    }
+    
+    ACTION search {
+      METHOD GET
+      PATH "/search"
+      QUERY { query: String, limit: Int? }
+    }
+    
+    ACTION history {
+      METHOD GET
+      PATH "/history/:symbol"
+      QUERY { period: String, interval: String }
+      CACHE "5m"
+    }
+  }
+}
+
+// =============================================================================
+// IPC (Electron Inter-Process Communication)
+// =============================================================================
+
+IPC main_renderer {
+  CHANNELS [
+    { NAME "portfolio:update", DIRECTION "main->renderer", DATA Portfolio },
+    { NAME "price:update", DIRECTION "main->renderer", DATA { symbol: String, price: Decimal } },
+    { NAME "alert:triggered", DIRECTION "main->renderer", DATA PriceAlert },
+    { NAME "notification:show", DIRECTION "renderer->main", DATA { title: String, body: String } },
+    { NAME "window:minimize-to-tray", DIRECTION "renderer->main" },
+    { NAME "export:start", DIRECTION "renderer->main", DATA { portfolioId: String, format: String } },
+    { NAME "export:complete", DIRECTION "main->renderer", DATA { path: String } }
+  ]
+}
+
+// =============================================================================
+// SYSTEM TRAY
+// =============================================================================
+
+TRAY {
+  ICON "assets/tray-icon.png"
+  TOOLTIP "Investment Manager"
+  
+  MENU [
+    { LABEL "Open Dashboard", ACTION "window:show" },
+    { LABEL "Quick Stats", SUBMENU [
+      { LABEL "Portfolio Value", ACTION "stats:value" },
+      { LABEL "Day Change", ACTION "stats:change" }
+    ]},
+    { TYPE "separator" },
+    { LABEL "Settings", ACTION "window:settings" },
+    { LABEL "Quit", ACTION "app:quit" }
+  ]
+  
+  CLICK_ACTION "window:toggle"
+}
+
+// =============================================================================
+// SCHEDULED TASKS
+// =============================================================================
+
+SCHEDULER {
+  TASKS [
+    { NAME "price-update", CRON "*/5 * * * *", PIPELINE "PriceUpdate" },
+    { NAME "daily-report", CRON "0 18 * * 1-5", ACTION "reports:daily" },
+    { NAME "weekly-summary", CRON "0 9 * * 1", ACTION "reports:weekly" },
+    { NAME "db-backup", CRON "0 2 * * *", ACTION "backup:database" }
+  ]
+}
+
+// =============================================================================
+// ENVIRONMENT VARIABLES (documented in .env.example)
+// =============================================================================
+
+ENV {
+  API_PORT: Int = 8080
+  MARKET_DATA_URL: String
+  MARKET_DATA_API_KEY: String @secret
+  SESSION_SECRET: String @secret
+  WIN_CERT_PATH: String? @secret
+  MAC_CERT_ID: String? @secret
+  AUTO_UPDATE_ENABLED: Boolean = true
+  LOG_LEVEL: String = "info"
+}
+
+// =============================================================================
+// CONFIG
+// =============================================================================
+
+CONFIG app {
+  defaultCurrency: "USD"
+  refreshInterval: 300000
+  maxWatchlistSize: 50
+  dataRetentionDays: 365
+}
+
+CONFIG trading {
+  defaultExchange: "NASDAQ"
+  supportedAssetTypes: ["stock", "etf", "crypto", "bond", "mutual_fund"]
+  supportedCurrencies: ["USD", "EUR", "GBP", "PLN", "CHF"]
+}
+
+CONFIG notifications {
+  sound: true
+  desktop: true
+  email: false
+  quietHoursStart: "22:00"
+  quietHoursEnd: "08:00"
+}
+
+// =============================================================================
+// GENERATED FILES (output to target/)
+// =============================================================================
+//
+// target/
+// ├── backend/
+// │   ├── src/
+// │   │   ├── server.ts
+// │   │   ├── routes/
+// │   │   ├── models/
+// │   │   └── services/
+// │   ├── package.json
+// │   └── tsconfig.json
+// ├── frontend/
+// │   ├── src/
+// │   │   ├── App.tsx
+// │   │   ├── components/
+// │   │   ├── pages/
+// │   │   └── hooks/
+// │   ├── package.json
+// │   └── vite.config.ts
+// ├── electron/
+// │   ├── main.ts
+// │   ├── preload.ts
+// │   └── ipc.ts
+// ├── migrations/
+// ├── assets/
+// ├── package.json
+// ├── electron-builder.yml
+// └── docker-compose.yml (optional, for API-only mode)
