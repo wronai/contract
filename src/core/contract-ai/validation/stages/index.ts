@@ -5,6 +5,7 @@
  */
 
 export * from './syntax-validator';
+export * from './schema-validator';
 export * from './assertion-validator';
 export * from './static-analyzer';
 export * from './test-runner';

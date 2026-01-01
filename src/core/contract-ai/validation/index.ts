@@ -21,6 +21,7 @@ export * from './stages';
 import { ValidationPipelineOrchestrator } from './pipeline-orchestrator';
 import type { PipelineOptions } from './pipeline-orchestrator';
 import { createSyntaxValidator } from './stages/syntax-validator';
+import { createSchemaValidator } from './stages/schema-validator';
 import { createAssertionValidator } from './stages/assertion-validator';
 import { createStaticAnalyzer } from './stages/static-analyzer';
 import { createTestRunner } from './stages/test-runner';
@@ -39,6 +40,7 @@ export function createDefaultValidationPipeline(
   // Rejestruj stage'y w kolejności
   pipeline.registerStages([
     createSyntaxValidator(),
+    createSchemaValidator(),
     createAssertionValidator(),
     createStaticAnalyzer(),
     createTestRunner(),
