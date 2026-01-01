@@ -2,7 +2,8 @@
 
 **Data:** 1 Stycznia 2026  
 **Wersja:** 2.3.0  
-**Kategoria:** Testing Guide
+**Kategoria:** Testing Guide  
+**Status:** ✅ VERIFIED
 
 ## 🎯 Jak System Powinien Działać
 
@@ -298,6 +299,159 @@ PASS  tests/integration/contract-ai-flow.test.ts
 
 Test Suites: 1 passed, 1 total
 Tests:       16 passed, 16 total
+```
+
+## 🐳 Testowanie Wygenerowanej Aplikacji
+
+### Uruchomienie API
+
+```bash
+cd ./generated/api
+
+# Zainstaluj zależności
+npm install
+
+# Uruchom w trybie dev
+npm run dev
+
+# Lub zbuduj i uruchom
+npm run build
+npm start
+```
+
+**Oczekiwany output:**
+```
+> api@1.0.0 dev
+> ts-node-dev src/server.ts
+
+[INFO] Server starting...
+[INFO] Routes registered:
+  GET    /health
+  GET    /api/contacts
+  POST   /api/contacts
+  GET    /api/contacts/:id
+  PUT    /api/contacts/:id
+  DELETE /api/contacts/:id
+[INFO] Server listening on http://localhost:3000
+```
+
+### Testowanie Endpointów
+
+```bash
+# Health check
+curl http://localhost:3000/health
+# {"status":"ok","timestamp":"2026-01-01T20:00:00.000Z"}
+
+# Create contact
+curl -X POST http://localhost:3000/api/contacts \
+  -H "Content-Type: application/json" \
+  -d '{"email":"john@example.com","firstName":"John","lastName":"Doe"}'
+
+# Get all contacts
+curl http://localhost:3000/api/contacts
+
+# Get single contact
+curl http://localhost:3000/api/contacts/uuid-123
+
+# Update contact
+curl -X PUT http://localhost:3000/api/contacts/uuid-123 \
+  -H "Content-Type: application/json" \
+  -d '{"phone":"+48123456789"}'
+
+# Delete contact
+curl -X DELETE http://localhost:3000/api/contacts/uuid-123
+```
+
+### Uruchomienie z Docker
+
+```bash
+cd ./generated
+
+# Uruchom wszystko
+docker-compose up -d
+
+# Sprawdź status
+docker-compose ps
+
+# Logi
+docker-compose logs -f api
+
+# Zatrzymaj
+docker-compose down
+```
+
+## 🔍 Testowanie Feedback Loop
+
+### Symulacja Błędu i Korekcji
+
+```bash
+./bin/reclapp generate-ai \
+  --prompt "Create a system with complex validation rules" \
+  --max-iterations 5 \
+  --verbose
+```
+
+**Scenariusz z feedback loop:**
+```
+🔧 Generating code (attempt 1/5)...
+  ✅ Generated 15 files
+
+🔍 Validation Pipeline:
+  Stage 1/7: Syntax validation      ✅ PASSED
+  Stage 2/7: Assertion validation   ❌ FAILED
+    Error: Missing endpoint /api/items
+    Error: Field 'price' should be positive
+
+🔄 Feedback Loop activated...
+  Generating feedback...
+  Errors grouped: 2 files affected
+  Suggestions generated: 3
+
+🔧 Generating code (attempt 2/5)...
+  Applying corrections...
+  ✅ Generated 15 files (2 modified)
+
+🔍 Validation Pipeline:
+  Stage 1/7: Syntax validation      ✅ PASSED
+  Stage 2/7: Assertion validation   ✅ PASSED
+  ... (all stages pass)
+
+✅ SUCCESS after 2 iterations!
+```
+
+## 📊 Sprawdzanie Logów
+
+### Format Logu (.rcl.md)
+
+```bash
+cat ./generated/logs/crm-system_*.rcl.md
+```
+
+**Zawartość:**
+```markdown
+# Generation Log: CRM System
+
+**Date:** 2026-01-01T20:00:00.000Z
+**Contract:** examples/contract-ai/crm-contract.ts
+**Status:** ✅ SUCCESS
+
+## Contract Summary
+
+- **Name:** CRM System
+- **Version:** 1.0.0
+- **Entities:** Contact, Company, Deal
+
+## Validation Results
+
+| Stage | Result | Time | Details |
+|-------|--------|------|---------|
+| 1. Syntax | ✅ PASSED | 2ms | 0 errors |
+| 2. Assertions | ✅ PASSED | 1ms | passed |
+| 3. Static | ✅ PASSED | 2ms | 0 warnings |
+| 4. Tests | ✅ PASSED | 1ms | tests OK |
+| 5. Quality | ✅ PASSED | 2ms | OK |
+| 6. Security | ✅ PASSED | 3ms | 0 vulnerabilities |
+| 7. Runtime | ✅ PASSED | 20ms | OK |
 ```
 
 ## ❌ Troubleshooting

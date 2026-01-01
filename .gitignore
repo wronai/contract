@@ -1,7 +1,13 @@
 test-verify/
 
 test-lifecycle
+test-lifecycle-*
+test-prompt-*
 .test-output
+test-guide
+test-docs
+test-notes
+test-verify
 .test-output-e2e
 target
 .idea

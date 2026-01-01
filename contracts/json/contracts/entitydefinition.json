@@ -84,7 +84,7 @@
           "default": null,
           "title": "Pattern"
         },
-        "min_value": {
+        "min": {
           "anyOf": [
             {
               "type": "number"
@@ -94,9 +94,9 @@
             }
           ],
           "default": null,
-          "title": "Min Value"
+          "title": "Min"
         },
-        "max_value": {
+        "max": {
           "anyOf": [
             {
               "type": "number"
@@ -106,7 +106,7 @@
             }
           ],
           "default": null,
-          "title": "Max Value"
+          "title": "Max"
         },
         "default": {
           "anyOf": [

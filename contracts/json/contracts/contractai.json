@@ -9,7 +9,7 @@
           "type": "string"
         },
         "version": {
-          "default": "1.0.0",
+          "minLength": 1,
           "title": "Version",
           "type": "string"
         },
@@ -51,7 +51,8 @@
         }
       },
       "required": [
-        "name"
+        "name",
+        "version"
       ],
       "title": "AppDefinition",
       "type": "object"
@@ -187,6 +188,68 @@
         "errorMessage"
       ],
       "title": "CodeAssertion",
+      "type": "object"
+    },
+    "CodePattern": {
+      "description": "Code pattern for LLM to follow",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "appliesTo": {
+          "default": [],
+          "items": {
+            "enum": [
+              "api",
+              "frontend",
+              "database",
+              "tests",
+              "docker",
+              "all"
+            ],
+            "type": "string"
+          },
+          "title": "Appliesto",
+          "type": "array"
+        },
+        "template": {
+          "title": "Template",
+          "type": "string"
+        },
+        "variables": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PatternVariable"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Variables"
+        }
+      },
+      "required": [
+        "name",
+        "template"
+      ],
+      "title": "CodePattern",
       "type": "object"
     },
     "ContractMetadata": {
@@ -359,7 +422,7 @@
           "default": null,
           "title": "Pattern"
         },
-        "min_value": {
+        "min": {
           "anyOf": [
             {
               "type": "number"
@@ -369,9 +432,9 @@
             }
           ],
           "default": null,
-          "title": "Min Value"
+          "title": "Min"
         },
-        "max_value": {
+        "max": {
           "anyOf": [
             {
               "type": "number"
@@ -381,7 +444,7 @@
             }
           ],
           "default": null,
-          "title": "Max Value"
+          "title": "Max"
         },
         "default": {
           "anyOf": [
@@ -440,39 +503,48 @@
           "enum": [
             "api",
             "frontend",
-            "shared",
-            "docker"
+            "database",
+            "tests",
+            "docker",
+            "all"
           ],
           "title": "Target",
           "type": "string"
         },
-        "template": {
+        "priority": {
+          "default": "must",
+          "enum": [
+            "must",
+            "should",
+            "may"
+          ],
+          "title": "Priority",
+          "type": "string"
+        },
+        "instruction": {
+          "title": "Instruction",
+          "type": "string"
+        },
+        "examples": {
           "anyOf": [
             {
-              "type": "string"
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
             },
             {
               "type": "null"
             }
           ],
           "default": null,
-          "title": "Template"
-        },
-        "description": {
-          "title": "Description",
-          "type": "string"
-        },
-        "priority": {
-          "default": 0,
-          "maximum": 100,
-          "minimum": 0,
-          "title": "Priority",
-          "type": "integer"
+          "title": "Examples"
         }
       },
       "required": [
         "target",
-        "description"
+        "instruction"
       ],
       "title": "GenerationInstruction",
       "type": "object"
@@ -488,6 +560,27 @@
           "title": "Instructions",
           "type": "array"
         },
+        "patterns": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/CodePattern"
+          },
+          "title": "Patterns",
+          "type": "array"
+        },
+        "constraints": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TechnicalConstraint"
+          },
+          "title": "Constraints",
+          "type": "array"
+        },
+        "techStack": {
+          "additionalProperties": true,
+          "title": "Techstack",
+          "type": "object"
+        },
         "templates": {
           "additionalProperties": {
             "type": "string"
@@ -498,6 +591,106 @@
         }
       },
       "title": "GenerationLayer",
+      "type": "object"
+    },
+    "PatternVariable": {
+      "description": "Variable used in a code pattern",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "type": {
+          "default": "string",
+          "enum": [
+            "string",
+            "number",
+            "boolean",
+            "array",
+            "object"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "default": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Default"
+        },
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Required"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "PatternVariable",
+      "type": "object"
+    },
+    "TechnicalConstraint": {
+      "description": "Technical constraint",
+      "properties": {
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "rule": {
+          "title": "Rule",
+          "type": "string"
+        },
+        "severity": {
+          "default": "error",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "autoFix": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Autofix"
+        }
+      },
+      "required": [
+        "type",
+        "rule"
+      ],
+      "title": "TechnicalConstraint",
       "type": "object"
     },
     "ValidationLayer": {
@@ -514,10 +707,32 @@
         "tests": {
           "default": [],
           "items": {
+            "additionalProperties": true,
             "type": "object"
           },
           "title": "Tests",
           "type": "array"
+        },
+        "staticRules": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Staticrules",
+          "type": "array"
+        },
+        "qualityGates": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Qualitygates",
+          "type": "array"
+        },
+        "acceptance": {
+          "additionalProperties": true,
+          "title": "Acceptance",
+          "type": "object"
         }
       },
       "title": "ValidationLayer",

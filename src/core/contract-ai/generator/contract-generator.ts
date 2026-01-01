@@ -10,6 +10,7 @@
 import { ContractAI, ContractValidationError } from '../types';
 import { ContractPromptBuilder } from './prompt-builder';
 import { ContractValidator } from './contract-validator';
+import { createPydanticValidator, type ValidationError as SchemaValidationError } from '../llm/pydantic-validator';
 
 // ============================================================================
 // TYPES
@@ -123,6 +124,9 @@ export class ContractGenerator {
     let currentContract: Partial<ContractAI> | null = null;
     let lastErrors: ContractValidationError[] = [];
 
+    const schemaValidator = await this.tryCreateSchemaValidator();
+    const contractSchemaName = 'contracts/contractai';
+
     while (attempts < this.options.maxAttempts) {
       attempts++;
       
@@ -154,6 +158,14 @@ export class ContractGenerator {
         }
 
         currentContract = parsedContract;
+
+        if (schemaValidator) {
+          const schemaResult = schemaValidator.validate(contractSchemaName, currentContract);
+          if (!schemaResult.valid) {
+            lastErrors = this.mapSchemaErrors(schemaResult.errors);
+            continue;
+          }
+        }
 
         // Waliduj kontrakt
         const validationResult = this.validator.validate(currentContract);
@@ -205,6 +217,28 @@ export class ContractGenerator {
       tokensUsed,
       timeMs: Date.now() - startTime
     };
+  }
+
+  private async tryCreateSchemaValidator(): Promise<Awaited<ReturnType<typeof createPydanticValidator>> | null> {
+    try {
+      const v = await createPydanticValidator();
+      if (!v.getSchema('contracts/contractai')) {
+        return null;
+      }
+      return v;
+    } catch {
+      return null;
+    }
+  }
+
+  private mapSchemaErrors(errors: SchemaValidationError[]): ContractValidationError[] {
+    return errors.map((e) => ({
+      code: 'E_SCHEMA',
+      message: e.message,
+      path: e.path || '',
+      severity: 'error',
+      suggestion: 'Ensure the contract JSON matches the Pydantic-generated JSON Schema'
+    }));
   }
 
   /**

@@ -685,6 +685,9 @@ async function cmdGenerateAI(args, options) {
       dryRun = true;
     } else if (arg === '--max-iterations') {
       maxIterations = parseInt(args[++i], 10);
+    } else if (arg === '--output' || arg === '-o') {
+      // Skip -o and its value (handled by main options)
+      i++;
     } else if (!arg.startsWith('-') && !contractFile) {
       contractFile = arg;
     }
