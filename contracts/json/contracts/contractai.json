@@ -514,6 +514,7 @@
         "tests": {
           "default": [],
           "items": {
+            "additionalProperties": true,
             "type": "object"
           },
           "title": "Tests",

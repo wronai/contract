@@ -24,8 +24,9 @@ class GeneratedFile(BaseModel):
     
     def get_extension(self) -> str:
         """Get file extension"""
-        parts = self.path.split(".")
-        return parts[-1] if len(parts) > 1 else ""
+        base = self.path.split("/")[-1]
+        parts = base.split(".")
+        return parts[-1] if len(parts) > 1 else base
 
 
 class LLMCodeOutput(BaseModel):

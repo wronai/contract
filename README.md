@@ -291,6 +291,52 @@ const crmContract: ContractAI = {
 
 See full documentation: [docs/contract-ai.md](docs/contract-ai.md)
 
+### Pydantic Contracts (Python Source of Truth)
+
+Pydantic contracts provide type-safe schema definitions that generate JSON Schemas and TypeScript types.
+
+```bash
+# Install Python dependencies
+pip install -r pycontracts/requirements.txt
+
+# Generate JSON Schemas + TypeScript types
+python3 -m pycontracts.generate --typescript
+
+# Output:
+# - contracts/json/       → 14 JSON Schemas
+# - frontend-sdk/types/   → 3 TypeScript files
+```
+
+**Available Entity Contracts:**
+| Entity | Description |
+|--------|-------------|
+| `Contact` | CRM contact with email, name, phone |
+| `Company` | Business entity with size, revenue |
+| `Deal` | Sales opportunity with stage, value |
+| `User` | System user with role, permissions |
+| `Task` | Todo item with status, priority |
+| `Project` | Project with budget, timeline |
+
+**Usage in Python:**
+```python
+from pycontracts.entities import Contact, Deal
+from pycontracts.llm import LLMCodeOutput
+
+# Validate contact data
+contact = Contact(
+    id="123",
+    email="john@example.com",
+    firstName="John",
+    lastName="Doe"
+)
+
+# Validate LLM output
+output = LLMCodeOutput(
+    files=[{"path": "server.ts", "content": "..."}],
+    model="llama3"
+)
+```
+
 ## 📜 Declarative DSL
 
 ```reclapp
