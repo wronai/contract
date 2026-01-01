@@ -62,6 +62,15 @@ export class PydanticValidator {
     this.schemasDir = schemasDir || path.join(process.cwd(), 'contracts/json');
   }
 
+  private normalizeSchemaName(name: string): string {
+    return name
+      .trim()
+      .replace(/\\/g, '/')
+      .replace(/^\//, '')
+      .replace(/\.json$/i, '')
+      .toLowerCase();
+  }
+
   /**
    * Load all schemas from directory
    */
@@ -89,7 +98,8 @@ export class PydanticValidator {
         try {
           const content = fs.readFileSync(fullPath, 'utf-8');
           const schema = JSON.parse(content) as JSONSchema;
-          const schemaName = entry.name.replace('.json', '');
+          const rel = path.relative(this.schemasDir, fullPath).replace(/\\/g, '/');
+          const schemaName = this.normalizeSchemaName(rel);
           this.schemas.set(schemaName, schema);
         } catch (e) {
           console.warn(`Failed to load schema: ${fullPath}`);
@@ -102,7 +112,38 @@ export class PydanticValidator {
    * Get loaded schema by name
    */
   getSchema(name: string): JSONSchema | undefined {
-    return this.schemas.get(name.toLowerCase());
+    return this.schemas.get(this.normalizeSchemaName(name));
+  }
+
+  private resolveJsonPointer(root: any, pointer: string): JSONSchema | undefined {
+    const p = pointer.startsWith('#') ? pointer.slice(1) : pointer;
+    const parts = p.split('/').filter(Boolean);
+    let cur: any = root;
+    for (const part of parts) {
+      const key = part.replace(/~1/g, '/').replace(/~0/g, '~');
+      if (cur && typeof cur === 'object' && key in cur) {
+        cur = cur[key];
+      } else {
+        return undefined;
+      }
+    }
+    return cur as JSONSchema;
+  }
+
+  private resolveRef(ref: string, rootSchema: JSONSchema): JSONSchema | undefined {
+    // Local ref inside the same schema
+    if (ref.startsWith('#')) {
+      return this.resolveJsonPointer(rootSchema as any, ref);
+    }
+
+    // External ref like "entities/contact.json#/$defs/X"
+    const [filePart, pointer = ''] = ref.split('#');
+    const schemaName = this.normalizeSchemaName(filePart);
+    const external = this.schemas.get(schemaName);
+    if (!external) return undefined;
+
+    if (!pointer) return external;
+    return this.resolveJsonPointer(external as any, `#${pointer}`);
   }
 
   /**
@@ -119,7 +160,7 @@ export class PydanticValidator {
       };
     }
 
-    const errors = this.validateValue(data, schema, '');
+    const errors = this.validateValue(data, schema, '', schema);
 
     return {
       valid: errors.length === 0,
@@ -134,18 +175,16 @@ export class PydanticValidator {
   private validateValue(
     value: unknown,
     schema: JSONSchema,
-    path: string
+    path: string,
+    rootSchema: JSONSchema
   ): ValidationError[] {
     const errors: ValidationError[] = [];
 
     // Handle $ref
     if (schema.$ref) {
-      const refName = schema.$ref.split('/').pop()?.toLowerCase();
-      if (refName) {
-        const refSchema = this.schemas.get(refName);
-        if (refSchema) {
-          return this.validateValue(value, refSchema, path);
-        }
+      const refSchema = this.resolveRef(schema.$ref, rootSchema);
+      if (refSchema) {
+        return this.validateValue(value, refSchema, path, rootSchema);
       }
     }
 
@@ -153,7 +192,7 @@ export class PydanticValidator {
     if (schema.anyOf || schema.oneOf) {
       const options = schema.anyOf || schema.oneOf || [];
       const anyValid = options.some(opt => 
-        this.validateValue(value, opt, path).length === 0
+        this.validateValue(value, opt, path, rootSchema).length === 0
       );
       if (!anyValid && options.length > 0) {
         errors.push({
@@ -168,7 +207,7 @@ export class PydanticValidator {
     // Handle allOf
     if (schema.allOf) {
       for (const subSchema of schema.allOf) {
-        errors.push(...this.validateValue(value, subSchema, path));
+        errors.push(...this.validateValue(value, subSchema, path, rootSchema));
       }
       return errors;
     }
@@ -178,14 +217,26 @@ export class PydanticValidator {
       const types = Array.isArray(schema.type) ? schema.type : [schema.type];
       const actualType = this.getType(value);
 
-      if (!types.includes(actualType) && !types.includes('null' as any)) {
-        // Allow null for optional fields
-        if (value !== null && value !== undefined) {
-          errors.push({
-            path,
-            message: `Expected ${types.join(' | ')}, got ${actualType}`,
-            value
-          });
+      const allowsNull = types.includes('null' as any);
+      const isNullish = value === null || value === undefined;
+
+      const typeMatches =
+        types.includes(actualType) ||
+        (types.includes('integer' as any) && actualType === 'number') ||
+        (allowsNull && isNullish);
+
+      if (!typeMatches && !isNullish) {
+        errors.push({
+          path,
+          message: `Expected ${types.join(' | ')}, got ${actualType}`,
+          value
+        });
+        return errors;
+      }
+
+      if (types.includes('integer' as any) && actualType === 'number' && typeof value === 'number') {
+        if (!Number.isInteger(value)) {
+          errors.push({ path, message: 'Expected integer', value });
           return errors;
         }
       }
@@ -280,7 +331,7 @@ export class PydanticValidator {
         for (const [propName, propSchema] of Object.entries(schema.properties)) {
           if (propName in obj) {
             const propPath = path ? `${path}.${propName}` : propName;
-            errors.push(...this.validateValue(obj[propName], propSchema, propPath));
+            errors.push(...this.validateValue(obj[propName], propSchema, propPath, rootSchema));
           }
         }
       }
@@ -303,7 +354,7 @@ export class PydanticValidator {
     if (Array.isArray(value) && schema.items) {
       value.forEach((item, index) => {
         const itemPath = `${path}[${index}]`;
-        errors.push(...this.validateValue(item, schema.items!, itemPath));
+        errors.push(...this.validateValue(item, schema.items!, itemPath, rootSchema));
       });
     }
 
