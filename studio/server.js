@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Reclapp Studio - Simple Web UI without Gradio
+ * Reclapp Studio - Simple Web UI
  * 
  * Express backend + vanilla HTML/JS frontend
  */
@@ -13,7 +13,7 @@ const http = require('http');
 const net = require('net');
 
 const app = express();
-const PORT = process.env.STUDIO_PORT || process.env.STUDIO_LITE_PORT || 7861;
+const PORT = process.env.STUDIO_PORT || 7861;
 const OLLAMA_HOST = process.env.OLLAMA_HOST || 'http://localhost:11434';
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'deepseek-coder:6.7b';
 

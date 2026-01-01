@@ -1,7 +1,7 @@
 ![reclapp.png](reclapp.png)
-# Reclapp 2.1.0 - AI-Native Declarative Platform
+# Reclapp 2.2.0 - AI-Native Declarative Platform
 
-[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/wronai/reclapp)
+[![Version](https://img.shields.io/badge/version-2.2.0-blue.svg)](https://github.com/wronai/reclapp)
 [![License](https://img.shields.io/badge/license-Apache-green.svg)](LICENSE) 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
@@ -10,6 +10,7 @@
 
 ## 🌟 Key Features
 
+- **Contract AI 2.2** - 3-layer specification for LLM-driven code generation
 - **TypeScript AI Contracts** - Fully typed, compile-time validated contracts for AI agents
 - **Causal Verification Loop** - Closed-loop decision making with confidence decay
 - **MCP Protocol** - Model Context Protocol integration for AI interoperability
@@ -90,6 +91,12 @@ reclapp/
 │   ├── validator.ts     # Zod validation schemas
 │   ├── executor.ts      # Runtime contract executor
 │   └── examples/        # Example contracts
+│
+├── src/                 # New Contract AI 2.2 Implementation
+│   └── core/
+│       └── contract-ai/ # 3-Layer Contract AI System
+│           ├── types/   # Definition, Generation, Validation layers
+│           └── generator/ # Contract & Code generators
 │
 ├── core/                # Core Engine
 │   ├── ai-contract/     # AI Contract Enforcer
@@ -175,6 +182,68 @@ const agent = defineContract('RiskAgent', '1.0.0')
 const executor = createExecutor(agent);
 const result = await executor.execute();
 ```
+
+## 🤖 Contract AI 2.2 - LLM Code Generation
+
+Contract AI 2.2 introduces a 3-layer specification for LLM-driven code generation:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    CONTRACT AI 3 LAYERS                          │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Layer 1: DEFINITION (CO)                                        │
+│  └─ app, entities, events, workflows, api                       │
+│                                                                  │
+│  Layer 2: GENERATION (JAK GENEROWAĆ)                             │
+│  └─ instructions, patterns, constraints, techStack              │
+│                                                                  │
+│  Layer 3: VALIDATION (KIEDY GOTOWE)                              │
+│  └─ assertions, tests, staticRules, qualityGates, acceptance    │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+```typescript
+import { ContractAI, createContractGenerator } from './src/core/contract-ai';
+
+// Generate Contract AI from natural language
+const generator = createContractGenerator({ verbose: true });
+generator.setLLMClient(myLLMClient);
+
+const result = await generator.generate(
+  'Create a CRM system with contacts, companies, and deals'
+);
+
+if (result.success) {
+  console.log('Contract generated:', result.contract);
+  // result.contract contains full 3-layer specification
+}
+
+// Or define Contract AI manually
+const crmContract: ContractAI = {
+  definition: {
+    app: { name: 'CRM', version: '1.0.0' },
+    entities: [{ name: 'Contact', fields: [...] }],
+    api: { version: 'v1', prefix: '/api/v1', resources: [...] }
+  },
+  generation: {
+    instructions: [{ target: 'api', priority: 'must', instruction: '...' }],
+    patterns: [],
+    constraints: [],
+    techStack: { backend: { runtime: 'node', language: 'typescript', framework: 'express', port: 3000 } }
+  },
+  validation: {
+    assertions: [{ id: 'A001', check: { type: 'file-exists', path: 'src/server.ts' }, ... }],
+    tests: [{ name: 'API Tests', type: 'api', scenarios: [...] }],
+    staticRules: [],
+    qualityGates: [{ metric: 'test-coverage', threshold: 70, operator: '>=' }],
+    acceptance: { testsPass: true, minCoverage: 70, ... }
+  }
+};
+```
+
+See `examples/contract-ai/crm-contract.ts` for a complete example.
 
 ## 📜 Declarative DSL
 

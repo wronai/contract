@@ -32,7 +32,13 @@ generator/
 
 ### SimpleGenerator
 
-The primary generator for creating applications from `.reclapp.ts` contracts.
+The primary generator for creating applications from validated contracts.
+
+Supported input formats via `./bin/reclapp generate`:
+
+- `.reclapp.ts`
+- `.reclapp.rcl`
+- `.rcl.md`
 
 ```typescript
 import { SimpleGenerator } from './generator/core/simple-generator';
@@ -54,7 +60,7 @@ Modular TypeScript templates for each generated component:
 ### Usage Flow
 
 ```
-.reclapp.ts Contract
+.reclapp.ts / .reclapp.rcl / .rcl.md Contract
         │
         ▼
   ┌─────────────┐

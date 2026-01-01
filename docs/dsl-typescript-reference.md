@@ -409,10 +409,10 @@ for (const warning of result.warnings) {
 ### Loading Contracts
 
 ```typescript
-import { loadContract } from '@reclapp/contracts/dsl-loader';
+import { loadContract } from '../contracts/dsl-loader';
 
 // Load from any format
-const result = await loadContract('contracts/main.reclapp', {
+const result = await loadContract('contracts/main.reclapp.rcl', {
   validate: true,
   autoFix: true,
   logLevel: 'info'
@@ -429,10 +429,10 @@ if (result.validation.valid) {
 ### Converting Formats
 
 ```typescript
-import { loadContract, convertToTypeScript } from '@reclapp/contracts/dsl-loader';
+import { loadContract, convertToTypeScript } from '../contracts/dsl-loader';
 
-// Load .reclapp and convert to .reclapp.ts
-const result = await loadContract('contracts/main.reclapp');
+// Load Mini-DSL or Markdown and convert to .reclapp.ts
+const result = await loadContract('contracts/main.reclapp.rcl');
 
 if (result.contract) {
   const ts = convertToTypeScript(result.contract);
@@ -443,17 +443,13 @@ if (result.contract) {
 ## CLI Commands
 
 ```bash
-# Load and validate a contract
-npx reclapp-loader load contracts/main.reclapp
+# Validate
+./bin/reclapp validate contracts/main.reclapp.rcl
 
-# Convert .reclapp to .reclapp.ts
-npx reclapp-loader convert contracts/main.reclapp --output=contracts/main.reclapp.ts
-
-# Validate with auto-fix
-npx reclapp-loader validate contracts/main.reclapp --auto-fix
-
-# Force format
-npx reclapp-loader load contracts/main.yaml --format=yaml
+# Convert between formats
+./bin/reclapp convert contracts/main.reclapp.rcl --format md
+./bin/reclapp convert contracts/main.rcl.md --format ts
+./bin/reclapp convert contracts/main.reclapp.ts --format rcl
 ```
 
 ## Best Practices

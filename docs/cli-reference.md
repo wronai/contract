@@ -357,6 +357,28 @@ reclapp convert contract.rcl.md --format rcl
 
 ---
 
+### `reclapp normalize`
+
+Normalize a Mini-DSL contract file by fixing common LLM mistakes (e.g. `field: type,`, `money PLN`, `@indexed`, `@belongs_to`).
+
+```bash
+reclapp normalize <input.reclapp.rcl> [--in-place] [-o <output>]
+
+# Aliases: norm
+```
+
+**Examples:**
+
+```bash
+# Write normalized output to a new file
+reclapp normalize apps/my-app/contracts/main.reclapp.rcl -o /tmp/main.reclapp.rcl
+
+# Normalize in place
+reclapp normalize apps/my-app/contracts/main.reclapp.rcl --in-place
+```
+
+---
+
 ### `reclapp stop`
 
 Stop all running Reclapp Docker containers.

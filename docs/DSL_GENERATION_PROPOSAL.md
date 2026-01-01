@@ -8,9 +8,11 @@ This document proposes enhancements to the Reclapp DSL system to enable **comple
 
 Currently, examples contain:
 
-- `contracts/*.reclapp` - DSL definitions (data models, events, pipelines, dashboards)
-- `src/` - Manually written server code
-- `docker-compose.yml`, `Dockerfile`, `package.json` - Manual configurations
+- `contracts/*.reclapp.rcl` - Mini-DSL contracts (used by Studio + generation)
+- `contracts/*.reclapp.ts` - Type-safe TypeScript contracts (validated source)
+- `contracts/*.rcl.md` - Markdown contracts (readable + chat history)
+- `src/` - Manually written server code (in some examples)
+- `docker-compose.yml`, `Dockerfile`, `package.json` - Manual configurations (in some examples)
 
 ## Proposed Architecture
 
@@ -19,7 +21,9 @@ Currently, examples contain:
 ```text
 my-app/
 ├── contracts/
-│   └── main.reclapp          # Single source of truth
+│   └── main.reclapp.rcl      # Single source of truth (Mini-DSL)
+│   └── main.reclapp.ts       # Optional: type-safe variant
+│   └── main.rcl.md           # Optional: readable doc + conversation
 ├── .env.example              # Environment variables template
 ├── .env                      # Local configuration (gitignored)
 ├── README.md                 # Generated documentation
@@ -534,7 +538,7 @@ ENV {
 }
 ```
 
-Run: `reclapp dev contracts/main.reclapp` → Full working app at http://localhost:3000
+Run: `./bin/reclapp dev contracts/main.reclapp.rcl` → Full working app at `http://localhost:3000`
 
 ## Conclusion
 

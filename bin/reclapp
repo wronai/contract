@@ -78,6 +78,7 @@ Usage:
   reclapp deploy <contract>                  Generate and deploy with Docker
   reclapp validate <contract>                Validate contract
   reclapp convert <input> -o <output>        Convert between formats
+  reclapp normalize <input> [-o <output>]    Normalize Mini-DSL (.reclapp.rcl)
   reclapp list                               List available contracts
   reclapp studio                             Interactive examples browser
   reclapp chat                               Interactive LLM contract designer
@@ -91,6 +92,7 @@ Commands:
   deploy      Generate and deploy with Docker Compose
   validate    Validate contract without generating
   convert     Convert between .reclapp.ts, .rcl (Mini-DSL) formats
+  normalize   Normalize Mini-DSL source (fix common LLM mistakes)
   list        List all available contract files (.reclapp.ts, .rcl)
   studio      Interactive examples browser with tests
   stop        Stop all running Docker containers
@@ -112,6 +114,7 @@ Examples:
   reclapp examples/crm/contracts/main.rcl.md
   reclapp convert contract.rcl --format md
   reclapp convert contract.rcl.md --format ts
+  reclapp normalize apps/my-app/contracts/main.reclapp.rcl -o /tmp/main.reclapp.rcl
   reclapp studio
 `;
 
@@ -540,6 +543,30 @@ async function cmdConvert(inputPath, options = {}) {
   console.log(`✅ Converted to ${outPath}`);
 }
 
+async function cmdNormalize(inputPath, options = {}) {
+  if (!normalizeMiniRclSource) {
+    console.error('❌ Normalization not available');
+    process.exit(1);
+  }
+
+  const fullInput = path.resolve(inputPath);
+  if (!fs.existsSync(fullInput)) {
+    console.error(`❌ Input file not found: ${fullInput}`);
+    process.exit(1);
+  }
+
+  const inPlace = !!options.inPlace;
+  const outPath = inPlace
+    ? fullInput
+    : (options.output || inputPath.replace(/\.rcl(\.md)?$/, '.reclapp.rcl'));
+
+  const source = fs.readFileSync(fullInput, 'utf-8');
+  const normalized = normalizeMiniRclSource(source);
+
+  fs.writeFileSync(outPath, normalized);
+  console.log(`✅ Normalized: ${outPath}`);
+}
+
 function generateTypeScriptContract(ir) {
   const lines = [
     '// Generated from Mini-DSL contract',
@@ -819,7 +846,7 @@ async function main() {
   }
 
   const command = args[0];
-  const options = { output: null, verbose: args.includes('--verbose') || args.includes('-v') };
+  const options = { output: null, verbose: args.includes('--verbose') || args.includes('-v'), inPlace: args.includes('--in-place') };
 
   for (let i = 0; i < args.length; i++) {
     if ((args[i] === '--output' || args[i] === '-o') && args[i + 1]) {
@@ -875,6 +902,10 @@ async function main() {
         }
       }
       await cmdConvert(contractPath, options); break;
+
+    case 'normalize': case 'norm':
+      if (!contractPath) { console.error('❌ Missing input path'); process.exit(1); }
+      await cmdNormalize(contractPath, options); break;
 
     default:
       if (command.endsWith('.reclapp.ts') || command.endsWith('.ts') || command.endsWith('.rcl') || command.endsWith('.rcl.md')) {
