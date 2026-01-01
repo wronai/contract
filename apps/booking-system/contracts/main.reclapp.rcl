@@ -1,0 +1,178 @@
+app "Booking System" {
+  version: "1.0.0"
+  description: "Appointment and reservation booking system"
+  author: "Reclapp Studio"
+  license: "MIT"
+}
+
+enum BookingStatus { Pending, Confirmed, Cancelled, Completed, NoShow }
+enum PaymentStatus { Pending, Paid, Refunded, Failed }
+enum DayOfWeek { Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday }
+
+entity Provider {
+  id          uuid      @unique @generated
+  name        text      @required
+  email       email     @unique @required
+  phone       phone?
+  bio         text?
+  avatar      url?
+  specialties text[]?
+  active      bool      = true
+  createdAt   datetime  @generated
+}
+
+entity Service {
+  id          uuid      @unique @generated
+  name        text      @required
+  description text?
+  duration    int       @required
+  price       money(PLN) @required
+  provider    -> Provider @required
+  category    text?
+  active      bool      = true
+  createdAt   datetime  @generated
+}
+
+entity Customer {
+  id          uuid      @unique @generated
+  email       email     @unique @required
+  name        text      @required
+  phone       phone?
+  notes       text?
+  bookings    <- Booking[]
+  createdAt   datetime  @generated
+}
+
+entity Schedule {
+  id          uuid      @unique @generated
+  provider    -> Provider @required
+  dayOfWeek   DayOfWeek @required
+  startTime   text      @required
+  endTime     text      @required
+  active      bool      = true
+}
+
+entity TimeSlot {
+  id          uuid      @unique @generated
+  provider    -> Provider @required
+  date        date      @required
+  startTime   text      @required
+  endTime     text      @required
+  available   bool      = true
+  booking     -> Booking?
+}
+
+entity Booking {
+  id          uuid      @unique @generated
+  bookingNumber text    @unique @generated
+  customer    -> Customer @required
+  service     -> Service  @required
+  provider    -> Provider @required
+  slot        -> TimeSlot @required
+  status      BookingStatus = Pending
+  paymentStatus PaymentStatus = Pending
+  date        date      @required
+  startTime   text      @required
+  endTime     text      @required
+  price       money(PLN) @required
+  notes       text?
+  reminderSent bool     = false
+  createdAt   datetime  @generated
+  updatedAt   datetime  @generated
+  cancelledAt datetime?
+}
+
+entity Payment {
+  id          uuid      @unique @generated
+  booking     -> Booking  @required
+  amount      money(PLN) @required
+  method      enum(Card, Cash, Transfer, Online) @required
+  status      PaymentStatus = Pending
+  transactionId text?
+  paidAt      datetime?
+  createdAt   datetime  @generated
+}
+
+event BookingCreated {
+  bookingId: uuid
+  bookingNumber: text
+  customerId: uuid
+  serviceId: uuid
+  date: date
+  timestamp: datetime
+}
+
+event BookingConfirmed {
+  bookingId: uuid
+  confirmedBy: text
+  timestamp: datetime
+}
+
+event BookingCancelled {
+  bookingId: uuid
+  reason: text
+  cancelledBy: text
+  timestamp: datetime
+}
+
+event PaymentReceived {
+  paymentId: uuid
+  bookingId: uuid
+  amount: decimal
+  method: text
+  timestamp: datetime
+}
+
+event ReminderSent {
+  bookingId: uuid
+  customerId: uuid
+  channel: text
+  timestamp: datetime
+}
+
+alert "Unconfirmed Booking" {
+  entity: Booking
+  when: status = Pending AND createdAt < now() - 1h
+  notify: [email]
+  severity: medium
+}
+
+alert "Upcoming Booking Reminder" {
+  entity: Booking
+  when: date = today() + 1d AND reminderSent = false AND status = Confirmed
+  notify: [email, sms]
+  severity: low
+}
+
+alert "Payment Overdue" {
+  entity: Booking
+  when: paymentStatus = Pending AND status = Confirmed AND createdAt < now() - 24h
+  notify: [email]
+  severity: high
+}
+
+dashboard "Bookings Overview" {
+  entity: Booking
+  metrics: [count, byStatus, byProvider, revenue]
+  stream: realtime
+  layout: grid
+}
+
+dashboard "Provider Schedule" {
+  entity: TimeSlot
+  metrics: [available, booked, byProvider]
+  layout: calendar
+}
+
+pipeline BookingReminders {
+  input: [Booking.upcoming]
+  output: notifications
+  schedule: "0 9 * * *"
+}
+
+config app {
+  timezone: "Europe/Warsaw"
+  reminderHoursBefore: 24
+  cancellationDeadlineHours: 24
+  autoConfirmPayments: false
+}

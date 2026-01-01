@@ -1,0 +1,131 @@
+app "Task Manager" {
+  version: "1.0.0"
+  description: "Simple task management application with projects and assignments"
+  author: "Reclapp Studio"
+  license: "MIT"
+}
+
+enum TaskStatus { Todo, InProgress, Review, Done, Cancelled }
+enum Priority { Low, Medium, High, Urgent }
+enum ProjectStatus { Active, OnHold, Completed, Archived }
+
+entity User {
+  id          uuid      @unique @generated
+  email       email     @unique @required
+  name        text      @required
+  avatar      url?
+  role        enum(Admin, Manager, Member) = Member
+  active      bool      = true
+  createdAt   datetime  @generated
+  updatedAt   datetime  @generated
+}
+
+entity Project {
+  id          uuid      @unique @generated
+  name        text      @required
+  description text?
+  status      ProjectStatus = Active
+  owner       -> User   @required
+  members     <- ProjectMember[]
+  tasks       <- Task[]
+  startDate   date?
+  endDate     date?
+  createdAt   datetime  @generated
+  updatedAt   datetime  @generated
+}
+
+entity ProjectMember {
+  id          uuid      @unique @generated
+  project     -> Project @required
+  user        -> User    @required
+  role        enum(Owner, Admin, Member, Viewer) = Member
+  joinedAt    datetime  @generated
+}
+
+entity Task {
+  id          uuid      @unique @generated
+  title       text      @required
+  description text?
+  status      TaskStatus = Todo
+  priority    Priority   = Medium
+  project     -> Project @required
+  assignee    -> User?
+  createdBy   -> User    @required
+  dueDate     datetime?
+  estimatedHours float?
+  tags        text[]?
+  createdAt   datetime  @generated
+  updatedAt   datetime  @generated
+  completedAt datetime?
+}
+
+entity Comment {
+  id          uuid      @unique @generated
+  task        -> Task    @required
+  author      -> User    @required
+  content     text      @required
+  createdAt   datetime  @generated
+}
+
+event TaskCreated {
+  taskId: uuid
+  projectId: uuid
+  title: text
+  createdBy: uuid
+  timestamp: datetime
+}
+
+event TaskStatusChanged {
+  taskId: uuid
+  previousStatus: text
+  newStatus: text
+  changedBy: uuid
+  timestamp: datetime
+}
+
+event TaskAssigned {
+  taskId: uuid
+  assigneeId: uuid
+  assignedBy: uuid
+  timestamp: datetime
+}
+
+event TaskCompleted {
+  taskId: uuid
+  completedBy: uuid
+  duration: float
+  timestamp: datetime
+}
+
+alert "Overdue Task" {
+  entity: Task
+  when: dueDate < now() AND status != Done AND status != Cancelled
+  notify: [email]
+  severity: medium
+}
+
+alert "High Priority Unassigned" {
+  entity: Task
+  when: priority = Urgent AND assignee = null
+  notify: [email, slack]
+  severity: high
+}
+
+dashboard "Project Overview" {
+  entity: Project
+  metrics: [count, byStatus]
+  layout: grid
+}
+
+dashboard "Task Board" {
+  entity: Task
+  metrics: [count, byStatus, byPriority, byAssignee]
+  stream: realtime
+  layout: kanban
+}
+
+config app {
+  defaultTimezone: "UTC"
+  taskAutoAssign: false
+  notificationsEnabled: true
+}

@@ -1,0 +1,369 @@
+#!/usr/bin/env node
+/**
+ * Reclapp Chat - Interactive Contract Designer CLI
+ * 
+ * Terminal-based conversation with LLM for contract generation
+ */
+
+const readline = require('readline');
+const fs = require('fs');
+const path = require('path');
+const http = require('http');
+
+// Configuration
+const OLLAMA_HOST = process.env.OLLAMA_HOST || 'http://localhost:11434';
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'deepseek-coder:6.7b';
+const CODE_MODEL = process.env.CODE_MODEL || 'deepseek-coder:6.7b';
+
+// System prompt for contract generation
+const SYSTEM_PROMPT = `You are a contract designer for Reclapp. Generate application contracts in Reclapp Mini-DSL (RCL) format.
+
+## OUTPUT FORMAT
+Always respond with a JSON object:
+\`\`\`json
+{
+  "thinking": "Your analysis",
+  "contract": "RCL code here",
+  "summary": {"entities": [], "events": [], "features": []}
+}
+\`\`\`
+
+## RCL SYNTAX
+
+### App (required first)
+app "Name" {
+  version: "1.0.0"
+  description: "Description"
+}
+
+### Entity
+entity EntityName {
+  id          uuid      @unique @generated
+  fieldName   type      @modifiers
+  relation    -> Other?
+  createdAt   datetime  @generated
+}
+
+Types: text, email, phone, url, int, float, decimal, bool, date, datetime, uuid, json
+Modifiers: @unique, @required, @generated, @index
+Relations: -> (belongs_to), <- (has_many)
+
+### Enum
+enum Status { Active, Pending, Archived }
+
+### Event
+event EventName {
+  fieldName: type
+}
+
+### Alert
+alert "Name" {
+  entity: EntityName
+  when: condition
+  notify: [email, slack]
+  severity: high
+}
+
+### Dashboard
+dashboard "Name" {
+  entity: EntityName
+  metrics: [count, sum, avg]
+  layout: grid
+}
+
+## EXAMPLE
+User: "Create a task manager"
+
+\`\`\`json
+{
+  "thinking": "Task manager needs Task and User entities",
+  "contract": "app \\"Task Manager\\" {\\n  version: \\"1.0.0\\"\\n}\\n\\nenum TaskStatus { Todo, InProgress, Done }\\n\\nentity User {\\n  id uuid @unique @generated\\n  email email @unique @required\\n  name text @required\\n}\\n\\nentity Task {\\n  id uuid @unique @generated\\n  title text @required\\n  status TaskStatus = Todo\\n  assignee -> User?\\n  createdAt datetime @generated\\n}",
+  "summary": {"entities": ["User", "Task"], "events": [], "features": ["task management"]}
+}
+\`\`\`
+
+Always output valid JSON. Fix any errors if validation fails.`;
+
+class ReclappChat {
+  constructor() {
+    this.history = [];
+    this.currentContract = '';
+    this.projectName = 'my-app';
+  }
+
+  async chat(message) {
+    const messages = [
+      { role: 'system', content: SYSTEM_PROMPT },
+      ...this.history,
+      { role: 'user', content: message }
+    ];
+
+    try {
+      const response = await this.callOllama(messages);
+      this.history.push({ role: 'user', content: message });
+      this.history.push({ role: 'assistant', content: response });
+      
+      // Extract contract from response
+      const contract = this.extractContract(response);
+      if (contract) {
+        this.currentContract = contract;
+      }
+      
+      return response;
+    } catch (error) {
+      return `❌ Error: ${error.message}`;
+    }
+  }
+
+  async callOllama(messages) {
+    return new Promise((resolve, reject) => {
+      const url = new URL(OLLAMA_HOST);
+      const postData = JSON.stringify({
+        model: OLLAMA_MODEL,
+        messages: messages,
+        stream: false,
+        options: { temperature: 0.7 }
+      });
+
+      const options = {
+        hostname: url.hostname,
+        port: url.port || 11434,
+        path: '/api/chat',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData)
+        }
+      };
+
+      const req = http.request(options, (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          try {
+            const json = JSON.parse(data);
+            resolve(json.message?.content || 'No response');
+          } catch (e) {
+            reject(new Error('Failed to parse response'));
+          }
+        });
+      });
+
+      req.on('error', reject);
+      req.setTimeout(120000, () => reject(new Error('Request timeout')));
+      req.write(postData);
+      req.end();
+    });
+  }
+
+  extractContract(response) {
+    // Try JSON extraction first
+    const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
+    if (jsonMatch) {
+      try {
+        const parsed = JSON.parse(jsonMatch[1]);
+        if (parsed.contract) {
+          return parsed.contract.replace(/\\n/g, '\n').replace(/\\"/g, '"');
+        }
+      } catch (e) {}
+    }
+
+    // Fallback: extract RCL directly
+    const lines = [];
+    let inBlock = false;
+    for (const line of response.split('\n')) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('```')) {
+        inBlock = !inBlock;
+        continue;
+      }
+      if (inBlock || /^(app|entity|enum|event|alert|dashboard|pipeline|source|config)\s/.test(trimmed)) {
+        lines.push(line);
+      } else if (lines.length && (trimmed.startsWith('{') || trimmed.startsWith('}') || trimmed.includes(':'))) {
+        lines.push(line);
+      }
+    }
+    return lines.join('\n').trim();
+  }
+
+  formatContract(contract) {
+    const lines = [];
+    let indent = 0;
+    for (const line of contract.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      if (trimmed.startsWith('}')) indent = Math.max(0, indent - 1);
+      lines.push('  '.repeat(indent) + trimmed);
+      if (trimmed.endsWith('{')) indent++;
+    }
+    return lines.join('\n');
+  }
+
+  saveContract(outputDir) {
+    if (!this.currentContract) {
+      return '❌ No contract to save';
+    }
+
+    const contractsDir = path.join(outputDir, 'contracts');
+    fs.mkdirSync(contractsDir, { recursive: true });
+
+    const contractPath = path.join(contractsDir, 'main.reclapp.rcl');
+    const formatted = this.formatContract(this.currentContract);
+    fs.writeFileSync(contractPath, formatted);
+
+    return `✅ Saved to ${contractPath}`;
+  }
+
+  clear() {
+    this.history = [];
+    this.currentContract = '';
+  }
+}
+
+// CLI
+async function main() {
+  const chat = new ReclappChat();
+  
+  console.log(`
+╔══════════════════════════════════════════════════════════════╗
+║              🤖 RECLAPP CHAT - Contract Designer             ║
+║         Interactive LLM-powered contract generation          ║
+╚══════════════════════════════════════════════════════════════╝
+
+Model: ${OLLAMA_MODEL} @ ${OLLAMA_HOST}
+
+Commands:
+  /save <dir>   Save contract to directory (default: ./apps/my-app)
+  /show         Show current contract
+  /clear        Clear conversation history
+  /model <name> Switch model
+  /help         Show this help
+  /quit         Exit
+
+Start by describing what you want to build:
+`);
+
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  const prompt = () => {
+    rl.question('\n💬 You: ', async (input) => {
+      const trimmed = input.trim();
+      
+      if (!trimmed) {
+        prompt();
+        return;
+      }
+
+      // Handle commands
+      if (trimmed.startsWith('/')) {
+        const [cmd, ...args] = trimmed.slice(1).split(' ');
+        
+        switch (cmd) {
+          case 'quit':
+          case 'exit':
+          case 'q':
+            console.log('\n👋 Goodbye!\n');
+            rl.close();
+            process.exit(0);
+            break;
+            
+          case 'save':
+            const dir = args[0] || `./apps/${chat.projectName}`;
+            console.log(chat.saveContract(dir));
+            break;
+            
+          case 'show':
+            if (chat.currentContract) {
+              console.log('\n📄 Current Contract:\n');
+              console.log('```rcl');
+              console.log(chat.formatContract(chat.currentContract));
+              console.log('```');
+            } else {
+              console.log('❌ No contract generated yet');
+            }
+            break;
+            
+          case 'clear':
+            chat.clear();
+            console.log('🗑️  Conversation cleared');
+            break;
+            
+          case 'model':
+            if (args[0]) {
+              process.env.OLLAMA_MODEL = args[0];
+              console.log(`🔄 Switched to model: ${args[0]}`);
+            } else {
+              console.log(`Current model: ${OLLAMA_MODEL}`);
+            }
+            break;
+            
+          case 'name':
+            if (args[0]) {
+              chat.projectName = args[0];
+              console.log(`📁 Project name: ${chat.projectName}`);
+            }
+            break;
+            
+          case 'generate':
+            if (chat.currentContract) {
+              const genDir = args[0] || `./apps/${chat.projectName}`;
+              console.log(chat.saveContract(genDir));
+              console.log('\n🚀 Generating application...');
+              const { execSync } = require('child_process');
+              try {
+                execSync(`./bin/reclapp generate ${genDir}/contracts/main.reclapp.rcl -o ${genDir}/target`, {
+                  stdio: 'inherit',
+                  cwd: process.cwd()
+                });
+              } catch (e) {
+                console.log('❌ Generation failed');
+              }
+            } else {
+              console.log('❌ No contract to generate');
+            }
+            break;
+            
+          case 'help':
+          default:
+            console.log(`
+Commands:
+  /save [dir]      Save contract to directory
+  /show            Show current contract
+  /clear           Clear conversation
+  /model [name]    Show/switch LLM model
+  /name <name>     Set project name
+  /generate [dir]  Save and generate application
+  /quit            Exit
+`);
+        }
+        
+        prompt();
+        return;
+      }
+
+      // Chat with LLM
+      process.stdout.write('\n🤖 Assistant: ');
+      
+      try {
+        const response = await chat.chat(trimmed);
+        console.log(response);
+        
+        // Show extracted contract if any
+        if (chat.currentContract) {
+          console.log('\n📋 Contract extracted. Use /show to view, /save to save.');
+        }
+      } catch (error) {
+        console.log(`❌ Error: ${error.message}`);
+      }
+      
+      prompt();
+    });
+  };
+
+  prompt();
+}
+
+main().catch(console.error);

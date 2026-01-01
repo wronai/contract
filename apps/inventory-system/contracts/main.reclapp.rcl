@@ -1,0 +1,204 @@
+app "Inventory System" {
+  version: "1.0.0"
+  description: "Warehouse inventory management with stock tracking and orders"
+  author: "Reclapp Studio"
+  license: "MIT"
+}
+
+enum ProductStatus { Active, Discontinued, OutOfStock }
+enum OrderStatus { Pending, Processing, Shipped, Delivered, Cancelled }
+enum MovementType { In, Out, Adjustment, Transfer }
+
+entity Category {
+  id          uuid      @unique @generated
+  name        text      @required
+  slug        text      @unique @required
+  parent      -> Category?
+  description text?
+  active      bool      = true
+  createdAt   datetime  @generated
+}
+
+entity Supplier {
+  id          uuid      @unique @generated
+  name        text      @required
+  email       email     @required
+  phone       phone?
+  address     text?
+  contactPerson text?
+  rating      int(1..5)?
+  active      bool      = true
+  createdAt   datetime  @generated
+}
+
+entity Product {
+  id          uuid      @unique @generated
+  sku         text      @unique @required
+  name        text      @required
+  description text?
+  category    -> Category @required
+  supplier    -> Supplier?
+  price       money(PLN) @required
+  cost        money(PLN)?
+  unit        enum(Piece, Kg, Liter, Meter, Box) = Piece
+  status      ProductStatus = Active
+  minStock    int       = 10
+  maxStock    int?
+  weight      float?
+  barcode     text?     @unique
+  images      text[]?
+  createdAt   datetime  @generated
+  updatedAt   datetime  @generated
+}
+
+entity Warehouse {
+  id          uuid      @unique @generated
+  name        text      @required
+  code        text      @unique @required
+  address     text      @required
+  manager     text?
+  capacity    int?
+  active      bool      = true
+  createdAt   datetime  @generated
+}
+
+entity Stock {
+  id          uuid      @unique @generated
+  product     -> Product   @required
+  warehouse   -> Warehouse @required
+  quantity    int       = 0
+  reserved    int       = 0
+  location    text?
+  lastCountAt datetime?
+  updatedAt   datetime  @generated
+}
+
+entity StockMovement {
+  id          uuid      @unique @generated
+  product     -> Product   @required
+  warehouse   -> Warehouse @required
+  type        MovementType @required
+  quantity    int       @required
+  reference   text?
+  notes       text?
+  performedBy text      @required
+  createdAt   datetime  @generated
+}
+
+entity Order {
+  id          uuid      @unique @generated
+  orderNumber text      @unique @generated
+  customer    text      @required
+  status      OrderStatus = Pending
+  items       <- OrderItem[]
+  subtotal    money(PLN) @required
+  tax         money(PLN) = 0
+  shipping    money(PLN) = 0
+  total       money(PLN) @required
+  notes       text?
+  shippingAddress text?
+  createdAt   datetime  @generated
+  updatedAt   datetime  @generated
+  shippedAt   datetime?
+}
+
+entity OrderItem {
+  id          uuid      @unique @generated
+  order       -> Order    @required
+  product     -> Product  @required
+  quantity    int       @required
+  unitPrice   money(PLN) @required
+  total       money(PLN) @required
+}
+
+event ProductCreated {
+  productId: uuid
+  sku: text
+  name: text
+  timestamp: datetime
+}
+
+event StockUpdated {
+  productId: uuid
+  warehouseId: uuid
+  previousQty: int
+  newQty: int
+  movementType: text
+  timestamp: datetime
+}
+
+event LowStockAlert {
+  productId: uuid
+  sku: text
+  currentStock: int
+  minStock: int
+  timestamp: datetime
+}
+
+event OrderCreated {
+  orderId: uuid
+  orderNumber: text
+  customerName: text
+  total: decimal
+  timestamp: datetime
+}
+
+event OrderShipped {
+  orderId: uuid
+  orderNumber: text
+  trackingNumber: text
+  timestamp: datetime
+}
+
+alert "Low Stock" {
+  entity: Stock
+  when: quantity <= product.minStock
+  notify: [email, slack]
+  severity: high
+}
+
+alert "Out of Stock" {
+  entity: Stock
+  when: quantity = 0
+  notify: [email, slack, sms]
+  severity: critical
+}
+
+alert "Pending Orders" {
+  entity: Order
+  when: status = Pending AND createdAt < now() - 24h
+  notify: [email]
+  severity: medium
+}
+
+dashboard "Inventory Overview" {
+  entity: Product
+  metrics: [count, byCategory, byStatus, totalValue]
+  layout: grid
+}
+
+dashboard "Stock Levels" {
+  entity: Stock
+  metrics: [totalQuantity, lowStock, outOfStock, byWarehouse]
+  stream: realtime
+  layout: grid
+}
+
+dashboard "Orders" {
+  entity: Order
+  metrics: [count, byStatus, totalRevenue, avgOrderValue]
+  layout: grid
+}
+
+pipeline StockAnalytics {
+  input: [StockMovement.stream, Stock.changes]
+  output: StockMetrics
+  schedule: "0 */6 * * *"
+}
+
+config app {
+  defaultCurrency: "PLN"
+  lowStockThreshold: 10
+  autoReorderEnabled: false
+  taxRate: 23
+}
