@@ -818,8 +818,7 @@ studio-lite-up: studio-lite-install ## Start Studio Lite (Express + vanilla JS)
 
 studio-lite-down: ## Stop Studio Lite
 	@echo "$(BLUE)🛑 Stopping Studio Lite...$(NC)"
-	@-pkill -f "node server.js" 2>/dev/null; true
-	@-pkill -f "studio-lite" 2>/dev/null; true
+	@-pkill -f "node server.js" 2>/dev/null || true
 	@sleep 1
 	@if curl -sf http://localhost:$(STUDIO_LITE_PORT)/api/health >/dev/null 2>&1; then \
 		echo "$(YELLOW)⚠ Studio Lite still running, force killing...$(NC)"; \
