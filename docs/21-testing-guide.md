@@ -1,0 +1,351 @@
+# Reclapp 2.3: Praktyczny Przewodnik Testowania
+
+**Data:** 1 Stycznia 2026  
+**Wersja:** 2.3.0  
+**Kategoria:** Testing Guide
+
+## 🎯 Jak System Powinien Działać
+
+### Pełny Flow: Od Promptu do Działającej Aplikacji
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         RECLAPP LIFECYCLE                                │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  1. INPUT                                                                │
+│     ┌──────────────────────────────────────────────────────────────┐    │
+│     │  Prompt: "Stwórz system CRM z kontaktami i firmami"          │    │
+│     │  LUB                                                          │    │
+│     │  Contract: examples/contract-ai/crm-contract.ts              │    │
+│     └──────────────────────────────────────────────────────────────┘    │
+│                              ↓                                           │
+│  2. CONTRACT GENERATION                                                  │
+│     ┌──────────────────────────────────────────────────────────────┐    │
+│     │  LLM (Ollama/llama3) generuje Contract AI:                   │    │
+│     │  - Layer 1: Entities (Contact, Company, Deal)                │    │
+│     │  - Layer 2: Generation Instructions                          │    │
+│     │  - Layer 3: Validation Rules                                 │    │
+│     └──────────────────────────────────────────────────────────────┘    │
+│                              ↓                                           │
+│  3. CODE GENERATION                                                      │
+│     ┌──────────────────────────────────────────────────────────────┐    │
+│     │  LLM generuje pliki:                                         │    │
+│     │  - api/src/server.ts                                         │    │
+│     │  - api/src/routes/*.ts                                       │    │
+│     │  - api/src/validators/*.ts                                   │    │
+│     │  - frontend/src/components/*.tsx                             │    │
+│     │  - frontend/src/hooks/*.ts                                   │    │
+│     └──────────────────────────────────────────────────────────────┘    │
+│                              ↓                                           │
+│  4. VALIDATION (7 STAGES)                                               │
+│     ┌──────────────────────────────────────────────────────────────┐    │
+│     │  Stage 1: Syntax      → TypeScript kompiluje się?            │    │
+│     │  Stage 2: Assertions  → Czy spełnia kontraktowe assercje?    │    │
+│     │  Stage 3: Static      → ESLint rules OK?                     │    │
+│     │  Stage 4: Tests       → Wygenerowane testy przechodzą?       │    │
+│     │  Stage 5: Quality     → Coverage, complexity OK?             │    │
+│     │  Stage 6: Security    → Brak SQL injection, secrets?         │    │
+│     │  Stage 7: Runtime     → Docker + health check + CRUD?        │    │
+│     └──────────────────────────────────────────────────────────────┘    │
+│                              ↓                                           │
+│  5. OUTPUT                                                               │
+│     ┌──────────────────────────────────────────────────────────────┐    │
+│     │  ✅ Działająca aplikacja w ./generated/                      │    │
+│     │  ✅ Log w ./generated/logs/*.rcl.md                          │    │
+│     │  ✅ Gotowe do docker-compose up                              │    │
+│     └──────────────────────────────────────────────────────────────┘    │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+## 🚀 Quick Start: Testowanie w 5 Minut
+
+### Krok 1: Sprawdź Wymagania
+
+```bash
+cd ~/github/wronai/contract
+
+# Sprawdź Node.js
+node --version  # >= 18.0.0
+
+# Sprawdź Python
+python3 --version  # >= 3.10
+
+# Sprawdź Ollama (opcjonalne, ale zalecane)
+ollama --version
+ollama list  # Powinien być llama3
+```
+
+### Krok 2: Uruchom Ollama (jeśli używasz)
+
+```bash
+# W osobnym terminalu
+ollama serve
+
+# Sprawdź czy działa
+curl http://localhost:11434/api/tags
+```
+
+### Krok 3: Wygeneruj Aplikację
+
+```bash
+# Najprostsza komenda - z promptem
+./bin/reclapp generate-ai --prompt "Create a simple task manager"
+
+# Lub z gotowym kontraktem
+./bin/reclapp generate-ai examples/contract-ai/crm-contract.ts
+```
+
+### Krok 4: Sprawdź Wyniki
+
+```bash
+# Zobacz wygenerowane pliki
+ls -la ./generated/
+
+# Sprawdź logi
+cat ./generated/logs/*.rcl.md | head -100
+```
+
+## 📋 Przykłady Testowania
+
+### Przykład 1: CRM System (z pliku kontraktu)
+
+```bash
+./bin/reclapp generate-ai examples/contract-ai/crm-contract.ts
+```
+
+**Oczekiwany output:**
+```
+🤖 Reclapp Contract AI Generator v2.2.0
+
+📄 Loading contract from: examples/contract-ai/crm-contract.ts
+✅ Contract validated successfully
+
+🔨 Generating code...
+🤖 Using Ollama (llama3) for code generation
+✅ Generated 21-23 files
+
+🔍 Running validation pipeline...
+
+🔍 Starting validation pipeline with 7 stages
+
+   Running stage: syntax...
+   ✅ syntax: PASSED
+
+   Running stage: assertions...
+   ✅ assertions: PASSED
+
+   Running stage: static-analysis...
+   ✅ static-analysis: PASSED
+
+   Running stage: tests...
+   ✅ tests: PASSED
+
+   Running stage: quality...
+   ✅ quality: PASSED
+
+   Running stage: security...
+   ✅ security: PASSED
+
+   Running stage: runtime...
+   ✅ runtime: PASSED
+
+✅ All validation stages passed
+
+📁 Writing files to: ./generated/
+📝 Log saved: generated/logs/crm-system_*.rcl.md
+
+══════════════════════════════════════════════════
+✨ Generation complete!
+══════════════════════════════════════════════════
+```
+
+## 🔧 Testowanie Poszczególnych Komponentów
+
+### Test 1: Pydantic Contracts
+
+```bash
+# Generuj JSON Schema z Pydantic
+python3 -m pycontracts.generate --typescript
+
+# Sprawdź wygenerowane pliki
+ls contracts/json/entities/
+# contact.json  company.json  deal.json  user.json  task.json  project.json
+
+ls frontend-sdk/types/
+# entities.ts  llm.ts  index.ts
+```
+
+**Oczekiwany output:**
+```
+════════════════════════════════════════════════════════════
+  Pydantic Contract Generator v2.3.0
+════════════════════════════════════════════════════════════
+
+📋 Generating JSON Schemas...
+  ✓ contracts/json/entities/contact.json
+  ✓ contracts/json/entities/company.json
+  ✓ contracts/json/entities/deal.json
+  ✓ contracts/json/entities/user.json
+  ✓ contracts/json/entities/task.json
+  ✓ contracts/json/entities/project.json
+  ✓ contracts/json/llm/generatedfile.json
+  ✓ contracts/json/llm/llmcodeoutput.json
+  ✓ contracts/json/llm/pipelineresult.json
+  ✓ contracts/json/llm/validationresult.json
+  ✓ contracts/json/contracts/entityfield.json
+  ✓ contracts/json/contracts/entitydefinition.json
+  ✓ contracts/json/contracts/codeassertion.json
+  ✓ contracts/json/contracts/contractai.json
+
+  Generated 14 schemas
+
+📝 Generating TypeScript types...
+  ✓ frontend-sdk/types/entities.ts
+  ✓ frontend-sdk/types/llm.ts
+  ✓ frontend-sdk/types/index.ts
+
+  Generated 3 TypeScript files
+
+════════════════════════════════════════════════════════════
+  ✅ Generation complete!
+════════════════════════════════════════════════════════════
+```
+
+### Test 2: Walidacja Python Contracts
+
+```bash
+python3 -c "
+from pycontracts.entities import Contact, Deal
+from pycontracts.llm import LLMCodeOutput, GeneratedFile
+
+# Test Contact
+c = Contact(id='1', email='test@example.com', firstName='John', lastName='Doe')
+print('✓ Contact:', c.full_name)
+
+# Test Deal
+d = Deal(id='1', title='Big Deal', value=100000, probability=25)
+print('✓ Deal weighted_value:', d.weighted_value)
+
+# Test LLMCodeOutput
+output = LLMCodeOutput(files=[
+    GeneratedFile(path='server.ts', content='test')
+])
+print('✓ LLMCodeOutput files:', len(output.files))
+print()
+print('All tests passed!')
+"
+```
+
+**Oczekiwany output:**
+```
+✓ Contact: John Doe
+✓ Deal weighted_value: 25000.0
+✓ LLMCodeOutput files: 1
+
+All tests passed!
+```
+
+### Test 3: Unit Tests
+
+```bash
+npx jest tests/unit/contract-ai.test.ts --testTimeout=30000
+```
+
+**Oczekiwany output:**
+```
+PASS  tests/unit/contract-ai.test.ts
+  Contract AI Types
+    ✓ should create a valid empty contract
+    ✓ should have valid metadata
+    ✓ isValidContractAI should validate complete contract
+    ...
+  Contract Validator
+    ✓ should validate a complete contract
+    ✓ should detect missing definition layer
+    ...
+  Validation Pipeline
+    ✓ should create default pipeline with stages
+    ✓ should validate generated code
+  SDK Generator
+    ✓ should create SDK generator
+    ✓ should generate SDK from contract
+    ...
+
+Test Suites: 1 passed, 1 total
+Tests:       25 passed, 25 total
+```
+
+### Test 4: Integration Tests
+
+```bash
+npx jest tests/integration/contract-ai-flow.test.ts --testTimeout=60000
+```
+
+**Oczekiwany output:**
+```
+PASS  tests/integration/contract-ai-flow.test.ts
+  Contract AI Integration Flow
+    ✓ should generate code from CRM contract
+    ✓ should validate CRM contract structure
+    ✓ should run validation pipeline on generated code
+    ...
+  Validation Stage Tests
+    ✓ should have 7 stages registered
+    ✓ should have stages in correct order
+    ...
+
+Test Suites: 1 passed, 1 total
+Tests:       16 passed, 16 total
+```
+
+## ❌ Troubleshooting
+
+### Problem: Pydantic nie jest zainstalowany
+
+```bash
+# Zainstaluj zależności
+pip install -r pycontracts/requirements.txt
+
+# Lub bezpośrednio
+pip install pydantic[email]>=2.5
+```
+
+### Problem: Ollama nie odpowiada
+
+```bash
+# Sprawdź czy Ollama działa
+curl http://localhost:11434/api/tags
+
+# Jeśli nie, uruchom
+ollama serve
+
+# Pobierz model jeśli brak
+ollama pull llama3
+```
+
+### Problem: Testy nie przechodzą
+
+```bash
+# Sprawdź szczegóły błędów
+npx jest tests/unit/contract-ai.test.ts --verbose 2>&1 | tee debug.log
+
+# Przejrzyj log
+grep -A5 "FAILED" debug.log
+```
+
+## ✅ Checklist Testowania
+
+- [ ] Ollama działa (`curl localhost:11434/api/tags`)
+- [ ] Python contracts generują JSON (`python3 -m pycontracts.generate`)
+- [ ] Unit testy przechodzą (`npx jest tests/unit/`)
+- [ ] Integration testy przechodzą (`npx jest tests/integration/`)
+- [ ] CLI generuje kod (`./bin/reclapp generate-ai --prompt "..."`)
+- [ ] 7/7 validation stages PASSED
+- [ ] Wygenerowane API startuje (`cd generated/api && npm run dev`)
+- [ ] Endpointy odpowiadają (`curl localhost:3000/health`)
+
+---
+
+**Reclapp 2.3 Testing Guide | 1 Stycznia 2026**

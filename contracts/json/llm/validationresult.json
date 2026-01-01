@@ -214,7 +214,6 @@
           "type": "integer"
         },
         "metrics": {
-          "additionalProperties": true,
           "default": {},
           "title": "Metrics",
           "type": "object"
