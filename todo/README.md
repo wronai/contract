@@ -159,7 +159,7 @@ Artykuły są numerowane według kategorii i przeznaczone do publikacji na WordP
 
 ---
 
-### 16. Implementation TODO & Prompts 🆕
+### 16. Implementation TODO & Prompts
 **Plik:** `16-reclapp-implementation-todo-prompts.md`  
 **Rozmiar:** ~55 KB  
 **Kategoria:** Implementation Guide
@@ -172,14 +172,38 @@ Artykuły są numerowane według kategorii i przeznaczone do publikacji na WordP
 - **Timeline:** 24 dni roboczych
 - **Success metrics** z targetami
 
-**Fazy:**
-1. Contract AI Types (2 dni)
-2. Contract Generator (3 dni)
-3. LLM Code Generator (4 dni)
-4. Validation Pipeline - 7 stages (5 dni)
-5. Feedback Loop (3 dni)
-6. CLI Integration (2 dni)
-7. Testing & QA (5 dni)
+---
+
+### 17. Next Steps Plan 🆕
+**Plik:** `17-reclapp-next-steps-plan.md`  
+**Rozmiar:** ~15 KB  
+**Kategoria:** Implementation Status
+
+**Zawartość:**
+- **Aktualny stan projektu** - co działa (45% complete)
+- **Co brakuje** - 2 stages, feedback loop, LLM integration
+- **4 fazy do dokończenia** z promptami
+- **Natychmiastowe kroki** do wykonania
+- **Timeline:** 9 dni do pełnej v2.2
+
+---
+
+## 📁 Pliki Implementacyjne
+
+W folderze `impl/` znajdują się gotowe implementacje brakujących komponentów:
+
+| Plik | Opis |
+|------|------|
+| `test-runner.ts` | Stage 4 - Generowanie i uruchamianie testów |
+| `runtime-validator.ts` | Stage 7 - Docker deploy + API testing |
+| `code-corrector.ts` | Poprawianie kodu na podstawie feedback |
+
+**Użycie:** Skopiuj pliki do odpowiednich katalogów w projekcie:
+```bash
+cp impl/test-runner.ts src/core/contract-ai/validation/stages/
+cp impl/runtime-validator.ts src/core/contract-ai/validation/stages/
+cp impl/code-corrector.ts src/core/contract-ai/feedback/
+```
 
 ---
 
@@ -187,12 +211,12 @@ Artykuły są numerowane według kategorii i przeznaczone do publikacji na WordP
 
 | # | Temat | Priorytet |
 |---|-------|-----------|
-| 17 | Multi-Agent Architecture | 🟠 High |
-| 18 | Security & Compliance | 🟠 High |
-| 19 | Enterprise Deployment Guide | 🟡 Medium |
-| 20 | Plugin Development Guide | 🟡 Medium |
-| 21 | Performance Tuning | 🟢 Low |
-| 22 | Migration Guide (v1 → v2.2) | 🟢 Low |
+| 18 | Multi-Agent Architecture | 🟠 High |
+| 19 | Security & Compliance | 🟠 High |
+| 20 | Enterprise Deployment Guide | 🟡 Medium |
+| 21 | Plugin Development Guide | 🟡 Medium |
+| 22 | Performance Tuning | 🟢 Low |
+| 23 | Migration Guide (v1 → v2.2) | 🟢 Low |
 
 ---
 
@@ -219,6 +243,14 @@ Artykuły są numerowane według kategorii i przeznaczone do publikacji na WordP
 ---
 
 ## Changelog
+
+### 2026-01-01 (Update 3)
+- Dodano artykuł 17: Next Steps Plan
+- Dodano pliki implementacyjne w `impl/`:
+  - test-runner.ts (Stage 4)
+  - runtime-validator.ts (Stage 7)
+  - code-corrector.ts (Feedback Loop)
+- Analiza aktualnego stanu projektu (45% complete)
 
 ### 2026-01-01 (Update 2)
 - Dodano artykuł 16: Implementation TODO & Prompts

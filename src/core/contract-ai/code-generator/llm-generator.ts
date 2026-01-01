@@ -315,15 +315,122 @@ export class LLMCodeGenerator {
    * Symulacja odpowiedzi LLM (dla testów)
    */
   private simulateLLMResponse(prompt: string): string {
+    // Guard against undefined prompt
+    if (!prompt) {
+      prompt = '';
+    }
+    
     // Wykryj czy to API czy frontend
     const isApi = prompt.includes('TASK: API');
     
+    // Wyciągnij nazwy encji z promptu (format: ### EntityName)
+    const entityMatches = prompt.match(/###\s+(\w+)\n/g) || [];
+    const entities = entityMatches.map(m => m.replace(/###\s+/, '').replace('\n', ''));
+    
     if (isApi) {
+      // Generuj route files dla każdej encji
+      let routeFiles = '';
+      let routeImports = '';
+      let routeUses = '';
+      
+      for (const entity of entities) {
+        const kebab = entity.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+        // Simple pluralization: y -> ies, otherwise add s
+        const plural = kebab.endsWith('y') 
+          ? kebab.slice(0, -1) + 'ies' 
+          : kebab + 's';
+        routeImports += `import ${kebab}Router from './routes/${plural}';\n`;
+        routeUses += `app.use('/api/${plural}', ${kebab}Router);\n`;
+        
+        routeFiles += `
+\`\`\`typescript:api/src/routes/${plural}.ts
+import { Router, Request, Response } from 'express';
+
+const router = Router();
+
+// In-memory storage
+let items: any[] = [];
+let nextId = 1;
+
+// Email validation helper
+const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+  return emailRegex.test(email);
+};
+
+// GET all
+router.get('/', async (req: Request, res: Response) => {
+  try {
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET by ID
+router.get('/:id', async (req: Request, res: Response) => {
+  try {
+    const item = items.find(i => i.id === req.params.id);
+    if (!item) return res.status(404).json({ error: 'Not found' });
+    res.json(item);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST create
+router.post('/', async (req: Request, res: Response) => {
+  try {
+    // Validate email if present
+    if (req.body.email && !validateEmail(req.body.email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+    const item = { id: String(nextId++), ...req.body, createdAt: new Date().toISOString() };
+    items.push(item);
+    res.status(201).json(item);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT update
+router.put('/:id', async (req: Request, res: Response) => {
+  try {
+    const index = items.findIndex(i => i.id === req.params.id);
+    if (index === -1) return res.status(404).json({ error: 'Not found' });
+    // Validate email if present
+    if (req.body.email && !validateEmail(req.body.email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+    items[index] = { ...items[index], ...req.body, updatedAt: new Date().toISOString() };
+    res.json(items[index]);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE
+router.delete('/:id', async (req: Request, res: Response) => {
+  try {
+    const index = items.findIndex(i => i.id === req.params.id);
+    if (index === -1) return res.status(404).json({ error: 'Not found' });
+    items.splice(index, 1);
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+export default router;
+\`\`\`
+`;
+      }
+
       return `
 \`\`\`typescript:api/src/server.ts
 import express from 'express';
 import cors from 'cors';
-
+${routeImports}
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -334,6 +441,7 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+${routeUses}
 app.listen(PORT, () => {
   console.log(\`Server running on port \${PORT}\`);
 });
@@ -346,7 +454,7 @@ export interface Entity {
   updatedAt: string;
 }
 \`\`\`
-
+${routeFiles}
 \`\`\`json:api/package.json
 {
   "name": "api",

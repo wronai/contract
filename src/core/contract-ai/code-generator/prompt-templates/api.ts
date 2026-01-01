@@ -158,12 +158,15 @@ Generate complete, working code that can be run immediately with "npm install &&
   // ============================================================================
 
   private formatTechStack(techStack: ContractAI['generation']['techStack']): string {
+    if (!techStack || !techStack.backend) {
+      return '- Runtime: node\n- Language: typescript\n- Framework: express\n- Port: 3000';
+    }
     const { backend } = techStack;
     return `
-- Runtime: ${backend.runtime}
-- Language: ${backend.language}
-- Framework: ${backend.framework}
-- Port: ${backend.port}
+- Runtime: ${backend.runtime || 'node'}
+- Language: ${backend.language || 'typescript'}
+- Framework: ${backend.framework || 'express'}
+- Port: ${backend.port || 3000}
 ${backend.libraries ? `- Libraries: ${backend.libraries.join(', ')}` : ''}
 `.trim();
   }

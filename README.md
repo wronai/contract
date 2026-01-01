@@ -243,7 +243,53 @@ const crmContract: ContractAI = {
 };
 ```
 
-See `examples/contract-ai/crm-contract.ts` for a complete example.
+### Contract AI CLI
+
+```bash
+# Generate from natural language prompt
+./bin/reclapp generate-ai --prompt "Create a task manager with users, projects, and tasks"
+
+# Generate from Contract AI file
+./bin/reclapp generate-ai examples/contract-ai/crm-contract.ts
+
+# Generate with custom output directory
+./bin/reclapp generate-ai -p "Blog with posts and comments" -o ./my-blog
+
+# Dry-run (show contract only, no code generation)
+./bin/reclapp generate-ai -p "E-commerce store" --dry-run
+
+# Verbose mode (see validation stages)
+./bin/reclapp generate-ai examples/contract-ai/task-manager-contract.ts -v
+```
+
+### Contract AI Workflow
+
+```
+1. PROMPT          "Create a CRM system"
+       ↓
+2. CONTRACT AI     3-layer specification generated
+       ↓
+3. CODE GEN        LLM generates code from contract
+       ↓
+4. VALIDATION      7-stage pipeline checks quality
+       ↓
+5. FEEDBACK        Issues reported back to LLM
+       ↓
+6. ITERATION       Self-correction loop (max 10x)
+       ↓
+7. OUTPUT          Production-ready code
+```
+
+### Contract AI Examples
+
+| Example | Description | File |
+|---------|-------------|------|
+| CRM System | Contacts, Companies, Deals | `examples/contract-ai/crm-contract.ts` |
+| Task Manager | Users, Projects, Tasks | `examples/contract-ai/task-manager-contract.ts` |
+| E-Commerce | Products, Orders, Customers | `examples/contract-ai/ecommerce-contract.ts` |
+| Blog Platform | Posts, Comments, Categories | `examples/contract-ai/blog-contract.ts` |
+
+See full documentation: [docs/contract-ai.md](docs/contract-ai.md)
 
 ## 📜 Declarative DSL
 

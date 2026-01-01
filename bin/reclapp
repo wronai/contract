@@ -710,7 +710,16 @@ async function cmdGenerateAI(args, options) {
       
       delete require.cache[require.resolve(fullPath)];
       const module = require(fullPath);
-      contract = module.crmContract || module.contract || module.default || module;
+      // Try various export names for Contract AI files
+      contract = module.crmContract || 
+                 module.taskManagerContract || 
+                 module.ecommerceContract || 
+                 module.blogContract ||
+                 module.contract || 
+                 module.default || 
+                 // Find first ContractAI-like export
+                 Object.values(module).find(v => v && typeof v === 'object' && v.definition) ||
+                 module;
       
       // Convert old format to Contract AI format if needed
       if (!contract.definition && contract.app) {
