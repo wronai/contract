@@ -8,3 +8,4 @@
 
 export * from './feedback-generator';
 export * from './iteration-manager';
+export * from './code-corrector';

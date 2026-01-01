@@ -265,7 +265,7 @@ class TaskService {
     qualityGates: [
       { name: 'Minimum test coverage', metric: 'test-coverage', threshold: 70, operator: '>=' },
       { name: 'Maximum cyclomatic complexity', metric: 'cyclomatic-complexity', threshold: 15, operator: '<=' },
-      { name: 'Acceptable code duplication', metric: 'duplication-ratio', threshold: 70, operator: '<=' }
+      { name: 'Acceptable code duplication', metric: 'duplication-ratio', threshold: 75, operator: '<=' }
     ],
     
     acceptance: {

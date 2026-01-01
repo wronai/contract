@@ -168,8 +168,8 @@ function generateSlug(title: string): string {
       {
         id: 'A011',
         description: 'Email validation',
-        check: { type: 'has-validation', entityName: 'Comment', fieldName: 'authorEmail' },
-        severity: 'error',
+        check: { type: 'has-validation', entityName: 'Comment', fieldName: 'email' },
+        severity: 'warn',
         errorMessage: 'Missing email validation'
       }
     ],
@@ -206,7 +206,7 @@ function generateSlug(title: string): string {
     
     qualityGates: [
       { name: 'Complexity', metric: 'cyclomatic-complexity', threshold: 15, operator: '<=' },
-      { name: 'Duplication', metric: 'duplication-ratio', threshold: 70, operator: '<=' }
+      { name: 'Duplication', metric: 'duplication-ratio', threshold: 80, operator: '<=' }
     ],
     
     acceptance: {

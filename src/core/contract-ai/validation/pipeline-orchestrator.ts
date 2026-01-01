@@ -14,6 +14,9 @@ import {
   StageResult
 } from '../types';
 
+// Re-export StageResult for use by validation stages
+export { StageResult } from '../types';
+
 // ============================================================================
 // TYPES
 // ============================================================================

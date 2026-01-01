@@ -32,7 +32,13 @@ export class ApiPromptTemplate implements PromptTemplate {
    * Buduje kompletny prompt do generowania API
    */
   buildPrompt(contract: ContractAI): string {
-    const { definition, generation, validation } = contract;
+    if (!contract) {
+      return '# ERROR: No contract provided';
+    }
+    
+    const definition = contract.definition || { app: { name: 'Unknown', version: '1.0.0' }, entities: [] };
+    const generation = contract.generation || { instructions: [], patterns: [], constraints: [], techStack: {} };
+    const validation = contract.validation || { assertions: [], tests: [], staticRules: [], qualityGates: [], acceptance: {} };
     
     return `
 # CODE GENERATION TASK: API
@@ -220,8 +226,11 @@ ${api.resources.map(r => `| /${r.name} | ${r.entity} | ${r.operations.join(', ')
     patterns: ContractAI['generation']['patterns'],
     target: string
   ): string {
+    if (!patterns || !Array.isArray(patterns)) {
+      return 'No specific patterns defined.';
+    }
     const relevantPatterns = patterns.filter(p => 
-      p.appliesTo.includes(target as any) || p.appliesTo.includes('all' as any)
+      p.appliesTo?.includes(target as any) || p.appliesTo?.includes('all' as any)
     );
 
     if (relevantPatterns.length === 0) {

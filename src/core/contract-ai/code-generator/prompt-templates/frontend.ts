@@ -216,8 +216,11 @@ ${formFields.join('\n')}
     patterns: ContractAI['generation']['patterns'],
     target: string
   ): string {
+    if (!patterns || !Array.isArray(patterns)) {
+      return 'No specific patterns defined.';
+    }
     const relevantPatterns = patterns.filter(p => 
-      p.appliesTo.includes(target as any) || p.appliesTo.includes('all' as any)
+      p.appliesTo?.includes(target as any) || p.appliesTo?.includes('all' as any)
     );
 
     if (relevantPatterns.length === 0) {

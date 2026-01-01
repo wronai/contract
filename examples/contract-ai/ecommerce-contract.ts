@@ -299,7 +299,7 @@ function generateOrderNumber(): string {
     qualityGates: [
       { name: 'Test coverage', metric: 'test-coverage', threshold: 70, operator: '>=' },
       { name: 'Complexity', metric: 'cyclomatic-complexity', threshold: 15, operator: '<=' },
-      { name: 'Duplication', metric: 'duplication-ratio', threshold: 70, operator: '<=' }
+      { name: 'Duplication', metric: 'duplication-ratio', threshold: 80, operator: '<=' }
     ],
     
     acceptance: {

@@ -19,25 +19,32 @@ export * from './pipeline-orchestrator';
 export * from './stages';
 
 import { ValidationPipelineOrchestrator } from './pipeline-orchestrator';
+import type { PipelineOptions } from './pipeline-orchestrator';
 import { createSyntaxValidator } from './stages/syntax-validator';
 import { createAssertionValidator } from './stages/assertion-validator';
 import { createStaticAnalyzer } from './stages/static-analyzer';
+import { createTestRunner } from './stages/test-runner';
 import { createQualityChecker } from './stages/quality-checker';
 import { createSecurityScanner } from './stages/security-scanner';
+import { createRuntimeValidator } from './stages/runtime-validator';
 
 /**
  * Tworzy skonfigurowany pipeline walidacji ze wszystkimi stage'ami
  */
-export function createDefaultValidationPipeline(): ValidationPipelineOrchestrator {
-  const pipeline = new ValidationPipelineOrchestrator({ verbose: true });
+export function createDefaultValidationPipeline(
+  options: Partial<PipelineOptions> = {}
+): ValidationPipelineOrchestrator {
+  const pipeline = new ValidationPipelineOrchestrator({ verbose: true, ...options });
 
   // Rejestruj stage'y w kolejności
   pipeline.registerStages([
     createSyntaxValidator(),
     createAssertionValidator(),
     createStaticAnalyzer(),
+    createTestRunner(),
     createQualityChecker(),
-    createSecurityScanner()
+    createSecurityScanner(),
+    createRuntimeValidator()
   ]);
 
   return pipeline;
