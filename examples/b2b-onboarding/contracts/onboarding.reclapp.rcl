@@ -1,0 +1,284 @@
+// B2B Customer Onboarding - Mini-DSL Contract (RCL)
+// Complete onboarding workflow with KRS/CEIDG verification
+
+app "B2B Onboarding" {
+  version: "2.0.0"
+  description: "B2B customer onboarding with automatic registry verification"
+  author: "Reclapp Team"
+  license: "Apache-2.0"
+}
+
+// Enums
+enum CustomerStatus { Pending, Verified, Rejected, Active, Suspended }
+enum CustomerSegment { Enterprise, SME, Startup }
+enum DocumentType { Registration, Financial, Identity, Contract }
+enum DocumentStatus { Pending, Approved, Rejected }
+
+// Entities
+entity Customer {
+  name            text        @required
+  nip             text        @unique @required
+  krs             text?
+  regon           text?
+  address         json        @required
+  email           text        @required
+  phone           text?
+  segment         CustomerSegment = SME
+  status          CustomerStatus = Pending
+  registryStatus  text?
+  creditLimit     money(PLN)  = 0
+  paymentTerms    int         = 30
+  riskScore       int(0..100) = 50
+  verifiedAt      datetime?
+  verifiedBy      uuid?
+  createdAt       datetime    @generated
+  updatedAt       datetime    @generated
+}
+
+entity OnboardingDocument {
+  customer        -> Customer @required
+  documentType    DocumentType @required
+  fileName        text        @required
+  fileUrl         text?
+  status          DocumentStatus = Pending
+  reviewedBy      uuid?
+  reviewedAt      datetime?
+  notes           text?
+  createdAt       datetime    @generated
+}
+
+entity RegistryCheck {
+  customer        -> Customer @required
+  source          enum(KRS, CEIDG)
+  status          enum(Success, Failed, Timeout)
+  responseData    json?
+  checkedAt       datetime    @generated
+}
+
+// Events
+event CustomerRegistered {
+  customerId: uuid
+  name: text
+  nip: text
+  email: text
+  segment: text
+  timestamp: datetime
+}
+
+event CustomerVerified {
+  customerId: uuid
+  verifiedBy: uuid
+  creditLimit: decimal
+  paymentTerms: int
+  timestamp: datetime
+}
+
+event CustomerRejected {
+  customerId: uuid
+  rejectedBy: uuid
+  reason: text
+  timestamp: datetime
+}
+
+event RegistryCheckCompleted {
+  customerId: uuid
+  source: text
+  status: text
+  data: text?
+  timestamp: datetime
+}
+
+event DocumentUploaded {
+  documentId: uuid
+  customerId: uuid
+  documentType: text
+  timestamp: datetime
+}
+
+event DocumentReviewed {
+  documentId: uuid
+  customerId: uuid
+  status: text
+  reviewedBy: uuid
+  notes: text?
+  timestamp: datetime
+}
+
+event CreditLimitSet {
+  customerId: uuid
+  previousLimit: decimal
+  newLimit: decimal
+  reason: text
+  setBy: uuid
+  timestamp: datetime
+}
+
+// Workflows
+workflow CustomerOnboarding {
+  trigger: CustomerRegistered.event
+
+  step verifyRegistry {
+    action: checkKRS
+    on_success: verifyDocuments
+    on_failure: manualReview
+    timeout: "5m"
+  }
+
+  step verifyDocuments {
+    action: validateDocuments
+    on_success: calculateRisk
+    on_failure: manualReview
+    timeout: "24h"
+  }
+
+  step calculateRisk {
+    action: calculateRiskScore
+    on_success: setCreditLimit
+    on_failure: manualReview
+  }
+
+  step setCreditLimit {
+    action: determineCreditLimit
+    on_success: approveCustomer
+    on_failure: manualReview
+  }
+
+  step manualReview {
+    action: notifyReviewer
+    on_success: approveCustomer
+    on_failure: rejectCustomer
+    timeout: "48h"
+  }
+
+  step approveCustomer {
+    action: activateCustomer
+    on_success: sendWelcome
+  }
+
+  step rejectCustomer {
+    action: deactivateCustomer
+    on_success: notifyRejection
+  }
+
+  step sendWelcome {
+    action: sendWelcomeEmail
+  }
+
+  step notifyRejection {
+    action: sendRejectionEmail
+  }
+}
+
+// Pipelines
+pipeline OnboardingMetrics {
+  input: Customer.events
+  transform: [aggregate, calculate]
+  output: [dashboard, analytics]
+  schedule: "*/5 * * * *"
+}
+
+pipeline RegistrySync {
+  input: Customer.pending
+  transform: [enrichFromKRS, enrichFromCEIDG]
+  output: Customer.update
+  schedule: "0 */6 * * *"
+}
+
+pipeline RiskAssessment {
+  input: [Customer.created, RegistryCheckCompleted.stream]
+  transform: [analyzeFinancials, calculateScore, assignLimit]
+  output: [Customer.update, alerts]
+}
+
+// Alerts
+alert "Pending Onboarding Too Long" {
+  entity: Customer
+  when: status == "pending" && createdAt < now() - 48h
+  notify: [email, slack]
+  severity: high
+  throttle: "4h"
+}
+
+alert "High Risk Customer" {
+  entity: Customer
+  when: riskScore > 80 && status == "active"
+  notify: [email, slack, mqtt:alerts/risk]
+  severity: critical
+}
+
+alert "Document Review Pending" {
+  entity: OnboardingDocument
+  when: status == "pending" && createdAt < now() - 24h
+  notify: [email]
+  severity: medium
+}
+
+alert "Registry Check Failed" {
+  entity: RegistryCheck
+  when: status == "failed"
+  notify: [slack]
+  severity: medium
+}
+
+// Dashboards
+dashboard "Onboarding Overview" {
+  entity: Customer
+  metrics: [totalCount, pendingCount, verifiedCount, rejectedCount, avgProcessingTime]
+  stream: realtime
+  layout: grid
+}
+
+dashboard "Onboarding Funnel" {
+  entity: Customer
+  metrics: [registeredToday, pendingVerification, documentsUploaded, documentsApproved, fullyVerified, conversionRate]
+  stream: hourly
+}
+
+dashboard "Risk Distribution" {
+  entity: Customer
+  metrics: [riskScoreDistribution, riskBySegment, highRiskTrend]
+  stream: daily
+}
+
+dashboard "Document Processing" {
+  entity: OnboardingDocument
+  metrics: [pendingDocs, approvedToday, rejectedToday, avgReviewTime]
+  stream: realtime
+}
+
+// Sources
+source krs {
+  type: rest
+  url: "https://api.krs.pl/v1/company"
+  auth: apiKey
+  cache: "1h"
+}
+
+source ceidg {
+  type: rest
+  url: "https://api.ceidg.gov.pl/v1/business"
+  auth: apiKey
+  cache: "1h"
+}
+
+source financialData {
+  type: rest
+  url: "${FINANCIAL_API_URL}"
+  auth: bearer
+}
+
+// Config
+config onboarding {
+  defaultPaymentTerms: 30
+  maxCreditLimitSME: 100000
+  maxCreditLimitEnterprise: 1000000
+  documentRequiredTypes: ["registration", "financial"]
+  autoApproveThreshold: 30
+}
+
+config risk {
+  highRiskThreshold: 80
+  mediumRiskThreshold: 50
+  defaultScore: 50
+  scoreDecayDays: 90
+}

@@ -1,0 +1,247 @@
+// Web Dashboard Analytics - Mini-DSL Contract (RCL)
+// Real-time web analytics dashboard
+
+app "Web Analytics Dashboard" {
+  version: "1.0.0"
+  description: "Real-time web analytics with visitor tracking and insights"
+  author: "Reclapp Team"
+  license: "MIT"
+}
+
+// Enums
+enum SessionStatus { Active, Completed, Bounced }
+enum EventCategory { Pageview, Click, Scroll, Form, Custom }
+enum DeviceType { Desktop, Mobile, Tablet }
+enum TrafficSource { Direct, Organic, Paid, Social, Referral, Email }
+
+// Entities
+entity Visitor {
+  visitorId       text        @unique @required
+  firstSeen       datetime    @required
+  lastSeen        datetime    @required
+  totalSessions   int         = 1
+  totalPageviews  int         = 0
+  deviceType      DeviceType?
+  browser         text?
+  os              text?
+  country         text?
+  city            text?
+  createdAt       datetime    @generated
+}
+
+entity Session {
+  sessionId       text        @unique @required
+  visitor         -> Visitor  @required
+  status          SessionStatus = Active
+  source          TrafficSource = Direct
+  referrer        text?
+  landingPage     text        @required
+  exitPage        text?
+  pageviews       int         = 1
+  duration        int         = 0
+  startedAt       datetime    @required
+  endedAt         datetime?
+}
+
+entity PageView {
+  session         -> Session  @required
+  url             text        @required
+  title           text?
+  referrer        text?
+  duration        int         = 0
+  scrollDepth     int(0..100) = 0
+  timestamp       datetime    @required
+}
+
+entity WebEvent {
+  session         -> Session  @required
+  category        EventCategory @required
+  action          text        @required
+  label           text?
+  value           decimal?
+  elementId       text?
+  metadata        json?
+  timestamp       datetime    @required
+}
+
+entity Goal {
+  name            text        @required @unique
+  description     text?
+  eventMatch      json        @required
+  value           decimal     = 0
+  isActive        bool        = true
+  createdAt       datetime    @generated
+}
+
+entity GoalConversion {
+  goal            -> Goal     @required
+  session         -> Session  @required
+  visitor         -> Visitor  @required
+  value           decimal
+  convertedAt     datetime    @required
+}
+
+entity Campaign {
+  name            text        @required
+  source          text        @required
+  medium          text        @required
+  content         text?
+  term            text?
+  startDate       date
+  endDate         date?
+  budget          money(PLN)?
+  isActive        bool        = true
+}
+
+// Events
+event VisitorIdentified {
+  visitorId: text
+  deviceType: text?
+  country: text?
+  timestamp: datetime
+}
+
+event SessionStarted {
+  sessionId: text
+  visitorId: text
+  source: text
+  landingPage: text
+  timestamp: datetime
+}
+
+event SessionEnded {
+  sessionId: text
+  duration: int
+  pageviews: int
+  bounced: bool
+  timestamp: datetime
+}
+
+event PageViewed {
+  sessionId: text
+  url: text
+  title: text?
+  timestamp: datetime
+}
+
+event GoalConverted {
+  goalId: uuid
+  sessionId: text
+  visitorId: text
+  value: decimal
+  timestamp: datetime
+}
+
+event EventTracked {
+  sessionId: text
+  category: text
+  action: text
+  label: text?
+  timestamp: datetime
+}
+
+// Pipelines
+pipeline SessionAggregation {
+  input: [PageViewed.stream, EventTracked.stream]
+  transform: [aggregateBySession, updateMetrics, detectBounce]
+  output: [Session.update, analytics]
+}
+
+pipeline VisitorEnrichment {
+  input: VisitorIdentified.stream
+  transform: [geolocate, detectDevice, enrichProfile]
+  output: Visitor.update
+}
+
+pipeline GoalTracking {
+  input: EventTracked.stream
+  transform: [matchGoals, calculateValue, recordConversion]
+  output: [GoalConversion.create, notifications]
+}
+
+pipeline RealtimeMetrics {
+  input: [SessionStarted.stream, PageViewed.stream, SessionEnded.stream]
+  transform: [aggregateRealtime, updateCounters]
+  output: dashboard.realtime
+  schedule: "*/10 * * * * *"
+}
+
+// Alerts
+alert "Traffic Spike" {
+  entity: Session
+  when: sessionsPerMinute > avgSessionsPerMinute * 3
+  notify: [slack]
+  severity: medium
+}
+
+alert "High Bounce Rate" {
+  entity: Session
+  when: hourlyBounceRate > 0.7
+  notify: [email]
+  severity: medium
+}
+
+alert "Goal Conversion Drop" {
+  entity: GoalConversion
+  when: hourlyConversions < avgHourlyConversions * 0.5
+  notify: [slack, email]
+  severity: high
+}
+
+alert "Error Rate Spike" {
+  entity: WebEvent
+  when: category == "error" && count > threshold
+  notify: [slack]
+  severity: critical
+}
+
+// Dashboards
+dashboard "Real-time Overview" {
+  entity: Session
+  metrics: [activeVisitors, pageviewsPerMinute, avgSessionDuration, topPages]
+  stream: realtime
+  layout: grid
+  refresh: "10s"
+}
+
+dashboard "Audience" {
+  entity: Visitor
+  metrics: [totalVisitors, newVsReturning, byDeviceType, byCountry, byBrowser]
+  stream: hourly
+  layout: tabs
+}
+
+dashboard "Acquisition" {
+  entity: Session
+  metrics: [bySource, byCampaign, landingPages, referrers]
+  stream: hourly
+  layout: grid
+}
+
+dashboard "Behavior" {
+  entity: PageView
+  metrics: [topPages, avgTimeOnPage, exitPages, scrollDepthDistribution]
+  stream: hourly
+  layout: grid
+}
+
+dashboard "Conversions" {
+  entity: GoalConversion
+  metrics: [conversionRate, byGoal, conversionTrend, topConvertingPages]
+  stream: hourly
+  layout: grid
+}
+
+// Config
+config tracking {
+  sessionTimeout: 1800
+  bounceThreshold: 10
+  maxEventsPerSession: 1000
+  anonymizeIp: true
+}
+
+config realtime {
+  windowSize: 300
+  updateInterval: 10
+  maxActiveUsers: 10000
+}

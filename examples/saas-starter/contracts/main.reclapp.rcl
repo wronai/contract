@@ -1,0 +1,393 @@
+// SaaS Starter - Mini-DSL Contract (RCL)
+// Multi-tenant SaaS platform with subscriptions and billing
+
+app "SaaS Starter" {
+  version: "2.1.0"
+  description: "Multi-tenant SaaS platform with subscriptions and billing"
+  author: "Reclapp Team"
+  license: "MIT"
+}
+
+// Enums
+enum PlanType { Free, Starter, Pro, Enterprise }
+enum SubscriptionStatus { Trialing, Active, PastDue, Cancelled, Expired }
+enum InvoiceStatus { Draft, Open, Paid, Void, Uncollectible }
+enum UserRole { Owner, Admin, Member, Viewer }
+
+// Entities
+entity Organization {
+  name            text        @required
+  slug            text        @unique @required
+  plan            PlanType    = Free
+  status          enum(Active, Suspended, Cancelled) = Active
+  ownerId         uuid        @required
+  settings        json?
+  createdAt       datetime    @generated
+}
+
+entity User {
+  email           text        @unique @required
+  name            text        @required
+  role            UserRole    = Member
+  organization    -> Organization @required
+  avatarUrl       text?
+  lastLoginAt     datetime?
+  isActive        bool        = true
+  createdAt       datetime    @generated
+}
+
+entity Invitation {
+  organization    -> Organization @required
+  email           text        @required
+  role            UserRole    = Member
+  invitedBy       uuid        @required
+  token           text        @unique @generated
+  expiresAt       datetime    @required
+  acceptedAt      datetime?
+  createdAt       datetime    @generated
+}
+
+entity Subscription {
+  organization    -> Organization @required
+  stripeSubscriptionId text   @unique
+  plan            PlanType    @required
+  status          SubscriptionStatus = Trialing
+  currentPeriodStart datetime @required
+  currentPeriodEnd datetime   @required
+  cancelAtPeriodEnd bool      = false
+  quantity        int         = 1
+  trialEndsAt     datetime?
+}
+
+entity Invoice {
+  organization    -> Organization @required
+  stripeInvoiceId text        @unique
+  subscription    -> Subscription?
+  amount          decimal     @required
+  currency        text        = "USD"
+  status          InvoiceStatus = Draft
+  paidAt          datetime?
+  dueDate         datetime    @required
+  invoiceUrl      text?
+  createdAt       datetime    @generated
+}
+
+entity PaymentMethod {
+  organization    -> Organization @required
+  stripePaymentMethodId text  @unique
+  type            enum(Card, BankAccount)
+  last4           text
+  expiryMonth     int?
+  expiryYear      int?
+  isDefault       bool        = false
+  createdAt       datetime    @generated
+}
+
+entity Usage {
+  organization    -> Organization @required
+  metric          text        @required
+  value           int         @required
+  period          text        @required
+  recordedAt      datetime    @generated
+}
+
+entity Feature {
+  name            text        @required @unique
+  description     text?
+  plans           text[]
+  limitByPlan     json
+  isActive        bool        = true
+}
+
+entity AuditLog {
+  organization    -> Organization @required
+  user            -> User?
+  action          text        @required
+  resource        text        @required
+  resourceId      uuid?
+  metadata        json?
+  ipAddress       text?
+  createdAt       datetime    @generated
+}
+
+entity ApiKey {
+  organization    -> Organization @required
+  name            text        @required
+  keyHash         text        @unique
+  lastUsedAt      datetime?
+  expiresAt       datetime?
+  isActive        bool        = true
+  createdAt       datetime    @generated
+}
+
+// Events
+event UserSignedUp {
+  userId: uuid
+  email: text
+  organizationId: uuid
+  source: text
+  timestamp: datetime
+}
+
+event UserInvited {
+  invitationId: uuid
+  organizationId: uuid
+  email: text
+  invitedBy: uuid
+  timestamp: datetime
+}
+
+event SubscriptionChanged {
+  organizationId: uuid
+  subscriptionId: uuid
+  previousPlan: text?
+  newPlan: text
+  changeType: text
+  timestamp: datetime
+}
+
+event PaymentReceived {
+  organizationId: uuid
+  invoiceId: uuid
+  amount: decimal
+  currency: text
+  timestamp: datetime
+}
+
+event PaymentFailed {
+  organizationId: uuid
+  invoiceId: uuid
+  amount: decimal
+  reason: text
+  timestamp: datetime
+}
+
+event UsageLimitApproaching {
+  organizationId: uuid
+  metric: text
+  currentUsage: int
+  limit: int
+  percentUsed: decimal
+  timestamp: datetime
+}
+
+event TrialEnding {
+  organizationId: uuid
+  subscriptionId: uuid
+  trialEndsAt: datetime
+  timestamp: datetime
+}
+
+// Pipelines
+pipeline OnboardingFlow {
+  input: UserSignedUp.stream
+  transform: [createOrganization, setupDefaults, sendWelcomeEmail]
+  output: [dashboard, notifications]
+}
+
+pipeline BillingSync {
+  input: stripeApi.webhooks
+  transform: [validateEvent, processPayment, updateSubscription]
+  output: [invoices, notifications]
+}
+
+pipeline UsageTracking {
+  input: Usage.stream
+  transform: [aggregate, checkLimits]
+  output: [metrics, alerts]
+  schedule: "*/5 * * * *"
+}
+
+pipeline ChurnPrediction {
+  input: [Subscription.changes, Usage.stream, AuditLog.stream]
+  transform: [analyzeEngagement, calculateChurnRisk]
+  output: [dashboard, alerts]
+  schedule: "0 0 * * *"
+}
+
+pipeline TrialConversion {
+  input: Subscription.trialing
+  filter: trialEndsAt < now() + 3d
+  transform: [sendReminder, trackConversion]
+  output: [notifications, analytics]
+  schedule: "0 9 * * *"
+}
+
+// Alerts
+alert "Payment Failed" {
+  entity: Invoice
+  when: status == "failed"
+  notify: [email, slack]
+  severity: critical
+  throttle: "1h"
+}
+
+alert "Subscription Cancelled" {
+  entity: Subscription
+  when: cancelAtPeriodEnd == true
+  notify: [email, slack]
+  severity: high
+}
+
+alert "Usage Limit 80%" {
+  entity: Usage
+  when: value > limit * 0.8
+  notify: [email, dashboard]
+  severity: medium
+}
+
+alert "Trial Expiring" {
+  entity: Subscription
+  when: status == "trialing" && trialEndsAt < now() + 3d
+  notify: [email]
+  severity: medium
+}
+
+alert "High Churn Risk" {
+  entity: Organization
+  when: churnRiskScore > 0.7
+  notify: [slack]
+  severity: high
+}
+
+alert "API Key Expiring" {
+  entity: ApiKey
+  when: expiresAt < now() + 7d && isActive == true
+  notify: [email]
+  severity: low
+}
+
+// Dashboards
+dashboard "SaaS Metrics" {
+  entity: Organization
+  metrics: [mrr, arr, activeOrganizations, trialConversions, churnRate, ltv, cac]
+  layout: grid
+  refresh: "1m"
+}
+
+dashboard "Revenue Analytics" {
+  entity: Invoice
+  metrics: [totalRevenue, revenueByPlan, paymentSuccessRate, avgRevenuePerUser]
+  stream: hourly
+  layout: tabs
+}
+
+dashboard "User Activity" {
+  entity: AuditLog
+  metrics: [dailyActiveUsers, weeklyActiveUsers, monthlyActiveUsers, topActions]
+  stream: realtime
+}
+
+dashboard "Subscription Health" {
+  entity: Subscription
+  metrics: [activeSubscriptions, byPlan, trialCount, cancelledThisMonth, upgradeRate]
+  layout: grid
+}
+
+dashboard "Usage Overview" {
+  entity: Usage
+  metrics: [apiCallsTotal, apiCallsByOrg, storageUsed, topConsumers]
+  stream: realtime
+}
+
+// Workflows
+workflow TrialToSubscription {
+  trigger: TrialEnding.event
+
+  step sendReminder {
+    action: sendEmail
+    on_success: waitForResponse
+    on_failure: logFailure
+  }
+
+  step checkConversion {
+    action: checkSubscriptionStatus
+    on_success: activateSubscription
+    on_failure: sendFinalReminder
+    timeout: "48h"
+  }
+
+  step activateSubscription {
+    action: updateStatus
+    on_success: sendWelcome
+  }
+}
+
+workflow DunningFlow {
+  trigger: PaymentFailed.event
+
+  step retryPayment {
+    action: chargeCard
+    on_success: confirmPayment
+    on_failure: sendPaymentReminder
+    timeout: "24h"
+  }
+
+  step sendPaymentReminder {
+    action: sendEmail
+    on_success: waitForPayment
+    on_failure: escalate
+  }
+
+  step escalate {
+    action: suspendAccount
+    on_success: notifyAdmin
+  }
+}
+
+workflow InvitationFlow {
+  trigger: UserInvited.event
+
+  step sendInvitation {
+    action: sendInviteEmail
+    on_success: waitForAcceptance
+    on_failure: logFailure
+  }
+
+  step waitForAcceptance {
+    action: checkInvitationStatus
+    on_success: activateUser
+    on_failure: sendReminder
+    timeout: "7d"
+  }
+
+  step sendReminder {
+    action: sendReminderEmail
+    on_success: waitForAcceptance
+    timeout: "3d"
+  }
+}
+
+// Sources
+source stripeApi {
+  type: rest
+  url: "https://api.stripe.com/v1"
+  auth: bearer
+  cache: "5m"
+}
+
+// Config
+config billing {
+  currency: "USD"
+  trialDays: 14
+  gracePeriodDays: 3
+  dunningRetries: 3
+}
+
+config limits {
+  free_apiCalls: 1000
+  free_storage: 100
+  starter_apiCalls: 10000
+  starter_storage: 1000
+  pro_apiCalls: 100000
+  pro_storage: 10000
+  enterprise_apiCalls: -1
+  enterprise_storage: -1
+}
+
+config features {
+  free: ["basic_dashboard", "single_user"]
+  starter: ["basic_dashboard", "team_5", "api_access"]
+  pro: ["advanced_dashboard", "team_20", "api_access", "integrations"]
+  enterprise: ["custom_dashboard", "unlimited_team", "api_access", "integrations", "sso", "audit_logs"]
+}

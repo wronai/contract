@@ -1,0 +1,411 @@
+// E-Commerce Platform - Mini-DSL Contract (RCL)
+// Full e-commerce solution with products, orders, and payments
+
+app "E-Commerce Platform" {
+  version: "2.1.0"
+  description: "Full e-commerce solution with products, orders, and payments"
+  author: "Reclapp Team"
+  license: "MIT"
+}
+
+// Enums
+enum ProductStatus { Draft, Active, Archived, OutOfStock }
+enum OrderStatus { Pending, Confirmed, Processing, Shipped, Delivered, Cancelled, Refunded }
+enum PaymentStatus { Pending, Authorized, Captured, Failed, Refunded }
+enum FulfillmentStatus { Unfulfilled, PartiallyFulfilled, Fulfilled, Returned }
+enum ShipmentStatus { LabelCreated, PickedUp, InTransit, OutForDelivery, Delivered, Exception }
+
+// Entities
+entity Product {
+  sku             text        @unique @required
+  name            text        @required
+  description     text?
+  price           decimal     @required
+  compareAtPrice  decimal?
+  cost            decimal?
+  category        -> Category
+  brand           -> Brand?
+  images          json
+  attributes      json?
+  status          ProductStatus = Draft
+  publishedAt     datetime?
+  createdAt       datetime    @generated
+}
+
+entity Category {
+  name            text        @required
+  slug            text        @unique @required
+  parent          -> Category?
+  description     text?
+  imageUrl        text?
+  sortOrder       int         = 0
+}
+
+entity Brand {
+  name            text        @required
+  slug            text        @unique
+  logoUrl         text?
+  description     text?
+}
+
+entity Inventory {
+  product         -> Product  @required
+  warehouse       -> Warehouse @required
+  quantity        int         = 0
+  reservedQuantity int        = 0
+  lowStockThreshold int       = 10
+  updatedAt       datetime    @generated
+}
+
+entity Warehouse {
+  name            text        @required
+  code            text        @unique
+  address         json
+  isActive        bool        = true
+}
+
+entity Customer {
+  email           text        @unique @required
+  firstName       text        @required
+  lastName        text        @required
+  phone           text?
+  defaultAddress  -> Address?
+  tags            text[]?
+  totalOrders     int         = 0
+  totalSpent      decimal     = 0
+  lastOrderAt     datetime?
+  createdAt       datetime    @generated
+}
+
+entity Address {
+  customer        -> Customer @required
+  type            enum(Shipping, Billing)
+  firstName       text        @required
+  lastName        text        @required
+  company         text?
+  address1        text        @required
+  address2        text?
+  city            text        @required
+  state           text        @required
+  postalCode      text        @required
+  country         text        @required
+  phone           text?
+  isDefault       bool        = false
+}
+
+entity Order {
+  orderNumber     text        @unique @generated
+  customer        -> Customer @required
+  email           text        @required
+  status          OrderStatus = Pending
+  fulfillmentStatus FulfillmentStatus = Unfulfilled
+  paymentStatus   PaymentStatus = Pending
+  subtotal        decimal     @required
+  shippingTotal   decimal     = 0
+  taxTotal        decimal     = 0
+  discountTotal   decimal     = 0
+  total           decimal     @required
+  currency        text        = "PLN"
+  shippingAddress -> Address
+  billingAddress  -> Address
+  notes           text?
+  metadata        json?
+  fraudScore      decimal     = 0
+  placedAt        datetime    @generated
+}
+
+entity OrderItem {
+  order           -> Order    @required
+  product         -> Product  @required
+  sku             text        @required
+  name            text        @required
+  quantity        int         @required
+  unitPrice       decimal     @required
+  total           decimal     @required
+  fulfillmentStatus FulfillmentStatus = Unfulfilled
+}
+
+entity Cart {
+  sessionId       text        @unique @required
+  customer        -> Customer?
+  items           json
+  subtotal        decimal     = 0
+  currency        text        = "PLN"
+  expiresAt       datetime
+  updatedAt       datetime    @generated
+}
+
+entity Coupon {
+  code            text        @unique @required
+  type            enum(Percentage, FixedAmount, FreeShipping)
+  value           decimal     @required
+  minOrderAmount  decimal?
+  maxUses         int?
+  usedCount       int         = 0
+  startsAt        datetime?
+  expiresAt       datetime?
+  isActive        bool        = true
+}
+
+entity Review {
+  product         -> Product  @required
+  customer        -> Customer @required
+  order           -> Order?
+  rating          int(1..5)   @required
+  title           text?
+  content         text?
+  isVerified      bool        = false
+  status          enum(Pending, Approved, Rejected) = Pending
+  createdAt       datetime    @generated
+}
+
+entity Shipment {
+  order           -> Order    @required
+  carrier         text        @required
+  trackingNumber  text?
+  status          ShipmentStatus = LabelCreated
+  shippedAt       datetime?
+  deliveredAt     datetime?
+  items           json
+}
+
+// Events
+event ProductViewed {
+  productId: uuid
+  customerId: uuid?
+  sessionId: text
+  source: text
+  timestamp: datetime
+}
+
+event CartUpdated {
+  cartId: uuid
+  customerId: uuid?
+  action: text
+  productId: uuid
+  quantity: int
+  timestamp: datetime
+}
+
+event OrderPlaced {
+  orderId: uuid
+  customerId: uuid
+  total: decimal
+  itemCount: int
+  timestamp: datetime
+}
+
+event PaymentProcessed {
+  orderId: uuid
+  paymentId: text
+  amount: decimal
+  status: text
+  method: text
+  timestamp: datetime
+}
+
+event InventoryChanged {
+  productId: uuid
+  warehouseId: uuid
+  previousQuantity: int
+  newQuantity: int
+  reason: text
+  timestamp: datetime
+}
+
+event ShipmentUpdated {
+  shipmentId: uuid
+  orderId: uuid
+  status: text
+  location: text?
+  timestamp: datetime
+}
+
+// Pipelines
+pipeline OrderProcessing {
+  input: OrderPlaced.stream
+  transform: [validateOrder, processPayment, reserveInventory, sendConfirmation]
+  output: [fulfillment, notifications, analytics]
+}
+
+pipeline InventorySync {
+  input: inventoryApi.changes
+  transform: [validate, updateStock, checkReorderPoints]
+  output: [inventory, alerts]
+  schedule: "*/15 * * * *"
+}
+
+pipeline RecommendationEngine {
+  input: [ProductViewed.stream, OrderPlaced.stream]
+  transform: [analyzePatterns, generateRecommendations]
+  output: [recommendations, personalization]
+  schedule: "0 */6 * * *"
+}
+
+pipeline AbandonedCartRecovery {
+  input: Cart.stale
+  filter: expiresAt < now() && customerId != null
+  transform: [createReminder, calculateDiscount]
+  output: [email, notifications]
+  schedule: "0 * * * *"
+}
+
+pipeline FraudDetection {
+  input: [OrderPlaced.stream, PaymentProcessed.stream]
+  transform: [analyzeRisk, scoreTransaction]
+  output: [alerts, orderHold]
+}
+
+// Alerts
+alert "Low Stock" {
+  entity: Inventory
+  when: quantity <= lowStockThreshold && quantity > 0
+  notify: [email, slack, dashboard]
+  severity: medium
+}
+
+alert "Out of Stock" {
+  entity: Inventory
+  when: quantity == 0
+  notify: [email, slack]
+  severity: high
+}
+
+alert "High Value Order" {
+  entity: Order
+  when: total > 1000
+  notify: [slack]
+  severity: low
+}
+
+alert "Payment Failed" {
+  entity: Order
+  when: paymentStatus == "failed"
+  notify: [email, slack]
+  severity: critical
+}
+
+alert "Fraud Risk" {
+  entity: Order
+  when: fraudScore > 0.8
+  notify: [slack, email]
+  severity: critical
+  throttle: "5m"
+}
+
+alert "Delivery Exception" {
+  entity: Shipment
+  when: status == "exception"
+  notify: [email, slack]
+  severity: high
+}
+
+// Dashboards
+dashboard "Sales Overview" {
+  entity: Order
+  metrics: [totalRevenue, orderCount, avgOrderValue, conversionRate, revenueByDay, topProducts]
+  stream: realtime
+  layout: grid
+  refresh: "30s"
+}
+
+dashboard "Inventory Health" {
+  entity: Inventory
+  metrics: [totalProducts, lowStockCount, outOfStockCount, inventoryValue, turnoverRate]
+  layout: grid
+}
+
+dashboard "Customer Insights" {
+  entity: Customer
+  metrics: [totalCustomers, newCustomers, repeatCustomerRate, customerLifetimeValue, topCustomers]
+  layout: tabs
+}
+
+dashboard "Fulfillment Status" {
+  entity: Order
+  metrics: [pendingOrders, processingOrders, shippedOrders, deliveredOrders, avgFulfillmentTime]
+  stream: realtime
+}
+
+// Workflows
+workflow OrderFulfillment {
+  trigger: OrderPlaced.event
+
+  step validateInventory {
+    action: checkStock
+    on_success: allocateStock
+    on_failure: notifyOutOfStock
+  }
+
+  step allocateStock {
+    action: reserveInventory
+    on_success: processPayment
+    on_failure: releaseHold
+  }
+
+  step processPayment {
+    action: chargeCustomer
+    on_success: createShipment
+    on_failure: handlePaymentFailure
+  }
+
+  step createShipment {
+    action: generateLabel
+    on_success: notifyCustomer
+  }
+}
+
+workflow ReturnProcessing {
+  trigger: ReturnRequested.event
+
+  step validateReturn {
+    action: checkReturnPolicy
+    on_success: approveReturn
+    on_failure: rejectReturn
+  }
+
+  step approveReturn {
+    action: createReturnLabel
+    on_success: trackReturn
+  }
+
+  step processRefund {
+    action: issueRefund
+    on_success: restockInventory
+    on_failure: escalateToSupport
+  }
+}
+
+// Sources
+source inventoryApi {
+  type: rest
+  url: "${INVENTORY_API_URL}"
+  auth: apiKey
+  cache: "1m"
+}
+
+source paymentGateway {
+  type: rest
+  url: "https://api.stripe.com/v1"
+  auth: bearer
+}
+
+source shippingProvider {
+  type: rest
+  url: "${SHIPPING_API_URL}"
+  auth: apiKey
+}
+
+// Config
+config store {
+  currency: "PLN"
+  timezone: "Europe/Warsaw"
+  taxIncluded: false
+  freeShippingThreshold: 200
+}
+
+config inventory {
+  defaultLowStockThreshold: 10
+  reservationTimeout: 900
+  autoReorderEnabled: true
+}

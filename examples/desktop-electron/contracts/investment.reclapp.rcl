@@ -1,0 +1,284 @@
+// Investment Portfolio Manager - Mini-DSL Contract (RCL)
+// Desktop Electron application for investment tracking
+
+app "Investment Portfolio Manager" {
+  version: "1.0.0"
+  description: "Desktop application for tracking investments and portfolios"
+  author: "Reclapp Team"
+  license: "MIT"
+}
+
+// Enums
+enum TransactionType { Buy, Sell, Dividend, Split, Transfer }
+enum AssetType { Stock, ETF, Crypto, Bond, MutualFund, Cash }
+enum AlertCondition { Above, Below, PercentChange }
+
+// Entities
+entity Portfolio {
+  name            text        @required
+  description     text?
+  currency        text        = "USD"
+  ownerId         uuid        @required
+  totalValue      decimal     = 0
+  totalCost       decimal     = 0
+  unrealizedGain  decimal     = 0
+  realizedGain    decimal     = 0
+  createdAt       datetime    @generated
+  updatedAt       datetime    @generated
+}
+
+entity Holding {
+  portfolio       -> Portfolio @required
+  symbol          text        @required
+  name            text        @required
+  assetType       AssetType   @required
+  quantity        decimal     @required
+  avgCost         decimal     @required
+  currentPrice    decimal?
+  currency        text        = "USD"
+  sector          text?
+  exchange        text?
+  lastUpdated     datetime?
+  createdAt       datetime    @generated
+}
+
+entity Transaction {
+  portfolio       -> Portfolio @required
+  holding         -> Holding?
+  type            TransactionType @required
+  symbol          text        @required
+  quantity        decimal     @required
+  price           decimal     @required
+  fees            decimal     = 0
+  currency        text        = "USD"
+  exchangeRate    decimal     = 1
+  notes           text?
+  executedAt      datetime    @required
+  createdAt       datetime    @generated
+}
+
+entity Watchlist {
+  name            text        @required
+  symbols         text[]
+  ownerId         uuid        @required
+  isDefault       bool        = false
+  createdAt       datetime    @generated
+}
+
+entity PriceAlert {
+  symbol          text        @required
+  condition       AlertCondition @required
+  targetPrice     decimal     @required
+  isActive        bool        = true
+  triggeredAt     datetime?
+  createdAt       datetime    @generated
+}
+
+entity DividendRecord {
+  holding         -> Holding  @required
+  amount          decimal     @required
+  currency        text        = "USD"
+  exDate          date        @required
+  payDate         date        @required
+  reinvested      bool        = false
+  createdAt       datetime    @generated
+}
+
+entity MarketQuote {
+  symbol          text        @required
+  price           decimal     @required
+  change          decimal
+  changePercent   decimal
+  volume          int
+  high            decimal
+  low             decimal
+  open            decimal
+  previousClose   decimal
+  updatedAt       datetime    @generated
+}
+
+// Events
+event TransactionExecuted {
+  transactionId: uuid
+  portfolioId: uuid
+  type: text
+  symbol: text
+  quantity: decimal
+  totalValue: decimal
+  timestamp: datetime
+}
+
+event PriceAlertTriggered {
+  alertId: uuid
+  symbol: text
+  currentPrice: decimal
+  targetPrice: decimal
+  condition: text
+  timestamp: datetime
+}
+
+event PortfolioRebalanced {
+  portfolioId: uuid
+  adjustments: text
+  timestamp: datetime
+}
+
+event DividendReceived {
+  holdingId: uuid
+  symbol: text
+  amount: decimal
+  timestamp: datetime
+}
+
+event MarketDataUpdated {
+  symbols: text
+  source: text
+  timestamp: datetime
+}
+
+event PortfolioValueChanged {
+  portfolioId: uuid
+  previousValue: decimal
+  newValue: decimal
+  changePercent: decimal
+  timestamp: datetime
+}
+
+// Pipelines
+pipeline PriceUpdate {
+  input: marketDataApi.stream
+  transform: [fetchPrices, updateHoldings, calculateValues, checkAlerts]
+  output: [holdings, alerts]
+  schedule: "*/5 * * * *"
+}
+
+pipeline PortfolioValuation {
+  input: [Holding.changes, Transaction.stream]
+  transform: [aggregateHoldings, calculateMetrics, updatePortfolio]
+  output: [portfolio, dashboard]
+  schedule: "0 * * * *"
+}
+
+pipeline DividendTracking {
+  input: marketDataApi.dividends
+  transform: [matchHoldings, recordDividend, notifyUser]
+  output: [dividends, notifications]
+  schedule: "0 9 * * *"
+}
+
+pipeline PerformanceAnalysis {
+  input: [Portfolio.stream, Transaction.stream]
+  transform: [calculateReturns, benchmarkComparison, riskMetrics]
+  output: [analytics, reports]
+  schedule: "0 0 * * *"
+}
+
+// Alerts
+alert "Price Target Reached" {
+  entity: PriceAlert
+  when: currentPrice >= targetPrice && condition == "above"
+  notify: [notification, sound]
+  severity: medium
+}
+
+alert "Stop Loss Triggered" {
+  entity: PriceAlert
+  when: currentPrice <= targetPrice && condition == "below"
+  notify: [notification, sound, email]
+  severity: high
+}
+
+alert "Large Portfolio Movement" {
+  entity: Portfolio
+  when: abs(dailyChangePercent) > 5
+  notify: [notification]
+  severity: high
+}
+
+alert "Dividend Upcoming" {
+  entity: Holding
+  when: daysUntilExDate <= 3
+  notify: [notification]
+  severity: low
+}
+
+alert "Position Size Warning" {
+  entity: Holding
+  when: valuePercent > 25
+  notify: [notification]
+  severity: medium
+}
+
+// Dashboards
+dashboard "Portfolio Overview" {
+  entity: Portfolio
+  metrics: [totalValue, totalGain, totalGainPercent, dayChange, dayChangePercent, allocationByAsset, allocationBySector]
+  stream: realtime
+  layout: grid
+}
+
+dashboard "Analytics" {
+  entity: Portfolio
+  metrics: [sharpeRatio, volatility, beta, maxDrawdown, cagr, benchmarkComparison]
+  layout: tabs
+}
+
+dashboard "Watchlist" {
+  entity: Watchlist
+  metrics: [symbolPrices, dayChanges, volumes]
+  stream: realtime
+}
+
+dashboard "Transactions" {
+  entity: Transaction
+  metrics: [recentTransactions, transactionsByType, totalFees, realizedGains]
+  layout: grid
+}
+
+dashboard "Dividends" {
+  entity: DividendRecord
+  metrics: [totalDividends, dividendYield, upcomingDividends, dividendHistory]
+  layout: grid
+}
+
+// Sources
+source marketDataApi {
+  type: rest
+  url: "${MARKET_DATA_URL}"
+  auth: apiKey
+  cache: "5m"
+}
+
+source currencyApi {
+  type: rest
+  url: "https://api.exchangerate.host"
+  cache: "1h"
+}
+
+// Config
+config app {
+  defaultCurrency: "USD"
+  refreshInterval: 300000
+  maxWatchlistSize: 50
+  dataRetentionDays: 365
+}
+
+config trading {
+  defaultExchange: "NASDAQ"
+  supportedAssetTypes: ["stock", "etf", "crypto", "bond", "mutual_fund"]
+  supportedCurrencies: ["USD", "EUR", "GBP", "PLN", "CHF"]
+}
+
+config notifications {
+  sound: true
+  desktop: true
+  email: false
+  quietHoursStart: "22:00"
+  quietHoursEnd: "08:00"
+}
+
+config performance {
+  benchmarkSymbol: "SPY"
+  riskFreeRate: 0.04
+  calculationPeriod: 252
+}

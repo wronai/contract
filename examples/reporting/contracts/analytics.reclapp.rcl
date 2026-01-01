@@ -1,0 +1,224 @@
+// Analytics & Reporting - Mini-DSL Contract (RCL)
+// Business analytics and automated reporting system
+
+app "Analytics Platform" {
+  version: "1.0.0"
+  description: "Business analytics with automated reports and insights"
+  author: "Reclapp Team"
+  license: "MIT"
+}
+
+// Enums
+enum ReportType { Daily, Weekly, Monthly, Quarterly, Custom }
+enum ReportStatus { Scheduled, Generating, Completed, Failed }
+enum MetricType { Counter, Gauge, Histogram, Summary }
+enum AggregationType { Sum, Avg, Min, Max, Count, Percentile }
+
+// Entities
+entity Report {
+  name            text        @required
+  type            ReportType  @required
+  status          ReportStatus = Scheduled
+  template        -> ReportTemplate @required
+  parameters      json?
+  generatedAt     datetime?
+  fileUrl         text?
+  recipientEmails text[]
+  createdAt       datetime    @generated
+}
+
+entity ReportTemplate {
+  name            text        @required @unique
+  description     text?
+  type            ReportType  @required
+  sections        json        @required
+  defaultParams   json?
+  isActive        bool        = true
+  createdAt       datetime    @generated
+}
+
+entity Metric {
+  name            text        @required @unique
+  displayName     text
+  type            MetricType  @required
+  unit            text?
+  aggregation     AggregationType = Sum
+  source          text        @required
+  query           text
+  isActive        bool        = true
+}
+
+entity MetricValue {
+  metric          -> Metric   @required
+  value           decimal     @required
+  dimensions      json?
+  timestamp       datetime    @required
+  createdAt       datetime    @generated
+}
+
+entity Dashboard {
+  name            text        @required @unique
+  description     text?
+  widgets         json        @required
+  isPublic        bool        = false
+  ownerId         uuid        @required
+  createdAt       datetime    @generated
+  updatedAt       datetime    @generated
+}
+
+entity Widget {
+  dashboard       -> Dashboard @required
+  type            enum(Chart, Table, KPI, Map, Gauge)
+  title           text        @required
+  metrics         text[]
+  config          json
+  position        json
+}
+
+entity ScheduledReport {
+  template        -> ReportTemplate @required
+  schedule        text        @required
+  recipientEmails text[]      @required
+  parameters      json?
+  lastRunAt       datetime?
+  nextRunAt       datetime
+  isActive        bool        = true
+}
+
+entity DataSource {
+  name            text        @required @unique
+  type            enum(Database, API, File, Stream)
+  connectionConfig json       @required
+  isActive        bool        = true
+  lastSyncAt      datetime?
+}
+
+// Events
+event ReportGenerated {
+  reportId: uuid
+  templateId: uuid
+  status: text
+  duration: int
+  timestamp: datetime
+}
+
+event MetricUpdated {
+  metricId: uuid
+  value: decimal
+  previousValue: decimal?
+  timestamp: datetime
+}
+
+event DashboardViewed {
+  dashboardId: uuid
+  userId: uuid
+  timestamp: datetime
+}
+
+event AlertTriggered {
+  metricId: uuid
+  value: decimal
+  threshold: decimal
+  condition: text
+  timestamp: datetime
+}
+
+// Pipelines
+pipeline MetricCollection {
+  input: DataSource.all
+  transform: [extractMetrics, aggregate, store]
+  output: MetricValue.create
+  schedule: "*/5 * * * *"
+}
+
+pipeline ReportGeneration {
+  input: ScheduledReport.due
+  transform: [fetchData, generateReport, storeReport, sendEmail]
+  output: [Report.create, notifications]
+  schedule: "0 * * * *"
+}
+
+pipeline DashboardRefresh {
+  input: MetricUpdated.stream
+  transform: [aggregateByDashboard, updateCache]
+  output: dashboard.refresh
+}
+
+pipeline AnomalyDetection {
+  input: MetricValue.stream
+  transform: [calculateBaseline, detectAnomalies, createAlert]
+  output: [alerts, notifications]
+}
+
+// Alerts
+alert "Metric Anomaly" {
+  entity: MetricValue
+  when: value > baseline * 2 || value < baseline * 0.5
+  notify: [slack, email]
+  severity: medium
+}
+
+alert "Report Generation Failed" {
+  entity: Report
+  when: status == "failed"
+  notify: [email, slack]
+  severity: high
+}
+
+alert "Data Source Offline" {
+  entity: DataSource
+  when: lastSyncAt < now() - 1h && isActive == true
+  notify: [slack]
+  severity: critical
+}
+
+alert "KPI Threshold Breached" {
+  entity: MetricValue
+  when: value > threshold
+  notify: [email, slack]
+  severity: high
+}
+
+// Dashboards
+dashboard "Executive Summary" {
+  entity: Metric
+  metrics: [revenue, orders, customers, conversion, growth]
+  stream: realtime
+  layout: grid
+  refresh: "1m"
+}
+
+dashboard "Operations" {
+  entity: Metric
+  metrics: [systemHealth, errorRate, responseTime, throughput]
+  stream: realtime
+  layout: grid
+  refresh: "30s"
+}
+
+dashboard "Sales Analytics" {
+  entity: Metric
+  metrics: [salesByRegion, topProducts, salesTrend, pipeline]
+  stream: hourly
+  layout: tabs
+}
+
+dashboard "Report Status" {
+  entity: Report
+  metrics: [pendingReports, completedToday, failedCount, avgGenerationTime]
+  stream: realtime
+}
+
+// Config
+config reporting {
+  defaultTimezone: "Europe/Warsaw"
+  maxReportSize: 10485760
+  retentionDays: 90
+  parallelGenerations: 3
+}
+
+config metrics {
+  collectionInterval: 300
+  retentionDays: 365
+  anomalyThreshold: 2.0
+}

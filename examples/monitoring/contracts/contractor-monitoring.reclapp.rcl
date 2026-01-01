@@ -1,0 +1,233 @@
+// Contractor Monitoring - Mini-DSL Contract (RCL)
+// Risk monitoring and alerting for B2B contractors
+
+app "Contractor Monitoring" {
+  version: "1.0.0"
+  description: "Real-time contractor risk monitoring with automated alerts"
+  author: "Reclapp Team"
+  license: "MIT"
+}
+
+// Enums
+enum ContractorStatus { Active, Inactive, Suspended, Blacklisted }
+enum RiskLevel { Low, Medium, High, Critical }
+enum AlertSeverity { Info, Warning, High, Critical }
+
+// Entities
+entity Contractor {
+  name            text        @required
+  nip             text        @unique @required
+  krs             text?
+  regon           text?
+  address         json
+  email           text        @required
+  phone           text?
+  status          ContractorStatus = Active
+  riskScore       int(0..100) = 50
+  riskLevel       RiskLevel   = Medium
+  creditLimit     money(PLN)  = 0
+  outstandingDebt money(PLN)  = 0
+  lastAssessment  datetime?
+  createdAt       datetime    @generated
+  updatedAt       datetime    @generated
+}
+
+entity RiskEvent {
+  contractor      -> Contractor @required
+  eventType       text        @required
+  severity        AlertSeverity @required
+  description     text
+  sourceData      json?
+  resolvedAt      datetime?
+  resolvedBy      uuid?
+  createdAt       datetime    @generated
+}
+
+entity FinancialReport {
+  contractor      -> Contractor @required
+  reportDate      date        @required
+  revenue         money(PLN)
+  profit          money(PLN)
+  debt            money(PLN)
+  assets          money(PLN)
+  source          text
+  createdAt       datetime    @generated
+}
+
+entity ContractorContract {
+  contractor      -> Contractor @required
+  contractNumber  text        @unique
+  value           money(PLN)  @required
+  startDate       date        @required
+  endDate         date?
+  status          enum(Draft, Active, Completed, Terminated)
+  createdAt       datetime    @generated
+}
+
+// Events
+event ContractorCreated {
+  contractorId: uuid
+  name: text
+  nip: text
+  timestamp: datetime
+}
+
+event RiskScoreChanged {
+  contractorId: uuid
+  previousScore: int
+  newScore: int
+  reason: text
+  timestamp: datetime
+}
+
+event RiskEventCreated {
+  eventId: uuid
+  contractorId: uuid
+  eventType: text
+  severity: text
+  timestamp: datetime
+}
+
+event ContractorSuspended {
+  contractorId: uuid
+  reason: text
+  suspendedBy: uuid
+  timestamp: datetime
+}
+
+event FinancialDataUpdated {
+  contractorId: uuid
+  source: text
+  dataType: text
+  timestamp: datetime
+}
+
+// Pipelines
+pipeline RiskCalculation {
+  input: [FinancialDataUpdated.stream, RiskEvent.stream]
+  transform: [aggregateData, calculateScore, updateRiskLevel]
+  output: [Contractor.update, alerts]
+  schedule: "0 */4 * * *"
+}
+
+pipeline FinancialSync {
+  input: financialApi.changes
+  transform: [validate, normalize, store]
+  output: [FinancialReport.create, RiskCalculation.trigger]
+  schedule: "0 6 * * *"
+}
+
+pipeline RegistryMonitoring {
+  input: [krsApi.changes, ceidgApi.changes]
+  transform: [detectChanges, assessImpact, createEvent]
+  output: [RiskEvent.create, notifications]
+  schedule: "0 8 * * *"
+}
+
+// Alerts
+alert "High Risk Contractor" {
+  entity: Contractor
+  when: riskScore > 80 && status == "active"
+  notify: [email, slack, mqtt:risk/high]
+  severity: critical
+}
+
+alert "Risk Score Increased" {
+  entity: Contractor
+  when: riskScore > previousRiskScore + 20
+  notify: [email, slack]
+  severity: high
+}
+
+alert "Outstanding Debt Warning" {
+  entity: Contractor
+  when: outstandingDebt > creditLimit * 0.8
+  notify: [email]
+  severity: medium
+}
+
+alert "Credit Limit Exceeded" {
+  entity: Contractor
+  when: outstandingDebt > creditLimit
+  notify: [email, slack]
+  severity: critical
+}
+
+alert "Contractor Inactive" {
+  entity: Contractor
+  when: lastAssessment < now() - 90d && status == "active"
+  notify: [email]
+  severity: low
+}
+
+alert "Registry Status Changed" {
+  entity: RiskEvent
+  when: eventType == "registry_status_change"
+  notify: [email, slack]
+  severity: high
+}
+
+// Dashboards
+dashboard "Risk Overview" {
+  entity: Contractor
+  metrics: [totalContractors, byRiskLevel, avgRiskScore, highRiskCount, criticalCount]
+  stream: realtime
+  layout: grid
+}
+
+dashboard "Risk Trends" {
+  entity: Contractor
+  metrics: [riskScoreTrend, newHighRisk, resolvedEvents, riskDistribution]
+  stream: daily
+  layout: grid
+}
+
+dashboard "Financial Health" {
+  entity: Contractor
+  metrics: [totalCreditLimit, totalOutstanding, utilizationRate, debtByRisk]
+  stream: realtime
+}
+
+dashboard "Event Monitor" {
+  entity: RiskEvent
+  metrics: [openEvents, bySeverity, avgResolutionTime, eventTrend]
+  stream: realtime
+  layout: grid
+}
+
+// Sources
+source krsApi {
+  type: rest
+  url: "https://api.krs.pl/v1"
+  auth: apiKey
+  cache: "1h"
+}
+
+source ceidgApi {
+  type: rest
+  url: "https://api.ceidg.gov.pl/v1"
+  auth: apiKey
+  cache: "1h"
+}
+
+source financialApi {
+  type: rest
+  url: "${FINANCIAL_API_URL}"
+  auth: bearer
+  cache: "15m"
+}
+
+// Config
+config risk {
+  highRiskThreshold: 80
+  mediumRiskThreshold: 50
+  criticalRiskThreshold: 90
+  assessmentIntervalDays: 30
+  scoreDecayRate: 0.01
+}
+
+config monitoring {
+  financialSyncHour: 6
+  registrySyncHour: 8
+  alertCooldownMinutes: 60
+}
