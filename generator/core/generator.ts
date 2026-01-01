@@ -1733,10 +1733,10 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Build API image
-        run: docker build -f docker/Dockerfile.api -t reclapp/api:${{ github.sha }} ./api
+        run: docker build -f docker/Dockerfile.api -t reclapp/api:\${{ github.sha }} ./api
       
       - name: Build Frontend image
-        run: docker build -f docker/Dockerfile.frontend -t reclapp/frontend:${{ github.sha }} ./frontend
+        run: docker build -f docker/Dockerfile.frontend -t reclapp/frontend:\${{ github.sha }} ./frontend
 `;
   }
 
@@ -1754,7 +1754,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Login to Registry
-        run: echo "${{ secrets.REGISTRY_TOKEN }}" | docker login -u "${{ secrets.REGISTRY_USER }}" --password-stdin
+        run: echo "\${{ secrets.REGISTRY_TOKEN }}" | docker login -u "\${{ secrets.REGISTRY_USER }}" --password-stdin
       
       - name: Build and push API
         run: |

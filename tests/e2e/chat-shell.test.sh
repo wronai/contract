@@ -27,14 +27,20 @@ test_case() {
     if output=$(eval "$cmd" 2>&1); then
         if echo "$output" | grep -q "$expected"; then
             echo -e "${GREEN}✓ PASS${NC}"
-            ((PASSED++))
+            PASSED=$((PASSED + 1))
         else
             echo -e "${RED}✗ FAIL${NC} (expected: $expected)"
-            ((FAILED++))
+            echo "---- output ----"
+            echo "$output"
+            echo "--------------"
+            FAILED=$((FAILED + 1))
         fi
     else
         echo -e "${RED}✗ FAIL${NC} (command failed)"
-        ((FAILED++))
+        echo "---- output ----"
+        echo "$output"
+        echo "--------------"
+        FAILED=$((FAILED + 1))
     fi
 }
 
@@ -109,9 +115,9 @@ test_case "getState works" \
     "model"
 
 test_case "reclapp normalize works" \
-    "tmp=\$(mktemp -d); \
+    "(tmp=\$(mktemp -d); trap \"rm -rf \\\"\$tmp\\\" >/dev/null 2>&1 || true\" EXIT; \
       printf '%s\n' \
-        'app TestApp { version: "1.0.0", }' \
+        'app TestApp { version: \"1.0.0\", }' \
         '' \
         'entity User {' \
         '  id: uuid @indexed,' \
@@ -121,14 +127,17 @@ test_case "reclapp normalize works" \
         'entity Company { id uuid }' \
         > \"\$tmp/in.reclapp.rcl\"; \
       ./bin/reclapp normalize \"\$tmp/in.reclapp.rcl\" -o \"\$tmp/out.reclapp.rcl\" >/dev/null; \
-      grep -q '@index' \"\$tmp/out.reclapp.rcl\" && ! grep -q ':' \"\$tmp/out.reclapp.rcl\" && echo ok; \
-      rm -rf \"\$tmp\"" \
+      grep -q 'app \"TestApp\"' \"\$tmp/out.reclapp.rcl\" \
+        && grep -q '@index' \"\$tmp/out.reclapp.rcl\" \
+        && grep -q 'company -> Company' \"\$tmp/out.reclapp.rcl\" \
+        && echo ok)" \
     "ok"
 
 test_case "reclapp-chat saves and generates" \
-    "tmp=\$(mktemp -d); \
+    "(tmp=\$(mktemp -d); trap \"rm -rf \\\"\$tmp\\\" >/dev/null 2>&1 || true\" EXIT; \
       app=\"\$tmp/my-app\"; \
       seed=\"\$tmp/seed.reclapp.rcl\"; \
+      log=\"\$tmp/chat.log\"; \
       mkdir -p \"\$app\"; \
       printf '%s\n' \
         'app CRM { version: "1.0.0", }' \
@@ -144,13 +153,12 @@ test_case "reclapp-chat saves and generates" \
         '/validate' \
         \"/generate \$app\" \
         '/quit' \
-        | RECLAPP_CHAT_SEED_CONTRACT_PATH=\"\$seed\" node bin/reclapp-chat >/dev/null 2>&1; \
+        | RECLAPP_CHAT_SEED_CONTRACT_PATH=\"\$seed\" node bin/reclapp-chat >\"\$log\" 2>&1 || { cat \"\$log\"; exit 1; }; \
       test -f \"\$app/contracts/main.reclapp.rcl\" \
         && test -f \"\$app/contracts/main.rcl.md\" \
         && test -f \"\$app/contracts/main.reclapp.ts\" \
         && test -f \"\$app/target/api/package.json\" \
-        && echo ok; \
-      rm -rf \"\$tmp\"" \
+        && echo ok || { cat \"\$log\"; exit 1; })" \
     "ok"
 
 echo ""

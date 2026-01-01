@@ -119,6 +119,7 @@ ${color('dim', 'Start by describing what you want to build...')}
   };
 
   const prompt = () => {
+    if (rl.closed) return;
     rl.question(`\n${color('green', '�� You:')} `, async (input) => {
       const trimmed = input.trim();
       
@@ -257,7 +258,7 @@ ${color('yellow', 'Commands:')}
               await new Promise((resolve, reject) => {
                 const p = spawn(process.execPath, [reclappBin, 'generate', contractPath], {
                   cwd: repoRoot,
-                  stdio: 'inherit',
+                  stdio: ['ignore', 'inherit', 'inherit'],
                   shell: false
                 });
                 p.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`generate exited with code ${code}`))));
@@ -277,7 +278,7 @@ ${color('yellow', 'Commands:')}
               rl.close();
               const p = spawn(process.execPath, [reclappBin, 'dev', contractPath], {
                 cwd: repoRoot,
-                stdio: 'inherit',
+                stdio: ['ignore', 'inherit', 'inherit'],
                 shell: false
               });
               p.on('close', (code) => process.exit(code || 0));

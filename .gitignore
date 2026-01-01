@@ -1,6 +1,7 @@
 target
 .idea
 venv
+generated/
 package-lock.json
 # Logs
 logs

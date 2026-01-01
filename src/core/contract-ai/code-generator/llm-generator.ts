@@ -34,17 +34,9 @@ export interface CodeGeneratorOptions {
   verbose: boolean;
 }
 
-/**
- * Klient LLM (interfejs)
- */
-export interface LLMClient {
-  generate(options: {
-    system: string;
-    user: string;
-    temperature?: number;
-    maxTokens?: number;
-  }): Promise<string>;
-}
+// LLMClient is imported from generator module to avoid duplication
+import { LLMClient } from '../generator/contract-generator';
+export { LLMClient };
 
 /**
  * Błąd składniowy

@@ -82,6 +82,7 @@ Usage:
   reclapp list                               List available contracts
   reclapp studio                             Interactive examples browser
   reclapp chat                               Interactive LLM contract designer
+  reclapp generate-ai <contract|--prompt>    Generate code with Contract AI 2.2
   reclapp stop                               Stop all running containers
 
 Commands:
@@ -95,6 +96,7 @@ Commands:
   normalize   Normalize Mini-DSL source (fix common LLM mistakes)
   list        List all available contract files (.reclapp.ts, .rcl)
   studio      Interactive examples browser with tests
+  generate-ai Generate code using Contract AI 2.2 (LLM-driven)
   stop        Stop all running Docker containers
 
 Supported Formats:
@@ -668,6 +670,171 @@ async function cmdChat() {
   child.on('close', (code) => process.exit(code));
 }
 
+async function cmdGenerateAI(args, options) {
+  // Parse generate-ai specific arguments
+  let contractFile = null;
+  let prompt = null;
+  let dryRun = false;
+  let maxIterations = 10;
+  
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === '--prompt' || arg === '-p') {
+      prompt = args[++i];
+    } else if (arg === '--dry-run') {
+      dryRun = true;
+    } else if (arg === '--max-iterations') {
+      maxIterations = parseInt(args[++i], 10);
+    } else if (!arg.startsWith('-') && !contractFile) {
+      contractFile = arg;
+    }
+  }
+
+  console.log('\n🤖 Reclapp Contract AI Generator v2.2.0\n');
+
+  try {
+    // Dynamic import of contract-ai module
+    const contractAI = require('../src/core/contract-ai');
+
+    let contract;
+
+    if (contractFile) {
+      console.log(`📄 Loading contract from: ${contractFile}`);
+      
+      // Load ContractAI file directly (bypasses loadContract which expects app at root)
+      const fullPath = path.resolve(contractFile);
+      if (!fs.existsSync(fullPath)) {
+        console.error(`❌ Contract file not found: ${fullPath}`);
+        process.exit(1);
+      }
+      
+      delete require.cache[require.resolve(fullPath)];
+      const module = require(fullPath);
+      contract = module.crmContract || module.contract || module.default || module;
+      
+      // Convert old format to Contract AI format if needed
+      if (!contract.definition && contract.app) {
+        contract = {
+          definition: {
+            app: contract.app,
+            entities: contract.entities || [],
+            events: contract.events || [],
+            api: contract.api
+          },
+          generation: {
+            instructions: [
+              { target: 'api', priority: 'must', instruction: 'Use Express.js with TypeScript' }
+            ],
+            patterns: [],
+            constraints: [],
+            techStack: {
+              backend: { runtime: 'node', language: 'typescript', framework: 'express', port: 8080 }
+            }
+          },
+          validation: {
+            assertions: [],
+            tests: [],
+            staticRules: [],
+            qualityGates: [{ name: 'Coverage', metric: 'test-coverage', threshold: 70, operator: '>=' }],
+            acceptance: { testsPass: true, minCoverage: 70, maxLintErrors: 0, maxResponseTime: 500, securityChecks: [], custom: [] }
+          }
+        };
+      }
+    } else if (prompt) {
+      console.log(`💬 Generating contract from prompt: "${prompt}"`);
+      
+      const generator = contractAI.createContractGenerator({
+        verbose: options.verbose,
+        maxAttempts: maxIterations
+      });
+
+      const result = await generator.generate(prompt);
+      
+      if (!result.success) {
+        console.error('❌ Failed to generate contract');
+        result.errors.forEach(e => console.error(`   - ${e.message}`));
+        process.exit(1);
+      }
+
+      contract = result.contract;
+      console.log(`✅ Contract generated in ${result.attempts} attempt(s)`);
+    } else {
+      console.error('❌ Provide either a contract file or --prompt');
+      console.log('\nUsage:');
+      console.log('  reclapp generate-ai <contract-file>');
+      console.log('  reclapp generate-ai --prompt "Create a CRM system"');
+      process.exit(1);
+    }
+
+    // Validate contract
+    const validator = contractAI.createContractValidator();
+    const validationResult = validator.validate(contract);
+
+    if (!validationResult.valid) {
+      console.error('❌ Contract validation failed:');
+      validationResult.errors.slice(0, 5).forEach(e => 
+        console.error(`   - [${e.code}] ${e.path}: ${e.message}`)
+      );
+      process.exit(1);
+    }
+
+    console.log('✅ Contract validated successfully');
+
+    if (dryRun) {
+      console.log('\n📋 Contract (dry-run):');
+      console.log(JSON.stringify(contract, null, 2));
+      return;
+    }
+
+    // Generate code
+    console.log('\n🔨 Generating code...');
+    
+    const codeGenerator = contractAI.createLLMCodeGenerator({
+      verbose: options.verbose
+    });
+
+    const generatedCode = await codeGenerator.generate(contract);
+    
+    console.log(`✅ Generated ${generatedCode.files.length} files`);
+
+    // Run validation pipeline
+    console.log('\n🔍 Running validation pipeline...');
+    
+    const pipeline = contractAI.createDefaultValidationPipeline();
+    const pipelineResult = await pipeline.validate(contract, generatedCode);
+
+    if (pipelineResult.passed) {
+      console.log('✅ All validation stages passed');
+    } else {
+      console.log(`⚠️ Validation: ${pipelineResult.summary.passedStages}/${pipelineResult.stages.length} stages passed`);
+    }
+
+    // Write output files
+    const outputDir = options.output || './generated';
+    console.log(`\n📁 Writing files to: ${outputDir}`);
+    
+    for (const file of generatedCode.files) {
+      const filePath = path.join(outputDir, file.path);
+      const fileDir = path.dirname(filePath);
+      if (!fs.existsSync(fileDir)) {
+        fs.mkdirSync(fileDir, { recursive: true });
+      }
+      fs.writeFileSync(filePath, file.content, 'utf-8');
+    }
+
+    console.log('\n' + '═'.repeat(50));
+    console.log('✨ Generation complete!');
+    console.log('═'.repeat(50));
+    console.log(`   Files: ${generatedCode.files.length}`);
+    console.log(`   Output: ${outputDir}`);
+
+  } catch (error) {
+    console.error(`\n❌ Error: ${error.message}`);
+    if (options.verbose) console.error(error.stack);
+    process.exit(1);
+  }
+}
+
 async function cmdStudio() {
   const readline = require('readline');
   const { execSync } = require('child_process');
@@ -906,6 +1073,9 @@ async function main() {
     case 'normalize': case 'norm':
       if (!contractPath) { console.error('❌ Missing input path'); process.exit(1); }
       await cmdNormalize(contractPath, options); break;
+
+    case 'generate-ai': case 'gen-ai': case 'ai-gen':
+      await cmdGenerateAI(args.slice(1), options); break;
 
     default:
       if (command.endsWith('.reclapp.ts') || command.endsWith('.ts') || command.endsWith('.rcl') || command.endsWith('.rcl.md')) {

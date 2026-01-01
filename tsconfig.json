@@ -21,6 +21,8 @@
     "paths": {
       "@dsl/*": ["dsl/*"],
       "@core/*": ["core/*"],
+      "@src/*": ["src/*"],
+      "@contract-ai/*": ["src/core/contract-ai/*"],
       "@modules/*": ["modules/*"],
       "@api/*": ["api/*"]
     }
@@ -28,6 +30,7 @@
   "include": [
     "dsl/**/*.ts",
     "core/**/*.ts",
+    "src/**/*.ts",
     "modules/**/*.ts",
     "api/**/*.ts",
     "generators/**/*.ts",
