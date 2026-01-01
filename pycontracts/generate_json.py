@@ -1,10 +1,10 @@
 """Generate JSON Schema files from Pydantic models.
 
 Usage:
-  python contracts/generate_json.py
+  python pycontracts/generate_json.py
 
 Outputs:
-  contracts/json/*.json
+  pycontracts/json/*.json
 
 The generator scans Python files in the same directory as this script
 (excluding itself) and exports JSON Schema for each Pydantic BaseModel.
@@ -23,7 +23,7 @@ from pydantic import BaseModel
 
 
 def _load_module_from_path(path: Path) -> Any:
-    module_name = f"contracts_pydantic_{path.stem}"
+    module_name = f"pycontracts_pydantic_{path.stem}"
     spec = importlib.util.spec_from_file_location(module_name, str(path))
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Failed to load module spec: {path}")
@@ -42,13 +42,11 @@ def _collect_models(module: Any) -> List[Type[BaseModel]]:
             if obj is BaseModel:
                 continue
             if issubclass(obj, BaseModel):
-                # Only include models defined in this module
                 if getattr(obj, "__module__", None) == getattr(module, "__name__", None):
                     models.append(obj)
         except TypeError:
             continue
 
-    # Deterministic ordering
     models.sort(key=lambda m: m.__name__)
     return models
 
@@ -75,8 +73,6 @@ def generate_json_schemas(base_dir: Path, out_dir: Path) -> List[Tuple[Type[Base
         models = _collect_models(module)
 
         for model in models:
-            # Resolve postponed annotations (from __future__ import annotations)
-            # so model_json_schema() can evaluate types like UUID/EmailStr.
             model.model_rebuild()
             schema: Dict[str, Any] = model.model_json_schema()
             out_path = out_dir / _schema_filename(model)

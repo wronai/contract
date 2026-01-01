@@ -1,0 +1,32 @@
+{
+  "description": "Represents an aggregated system summary.",
+  "properties": {
+    "active_users": {
+      "description": "Number of active users",
+      "minimum": 0,
+      "title": "Active Users",
+      "type": "integer"
+    },
+    "generated_at": {
+      "description": "Generation timestamp (RFC3339)",
+      "examples": [
+        "2026-01-01T12:00:00Z"
+      ],
+      "title": "Generated At",
+      "type": "string"
+    },
+    "total_users": {
+      "description": "Total number of users",
+      "minimum": 0,
+      "title": "Total Users",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "total_users",
+    "active_users",
+    "generated_at"
+  ],
+  "title": "Summary",
+  "type": "object"
+}

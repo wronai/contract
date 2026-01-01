@@ -238,3 +238,84 @@ describe('Feedback Generator', () => {
     expect(feedback.summary).toContain('1 error');
   });
 });
+
+describe('SDK Generator', () => {
+  const { createSDKGenerator, createEmptyContract } = require('../../src/core/contract-ai');
+
+  it('should create SDK generator', () => {
+    const generator = createSDKGenerator();
+    expect(generator).toBeDefined();
+  });
+
+  it('should generate SDK from contract', () => {
+    const contract = createEmptyContract('Test App');
+    contract.definition.entities = [
+      {
+        name: 'User',
+        fields: [
+          { name: 'id', type: 'UUID', annotations: { generated: true } },
+          { name: 'email', type: 'Email', annotations: { required: true } },
+          { name: 'name', type: 'String', annotations: { required: true } }
+        ]
+      }
+    ];
+
+    const generator = createSDKGenerator();
+    const sdk = generator.generate(contract);
+
+    expect(sdk.types).toBeDefined();
+    expect(sdk.types).toContain('interface User');
+    expect(sdk.types).toContain('CreateUserInput');
+    expect(sdk.files.size).toBeGreaterThan(0);
+  });
+
+  it('should generate Zod schemas', () => {
+    const contract = createEmptyContract('Test');
+    contract.definition.entities = [
+      {
+        name: 'Product',
+        fields: [
+          { name: 'id', type: 'UUID' },
+          { name: 'price', type: 'Decimal' }
+        ]
+      }
+    ];
+
+    const generator = createSDKGenerator({ generateZodSchemas: true });
+    const sdk = generator.generate(contract);
+
+    expect(sdk.zodSchemas).toBeDefined();
+    expect(sdk.zodSchemas).toContain('productSchema');
+    expect(sdk.zodSchemas).toContain('z.number()');
+  });
+
+  it('should generate API client', () => {
+    const contract = createEmptyContract('Test');
+    contract.definition.entities = [
+      { name: 'Order', fields: [{ name: 'id', type: 'UUID' }] }
+    ];
+
+    const generator = createSDKGenerator({ generateClient: true });
+    const sdk = generator.generate(contract);
+
+    expect(sdk.client).toBeDefined();
+    expect(sdk.client).toContain('class ApiClient');
+    expect(sdk.client).toContain('listOrders');
+    expect(sdk.client).toContain('createOrder');
+  });
+
+  it('should generate React hooks', () => {
+    const contract = createEmptyContract('Test');
+    contract.definition.entities = [
+      { name: 'Task', fields: [{ name: 'id', type: 'UUID' }] }
+    ];
+
+    const generator = createSDKGenerator({ generateHooks: true });
+    const sdk = generator.generate(contract);
+
+    expect(sdk.hooks).toBeDefined();
+    expect(sdk.hooks).toContain('useTaskList');
+    expect(sdk.hooks).toContain('useTask');
+    expect(sdk.hooks).toContain('useTaskMutations');
+  });
+});

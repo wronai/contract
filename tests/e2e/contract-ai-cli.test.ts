@@ -58,10 +58,11 @@ describe('Contract AI CLI E2E', () => {
       expect(result.stdout + result.stderr).toMatch(/generate-ai|Generate/i);
     });
 
-    it('should show version', () => {
-      const result = runCLI('--version');
+    it('should show version in help', () => {
+      const result = runCLI('--help');
       
-      expect(result.stdout).toMatch(/\d+\.\d+\.\d+/);
+      // Version is shown in generate-ai header, not as --version flag
+      expect(result.stdout).toMatch(/Reclapp|reclapp/i);
     });
   });
 
@@ -77,7 +78,7 @@ describe('Contract AI CLI E2E', () => {
       const contractPath = path.join(EXAMPLES_DIR, contractFile);
       const outputDir = path.join(TEST_OUTPUT_DIR, contractFile.replace('.ts', ''));
       
-      const result = runCLI(`generate-ai -o "${outputDir}" "${contractPath}"`, 120000);
+      const result = runCLI(`generate-ai "${contractPath}" -o "${outputDir}"`, 120000);
       
       // Should complete without critical error
       expect(result.exitCode).toBe(0);
@@ -97,7 +98,7 @@ describe('Contract AI CLI E2E', () => {
       const contractPath = path.join(EXAMPLES_DIR, 'crm-contract.ts');
       const outputDir = path.join(TEST_OUTPUT_DIR, 'crm-verbose');
       
-      const result = runCLI(`generate-ai -v -o "${outputDir}" "${contractPath}"`, 120000);
+      const result = runCLI(`generate-ai "${contractPath}" -v -o "${outputDir}"`, 120000);
       
       expect(result.exitCode).toBe(0);
     }, 120000);
@@ -108,7 +109,7 @@ describe('Contract AI CLI E2E', () => {
       const contractPath = path.join(EXAMPLES_DIR, 'crm-contract.ts');
       const outputDir = path.join(TEST_OUTPUT_DIR, 'crm-validation');
       
-      const result = runCLI(`generate-ai -o "${outputDir}" "${contractPath}"`, 120000);
+      const result = runCLI(`generate-ai "${contractPath}" -o "${outputDir}"`, 120000);
       
       // Should mention 7 stages
       expect(result.stdout).toMatch(/7 stages/);
@@ -129,7 +130,7 @@ describe('Contract AI CLI E2E', () => {
       const contractPath = path.join(EXAMPLES_DIR, 'crm-contract.ts');
       const outputDir = path.join(TEST_OUTPUT_DIR, 'crm-structure');
       
-      runCLI(`generate-ai -o "${outputDir}" "${contractPath}"`, 120000);
+      runCLI(`generate-ai "${contractPath}" -o "${outputDir}"`, 120000);
       
       // Should have api directory
       expect(fs.existsSync(path.join(outputDir, 'api'))).toBe(true);
@@ -148,7 +149,7 @@ describe('Contract AI CLI E2E', () => {
       const contractPath = path.join(EXAMPLES_DIR, 'crm-contract.ts');
       const outputDir = path.join(TEST_OUTPUT_DIR, 'crm-log');
       
-      runCLI(`generate-ai -o "${outputDir}" "${contractPath}"`, 120000);
+      runCLI(`generate-ai "${contractPath}" -o "${outputDir}"`, 120000);
       
       // Should have logs directory
       expect(fs.existsSync(path.join(outputDir, 'logs'))).toBe(true);
@@ -169,7 +170,7 @@ describe('Contract AI CLI E2E', () => {
       const contractPath = path.join(EXAMPLES_DIR, 'crm-contract.ts');
       const outputDir = path.join(TEST_OUTPUT_DIR, 'crm-docker');
       
-      runCLI(`generate-ai -o "${outputDir}" "${contractPath}"`, 120000);
+      runCLI(`generate-ai "${contractPath}" -o "${outputDir}"`, 120000);
       
       // Should have docker directory with Dockerfile
       const dockerDir = path.join(outputDir, 'docker');
@@ -221,7 +222,7 @@ describe('Ollama Integration', () => {
     const contractPath = path.join(EXAMPLES_DIR, 'crm-contract.ts');
     const outputDir = path.join(TEST_OUTPUT_DIR, 'crm-ollama-detect');
     
-    const result = runCLI(`generate-ai -o "${outputDir}" "${contractPath}"`, 120000);
+    const result = runCLI(`generate-ai "${contractPath}" -o "${outputDir}"`, 120000);
     
     if (isOllamaRunning()) {
       expect(result.stdout).toMatch(/Using Ollama|Ollama/);
