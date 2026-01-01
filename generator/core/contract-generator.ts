@@ -1,0 +1,1496 @@
+/**
+ * Contract Generator - Generate Applications from ReclappContract
+ * 
+ * This generator works directly with .reclapp.ts TypeScript contracts.
+ * It generates full-stack applications including API, frontend, and infrastructure.
+ */
+
+import * as fs from 'fs';
+import * as path from 'path';
+import type { 
+  ReclappContract, 
+  Entity, 
+  Event, 
+  Pipeline, 
+  Alert, 
+  Dashboard, 
+  Workflow,
+  ApiConfig,
+  EnvVar,
+  EntityField
+} from '../../contracts/dsl-types';
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+export interface ContractGeneratorOptions {
+  output: string;
+  target?: 'all' | 'api' | 'frontend' | 'docker' | 'database';
+  dryRun?: boolean;
+  verbose?: boolean;
+}
+
+export interface GeneratedFile {
+  path: string;
+  content: string;
+  type: 'source' | 'config' | 'docker' | 'sql' | 'readme';
+}
+
+export interface GenerationResult {
+  success: boolean;
+  files: GeneratedFile[];
+  errors: string[];
+  warnings: string[];
+  stats: {
+    totalFiles: number;
+    entities: number;
+    routes: number;
+    components: number;
+  };
+}
+
+// ============================================================================
+// CONTRACT GENERATOR
+// ============================================================================
+
+export class ContractGenerator {
+  private contract: ReclappContract;
+  private options: ContractGeneratorOptions;
+  private files: GeneratedFile[] = [];
+  private errors: string[] = [];
+  private warnings: string[] = [];
+
+  constructor(contract: ReclappContract, options: ContractGeneratorOptions) {
+    this.contract = contract;
+    this.options = {
+      target: 'all',
+      dryRun: false,
+      verbose: false,
+      ...options
+    };
+  }
+
+  async generate(): Promise<GenerationResult> {
+    const target = this.options.target || 'all';
+    
+    this.log(`Generating ${target} for ${this.contract.app.name}...`);
+
+    try {
+      if (target === 'all' || target === 'api') {
+        this.generateApi();
+      }
+      if (target === 'all' || target === 'frontend') {
+        this.generateFrontend();
+      }
+      if (target === 'all' || target === 'database') {
+        this.generateDatabase();
+      }
+      if (target === 'all' || target === 'docker') {
+        this.generateDocker();
+      }
+      if (target === 'all') {
+        this.generateProjectFiles();
+      }
+
+      // Write files unless dry run
+      if (!this.options.dryRun) {
+        await this.writeFiles();
+      }
+
+    } catch (error) {
+      this.errors.push(`Generation error: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
+    return {
+      success: this.errors.length === 0,
+      files: this.files,
+      errors: this.errors,
+      warnings: this.warnings,
+      stats: {
+        totalFiles: this.files.length,
+        entities: this.contract.entities?.length || 0,
+        routes: this.contract.api?.resources?.length || 0,
+        components: (this.contract.entities?.length || 0) + (this.contract.dashboards?.length || 0)
+      }
+    };
+  }
+
+  // ============================================================================
+  // API GENERATION
+  // ============================================================================
+
+  private generateApi(): void {
+    const entities = this.contract.entities || [];
+    const backend = this.contract.backend;
+    const api = this.contract.api;
+
+    // Main server file
+    this.addFile('api/src/server.ts', this.generateServerTs(), 'source');
+
+    // Entity routes
+    for (const entity of entities) {
+      this.addFile(
+        `api/src/routes/${this.toKebabCase(entity.name)}.ts`,
+        this.generateEntityRoutes(entity),
+        'source'
+      );
+    }
+
+    // Entity models
+    for (const entity of entities) {
+      this.addFile(
+        `api/src/models/${this.toKebabCase(entity.name)}.ts`,
+        this.generateEntityModel(entity),
+        'source'
+      );
+    }
+
+    // API index
+    this.addFile('api/src/routes/index.ts', this.generateRoutesIndex(), 'source');
+
+    // Package.json
+    this.addFile('api/package.json', this.generateApiPackageJson(), 'config');
+
+    // tsconfig.json
+    this.addFile('api/tsconfig.json', this.generateTsConfig(), 'config');
+  }
+
+  private generateServerTs(): string {
+    const entities = this.contract.entities || [];
+    const backend = this.contract.backend;
+    const port = backend?.port || '8080';
+
+    const imports = entities.map(e => 
+      `import ${this.toCamelCase(e.name)}Routes from './routes/${this.toKebabCase(e.name)}';`
+    ).join('\n');
+
+    const routeSetup = entities.map(e =>
+      `app.use('/api/${this.toKebabCase(e.name)}s', ${this.toCamelCase(e.name)}Routes);`
+    ).join('\n  ');
+
+    return `/**
+ * ${this.contract.app.name} - API Server
+ * Generated by Reclapp Generator
+ * Version: ${this.contract.app.version}
+ */
+
+import express, { Request, Response, NextFunction } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import { createServer } from 'http';
+
+${imports}
+
+const app = express();
+const server = createServer(app);
+
+// Middleware
+app.use(helmet());
+app.use(cors({ 
+  origin: process.env.CORS_ORIGIN || '*',
+  credentials: true
+}));
+app.use(express.json());
+
+// Health check
+app.get('/api/health', (req: Request, res: Response) => {
+  res.json({ 
+    status: 'healthy',
+    name: '${this.contract.app.name}',
+    version: '${this.contract.app.version}',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Routes
+${routeSetup}
+
+// 404 handler
+app.use((req: Request, res: Response) => {
+  res.status(404).json({ error: 'Not found' });
+});
+
+// Error handler
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error('Error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+const PORT = process.env.PORT || ${port.toString().replace(/[^0-9]/g, '') || '8080'};
+
+server.listen(PORT, () => {
+  console.log(\`
+╔═══════════════════════════════════════════════════════════════╗
+║  ${this.contract.app.name.padEnd(57)}║
+║  API Server v${this.contract.app.version.padEnd(46)}║
+╠═══════════════════════════════════════════════════════════════╣
+║  Port: \${PORT}                                                  ║
+║  Environment: \${process.env.NODE_ENV || 'development'}                       ║
+╚═══════════════════════════════════════════════════════════════╝
+  \`);
+});
+
+export default app;
+`;
+  }
+
+  private generateEntityRoutes(entity: Entity): string {
+    const name = entity.name;
+    const nameLower = this.toCamelCase(name);
+    const fields = entity.fields || [];
+
+    return `/**
+ * ${name} Routes
+ * Generated by Reclapp Generator
+ */
+
+import { Router, Request, Response } from 'express';
+import { ${name}, Create${name}Input, Update${name}Input } from '../models/${this.toKebabCase(name)}';
+
+const router = Router();
+
+// In-memory storage (TODO: replace with database)
+let ${nameLower}s: ${name}[] = [];
+let nextId = 1;
+
+// List all ${name}s
+router.get('/', (req: Request, res: Response) => {
+  const { limit = 50, offset = 0, sort, order = 'asc' } = req.query;
+  
+  let result = [...${nameLower}s];
+  
+  // Sorting
+  if (sort && typeof sort === 'string') {
+    result.sort((a, b) => {
+      const aVal = (a as any)[sort];
+      const bVal = (b as any)[sort];
+      return order === 'desc' ? (bVal > aVal ? 1 : -1) : (aVal > bVal ? 1 : -1);
+    });
+  }
+  
+  // Pagination
+  const total = result.length;
+  result = result.slice(Number(offset), Number(offset) + Number(limit));
+  
+  res.json({
+    data: result,
+    meta: { total, limit: Number(limit), offset: Number(offset) }
+  });
+});
+
+// Get ${name} by ID
+router.get('/:id', (req: Request, res: Response) => {
+  const item = ${nameLower}s.find(i => i.id === req.params.id);
+  if (!item) {
+    return res.status(404).json({ error: '${name} not found' });
+  }
+  res.json({ data: item });
+});
+
+// Create ${name}
+router.post('/', (req: Request, res: Response) => {
+  const input: Create${name}Input = req.body;
+  
+  const item: ${name} = {
+    id: String(nextId++),
+    ...input,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  
+  ${nameLower}s.push(item);
+  res.status(201).json({ data: item });
+});
+
+// Update ${name}
+router.put('/:id', (req: Request, res: Response) => {
+  const index = ${nameLower}s.findIndex(i => i.id === req.params.id);
+  if (index === -1) {
+    return res.status(404).json({ error: '${name} not found' });
+  }
+  
+  const input: Update${name}Input = req.body;
+  ${nameLower}s[index] = {
+    ...${nameLower}s[index],
+    ...input,
+    updatedAt: new Date().toISOString()
+  };
+  
+  res.json({ data: ${nameLower}s[index] });
+});
+
+// Partial update ${name}
+router.patch('/:id', (req: Request, res: Response) => {
+  const index = ${nameLower}s.findIndex(i => i.id === req.params.id);
+  if (index === -1) {
+    return res.status(404).json({ error: '${name} not found' });
+  }
+  
+  ${nameLower}s[index] = {
+    ...${nameLower}s[index],
+    ...req.body,
+    updatedAt: new Date().toISOString()
+  };
+  
+  res.json({ data: ${nameLower}s[index] });
+});
+
+// Delete ${name}
+router.delete('/:id', (req: Request, res: Response) => {
+  const index = ${nameLower}s.findIndex(i => i.id === req.params.id);
+  if (index === -1) {
+    return res.status(404).json({ error: '${name} not found' });
+  }
+  
+  ${nameLower}s.splice(index, 1);
+  res.status(204).send();
+});
+
+export default router;
+`;
+  }
+
+  private generateEntityModel(entity: Entity): string {
+    const fields = entity.fields || [];
+    
+    const interfaceFields = fields.map(f => {
+      const tsType = this.fieldTypeToTs(f.type);
+      const optional = f.nullable ? '?' : '';
+      return `  ${f.name}${optional}: ${tsType};`;
+    }).join('\n');
+
+    const createFields = fields
+      .filter(f => !f.annotations?.generated)
+      .map(f => {
+        const tsType = this.fieldTypeToTs(f.type);
+        const optional = f.nullable || f.annotations?.default !== undefined ? '?' : '';
+        return `  ${f.name}${optional}: ${tsType};`;
+      }).join('\n');
+
+    return `/**
+ * ${entity.name} Model
+ * Generated by Reclapp Generator
+ */
+
+export interface ${entity.name} {
+  id: string;
+${interfaceFields}
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Create${entity.name}Input {
+${createFields}
+}
+
+export interface Update${entity.name}Input extends Partial<Create${entity.name}Input> {}
+
+export type ${entity.name}Field = keyof ${entity.name};
+`;
+  }
+
+  private generateRoutesIndex(): string {
+    const entities = this.contract.entities || [];
+    
+    const imports = entities.map(e =>
+      `import ${this.toCamelCase(e.name)}Routes from './${this.toKebabCase(e.name)}';`
+    ).join('\n');
+
+    const exports = entities.map(e =>
+      `  ${this.toCamelCase(e.name)}: ${this.toCamelCase(e.name)}Routes,`
+    ).join('\n');
+
+    return `/**
+ * Routes Index
+ * Generated by Reclapp Generator
+ */
+
+${imports}
+
+export const routes = {
+${exports}
+};
+
+export default routes;
+`;
+  }
+
+  private generateApiPackageJson(): string {
+    return JSON.stringify({
+      name: `${this.toKebabCase(this.contract.app.name)}-api`,
+      version: this.contract.app.version,
+      description: this.contract.app.description,
+      main: "dist/server.js",
+      scripts: {
+        dev: "ts-node-dev --respawn --transpile-only src/server.ts",
+        build: "tsc",
+        start: "node dist/server.js",
+        lint: "eslint src/**/*.ts"
+      },
+      dependencies: {
+        express: "^4.18.2",
+        cors: "^2.8.5",
+        helmet: "^7.1.0",
+        dotenv: "^16.3.1"
+      },
+      devDependencies: {
+        "@types/express": "^4.17.21",
+        "@types/cors": "^2.8.17",
+        "@types/node": "^20.10.0",
+        typescript: "^5.3.2",
+        "ts-node-dev": "^2.0.0"
+      }
+    }, null, 2);
+  }
+
+  private generateTsConfig(): string {
+    return JSON.stringify({
+      compilerOptions: {
+        target: "ES2022",
+        module: "commonjs",
+        lib: ["ES2022"],
+        outDir: "./dist",
+        rootDir: "./src",
+        strict: true,
+        esModuleInterop: true,
+        skipLibCheck: true,
+        forceConsistentCasingInFileNames: true,
+        resolveJsonModule: true,
+        declaration: true
+      },
+      include: ["src/**/*"],
+      exclude: ["node_modules", "dist"]
+    }, null, 2);
+  }
+
+  // ============================================================================
+  // FRONTEND GENERATION
+  // ============================================================================
+
+  private generateFrontend(): void {
+    const entities = this.contract.entities || [];
+    const dashboards = this.contract.dashboards || [];
+    const frontend = this.contract.frontend;
+
+    // Main App
+    this.addFile('frontend/src/App.tsx', this.generateAppTsx(), 'source');
+    this.addFile('frontend/src/main.tsx', this.generateMainTsx(), 'source');
+
+    // Entity components
+    for (const entity of entities) {
+      this.addFile(
+        `frontend/src/components/${entity.name}List.tsx`,
+        this.generateEntityListComponent(entity),
+        'source'
+      );
+    }
+
+    // Dashboard components
+    for (const dashboard of dashboards) {
+      this.addFile(
+        `frontend/src/components/dashboards/${this.toPascalCase(dashboard.name)}Dashboard.tsx`,
+        this.generateDashboardComponent(dashboard),
+        'source'
+      );
+    }
+
+    // API hooks
+    this.addFile('frontend/src/hooks/useApi.ts', this.generateApiHooks(), 'source');
+
+    // Config files
+    this.addFile('frontend/package.json', this.generateFrontendPackageJson(), 'config');
+    this.addFile('frontend/vite.config.ts', this.generateViteConfig(), 'config');
+    this.addFile('frontend/tsconfig.json', this.generateFrontendTsConfig(), 'config');
+    this.addFile('frontend/index.html', this.generateIndexHtml(), 'source');
+    this.addFile('frontend/tailwind.config.js', this.generateTailwindConfig(), 'config');
+    this.addFile('frontend/postcss.config.js', this.generatePostcssConfig(), 'config');
+    this.addFile('frontend/src/index.css', this.generateIndexCss(), 'source');
+  }
+
+  private generateAppTsx(): string {
+    const entities = this.contract.entities || [];
+    const dashboards = this.contract.dashboards || [];
+    const navigation = this.contract.frontend?.layout?.navigation || [];
+
+    const entityImports = entities.map(e =>
+      `import ${e.name}List from './components/${e.name}List';`
+    ).join('\n');
+
+    const dashboardImports = dashboards.map(d =>
+      `import ${this.toPascalCase(d.name)}Dashboard from './components/dashboards/${this.toPascalCase(d.name)}Dashboard';`
+    ).join('\n');
+
+    const navItems = navigation.length > 0 
+      ? navigation.map(n => `{ id: '${n.path}', label: '${n.label}', icon: '${n.icon}' }`).join(',\n    ')
+      : entities.map(e => `{ id: '/${this.toKebabCase(e.name)}s', label: '${e.name}s', icon: 'list' }`).join(',\n    ');
+
+    return `/**
+ * ${this.contract.app.name} - Frontend App
+ * Generated by Reclapp Generator
+ */
+
+import React, { useState } from 'react';
+import './index.css';
+${entityImports}
+${dashboardImports}
+
+interface NavItem {
+  id: string;
+  label: string;
+  icon: string;
+}
+
+function App() {
+  const [activeRoute, setActiveRoute] = useState('/');
+  
+  const navItems: NavItem[] = [
+    { id: '/', label: 'Dashboard', icon: 'home' },
+    ${navItems}
+  ];
+
+  const renderContent = () => {
+    switch (activeRoute) {
+${entities.map(e => `      case '/${this.toKebabCase(e.name)}s':
+        return <${e.name}List />;`).join('\n')}
+${dashboards.map(d => `      case '/dashboard/${this.toKebabCase(d.name)}':
+        return <${this.toPascalCase(d.name)}Dashboard />;`).join('\n')}
+      default:
+        return (
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold text-gray-900">Welcome to ${this.contract.app.name}</h2>
+            <p className="text-gray-600 mt-2">${this.contract.app.description || 'Select an item from the sidebar to get started.'}</p>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white border-r border-gray-200 min-h-screen">
+        <div className="p-4 border-b border-gray-200">
+          <h1 className="text-xl font-bold text-gray-900">${this.contract.app.name}</h1>
+          <p className="text-xs text-gray-500">v${this.contract.app.version}</p>
+        </div>
+        <nav className="p-4 space-y-1">
+          {navItems.map(item => (
+            <button
+              key={item.id}
+              onClick={() => setActiveRoute(item.id)}
+              className={\`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors \${
+                activeRoute === item.id
+                  ? 'bg-blue-50 text-blue-700 font-medium'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }\`}
+            >
+              <span className="mr-3">•</span>
+              {item.label}
+            </button>
+          ))}
+        </nav>
+      </aside>
+
+      {/* Main content */}
+      <main className="flex-1 p-8">
+        {renderContent()}
+      </main>
+    </div>
+  );
+}
+
+export default App;
+`;
+  }
+
+  private generateMainTsx(): string {
+    return `import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+`;
+  }
+
+  private generateEntityListComponent(entity: Entity): string {
+    const name = entity.name;
+    const fields = entity.fields?.slice(0, 5) || [];
+
+    return `/**
+ * ${name} List Component
+ * Generated by Reclapp Generator
+ */
+
+import React, { useEffect, useState } from 'react';
+import { use${name}s, useCreate${name}, useDelete${name} } from '../hooks/useApi';
+
+interface ${name} {
+  id: string;
+${fields.map(f => `  ${f.name}: ${this.fieldTypeToTs(f.type)};`).join('\n')}
+  createdAt: string;
+  updatedAt: string;
+}
+
+function ${name}List() {
+  const { data, loading, error, refetch } = use${name}s();
+  const { create, loading: creating } = useCreate${name}();
+  const { remove } = useDelete${name}();
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState<Partial<${name}>>({});
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+        Error: {error}
+      </div>
+    );
+  }
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await create(formData);
+    setFormData({});
+    setShowForm(false);
+    refetch();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this item?')) {
+      await remove(id);
+      refetch();
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-900">${name}s</h2>
+        <button
+          onClick={() => setShowForm(true)}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          + Add ${name}
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-medium mb-4">Create ${name}</h3>
+          <form onSubmit={handleCreate} className="space-y-4">
+${fields.filter(f => !f.annotations?.generated).map(f => `            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">${f.name}</label>
+              <input
+                type="${this.getInputType(f.type)}"
+                value={formData.${f.name} || ''}
+                onChange={(e) => setFormData({ ...formData, ${f.name}: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                ${!f.nullable ? 'required' : ''}
+              />
+            </div>`).join('\n')}
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={creating}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                {creating ? 'Creating...' : 'Create'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+${fields.slice(0, 4).map(f => `              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${f.name}</th>`).join('\n')}
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {data?.data?.map((item: ${name}) => (
+              <tr key={item.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">{item.id}</td>
+${fields.slice(0, 4).map(f => `                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{String(item.${f.name} ?? '-')}</td>`).join('\n')}
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {(!data?.data || data.data.length === 0) && (
+              <tr>
+                <td colSpan={${fields.slice(0, 4).length + 2}} className="px-6 py-12 text-center text-gray-500">
+                  No ${name.toLowerCase()}s found. Create one to get started.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+export default ${name}List;
+`;
+  }
+
+  private generateDashboardComponent(dashboard: Dashboard): string {
+    const name = dashboard.name;
+    const metrics = dashboard.metrics || [];
+
+    return `/**
+ * ${name} Dashboard
+ * Generated by Reclapp Generator
+ */
+
+import React, { useEffect, useState } from 'react';
+
+interface MetricData {
+  value: number | string;
+  change?: number;
+}
+
+function ${this.toPascalCase(name)}Dashboard() {
+  const [loading, setLoading] = useState(true);
+  const [metrics, setMetrics] = useState<Record<string, MetricData>>({});
+
+  useEffect(() => {
+    // Simulate loading metrics
+    setTimeout(() => {
+      setMetrics({
+${metrics.map(m => `        '${m}': { value: Math.floor(Math.random() * 1000), change: Math.random() * 20 - 10 },`).join('\n')}
+      });
+      setLoading(false);
+    }, 500);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-gray-900">${name}</h2>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+${metrics.map(m => `        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-sm font-medium text-gray-500">${m}</h3>
+          <p className="text-3xl font-bold text-gray-900 mt-2">
+            {metrics['${m}']?.value ?? '--'}
+          </p>
+          {metrics['${m}']?.change !== undefined && (
+            <p className={\`text-sm mt-1 \${metrics['${m}'].change! >= 0 ? 'text-green-600' : 'text-red-600'}\`}>
+              {metrics['${m}'].change! >= 0 ? '↑' : '↓'} {Math.abs(metrics['${m}'].change!).toFixed(1)}%
+            </p>
+          )}
+        </div>`).join('\n')}
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Activity</h3>
+        <div className="h-64 flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
+          Chart placeholder
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default ${this.toPascalCase(name)}Dashboard;
+`;
+  }
+
+  private generateApiHooks(): string {
+    const entities = this.contract.entities || [];
+
+    const hooks = entities.map(e => {
+      const name = e.name;
+      const kebab = this.toKebabCase(name);
+
+      return `
+// ${name} hooks
+export function use${name}s() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetch${name}s = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(\`\${API_BASE}/api/${kebab}s\`);
+      if (!response.ok) throw new Error('Failed to fetch ${name}s');
+      const result = await response.json();
+      setData(result);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetch${name}s(); }, []);
+
+  return { data, loading, error, refetch: fetch${name}s };
+}
+
+export function useCreate${name}() {
+  const [loading, setLoading] = useState(false);
+
+  const create = async (data: any) => {
+    setLoading(true);
+    try {
+      const response = await fetch(\`\${API_BASE}/api/${kebab}s\`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Failed to create ${name}');
+      return await response.json();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { create, loading };
+}
+
+export function useDelete${name}() {
+  const remove = async (id: string) => {
+    const response = await fetch(\`\${API_BASE}/api/${kebab}s/\${id}\`, { 
+      method: 'DELETE' 
+    });
+    if (!response.ok) throw new Error('Failed to delete ${name}');
+  };
+  return { remove };
+}
+`;
+    }).join('\n');
+
+    return `/**
+ * API Hooks
+ * Generated by Reclapp Generator
+ */
+
+import { useState, useEffect } from 'react';
+
+const API_BASE = import.meta.env.VITE_API_URL || '';
+${hooks}
+`;
+  }
+
+  private generateFrontendPackageJson(): string {
+    return JSON.stringify({
+      name: `${this.toKebabCase(this.contract.app.name)}-frontend`,
+      version: this.contract.app.version,
+      type: "module",
+      scripts: {
+        dev: "vite",
+        build: "tsc && vite build",
+        preview: "vite preview"
+      },
+      dependencies: {
+        react: "^18.2.0",
+        "react-dom": "^18.2.0"
+      },
+      devDependencies: {
+        "@types/react": "^18.2.43",
+        "@types/react-dom": "^18.2.17",
+        "@vitejs/plugin-react": "^4.2.1",
+        autoprefixer: "^10.4.16",
+        postcss: "^8.4.32",
+        tailwindcss: "^3.3.6",
+        typescript: "^5.3.2",
+        vite: "^5.0.8"
+      }
+    }, null, 2);
+  }
+
+  private generateViteConfig(): string {
+    return `import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    port: 3000,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
+      }
+    }
+  }
+});
+`;
+  }
+
+  private generateFrontendTsConfig(): string {
+    return JSON.stringify({
+      compilerOptions: {
+        target: "ES2020",
+        useDefineForClassFields: true,
+        lib: ["ES2020", "DOM", "DOM.Iterable"],
+        module: "ESNext",
+        skipLibCheck: true,
+        moduleResolution: "bundler",
+        allowImportingTsExtensions: true,
+        resolveJsonModule: true,
+        isolatedModules: true,
+        noEmit: true,
+        jsx: "react-jsx",
+        strict: true,
+        noUnusedLocals: true,
+        noUnusedParameters: true,
+        noFallthroughCasesInSwitch: true
+      },
+      include: ["src"],
+      references: [{ path: "./tsconfig.node.json" }]
+    }, null, 2);
+  }
+
+  private generateIndexHtml(): string {
+    return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${this.contract.app.name}</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+`;
+  }
+
+  private generateTailwindConfig(): string {
+    return `/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  theme: {
+    extend: {}
+  },
+  plugins: []
+};
+`;
+  }
+
+  private generatePostcssConfig(): string {
+    return `export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {}
+  }
+};
+`;
+  }
+
+  private generateIndexCss(): string {
+    return `@tailwind base;
+@tailwind components;
+@tailwind utilities;
+`;
+  }
+
+  // ============================================================================
+  // DATABASE GENERATION
+  // ============================================================================
+
+  private generateDatabase(): void {
+    const entities = this.contract.entities || [];
+
+    this.addFile(
+      'database/migrations/001_init.sql',
+      this.generateSqlMigration(entities),
+      'sql'
+    );
+  }
+
+  private generateSqlMigration(entities: Entity[]): string {
+    const tables = entities.map(entity => {
+      const columns = (entity.fields || []).map(f => {
+        const sqlType = this.fieldTypeToSql(f.type);
+        const nullable = f.nullable ? '' : ' NOT NULL';
+        const unique = f.annotations?.unique ? ' UNIQUE' : '';
+        const defaultVal = f.annotations?.default !== undefined 
+          ? ` DEFAULT ${this.sqlDefault(f.annotations.default, f.type)}` 
+          : '';
+        return `  ${this.toSnakeCase(f.name)} ${sqlType}${nullable}${unique}${defaultVal}`;
+      }).join(',\n');
+
+      return `-- ${entity.name} table
+CREATE TABLE IF NOT EXISTS ${this.toSnakeCase(entity.name)}s (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+${columns},
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Trigger to update updated_at
+CREATE OR REPLACE FUNCTION update_${this.toSnakeCase(entity.name)}_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER ${this.toSnakeCase(entity.name)}_updated_at
+  BEFORE UPDATE ON ${this.toSnakeCase(entity.name)}s
+  FOR EACH ROW EXECUTE FUNCTION update_${this.toSnakeCase(entity.name)}_updated_at();
+`;
+    }).join('\n\n');
+
+    return `-- ${this.contract.app.name} Database Migration
+-- Generated by Reclapp Generator
+-- Version: ${this.contract.app.version}
+
+${tables}
+`;
+  }
+
+  // ============================================================================
+  // DOCKER GENERATION
+  // ============================================================================
+
+  private generateDocker(): void {
+    this.addFile('docker/Dockerfile.api', this.generateApiDockerfile(), 'docker');
+    this.addFile('docker/Dockerfile.frontend', this.generateFrontendDockerfile(), 'docker');
+    this.addFile('docker-compose.yml', this.generateDockerCompose(), 'docker');
+  }
+
+  private generateApiDockerfile(): string {
+    return `FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+EXPOSE 8080
+CMD ["node", "dist/server.js"]
+`;
+  }
+
+  private generateFrontendDockerfile(): string {
+    return `FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+`;
+  }
+
+  private generateDockerCompose(): string {
+    const services = this.contract.docker?.services || [];
+    const hasCustomDocker = services.length > 0;
+
+    if (hasCustomDocker) {
+      const serviceYaml = services.map(s => {
+        const lines = [`  ${s.name}:`];
+        if (s.build) lines.push(`    build: ${s.build}`);
+        if (s.image) lines.push(`    image: ${s.image}`);
+        if (s.ports) lines.push(`    ports:\n${s.ports.map(p => `      - "${p}"`).join('\n')}`);
+        if (s.envFile) lines.push(`    env_file: ${s.envFile}`);
+        if (s.dependsOn) lines.push(`    depends_on:\n${s.dependsOn.map(d => `      - ${d}`).join('\n')}`);
+        if (s.volumes) lines.push(`    volumes:\n${s.volumes.map(v => `      - ${v}`).join('\n')}`);
+        return lines.join('\n');
+      }).join('\n\n');
+
+      const volumesYaml = this.contract.docker?.volumes?.map(v => `  ${v}:`).join('\n') || '';
+
+      return `version: '3.8'
+
+services:
+${serviceYaml}
+
+${volumesYaml ? `volumes:\n${volumesYaml}` : ''}
+`;
+    }
+
+    return `version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: ../docker/Dockerfile.api
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+    depends_on:
+      - postgres
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${this.toSnakeCase(this.contract.app.name)}
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: \${DB_PASSWORD:-password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
+`;
+  }
+
+  // ============================================================================
+  // PROJECT FILES
+  // ============================================================================
+
+  private generateProjectFiles(): void {
+    this.addFile('README.md', this.generateReadme(), 'readme');
+    this.addFile('.env.example', this.generateEnvExample(), 'config');
+    this.addFile('Makefile', this.generateMakefile(), 'config');
+    this.addFile('.gitignore', this.generateGitignore(), 'config');
+  }
+
+  private generateReadme(): string {
+    return `# ${this.contract.app.name}
+
+${this.contract.app.description}
+
+**Version:** ${this.contract.app.version}  
+**Generated by:** Reclapp Generator
+
+## Quick Start
+
+\`\`\`bash
+# Install dependencies
+cd api && npm install
+cd ../frontend && npm install
+
+# Start development servers
+# Terminal 1 - API
+cd api && npm run dev
+
+# Terminal 2 - Frontend
+cd frontend && npm run dev
+\`\`\`
+
+## Docker
+
+\`\`\`bash
+# Start all services
+docker-compose up -d
+
+# Stop services
+docker-compose down
+\`\`\`
+
+## Project Structure
+
+\`\`\`
+${this.toKebabCase(this.contract.app.name)}/
+├── api/                  # Express API server
+│   ├── src/
+│   │   ├── routes/       # API routes
+│   │   ├── models/       # TypeScript models
+│   │   └── server.ts     # Main server
+│   └── package.json
+├── frontend/             # React frontend
+│   ├── src/
+│   │   ├── components/   # React components
+│   │   ├── hooks/        # API hooks
+│   │   └── App.tsx       # Main app
+│   └── package.json
+├── database/
+│   └── migrations/       # SQL migrations
+├── docker/
+│   ├── Dockerfile.api
+│   └── Dockerfile.frontend
+├── docker-compose.yml
+└── README.md
+\`\`\`
+
+## API Endpoints
+
+${(this.contract.entities || []).map(e => `
+### ${e.name}s
+
+- \`GET /api/${this.toKebabCase(e.name)}s\` - List all
+- \`GET /api/${this.toKebabCase(e.name)}s/:id\` - Get by ID
+- \`POST /api/${this.toKebabCase(e.name)}s\` - Create
+- \`PUT /api/${this.toKebabCase(e.name)}s/:id\` - Update
+- \`DELETE /api/${this.toKebabCase(e.name)}s/:id\` - Delete
+`).join('')}
+
+## License
+
+${this.contract.app.license || 'MIT'}
+`;
+  }
+
+  private generateEnvExample(): string {
+    const envVars = this.contract.env || [];
+    
+    const vars = envVars.map(v => {
+      const value = v.default !== undefined ? v.default : (v.secret ? 'your_secret_here' : '');
+      const comment = v.required ? '# Required' : '# Optional';
+      return `${comment}${v.secret ? ' (secret)' : ''}\n${v.name}=${value}`;
+    }).join('\n\n');
+
+    return `# ${this.contract.app.name} Environment Variables
+# Generated by Reclapp Generator
+
+# Server
+NODE_ENV=development
+PORT=8080
+
+# Database
+DATABASE_URL=postgresql://app:password@localhost:5432/${this.toSnakeCase(this.contract.app.name)}
+
+# CORS
+CORS_ORIGIN=http://localhost:3000
+
+${vars}
+`;
+  }
+
+  private generateMakefile(): string {
+    return `# ${this.contract.app.name} Makefile
+# Generated by Reclapp Generator
+
+.PHONY: dev build start stop clean
+
+dev:
+\t@echo "Starting development servers..."
+\tcd api && npm run dev &
+\tcd frontend && npm run dev
+
+build:
+\t@echo "Building..."
+\tcd api && npm run build
+\tcd frontend && npm run build
+
+docker-up:
+\tdocker-compose up -d
+
+docker-down:
+\tdocker-compose down
+
+docker-logs:
+\tdocker-compose logs -f
+
+clean:
+\trm -rf api/dist frontend/dist
+
+install:
+\tcd api && npm install
+\tcd frontend && npm install
+`;
+  }
+
+  private generateGitignore(): string {
+    return `# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+`;
+  }
+
+  // ============================================================================
+  // UTILITIES
+  // ============================================================================
+
+  private addFile(relativePath: string, content: string, type: GeneratedFile['type']): void {
+    this.files.push({
+      path: path.join(this.options.output, relativePath),
+      content,
+      type
+    });
+  }
+
+  private async writeFiles(): Promise<void> {
+    for (const file of this.files) {
+      const dir = path.dirname(file.path);
+      
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      
+      fs.writeFileSync(file.path, file.content, 'utf-8');
+      this.log(`  ✓ ${file.path}`);
+    }
+  }
+
+  private log(message: string): void {
+    if (this.options.verbose) {
+      console.log(message);
+    }
+  }
+
+  private fieldTypeToTs(type: string): string {
+    const map: Record<string, string> = {
+      'String': 'string',
+      'Int': 'number',
+      'Float': 'number',
+      'Decimal': 'number',
+      'Boolean': 'boolean',
+      'DateTime': 'string',
+      'Date': 'string',
+      'UUID': 'string',
+      'JSON': 'Record<string, any>',
+      'Money': 'number',
+      'Email': 'string',
+      'URL': 'string'
+    };
+    return map[type] || 'any';
+  }
+
+  private fieldTypeToSql(type: string): string {
+    const map: Record<string, string> = {
+      'String': 'TEXT',
+      'Int': 'INTEGER',
+      'Float': 'DOUBLE PRECISION',
+      'Decimal': 'DECIMAL(10,2)',
+      'Boolean': 'BOOLEAN',
+      'DateTime': 'TIMESTAMPTZ',
+      'Date': 'DATE',
+      'UUID': 'UUID',
+      'JSON': 'JSONB',
+      'Money': 'DECIMAL(12,2)',
+      'Email': 'VARCHAR(255)',
+      'URL': 'TEXT'
+    };
+    return map[type] || 'TEXT';
+  }
+
+  private sqlDefault(value: any, type: string): string {
+    if (typeof value === 'string') return `'${value}'`;
+    if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
+    return String(value);
+  }
+
+  private getInputType(type: string): string {
+    const map: Record<string, string> = {
+      'String': 'text',
+      'Int': 'number',
+      'Float': 'number',
+      'Decimal': 'number',
+      'Boolean': 'checkbox',
+      'DateTime': 'datetime-local',
+      'Date': 'date',
+      'Email': 'email',
+      'URL': 'url',
+      'Money': 'number'
+    };
+    return map[type] || 'text';
+  }
+
+  private toKebabCase(str: string): string {
+    return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+  }
+
+  private toCamelCase(str: string): string {
+    return str.charAt(0).toLowerCase() + str.slice(1);
+  }
+
+  private toPascalCase(str: string): string {
+    return str.replace(/[-_](.)/g, (_, c) => c.toUpperCase())
+              .replace(/^(.)/, (_, c) => c.toUpperCase());
+  }
+
+  private toSnakeCase(str: string): string {
+    return str.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase();
+  }
+}
+
+// ============================================================================
+// CONVENIENCE FUNCTION
+// ============================================================================
+
+export async function generateFromContract(
+  contract: ReclappContract,
+  output: string,
+  options?: Partial<ContractGeneratorOptions>
+): Promise<GenerationResult> {
+  const generator = new ContractGenerator(contract, { output, ...options });
+  return generator.generate();
+}

@@ -32,14 +32,31 @@ git clone https://github.com/softreck/reclapp.git
 cd reclapp
 
 # Install dependencies
-make install
-# or
 npm install
 
-# Start development server
-make dev
-# or
-npm run dev
+# Link CLI globally (optional)
+npm link
+```
+
+### Generate Application from Contract
+
+```bash
+# List available contracts
+reclapp list
+
+# Generate full application from contract
+reclapp generate examples/crm/contracts/main.reclapp.ts
+
+# Or generate and run development servers
+reclapp dev examples/crm/contracts/main.reclapp.ts
+```
+
+### Run Generated Application
+
+```bash
+# After generation, start the servers
+cd examples/crm/target/api && npm install && npm run dev      # API on :8080
+cd examples/crm/target/frontend && npm install && npm run dev # UI on :3000
 ```
 
 ### Using Docker

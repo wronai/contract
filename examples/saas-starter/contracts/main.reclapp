@@ -1,6 +1,242 @@
 // SaaS Starter - Reclapp Contract
 // Multi-tenant SaaS application with subscriptions, billing, and user management
 // Version 2.1.0
+//
+// SELF-SUFFICIENT DSL - All source code generated from this definition
+// Generated files output to target/ folder
+
+// =============================================================================
+// METADATA
+// =============================================================================
+
+APP "SaaS Starter" {
+  VERSION "2.1.0"
+  DESCRIPTION "Multi-tenant SaaS platform with subscriptions and billing"
+  AUTHOR "Reclapp Team"
+  LICENSE "MIT"
+}
+
+// =============================================================================
+// DEPLOYMENT
+// =============================================================================
+
+DEPLOYMENT web {
+  FRAMEWORK nextjs
+  
+  BUILD {
+    OUTPUT_DIR "target"
+    NODE_VERSION "18"
+    OUTPUT_MODE "standalone"
+  }
+  
+  HOSTING {
+    PROVIDER "${HOSTING_PROVIDER:vercel}"
+    REGION "${DEPLOY_REGION:eu-central-1}"
+    
+    DOMAIN {
+      PRIMARY "${APP_DOMAIN}"
+      REDIRECT_WWW true
+    }
+    
+    SSL {
+      ENABLED true
+      PROVIDER "auto"
+    }
+  }
+  
+  SCALING {
+    MIN_INSTANCES 1
+    MAX_INSTANCES 10
+    AUTO_SCALE true
+  }
+}
+
+// =============================================================================
+// BACKEND
+// =============================================================================
+
+BACKEND api {
+  RUNTIME node
+  FRAMEWORK "nextjs-api-routes"
+  
+  DATABASE {
+    TYPE postgres
+    URL "${DATABASE_URL}"
+    POOL_SIZE 10
+    SSL true
+  }
+  
+  CACHE {
+    TYPE redis
+    URL "${REDIS_URL}"
+    TTL_DEFAULT 300
+  }
+  
+  AUTH {
+    TYPE oauth2
+    PROVIDERS ["google", "github", "email"]
+    SESSION_STRATEGY "jwt"
+    JWT_SECRET "${JWT_SECRET}"
+  }
+  
+  WEBHOOKS {
+    STRIPE {
+      SECRET "${STRIPE_WEBHOOK_SECRET}"
+      EVENTS ["invoice.paid", "invoice.payment_failed", "customer.subscription.*"]
+    }
+  }
+}
+
+// =============================================================================
+// FRONTEND
+// =============================================================================
+
+FRONTEND saas_ui {
+  FRAMEWORK react
+  BUNDLER nextjs
+  STYLE tailwindcss
+  COMPONENTS shadcn
+  
+  THEME {
+    MODE "system"
+    PRIMARY "#6366f1"
+    ACCENT "#22c55e"
+  }
+  
+  LAYOUT {
+    TYPE "app-shell"
+    NAVIGATION [
+      { ICON "layout-dashboard", LABEL "Dashboard", PATH "/dashboard" },
+      { ICON "users", LABEL "Team", PATH "/team" },
+      { ICON "credit-card", LABEL "Billing", PATH "/billing" },
+      { ICON "settings", LABEL "Settings", PATH "/settings" }
+    ]
+  }
+  
+  PAGES {
+    PUBLIC ["/", "/login", "/signup", "/pricing"]
+    PROTECTED ["/dashboard/*", "/team/*", "/billing/*", "/settings/*"]
+  }
+}
+
+// =============================================================================
+// API ENDPOINTS
+// =============================================================================
+
+API v1 {
+  PREFIX "/api/v1"
+  
+  RESOURCE organizations {
+    ENTITY Organization
+    OPERATIONS [list, get, create, update]
+    AUTH required
+  }
+  
+  RESOURCE users {
+    ENTITY User
+    OPERATIONS [list, get, update]
+    AUTH required
+  }
+  
+  RESOURCE subscriptions {
+    ENTITY Subscription
+    
+    ACTION create {
+      METHOD POST
+      PATH "/"
+      INPUT { planId: String, paymentMethodId: String }
+    }
+    
+    ACTION cancel {
+      METHOD POST
+      PATH "/:id/cancel"
+    }
+    
+    ACTION upgrade {
+      METHOD POST
+      PATH "/:id/upgrade"
+      INPUT { planId: String }
+    }
+  }
+  
+  RESOURCE invoices {
+    ENTITY Invoice
+    OPERATIONS [list, get]
+    AUTH required
+  }
+  
+  RESOURCE usage {
+    ENTITY Usage
+    
+    ACTION track {
+      METHOD POST
+      PATH "/track"
+      INPUT { metric: String, value: Int }
+    }
+    
+    ACTION summary {
+      METHOD GET
+      PATH "/summary"
+    }
+  }
+  
+  RESOURCE webhooks {
+    ACTION stripe {
+      METHOD POST
+      PATH "/stripe"
+      AUTH stripe_signature
+    }
+  }
+}
+
+// =============================================================================
+// ENVIRONMENT VARIABLES
+// =============================================================================
+
+ENV {
+  DATABASE_URL: String @secret
+  REDIS_URL: String @secret
+  JWT_SECRET: String @secret
+  STRIPE_SECRET_KEY: String @secret
+  STRIPE_WEBHOOK_SECRET: String @secret
+  STRIPE_PUBLISHABLE_KEY: String
+  APP_DOMAIN: String
+  HOSTING_PROVIDER: String = "vercel"
+  DEPLOY_REGION: String = "eu-central-1"
+  GOOGLE_CLIENT_ID: String? @secret
+  GOOGLE_CLIENT_SECRET: String? @secret
+  GITHUB_CLIENT_ID: String? @secret
+  GITHUB_CLIENT_SECRET: String? @secret
+}
+
+// =============================================================================
+// DOCKER COMPOSE
+// =============================================================================
+
+DOCKER {
+  SERVICES [
+    {
+      NAME "app"
+      BUILD "."
+      PORTS ["3000:3000"]
+      ENV_FILE ".env"
+      DEPENDS_ON ["postgres", "redis"]
+    },
+    {
+      NAME "postgres"
+      IMAGE "postgres:15-alpine"
+      VOLUMES ["postgres_data:/var/lib/postgresql/data"]
+      ENV { POSTGRES_DB: "saas", POSTGRES_USER: "saas", POSTGRES_PASSWORD: "${DB_PASSWORD}" }
+    },
+    {
+      NAME "redis"
+      IMAGE "redis:7-alpine"
+      VOLUMES ["redis_data:/data"]
+    }
+  ]
+  
+  VOLUMES ["postgres_data", "redis_data"]
+}
 
 // =============================================================================
 // DATA SOURCES

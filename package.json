@@ -3,6 +3,9 @@
   "version": "2.1.0",
   "description": "AI-Native Declarative Platform for B2B Applications with Causal Verification",
   "main": "dist/api/src/server.js",
+  "bin": {
+    "reclapp": "./bin/reclapp"
+  },
   "scripts": {
     "build": "npm run build:parser && tsc",
     "build:parser": "peggy -o dsl/parser/generated.js dsl/grammar/reclapp.pegjs",

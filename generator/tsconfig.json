@@ -4,7 +4,12 @@
     "module": "commonjs",
     "lib": ["ES2022"],
     "outDir": "./dist",
-    "rootDir": ".",
+    "rootDir": "..",
+    "baseUrl": "..",
+    "paths": {
+      "@contracts/*": ["contracts/*"],
+      "@dsl/*": ["dsl/*"]
+    },
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -14,6 +19,6 @@
     "declarationMap": true,
     "sourceMap": true
   },
-  "include": ["./**/*.ts"],
+  "include": ["./**/*.ts", "../contracts/dsl-types.ts"],
   "exclude": ["node_modules", "dist"]
 }
