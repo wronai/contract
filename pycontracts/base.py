@@ -24,6 +24,7 @@ class FieldType(str, Enum):
     EMAIL = "Email"
     URL = "URL"
     PHONE = "Phone"
+    MONEY = "Money"
     INT = "Int"
     INTEGER = "Integer"
     FLOAT = "Float"

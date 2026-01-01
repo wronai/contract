@@ -168,8 +168,8 @@ export const ecommerceContract: ContractAI = {
       {
         name: 'order-number-generator',
         description: 'Generate unique order numbers',
-        applies_to: ['api'],
-        example: `
+        appliesTo: ['api'],
+        template: `
 function generateOrderNumber(): string {
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   const random = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -180,8 +180,8 @@ function generateOrderNumber(): string {
     ],
     
     constraints: [
-      { type: 'no-negative-prices', description: 'All prices must be >= 0', severity: 'error' },
-      { type: 'stock-validation', description: 'Cannot order more than available stock', severity: 'error' }
+      { type: 'no-negative-prices', rule: 'All prices must be >= 0', severity: 'error' },
+      { type: 'stock-validation', rule: 'Cannot order more than available stock', severity: 'error' }
     ],
     
     techStack: {

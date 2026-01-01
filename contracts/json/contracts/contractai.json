@@ -481,6 +481,7 @@
         "Email",
         "URL",
         "Phone",
+        "Money",
         "Int",
         "Integer",
         "Float",

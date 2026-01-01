@@ -113,8 +113,8 @@ export const blogContract: ContractAI = {
       {
         name: 'slug-generator',
         description: 'Generate URL-friendly slugs',
-        applies_to: ['api'],
-        example: `
+        appliesTo: ['api'],
+        template: `
 function generateSlug(title: string): string {
   return title
     .toLowerCase()

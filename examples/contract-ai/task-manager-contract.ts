@@ -120,8 +120,8 @@ export const taskManagerContract: ContractAI = {
       {
         name: 'service-layer',
         description: 'Use service layer for business logic',
-        applies_to: ['api'],
-        example: `
+        appliesTo: ['api'],
+        template: `
 class TaskService {
   async create(data: CreateTaskInput): Promise<Task> {
     // Validate business rules
@@ -134,8 +134,8 @@ class TaskService {
     ],
     
     constraints: [
-      { type: 'no-raw-sql', description: 'Use ORM or query builder instead of raw SQL', severity: 'error' },
-      { type: 'max-function-lines', value: 50, description: 'Keep functions under 50 lines', severity: 'warn' }
+      { type: 'no-raw-sql', rule: 'Use ORM or query builder instead of raw SQL', severity: 'error' },
+      { type: 'max-function-lines', rule: 'Keep functions under 50 lines', severity: 'warning' }
     ],
     
     techStack: {

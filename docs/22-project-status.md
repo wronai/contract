@@ -12,33 +12,28 @@ Reclapp 2.3 to kompletna platforma do generowania aplikacji B2B z kontraktów AI
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     RECLAPP 2.3                              │
+│                     RECLAPP 2.3.1                            │
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
-│  INPUT                                                       │
-│  ├── Prompt ("Create a CRM system")                         │
-│  ├── TypeScript Contract (crm-contract.ts)                  │
-│  └── Pydantic Contract (Python)                             │
+│  CLI                                                         │
+│  ├── Python: reclapp --prompt "..." (pip install -e .)      │
+│  └── Shell:  ./bin/reclapp-full-lifecycle.sh --prompt "..." │
 │                                                              │
-│  CONTRACT AI                                                 │
-│  ├── Contract Generator (LLM → Contract)                    │
-│  ├── Contract Validator                                     │
-│  └── Code Generator (Contract → Files)                      │
+│  CONTRACT AI (3 Layers)                                      │
+│  ├── Definition (app, entities, api)                        │
+│  ├── Generation (instructions, techStack)                   │
+│  └── Validation (assertions, tests, acceptance)             │
 │                                                              │
-│  VALIDATION PIPELINE (7 stages)                             │
-│  ├── 1. Syntax (TypeScript compilation)                     │
-│  ├── 2. Assertions (Contract assertions)                    │
-│  ├── 3. Static Analysis (ESLint)                            │
-│  ├── 4. Tests (Generated tests)                             │
-│  ├── 5. Quality (Coverage, complexity)                      │
-│  ├── 6. Security (Vulnerability scan)                       │
-│  └── 7. Runtime (Docker + health + CRUD)                    │
+│  VALIDATION PIPELINE (8 stages)                              │
+│  ├── 1. Syntax      5. Tests                                │
+│  ├── 2. Schema      6. Quality                              │
+│  ├── 3. Assertions  7. Security                             │
+│  └── 4. Static      8. Runtime                              │
 │                                                              │
 │  OUTPUT                                                      │
 │  ├── Generated API (Express.js + TypeScript)                │
-│  ├── Generated Frontend (React)                             │
-│  ├── Generated Tests                                        │
-│  ├── Dockerfile + docker-compose                            │
+│  ├── Health Check (/health)                                 │
+│  ├── CRUD Endpoints (/api/v1/items)                         │
 │  └── Generation Log (.rcl.md)                               │
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
@@ -70,13 +65,12 @@ Reclapp 2.3 to kompletna platforma do generowania aplikacji B2B z kontraktów AI
 
 | Metryka | Wartość |
 |---------|---------|
-| Unit Tests | 25/25 PASSED |
-| Integration Tests | 16/16 PASSED |
-| Validation Stages | 7/7 |
+| Validation Stages | 8/8 PASSED |
+| Service Health Check | ✅ Working |
+| CRUD Endpoint Tests | 2/2 PASSED |
 | Pydantic Contracts | 5 |
 | TypeScript Contracts | 10+ |
-| JSON Schemas | 14 |
-| Generated TS Types | 3 |
+| Python CLI Commands | 6 |
 
 ## Testowanie
 
