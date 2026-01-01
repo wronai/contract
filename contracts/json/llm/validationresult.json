@@ -1,0 +1,350 @@
+{
+  "$defs": {
+    "CorrectionFeedback": {
+      "description": "Feedback for LLM code correction",
+      "properties": {
+        "issues": {
+          "items": {
+            "$ref": "#/$defs/FeedbackItem"
+          },
+          "title": "Issues",
+          "type": "array"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        },
+        "priorityFiles": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Priorityfiles",
+          "type": "array"
+        },
+        "iteration": {
+          "default": 1,
+          "title": "Iteration",
+          "type": "integer"
+        },
+        "maxIterations": {
+          "default": 5,
+          "title": "Maxiterations",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "issues",
+        "summary"
+      ],
+      "title": "CorrectionFeedback",
+      "type": "object"
+    },
+    "FeedbackItem": {
+      "description": "A single feedback item for code correction",
+      "properties": {
+        "file": {
+          "title": "File",
+          "type": "string"
+        },
+        "issue": {
+          "title": "Issue",
+          "type": "string"
+        },
+        "severity": {
+          "default": "error",
+          "enum": [
+            "error",
+            "warning",
+            "info"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "suggestion": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Suggestion"
+        },
+        "line": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Line"
+        },
+        "code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Code"
+        },
+        "contractHint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Contracthint"
+        }
+      },
+      "required": [
+        "file",
+        "issue"
+      ],
+      "title": "FeedbackItem",
+      "type": "object"
+    },
+    "PipelineResult": {
+      "description": "Complete pipeline validation result",
+      "properties": {
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        },
+        "stages": {
+          "items": {
+            "$ref": "#/$defs/StageResult"
+          },
+          "title": "Stages",
+          "type": "array"
+        },
+        "summary": {
+          "$ref": "#/$defs/PipelineSummary"
+        }
+      },
+      "required": [
+        "passed",
+        "stages",
+        "summary"
+      ],
+      "title": "PipelineResult",
+      "type": "object"
+    },
+    "PipelineSummary": {
+      "description": "Summary of pipeline execution",
+      "properties": {
+        "totalErrors": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Totalerrors",
+          "type": "integer"
+        },
+        "totalWarnings": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Totalwarnings",
+          "type": "integer"
+        },
+        "passedStages": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Passedstages",
+          "type": "integer"
+        },
+        "failedStages": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Failedstages",
+          "type": "integer"
+        },
+        "totalTimeMs": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Totaltimems",
+          "type": "integer"
+        }
+      },
+      "title": "PipelineSummary",
+      "type": "object"
+    },
+    "StageResult": {
+      "description": "Result from a single validation stage",
+      "properties": {
+        "stage": {
+          "title": "Stage",
+          "type": "string"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        },
+        "errors": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ValidationError"
+          },
+          "title": "Errors",
+          "type": "array"
+        },
+        "warnings": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ValidationWarning"
+          },
+          "title": "Warnings",
+          "type": "array"
+        },
+        "timeMs": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Timems",
+          "type": "integer"
+        },
+        "metrics": {
+          "default": {},
+          "title": "Metrics",
+          "type": "object"
+        }
+      },
+      "required": [
+        "stage",
+        "passed"
+      ],
+      "title": "StageResult",
+      "type": "object"
+    },
+    "ValidationError": {
+      "description": "A validation error",
+      "properties": {
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "File"
+        },
+        "line": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Line"
+        },
+        "code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Code"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "title": "ValidationError",
+      "type": "object"
+    },
+    "ValidationWarning": {
+      "description": "A validation warning",
+      "properties": {
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "File"
+        },
+        "line": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Line"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "title": "ValidationWarning",
+      "type": "object"
+    }
+  },
+  "description": "Complete validation result with feedback",
+  "properties": {
+    "pipeline": {
+      "$ref": "#/$defs/PipelineResult"
+    },
+    "feedback": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CorrectionFeedback"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "success": {
+      "default": false,
+      "title": "Success",
+      "type": "boolean"
+    },
+    "iterationsUsed": {
+      "default": 1,
+      "title": "Iterationsused",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "pipeline"
+  ],
+  "title": "ValidationResult",
+  "type": "object"
+}

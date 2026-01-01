@@ -1,4 +1,5 @@
 .test-output
+.test-output-e2e
 target
 .idea
 venv

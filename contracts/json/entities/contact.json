@@ -1,0 +1,102 @@
+{
+  "additionalProperties": false,
+  "description": "CRM Contact entity",
+  "properties": {
+    "id": {
+      "description": "Unique identifier",
+      "title": "Id",
+      "type": "string"
+    },
+    "email": {
+      "description": "Contact email address",
+      "format": "email",
+      "title": "Email",
+      "type": "string"
+    },
+    "firstName": {
+      "minLength": 1,
+      "title": "Firstname",
+      "type": "string"
+    },
+    "lastName": {
+      "minLength": 1,
+      "title": "Lastname",
+      "type": "string"
+    },
+    "phone": {
+      "anyOf": [
+        {
+          "pattern": "^\\+?[\\d\\s\\-()]+$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Phone"
+    },
+    "companyId": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Companyid"
+    },
+    "position": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Position"
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Notes"
+    },
+    "createdAt": {
+      "format": "date-time",
+      "title": "Createdat",
+      "type": "string"
+    },
+    "updatedAt": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Updatedat"
+    }
+  },
+  "required": [
+    "id",
+    "email",
+    "firstName",
+    "lastName"
+  ],
+  "title": "Contact",
+  "type": "object"
+}

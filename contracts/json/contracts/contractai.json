@@ -1,0 +1,557 @@
+{
+  "$defs": {
+    "AppDefinition": {
+      "description": "Application metadata",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "default": "1.0.0",
+          "title": "Version",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "author": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Author"
+        },
+        "license": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "License"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "AppDefinition",
+      "type": "object"
+    },
+    "AssertionCheck": {
+      "description": "Check definition for assertions",
+      "properties": {
+        "type": {
+          "enum": [
+            "file-exists",
+            "file-contains",
+            "file-not-contains",
+            "exports-function",
+            "exports-class",
+            "has-error-handling",
+            "has-validation"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Path"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pattern"
+        },
+        "functionName": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Functionname"
+        },
+        "className": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Classname"
+        },
+        "entityName": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Entityname"
+        },
+        "fieldName": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fieldname"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "AssertionCheck",
+      "type": "object"
+    },
+    "CodeAssertion": {
+      "description": "Assertion for validating generated code",
+      "properties": {
+        "id": {
+          "pattern": "^A\\d{3}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "check": {
+          "$ref": "#/$defs/AssertionCheck"
+        },
+        "severity": {
+          "default": "error",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "errorMessage": {
+          "title": "Errormessage",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "description",
+        "check",
+        "errorMessage"
+      ],
+      "title": "CodeAssertion",
+      "type": "object"
+    },
+    "ContractMetadata": {
+      "description": "Contract metadata",
+      "properties": {
+        "version": {
+          "default": "1.0.0",
+          "title": "Version",
+          "type": "string"
+        },
+        "createdAt": {
+          "format": "date-time",
+          "title": "Createdat",
+          "type": "string"
+        },
+        "updatedAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Updatedat"
+        }
+      },
+      "title": "ContractMetadata",
+      "type": "object"
+    },
+    "DefinitionLayer": {
+      "description": "Layer 1: What to build",
+      "properties": {
+        "app": {
+          "$ref": "#/$defs/AppDefinition"
+        },
+        "entities": {
+          "items": {
+            "$ref": "#/$defs/EntityDefinition"
+          },
+          "title": "Entities",
+          "type": "array"
+        }
+      },
+      "required": [
+        "app",
+        "entities"
+      ],
+      "title": "DefinitionLayer",
+      "type": "object"
+    },
+    "EntityDefinition": {
+      "description": "Complete entity definition",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/EntityField"
+          },
+          "title": "Fields",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "fields"
+      ],
+      "title": "EntityDefinition",
+      "type": "object"
+    },
+    "EntityField": {
+      "description": "Definition of a single entity field",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/FieldType"
+        },
+        "annotations": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FieldAnnotations"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "title": "EntityField",
+      "type": "object"
+    },
+    "FieldAnnotations": {
+      "description": "Annotations for entity fields",
+      "properties": {
+        "required": {
+          "default": true,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "title": "Unique",
+          "type": "boolean"
+        },
+        "generated": {
+          "default": false,
+          "title": "Generated",
+          "type": "boolean"
+        },
+        "min_length": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Length"
+        },
+        "max_length": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Length"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pattern"
+        },
+        "min_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Value"
+        },
+        "max_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Value"
+        },
+        "default": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Default"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        }
+      },
+      "title": "FieldAnnotations",
+      "type": "object"
+    },
+    "FieldType": {
+      "description": "Supported field types in contracts",
+      "enum": [
+        "UUID",
+        "String",
+        "Text",
+        "Email",
+        "URL",
+        "Phone",
+        "Int",
+        "Integer",
+        "Float",
+        "Decimal",
+        "Number",
+        "Boolean",
+        "Date",
+        "DateTime",
+        "Timestamp",
+        "JSON",
+        "Array"
+      ],
+      "title": "FieldType",
+      "type": "string"
+    },
+    "GenerationInstruction": {
+      "description": "Instruction for code generation",
+      "properties": {
+        "target": {
+          "enum": [
+            "api",
+            "frontend",
+            "shared",
+            "docker"
+          ],
+          "title": "Target",
+          "type": "string"
+        },
+        "template": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Template"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "priority": {
+          "default": 0,
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Priority",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "target",
+        "description"
+      ],
+      "title": "GenerationInstruction",
+      "type": "object"
+    },
+    "GenerationLayer": {
+      "description": "Layer 2: How to build",
+      "properties": {
+        "instructions": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/GenerationInstruction"
+          },
+          "title": "Instructions",
+          "type": "array"
+        },
+        "templates": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Templates",
+          "type": "object"
+        }
+      },
+      "title": "GenerationLayer",
+      "type": "object"
+    },
+    "ValidationLayer": {
+      "description": "Layer 3: How to validate",
+      "properties": {
+        "assertions": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/CodeAssertion"
+          },
+          "title": "Assertions",
+          "type": "array"
+        },
+        "tests": {
+          "default": [],
+          "items": {
+            "type": "object"
+          },
+          "title": "Tests",
+          "type": "array"
+        }
+      },
+      "title": "ValidationLayer",
+      "type": "object"
+    }
+  },
+  "description": "Complete Contract AI definition (3 layers)",
+  "properties": {
+    "definition": {
+      "$ref": "#/$defs/DefinitionLayer"
+    },
+    "generation": {
+      "$ref": "#/$defs/GenerationLayer"
+    },
+    "validation": {
+      "$ref": "#/$defs/ValidationLayer"
+    },
+    "metadata": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ContractMetadata"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "definition",
+    "generation",
+    "validation"
+  ],
+  "title": "ContractAI",
+  "type": "object"
+}

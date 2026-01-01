@@ -1,0 +1,160 @@
+{
+  "$defs": {
+    "FieldAnnotations": {
+      "description": "Annotations for entity fields",
+      "properties": {
+        "required": {
+          "default": true,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "title": "Unique",
+          "type": "boolean"
+        },
+        "generated": {
+          "default": false,
+          "title": "Generated",
+          "type": "boolean"
+        },
+        "min_length": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Length"
+        },
+        "max_length": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Length"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pattern"
+        },
+        "min_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Value"
+        },
+        "max_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Value"
+        },
+        "default": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Default"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        }
+      },
+      "title": "FieldAnnotations",
+      "type": "object"
+    },
+    "FieldType": {
+      "description": "Supported field types in contracts",
+      "enum": [
+        "UUID",
+        "String",
+        "Text",
+        "Email",
+        "URL",
+        "Phone",
+        "Int",
+        "Integer",
+        "Float",
+        "Decimal",
+        "Number",
+        "Boolean",
+        "Date",
+        "DateTime",
+        "Timestamp",
+        "JSON",
+        "Array"
+      ],
+      "title": "FieldType",
+      "type": "string"
+    }
+  },
+  "description": "Definition of a single entity field",
+  "properties": {
+    "name": {
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "type": {
+      "$ref": "#/$defs/FieldType"
+    },
+    "annotations": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/FieldAnnotations"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "name",
+    "type"
+  ],
+  "title": "EntityField",
+  "type": "object"
+}

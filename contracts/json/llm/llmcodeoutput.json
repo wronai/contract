@@ -1,0 +1,79 @@
+{
+  "$defs": {
+    "GeneratedFile": {
+      "description": "A single generated file",
+      "properties": {
+        "path": {
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "content": {
+          "title": "Content",
+          "type": "string"
+        },
+        "target": {
+          "default": "api",
+          "enum": [
+            "api",
+            "frontend",
+            "shared",
+            "docker"
+          ],
+          "title": "Target",
+          "type": "string"
+        },
+        "language": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Language"
+        }
+      },
+      "required": [
+        "path",
+        "content"
+      ],
+      "title": "GeneratedFile",
+      "type": "object"
+    }
+  },
+  "description": "Complete LLM code generation output",
+  "properties": {
+    "files": {
+      "items": {
+        "$ref": "#/$defs/GeneratedFile"
+      },
+      "title": "Files",
+      "type": "array"
+    },
+    "model": {
+      "default": "unknown",
+      "title": "Model",
+      "type": "string"
+    },
+    "tokensUsed": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Tokensused",
+      "type": "integer"
+    },
+    "generationTimeMs": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Generationtimems",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "files"
+  ],
+  "title": "LLMCodeOutput",
+  "type": "object"
+}

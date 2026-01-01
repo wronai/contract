@@ -1,0 +1,199 @@
+{
+  "$defs": {
+    "PipelineSummary": {
+      "description": "Summary of pipeline execution",
+      "properties": {
+        "totalErrors": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Totalerrors",
+          "type": "integer"
+        },
+        "totalWarnings": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Totalwarnings",
+          "type": "integer"
+        },
+        "passedStages": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Passedstages",
+          "type": "integer"
+        },
+        "failedStages": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Failedstages",
+          "type": "integer"
+        },
+        "totalTimeMs": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Totaltimems",
+          "type": "integer"
+        }
+      },
+      "title": "PipelineSummary",
+      "type": "object"
+    },
+    "StageResult": {
+      "description": "Result from a single validation stage",
+      "properties": {
+        "stage": {
+          "title": "Stage",
+          "type": "string"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        },
+        "errors": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ValidationError"
+          },
+          "title": "Errors",
+          "type": "array"
+        },
+        "warnings": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ValidationWarning"
+          },
+          "title": "Warnings",
+          "type": "array"
+        },
+        "timeMs": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Timems",
+          "type": "integer"
+        },
+        "metrics": {
+          "default": {},
+          "title": "Metrics",
+          "type": "object"
+        }
+      },
+      "required": [
+        "stage",
+        "passed"
+      ],
+      "title": "StageResult",
+      "type": "object"
+    },
+    "ValidationError": {
+      "description": "A validation error",
+      "properties": {
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "File"
+        },
+        "line": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Line"
+        },
+        "code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Code"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "title": "ValidationError",
+      "type": "object"
+    },
+    "ValidationWarning": {
+      "description": "A validation warning",
+      "properties": {
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "File"
+        },
+        "line": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Line"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "title": "ValidationWarning",
+      "type": "object"
+    }
+  },
+  "description": "Complete pipeline validation result",
+  "properties": {
+    "passed": {
+      "title": "Passed",
+      "type": "boolean"
+    },
+    "stages": {
+      "items": {
+        "$ref": "#/$defs/StageResult"
+      },
+      "title": "Stages",
+      "type": "array"
+    },
+    "summary": {
+      "$ref": "#/$defs/PipelineSummary"
+    }
+  },
+  "required": [
+    "passed",
+    "stages",
+    "summary"
+  ],
+  "title": "PipelineResult",
+  "type": "object"
+}

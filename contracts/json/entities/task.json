@@ -1,0 +1,124 @@
+{
+  "additionalProperties": false,
+  "description": "Task/Todo entity",
+  "properties": {
+    "id": {
+      "description": "Unique identifier",
+      "title": "Id",
+      "type": "string"
+    },
+    "title": {
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    },
+    "description": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Description"
+    },
+    "status": {
+      "default": "todo",
+      "enum": [
+        "todo",
+        "in_progress",
+        "done",
+        "cancelled"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "priority": {
+      "default": "medium",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "urgent"
+      ],
+      "title": "Priority",
+      "type": "string"
+    },
+    "assigneeId": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Assigneeid"
+    },
+    "projectId": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Projectid"
+    },
+    "dueDate": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Duedate"
+    },
+    "completedAt": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Completedat"
+    },
+    "createdAt": {
+      "format": "date-time",
+      "title": "Createdat",
+      "type": "string"
+    },
+    "updatedAt": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Updatedat"
+    }
+  },
+  "required": [
+    "id",
+    "title"
+  ],
+  "title": "Task",
+  "type": "object"
+}

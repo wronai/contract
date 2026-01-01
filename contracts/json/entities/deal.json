@@ -1,0 +1,134 @@
+{
+  "additionalProperties": false,
+  "description": "CRM Deal/Opportunity entity",
+  "properties": {
+    "id": {
+      "description": "Unique identifier",
+      "title": "Id",
+      "type": "string"
+    },
+    "title": {
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    },
+    "value": {
+      "minimum": 0.0,
+      "title": "Value",
+      "type": "number"
+    },
+    "currency": {
+      "default": "USD",
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "type": "string"
+    },
+    "stage": {
+      "default": "lead",
+      "enum": [
+        "lead",
+        "qualified",
+        "proposal",
+        "negotiation",
+        "won",
+        "lost"
+      ],
+      "title": "Stage",
+      "type": "string"
+    },
+    "probability": {
+      "default": 0,
+      "maximum": 100,
+      "minimum": 0,
+      "title": "Probability",
+      "type": "integer"
+    },
+    "contactId": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Contactid"
+    },
+    "companyId": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Companyid"
+    },
+    "expectedClose": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Expectedclose"
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Notes"
+    },
+    "createdAt": {
+      "format": "date-time",
+      "title": "Createdat",
+      "type": "string"
+    },
+    "updatedAt": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Updatedat"
+    },
+    "closedAt": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Closedat"
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "value"
+  ],
+  "title": "Deal",
+  "type": "object"
+}

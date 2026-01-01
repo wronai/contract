@@ -1,0 +1,43 @@
+{
+  "description": "A single generated file",
+  "properties": {
+    "path": {
+      "minLength": 1,
+      "title": "Path",
+      "type": "string"
+    },
+    "content": {
+      "title": "Content",
+      "type": "string"
+    },
+    "target": {
+      "default": "api",
+      "enum": [
+        "api",
+        "frontend",
+        "shared",
+        "docker"
+      ],
+      "title": "Target",
+      "type": "string"
+    },
+    "language": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Language"
+    }
+  },
+  "required": [
+    "path",
+    "content"
+  ],
+  "title": "GeneratedFile",
+  "type": "object"
+}

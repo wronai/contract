@@ -1,0 +1,135 @@
+{
+  "$defs": {
+    "AssertionCheck": {
+      "description": "Check definition for assertions",
+      "properties": {
+        "type": {
+          "enum": [
+            "file-exists",
+            "file-contains",
+            "file-not-contains",
+            "exports-function",
+            "exports-class",
+            "has-error-handling",
+            "has-validation"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Path"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pattern"
+        },
+        "functionName": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Functionname"
+        },
+        "className": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Classname"
+        },
+        "entityName": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Entityname"
+        },
+        "fieldName": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fieldname"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "AssertionCheck",
+      "type": "object"
+    }
+  },
+  "description": "Assertion for validating generated code",
+  "properties": {
+    "id": {
+      "pattern": "^A\\d{3}$",
+      "title": "Id",
+      "type": "string"
+    },
+    "description": {
+      "title": "Description",
+      "type": "string"
+    },
+    "check": {
+      "$ref": "#/$defs/AssertionCheck"
+    },
+    "severity": {
+      "default": "error",
+      "enum": [
+        "error",
+        "warning"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "errorMessage": {
+      "title": "Errormessage",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "description",
+    "check",
+    "errorMessage"
+  ],
+  "title": "CodeAssertion",
+  "type": "object"
+}

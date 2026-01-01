@@ -1,0 +1,74 @@
+{
+  "additionalProperties": false,
+  "description": "System User entity",
+  "properties": {
+    "id": {
+      "description": "Unique identifier",
+      "title": "Id",
+      "type": "string"
+    },
+    "email": {
+      "description": "User email",
+      "format": "email",
+      "title": "Email",
+      "type": "string"
+    },
+    "name": {
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "role": {
+      "default": "user",
+      "enum": [
+        "admin",
+        "user",
+        "viewer"
+      ],
+      "title": "Role",
+      "type": "string"
+    },
+    "avatarUrl": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Avatarurl"
+    },
+    "isActive": {
+      "default": true,
+      "title": "Isactive",
+      "type": "boolean"
+    },
+    "lastLogin": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Lastlogin"
+    },
+    "createdAt": {
+      "format": "date-time",
+      "title": "Createdat",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "email",
+    "name"
+  ],
+  "title": "User",
+  "type": "object"
+}
