@@ -35,14 +35,23 @@ try {
 }
 
 // Import Mini-DSL parser
-let parseMiniFile, miniToIR, irToMini;
+let parseMini, parseMiniFile, miniToIR, irToMini;
 try {
   const mini = require('../dsl/parser/mini');
+  parseMini = mini.parseMini;
   parseMiniFile = mini.parseMiniFile;
   miniToIR = mini.miniToIR;
   irToMini = mini.irToMini;
 } catch (e) {
   parseMiniFile = null;
+}
+
+// Import shared normalization helpers (used to auto-fix common LLM mistakes)
+let normalizeMiniRclSource;
+try {
+  ({ normalizeMiniRclSource } = require('../lib/chat-core'));
+} catch (e) {
+  normalizeMiniRclSource = null;
 }
 
 // Import Markdown parser (.rcl.md)
@@ -141,10 +150,23 @@ async function loadContract(contractPath) {
       console.error('❌ Mini-DSL parser not available');
       process.exit(1);
     }
-    const result = parseMiniFile(fullPath);
+    let result = parseMiniFile(fullPath);
+    if (!result.success && normalizeMiniRclSource && parseMini) {
+      try {
+        const originalSource = fs.readFileSync(fullPath, 'utf-8');
+        const normalizedSource = normalizeMiniRclSource(originalSource);
+        result = parseMini(normalizedSource);
+      } catch (e) {
+        // ignore and fall through to error reporting
+      }
+    }
     if (!result.success) {
       console.error('❌ Parse error:', result.errors[0]?.message || 'Unknown error');
       console.error(`   Line ${result.errors[0]?.line}, Column ${result.errors[0]?.column}`);
+      if (normalizeMiniRclSource) {
+        console.error('   Hint: This contract may contain LLM-style syntax like field: type, or trailing commas.');
+        console.error('         Re-save the contract from Reclapp Studio or use a normalized format.');
+      }
       process.exit(1);
     }
     const ir = miniToIR(result.ast);

@@ -758,7 +758,7 @@ studio-up: studio-install ## Start Reclapp Studio (Express + vanilla JS)
 	@if curl -sf http://localhost:$(STUDIO_PORT)/api/health >/dev/null 2>&1; then \
 		echo "$(GREEN)✓ Reclapp Studio already running on http://localhost:$(STUDIO_PORT)$(NC)"; \
 	else \
-		cd studio && nohup node server.js > server.log 2>&1 & \
+		cd studio && STUDIO_PORT=$(STUDIO_PORT) nohup node server.js > server.log 2>&1 & \
 		sleep 2; \
 		if curl -sf http://localhost:$(STUDIO_PORT)/api/health >/dev/null 2>&1; then \
 			echo "$(GREEN)✓ Reclapp Studio running on http://localhost:$(STUDIO_PORT)$(NC)"; \
