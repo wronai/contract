@@ -357,12 +357,10 @@ SERVERCODE
   
   log_info "Tests: $TESTS_PASSED/$TESTS_TOTAL passed"
   
-  # Cleanup
+  # Cleanup or keep running
   if [[ "$KEEP_RUNNING" == "false" ]]; then
     log_info "Stopping service..."
     kill $SERVER_PID 2>/dev/null
-  else
-    log_info "Service running at http://localhost:$PORT"
   fi
 fi
 
@@ -378,9 +376,40 @@ echo "════════════════════════�
 echo "   Files: $FILE_COUNT"
 echo "   Tests: $TESTS_PASSED/$TESTS_TOTAL passed"
 echo "   Output: $OUTPUT_DIR"
+
+# Keep service running with logs
 if [[ "$KEEP_RUNNING" == "true" && -n "$SERVER_PID" ]]; then
-  echo "   Service: http://localhost:$PORT (PID: $SERVER_PID)"
+  echo ""
+  echo "# Service Running"
+  echo ""
+  echo "\`\`\`yaml"
+  echo "url: http://localhost:$PORT"
+  echo "pid: $SERVER_PID"
+  echo "started: $(date -Iseconds)"
+  echo "output: $OUTPUT_DIR"
+  echo "\`\`\`"
+  echo ""
+  echo "## Endpoints"
+  echo ""
+  echo "- GET  http://localhost:$PORT/health"
+  echo "- GET  http://localhost:$PORT/api/v1/items"
+  echo "- POST http://localhost:$PORT/api/v1/items"
+  echo "- GET  http://localhost:$PORT/api/v1/items/:id"
+  echo "- PUT  http://localhost:$PORT/api/v1/items/:id"
+  echo "- DELETE http://localhost:$PORT/api/v1/items/:id"
+  echo ""
+  echo "## Logs"
+  echo ""
+  echo "Press Ctrl+C to stop the service"
+  echo ""
+  echo "\`\`\`"
+  
+  # Trap Ctrl+C to cleanup
+  trap "echo ''; echo '\`\`\`'; echo ''; log_info 'Stopping service...'; kill $SERVER_PID 2>/dev/null; exit 0" INT TERM
+  
+  # Wait for server process (this keeps the script running)
+  wait $SERVER_PID 2>/dev/null
+  echo "\`\`\`"
 fi
-echo ""
 
 exit 0

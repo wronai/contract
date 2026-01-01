@@ -224,13 +224,13 @@ export class ValidationPipelineOrchestrator {
   /**
    * Określa czy kontynuować po błędzie
    */
-  private shouldContinue(stageName: string, result: StageResult): boolean {
+  private shouldContinue(stage: ValidationStage, result: StageResult): boolean {
     if (!this.options.failFast) {
       return true;
     }
 
     // Stage'y krytyczne zatrzymują pipeline
-    if (CRITICAL_STAGES.has(stageName) && !result.passed) {
+    if (stage.critical && !result.passed) {
       return false;
     }
 

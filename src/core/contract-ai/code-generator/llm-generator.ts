@@ -87,6 +87,10 @@ export class LLMCodeGenerator {
     this.llmClient = client;
   }
 
+  getLLMClient(): LLMClient | null {
+    return this.llmClient;
+  }
+
   /**
    * Rejestruje szablon promptu dla danego targetu
    */

@@ -10,6 +10,7 @@ import { ContractAI, GeneratedCode, PipelineResult } from '../types';
 import { ValidationPipelineOrchestrator } from '../validation/pipeline-orchestrator';
 import { FeedbackGenerator, ValidationFeedback } from './feedback-generator';
 import { LLMCodeGenerator } from '../code-generator/llm-generator';
+import { CodeCorrector } from './code-corrector';
 
 // ============================================================================
 // TYPES
@@ -77,10 +78,12 @@ const DEFAULT_OPTIONS: IterationManagerOptions = {
 export class IterationManager {
   private options: IterationManagerOptions;
   private feedbackGenerator: FeedbackGenerator;
+  private codeCorrector: CodeCorrector;
 
   constructor(options: Partial<IterationManagerOptions> = {}) {
     this.options = { ...DEFAULT_OPTIONS, ...options };
     this.feedbackGenerator = new FeedbackGenerator();
+    this.codeCorrector = new CodeCorrector({ verbose: this.options.verbose });
   }
 
   /**
@@ -95,6 +98,11 @@ export class IterationManager {
     let currentCode = initialCode;
     const history: IterationHistoryEntry[] = [];
     let iteration = 0;
+
+    const llmClient = codeGenerator.getLLMClient();
+    if (llmClient) {
+      this.codeCorrector.setLLMClient(llmClient);
+    }
 
     if (this.options.verbose) {
       console.log(`\n🔄 Starting validation loop (max ${this.options.maxIterations} iterations)`);
@@ -138,6 +146,17 @@ export class IterationManager {
 
       // Generuj feedback
       const feedback = this.feedbackGenerator.generateFeedback(contract, validationResult);
+
+      if (feedback.filesToFix.length === 0) {
+        return {
+          success: false,
+          code: currentCode,
+          iterations: iteration,
+          validationResult,
+          error: 'No file-scoped errors to fix (cannot continue correction loop)',
+          history
+        };
+      }
 
       if (this.options.verbose) {
         console.log(`\n❌ Validation failed. ${feedback.issues.length} issue(s) to fix.`);
@@ -212,20 +231,8 @@ export class IterationManager {
     feedback: ValidationFeedback,
     codeGenerator: LLMCodeGenerator
   ): Promise<GeneratedCode> {
-    // Buduj prompt do korekty
-    const correctionPrompt = this.feedbackGenerator.buildCorrectionPrompt(
-      contract,
-      currentCode.files.map(f => ({ path: f.path, content: f.content })),
-      feedback
-    );
-
-    // W pełnej implementacji wywołałoby się LLM
-    // Na razie zwracamy oryginalny kod (LLM client nie jest podłączony)
-    
-    // Jeśli codeGenerator ma LLM client, użyj go
-    // const correctedFiles = await codeGenerator.correctFiles(contract, feedback.filesToFix, correctionPrompt);
-
-    return currentCode;
+    void codeGenerator;
+    return this.codeCorrector.correct(currentCode, feedback, contract);
   }
 }
 

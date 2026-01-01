@@ -87,10 +87,23 @@ export class CodeCorrector {
     // Grupuj issues po plikach
     const issuesByFile = this.groupIssuesByFile(feedback.issues);
 
+    const existingPaths = new Set(code.files.map((f) => f.path));
+    const missingPaths = feedback.filesToFix.filter((p) => !existingPaths.has(p));
+
+    const filesWithPlaceholders: GeneratedFile[] = [...code.files];
+    for (const p of missingPaths) {
+      const target = this.inferTargetFromPath(p);
+      filesWithPlaceholders.push({
+        path: p,
+        content: '',
+        ...(target ? { target } : {})
+      });
+    }
+
     // Popraw każdy plik z błędami
     const correctedFiles: GeneratedFile[] = [];
 
-    for (const file of code.files) {
+    for (const file of filesWithPlaceholders) {
       const fileIssues = issuesByFile.get(file.path);
 
       if (fileIssues && fileIssues.length > 0) {
@@ -118,6 +131,13 @@ export class CodeCorrector {
       ...code,
       files: correctedFiles
     };
+  }
+
+  private inferTargetFromPath(path: string): string | undefined {
+    if (path.startsWith('api/')) return 'api';
+    if (path.startsWith('frontend/')) return 'frontend';
+    if (path.startsWith('docker/')) return 'docker';
+    return undefined;
   }
 
   /**

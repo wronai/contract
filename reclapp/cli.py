@@ -76,9 +76,10 @@ def setup_node_env() -> dict:
 @click.option("--output", "-o", default="./generated", help="Output directory")
 @click.option("--port", default=3000, type=int, help="Service port")
 @click.option("--verbose", "-v", is_flag=True, help="Verbose output")
+@click.option("--keep-running", "-k", is_flag=True, help="Keep service running after tests")
 @click.option("--version", is_flag=True, help="Show version")
 @click.pass_context
-def main(ctx, prompt: Optional[str], output: str, port: int, verbose: bool, version: bool):
+def main(ctx, prompt: Optional[str], output: str, port: int, verbose: bool, keep_running: bool, version: bool):
     """
     Reclapp - AI-Native Declarative Platform
     
@@ -88,6 +89,7 @@ def main(ctx, prompt: Optional[str], output: str, port: int, verbose: bool, vers
     Examples:
         reclapp --prompt "Create a notes app"
         reclapp --prompt "Create a CRM" -o ./my-crm
+        reclapp --prompt "Create a todo app" --keep-running
         reclapp generate examples/contract-ai/crm-contract.ts
     """
     if version:
@@ -98,7 +100,7 @@ def main(ctx, prompt: Optional[str], output: str, port: int, verbose: bool, vers
     if ctx.invoked_subcommand is None:
         if prompt:
             # Run full lifecycle with prompt
-            ctx.invoke(lifecycle, prompt=prompt, output=output, port=port, verbose=verbose)
+            ctx.invoke(lifecycle, prompt=prompt, output=output, port=port, verbose=verbose, keep_running=keep_running)
         else:
             click.echo(ctx.get_help())
 

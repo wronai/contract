@@ -21,6 +21,22 @@ export class AssertionValidator implements ValidationStage {
   critical = true;
   timeout = 30000;
 
+  private getFileForAssertion(assertion: CodeAssertion): string | undefined {
+    const { check } = assertion;
+
+    switch (check.type) {
+      case 'file-exists':
+      case 'file-contains':
+      case 'file-not-contains':
+      case 'exports-function':
+      case 'exports-class':
+      case 'has-error-handling':
+        return check.path;
+      default:
+        return undefined;
+    }
+  }
+
   async validator(context: ValidationContext): Promise<StageResult> {
     const errors: StageResult['errors'] = [];
     const warnings: StageResult['warnings'] = [];
@@ -30,9 +46,11 @@ export class AssertionValidator implements ValidationStage {
       const result = this.checkAssertion(assertion, context.code.files);
       
       if (!result.passed) {
+        const file = this.getFileForAssertion(assertion);
         if (assertion.severity === 'error') {
           errors.push({
             message: `[${assertion.id}] ${assertion.errorMessage}`,
+            ...(file ? { file } : {}),
             code: assertion.id
           });
         } else {
