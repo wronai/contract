@@ -1,0 +1,6 @@
+Create an event management system:
+- Events with title, description, location, start/end dates, capacity, price
+- Registrations with attendee name, email, status (pending, confirmed, cancelled)
+- Check capacity limits
+- Email validation
+- CRUD API with Express.js and TypeScript

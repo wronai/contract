@@ -1,0 +1,7 @@
+Create a CRM system for managing contacts and companies:
+- Contacts with email, first name, last name, phone
+- Companies with name, industry, website
+- Deals with title, value, stage (lead, qualified, proposal, won, lost)
+- Email validation
+- CRUD operations for all entities
+- Express.js REST API with TypeScript

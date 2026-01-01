@@ -124,15 +124,16 @@ pytest tests/contracts/ -v
 
 - ✅ Full lifecycle command (`reclapp-full-lifecycle.sh`)
 - ✅ **Python CLI** (`pip install -e .` → `reclapp` command)
+- ✅ **Prompt files** (`examples/prompts/*.txt`) - 10 ready-to-use prompts
+- ✅ **reclapp-from-prompt.sh** - generate from .txt files
 - ✅ Pydantic contract examples (5)
-- ✅ Test prompts collection
-- ✅ Fixed --prompt handling in CLI
+- ✅ Full-lifecycle contract examples (10) - fixed schema
+- ✅ Contract-ai examples (4) - fixed appliesTo, template, rule
 - ✅ 8/8 validation stages working
 - ✅ Fixed ts-node/TypeScript version compatibility
 - ✅ Added nvm loading for shell scripts
 - ✅ Added fallback minimal server for robust testing
 - ✅ Service health check and CRUD endpoint testing
-- ✅ Documentation updates
 
 ## Python CLI Commands
 
@@ -146,6 +147,31 @@ reclapp prompts                          # Show example prompts
 reclapp validate                         # Validate Pydantic contracts
 reclapp list                             # List contracts
 ```
+
+## Prompt Files (NEW)
+
+Gotowe prompty do generowania usług w `examples/prompts/`:
+
+```bash
+# Z pliku .txt
+reclapp --prompt "$(cat examples/prompts/01-notes-app.txt)"
+
+# Lub helper script
+./bin/reclapp-from-prompt.sh examples/prompts/02-todo-app.txt -o ./my-todo
+```
+
+| Prompt | Opis | Encje |
+|--------|------|-------|
+| `01-notes-app.txt` | Notatki | Note |
+| `02-todo-app.txt` | Zadania | Task, Category |
+| `03-contacts-crm.txt` | CRM | Contact, Company, Deal |
+| `04-inventory.txt` | Magazyn | Product, Warehouse |
+| `05-booking.txt` | Rezerwacje | Resource, Booking |
+| `06-blog.txt` | Blog | Post, Comment |
+| `07-hr-system.txt` | HR | Employee, Department |
+| `08-invoices.txt` | Faktury | Invoice, InvoiceItem |
+| `09-support-tickets.txt` | Zgłoszenia | Ticket, TicketMessage |
+| `10-events.txt` | Wydarzenia | Event, Registration |
 
 ## Known Issues (Fixed)
 

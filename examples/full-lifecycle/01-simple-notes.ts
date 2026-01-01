@@ -40,13 +40,13 @@ export const simpleNotesContract: ContractAI = {
   },
   validation: {
     assertions: [
-      { id: 'A001', check: { type: 'file-exists', path: 'api/src/server.ts' }, severity: 'error', message: 'Server file required' },
-      { id: 'A002', check: { type: 'file-exists', path: 'api/src/routes/note.ts' }, severity: 'error', message: 'Note routes required' }
+      { id: 'A001', description: 'Server exists', check: { type: 'file-exists', path: 'api/src/server.ts' }, severity: 'error', errorMessage: 'Server file required' },
+      { id: 'A002', description: 'Note routes exist', check: { type: 'file-exists', path: 'api/src/routes/notes.ts' }, severity: 'error', errorMessage: 'Note routes required' }
     ],
     tests: [],
     staticRules: [],
     qualityGates: [],
-    acceptance: { testsPass: true, assertionsPass: true }
+    acceptance: { testsPass: true, minCoverage: 0, maxLintErrors: 10, maxResponseTime: 1000, securityChecks: [], custom: [] }
   }
 };
 

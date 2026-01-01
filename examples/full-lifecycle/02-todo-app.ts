@@ -51,12 +51,12 @@ export const todoAppContract: ContractAI = {
   },
   validation: {
     assertions: [
-      { id: 'A001', check: { type: 'file-exists', path: 'api/src/server.ts' }, severity: 'error', message: 'Server required' }
+      { id: 'A001', description: 'Server exists', check: { type: 'file-exists', path: 'api/src/server.ts' }, severity: 'error', errorMessage: 'Server required' }
     ],
     tests: [],
     staticRules: [],
     qualityGates: [],
-    acceptance: { testsPass: true, assertionsPass: true }
+    acceptance: { testsPass: true, minCoverage: 0, maxLintErrors: 10, maxResponseTime: 1000, securityChecks: [], custom: [] }
   }
 };
 

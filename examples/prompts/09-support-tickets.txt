@@ -1,0 +1,6 @@
+Create a customer support ticket system:
+- Tickets with subject, description, status (open, in_progress, resolved, closed), priority
+- Customer email for each ticket
+- Messages/replies on tickets
+- Track if message is from staff or customer
+- CRUD API with Express.js and TypeScript

@@ -1,0 +1,6 @@
+Create a blog platform:
+- Posts with title, slug, content, published status
+- Comments with author name, content, approval status
+- Auto-generate URL slugs from titles
+- Filter posts by status
+- CRUD API with Express.js and TypeScript

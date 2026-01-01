@@ -1,0 +1,6 @@
+Create a todo application with tasks and categories:
+- Tasks with title, description, status (todo, in_progress, done), priority (low, medium, high)
+- Categories to organize tasks
+- Due dates for tasks
+- CRUD API endpoints
+- Express.js with TypeScript

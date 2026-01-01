@@ -165,12 +165,33 @@ PROMPT → CONTRACT → CODE → VALIDATE → SERVICE → TESTS
 ### Example Prompts
 
 ```bash
+# Simple prompts
 reclapp --prompt "Create a notes app"
 reclapp --prompt "Create a todo app with tasks"
 reclapp --prompt "Create a CRM with contacts and deals"
-reclapp --prompt "Create an inventory system"
-reclapp --prompt "Create a booking system"
+
+# From prompt files (more detailed)
+reclapp --prompt "$(cat examples/prompts/01-notes-app.txt)"
+reclapp --prompt "$(cat examples/prompts/03-contacts-crm.txt)" -o ./my-crm
+
+# Or use the helper script
+./bin/reclapp-from-prompt.sh examples/prompts/02-todo-app.txt
 ```
+
+### Available Prompt Files
+
+| Prompt | Description |
+|--------|-------------|
+| `01-notes-app.txt` | Simple notes with CRUD |
+| `02-todo-app.txt` | Tasks with priorities and categories |
+| `03-contacts-crm.txt` | CRM with contacts, companies, deals |
+| `04-inventory.txt` | Stock management system |
+| `05-booking.txt` | Reservation system |
+| `06-blog.txt` | Blog with posts and comments |
+| `07-hr-system.txt` | Employee management |
+| `08-invoices.txt` | Invoice system |
+| `09-support-tickets.txt` | Support ticket system |
+| `10-events.txt` | Event registration |
 
 ### Example Contracts
 

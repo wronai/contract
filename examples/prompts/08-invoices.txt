@@ -1,0 +1,6 @@
+Create an invoice management system:
+- Invoices with number, issue date, due date, total, status (draft, sent, paid, overdue)
+- Invoice items with description, quantity, unit price
+- Auto-generate invoice numbers
+- Calculate totals
+- CRUD API with Express.js and TypeScript

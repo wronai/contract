@@ -2,45 +2,64 @@
  * Example 4: Booking System
  * System rezerwacji (hotel, restauracja, usługi)
  */
-import { ContractAI } from '../../src/core/contract-ai/types';
+import { ContractAI } from '../../src/core/contract-ai';
 
 export const bookingContract: ContractAI = {
-  metadata: { name: 'Booking System', version: '1.0.0', description: 'Reservation management' },
   definition: {
-    app: { name: 'Booking', version: '1.0.0' },
+    app: { name: 'Booking System', version: '1.0.0', description: 'Reservation management' },
     entities: [
       {
         name: 'Resource',
         description: 'Bookable resource (room, table, service)',
         fields: [
-          { name: 'id', type: 'UUID', required: true },
-          { name: 'name', type: 'String', required: true },
-          { name: 'type', type: 'String', required: true },
-          { name: 'capacity', type: 'Int', required: false },
-          { name: 'pricePerHour', type: 'Float', required: true }
+          { name: 'id', type: 'UUID', annotations: { generated: true } },
+          { name: 'name', type: 'String', annotations: { required: true } },
+          { name: 'type', type: 'String', annotations: { required: true } },
+          { name: 'capacity', type: 'Int', annotations: { required: false } },
+          { name: 'pricePerHour', type: 'Float', annotations: { required: true, min: 0 } },
+          { name: 'createdAt', type: 'DateTime', annotations: { generated: true } }
         ]
       },
       {
         name: 'Booking',
         description: 'Reservation',
         fields: [
-          { name: 'id', type: 'UUID', required: true },
-          { name: 'resourceId', type: 'UUID', required: true },
-          { name: 'customerName', type: 'String', required: true },
-          { name: 'customerEmail', type: 'Email', required: true },
-          { name: 'startTime', type: 'DateTime', required: true },
-          { name: 'endTime', type: 'DateTime', required: true },
-          { name: 'status', type: 'String', required: true }
+          { name: 'id', type: 'UUID', annotations: { generated: true } },
+          { name: 'customerName', type: 'String', annotations: { required: true } },
+          { name: 'customerEmail', type: 'Email', annotations: { required: true } },
+          { name: 'startTime', type: 'DateTime', annotations: { required: true } },
+          { name: 'endTime', type: 'DateTime', annotations: { required: true } },
+          { name: 'status', type: 'String', annotations: { required: true, enum: ['pending', 'confirmed', 'cancelled'] } },
+          { name: 'createdAt', type: 'DateTime', annotations: { generated: true } }
+        ],
+        relations: [
+          { name: 'resource', type: 'ManyToOne', target: 'Resource', foreignKey: 'resourceId' }
         ]
       }
     ],
-    api: { version: 'v1', prefix: '/api' }
+    api: { version: 'v1', prefix: '/api/v1', resources: [
+      { name: 'resources', entity: 'Resource', operations: ['list', 'get', 'create', 'update', 'delete'] },
+      { name: 'bookings', entity: 'Booking', operations: ['list', 'get', 'create', 'update', 'delete'] }
+    ]}
   },
   generation: {
-    instructions: [{ target: 'api', priority: 'must', instruction: 'CRUD for resources and bookings' }],
+    instructions: [
+      { target: 'api', priority: 'must', instruction: 'Use Express.js with TypeScript. Create CRUD for resources and bookings.' },
+      { target: 'api', priority: 'must', instruction: 'Use in-memory storage for simplicity.' }
+    ],
+    patterns: [],
+    constraints: [],
     techStack: { backend: { runtime: 'node', language: 'typescript', framework: 'express', port: 3004 } }
   },
-  validation: { assertions: [{ id: 'A001', check: { type: 'file-exists', path: 'api/src/server.ts' }, severity: 'error', message: 'Required' }], tests: [], qualityGates: [] }
+  validation: {
+    assertions: [
+      { id: 'A001', description: 'Server exists', check: { type: 'file-exists', path: 'api/src/server.ts' }, severity: 'error', errorMessage: 'Server required' }
+    ],
+    tests: [],
+    staticRules: [],
+    qualityGates: [],
+    acceptance: { testsPass: true, minCoverage: 0, maxLintErrors: 10, maxResponseTime: 1000, securityChecks: [], custom: [] }
+  }
 };
 
 export default bookingContract;

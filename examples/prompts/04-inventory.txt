@@ -1,0 +1,6 @@
+Create an inventory management system:
+- Products with SKU, name, quantity, price, minimum stock level
+- Warehouses with name, location, capacity
+- Track stock levels
+- Low stock alerts
+- CRUD API with Express.js and TypeScript

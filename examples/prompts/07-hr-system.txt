@@ -1,0 +1,6 @@
+Create an HR employee management system:
+- Employees with email, first name, last name, position, salary, hire date
+- Departments with name and code
+- Assign employees to departments
+- Email validation
+- CRUD API with Express.js and TypeScript

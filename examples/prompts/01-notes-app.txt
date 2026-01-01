@@ -1,0 +1,5 @@
+Create a simple notes application with the following features:
+- Notes with title, content, and timestamps
+- CRUD operations (create, read, update, delete)
+- In-memory storage
+- REST API with Express.js and TypeScript

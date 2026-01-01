@@ -1,0 +1,6 @@
+Create a booking and reservation system:
+- Resources (rooms, tables, services) with name, type, capacity, price per hour
+- Bookings with customer name, email, start time, end time, status
+- Prevent double bookings
+- Email validation for customers
+- CRUD API with Express.js and TypeScript
