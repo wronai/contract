@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reclapp Studio</title>
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --bg2: #16213e;
+            --accent: #0f3460;
+            --highlight: #e94560;
+            --text: #eaeaea;
+            --text2: #a0a0a0;
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --error: #f87171;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--accent);
+            margin-bottom: 20px;
+        }
+        
+        header h1 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status {
+            font-size: 0.9rem;
+            color: var(--text2);
+        }
+        
+        .status.ok { color: var(--success); }
+        .status.error { color: var(--error); }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--accent);
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: var(--text2);
+            cursor: pointer;
+            font-size: 1rem;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+        
+        .tab:hover { color: var(--text); }
+        .tab.active {
+            color: var(--highlight);
+            border-bottom-color: var(--highlight);
+        }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        /* Layout */
+        .split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .panel {
+            background: var(--bg2);
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .panel h3 {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            color: var(--text2);
+        }
+        
+        /* Chat */
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            background: var(--bg);
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 8px;
+        }
+        
+        .message.user {
+            background: var(--accent);
+            margin-left: 20%;
+        }
+        
+        .message.assistant {
+            background: var(--bg2);
+            border: 1px solid var(--accent);
+            margin-right: 20%;
+        }
+        
+        .message-role {
+            font-size: 0.8rem;
+            color: var(--text2);
+            margin-bottom: 5px;
+        }
+        
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+        
+        textarea, input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            background: var(--bg);
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 1rem;
+            resize: none;
+        }
+        
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: var(--highlight);
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: var(--highlight);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: opacity 0.2s;
+        }
+        
+        button:hover { opacity: 0.9; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        button.secondary {
+            background: var(--accent);
+        }
+        
+        /* Code preview */
+        .code-preview {
+            background: var(--bg);
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        /* Projects table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--accent);
+        }
+        
+        th { color: var(--text2); font-weight: 500; }
+        
+        tr:hover { background: var(--accent); cursor: pointer; }
+        tr.selected { background: var(--highlight); }
+        
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-right: 4px;
+        }
+        
+        .badge.md { background: #3b82f6; }
+        .badge.rcl { background: #8b5cf6; }
+        .badge.ts { background: #06b6d4; }
+        .badge.built { background: var(--success); color: #000; }
+        .badge.not-built { background: var(--warning); color: #000; }
+        
+        /* Actions */
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .action-result {
+            margin-top: 15px;
+            padding: 15px;
+            background: var(--bg);
+            border-radius: 6px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--text2);
+            border-top-color: var(--highlight);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Format info */
+        .format-info {
+            background: var(--bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .format-info h4 {
+            color: var(--highlight);
+            margin-bottom: 10px;
+        }
+        
+        .format-info table {
+            margin-top: 10px;
+        }
+        
+        /* Accordion styles */
+        .accordion {
+            margin-bottom: 10px;
+        }
+        
+        .accordion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: var(--accent);
+            border-radius: 6px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+        
+        .accordion-header:hover {
+            background: var(--highlight);
+        }
+        
+        .accordion-header.open {
+            border-radius: 6px 6px 0 0;
+            background: var(--highlight);
+        }
+        
+        .accordion-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+        
+        .accordion-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .accordion-actions button {
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--text);
+        }
+        
+        .accordion-actions button:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .accordion-content {
+            display: none;
+            padding: 15px;
+            background: var(--bg);
+            border-radius: 0 0 6px 6px;
+            border: 1px solid var(--accent);
+            border-top: none;
+        }
+        
+        .accordion-content.open {
+            display: block;
+        }
+        
+        .accordion-icon {
+            transition: transform 0.2s;
+        }
+        
+        .accordion-header.open .accordion-icon {
+            transform: rotate(180deg);
+        }
+        
+        /* File cards */
+        .file-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background: var(--bg2);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .file-icon {
+            font-size: 1.5rem;
+        }
+        
+        .file-name {
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        
+        .file-size {
+            font-size: 0.8rem;
+            color: var(--text2);
+        }
+        
+        .file-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .file-actions button {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+        
+        /* Quick action buttons */
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .quick-actions button {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+        
+        /* Status badges in accordion */
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+        
+        .status-badge.valid { background: var(--success); color: #000; }
+        .status-badge.invalid { background: var(--error); }
+        .status-badge.pending { background: var(--warning); color: #000; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Reclapp Studio</h1>
+            <span id="status" class="status">Connecting...</span>
+        </header>
+        
+        <div class="tabs">
+            <button class="tab active" data-tab="chat">💬 Chat</button>
+            <button class="tab" data-tab="projects">📁 Projects</button>
+            <button class="tab" data-tab="formats">📋 Formats</button>
+        </div>
+        
+        <!-- Chat Tab -->
+        <div id="tab-chat" class="tab-content active">
+            <div class="split">
+                <div class="panel">
+                    <!-- Example Prompts -->
+                    <div style="margin-bottom: 15px; padding: 10px; background: var(--bg); border-radius: 6px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-size: 0.9rem; color: var(--text2);">💡 Example prompts:</span>
+                            <select id="load-contract-select" style="padding: 4px 8px; background: var(--accent); border: none; border-radius: 4px; color: var(--text); font-size: 0.85rem;">
+                                <option value="">📂 Load existing contract...</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <button class="prompt-btn" onclick="usePrompt('Stwórz aplikację CRM z kontaktami i transakcjami')" style="padding: 6px 12px; font-size: 0.8rem; background: var(--accent); border: none; border-radius: 4px; color: var(--text); cursor: pointer;">CRM</button>
+                            <button class="prompt-btn" onclick="usePrompt('Stwórz sklep e-commerce z produktami i zamówieniami')" style="padding: 6px 12px; font-size: 0.8rem; background: var(--accent); border: none; border-radius: 4px; color: var(--text); cursor: pointer;">E-commerce</button>
+                            <button class="prompt-btn" onclick="usePrompt('Stwórz system zarządzania zadaniami z projektami')" style="padding: 6px 12px; font-size: 0.8rem; background: var(--accent); border: none; border-radius: 4px; color: var(--text); cursor: pointer;">Task Manager</button>
+                            <button class="prompt-btn" onclick="usePrompt('Stwórz system rezerwacji z terminami i klientami')" style="padding: 6px 12px; font-size: 0.8rem; background: var(--accent); border: none; border-radius: 4px; color: var(--text); cursor: pointer;">Booking</button>
+                            <button class="prompt-btn" onclick="usePrompt('Dodaj alerty dla wysokiego ryzyka klientów')" style="padding: 6px 12px; font-size: 0.8rem; background: var(--accent); border: none; border-radius: 4px; color: var(--text); cursor: pointer;">+ Alerts</button>
+                            <button class="prompt-btn" onclick="usePrompt('Dodaj dashboard z wykresami i statystykami')" style="padding: 6px 12px; font-size: 0.8rem; background: var(--accent); border: none; border-radius: 4px; color: var(--text); cursor: pointer;">+ Dashboard</button>
+                        </div>
+                    </div>
+                    
+                    <h3>💬 Chat with AI</h3>
+                    <div id="chat-messages" class="chat-messages"></div>
+                    <div class="chat-input">
+                        <textarea id="chat-input" rows="2" placeholder="Describe what you want to build..."></textarea>
+                        <button id="send-btn">Send</button>
+                    </div>
+                    <div class="actions" style="margin-top: 10px;">
+                        <button class="secondary" id="clear-btn">Clear</button>
+                        <input type="text" id="project-name" placeholder="Project name" value="my-app" style="flex: 1; max-width: 200px;">
+                    </div>
+                </div>
+                
+                <div class="panel" style="padding: 15px;">
+                    <!-- Contract Accordion -->
+                    <div class="accordion" id="acc-contract">
+                        <div class="accordion-header open" onclick="toggleAccordion('acc-contract')">
+                            <div class="accordion-title">
+                                <span>📄 Contract (RCL)</span>
+                                <span id="contract-status" class="status-badge pending">pending</span>
+                            </div>
+                            <div class="accordion-actions">
+                                <button onclick="event.stopPropagation(); copyToClipboard('contract-preview')" title="Copy">📋</button>
+                                <button onclick="event.stopPropagation(); downloadFile('contract', 'rcl')" title="Download .rcl">⬇️</button>
+                                <button onclick="event.stopPropagation(); openInEditor('contract')" title="Open">🔗</button>
+                                <span class="accordion-icon">▼</span>
+                            </div>
+                        </div>
+                        <div class="accordion-content open">
+                            <div id="contract-preview" class="code-preview" style="max-height: 300px; overflow-y: auto;">No contract yet...</div>
+                            <div class="quick-actions">
+                                <button class="secondary" id="save-rcl-btn">💾 Save .rcl</button>
+                                <button class="secondary" id="save-md-btn">📄 Save .rcl.md</button>
+                                <button class="secondary" id="save-ts-btn">🔷 Save .ts</button>
+                                <button id="validate-btn">✅ Validate</button>
+                                <button id="run-contract-btn" style="background: var(--success);">▶️ Run</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- TypeScript Preview Accordion -->
+                    <div class="accordion" id="acc-typescript">
+                        <div class="accordion-header" onclick="toggleAccordion('acc-typescript')">
+                            <div class="accordion-title">
+                                <span>🔷 TypeScript (Validatable)</span>
+                            </div>
+                            <div class="accordion-actions">
+                                <button onclick="event.stopPropagation(); copyToClipboard('ts-preview')" title="Copy">📋</button>
+                                <button onclick="event.stopPropagation(); downloadFile('typescript', 'ts')" title="Download .ts">⬇️</button>
+                                <span class="accordion-icon">▼</span>
+                            </div>
+                        </div>
+                        <div class="accordion-content">
+                            <div id="ts-preview" class="code-preview" style="max-height: 300px; overflow-y: auto;">Generate a contract first...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Markdown Preview Accordion -->
+                    <div class="accordion" id="acc-markdown">
+                        <div class="accordion-header" onclick="toggleAccordion('acc-markdown')">
+                            <div class="accordion-title">
+                                <span>📝 Markdown (Readable)</span>
+                            </div>
+                            <div class="accordion-actions">
+                                <button onclick="event.stopPropagation(); copyToClipboard('md-preview')" title="Copy">📋</button>
+                                <button onclick="event.stopPropagation(); downloadFile('markdown', 'md')" title="Download .md">⬇️</button>
+                                <span class="accordion-icon">▼</span>
+                            </div>
+                        </div>
+                        <div class="accordion-content">
+                            <div id="md-preview" class="code-preview" style="max-height: 300px; overflow-y: auto;">Generate a contract first...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Files Accordion -->
+                    <div class="accordion" id="acc-files">
+                        <div class="accordion-header" onclick="toggleAccordion('acc-files')">
+                            <div class="accordion-title">
+                                <span>📁 Generated Files</span>
+                                <span id="files-count" class="status-badge">0 files</span>
+                            </div>
+                            <div class="accordion-actions">
+                                <button onclick="event.stopPropagation(); downloadAllFiles()" title="Download All">⬇️ All</button>
+                                <span class="accordion-icon">▼</span>
+                            </div>
+                        </div>
+                        <div class="accordion-content">
+                            <div id="files-list">
+                                <p style="color: var(--text2);">No files generated yet. Save a contract to create files.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Logs Accordion -->
+                    <div class="accordion" id="acc-logs">
+                        <div class="accordion-header" onclick="toggleAccordion('acc-logs')">
+                            <div class="accordion-title">
+                                <span>📋 Session Logs</span>
+                                <span id="logs-count" class="status-badge">0 logs</span>
+                            </div>
+                            <div class="accordion-actions">
+                                <button onclick="event.stopPropagation(); copyToClipboard('logs-content')" title="Copy">📋</button>
+                                <button onclick="event.stopPropagation(); downloadFile('logs', 'md')" title="Download">⬇️</button>
+                                <span class="accordion-icon">▼</span>
+                            </div>
+                        </div>
+                        <div class="accordion-content">
+                            <div id="logs-content" class="code-preview" style="max-height: 200px; overflow-y: auto; font-size: 0.85rem;">No logs yet...</div>
+                            <div id="log-path" style="margin-top: 10px; font-size: 0.85rem; color: var(--text2);"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Status/Result -->
+                    <div id="chat-result" class="action-result" style="display: none; margin-top: 15px;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Projects Tab -->
+        <div id="tab-projects" class="tab-content">
+            <div class="panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3>📁 Projects from apps/ and examples/</h3>
+                    <button class="secondary" id="refresh-btn">🔄 Refresh</button>
+                </div>
+                
+                <table id="projects-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Source</th>
+                            <th>Formats</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                
+                <div class="actions">
+                    <button id="view-md-btn" class="secondary">📄 .rcl.md</button>
+                    <button id="view-rcl-btn" class="secondary">📝 .rcl</button>
+                    <button id="view-ts-btn" class="secondary">🔷 .ts</button>
+                    <button id="auto-gen-btn" style="background: #8b5cf6;">🔄 Auto-Generate Formats</button>
+                    <button id="validate-project-btn">✅ Validate</button>
+                    <button id="generate-btn">🚀 Build Target</button>
+                    <button id="run-btn" style="background: var(--success);">▶️ Run</button>
+                    <button id="edit-in-chat-btn" class="secondary">✏️ Edit in Chat</button>
+                </div>
+                
+                <div id="project-result" class="action-result" style="display: none;"></div>
+                
+                <!-- Run URLs panel -->
+                <div id="run-urls" class="panel" style="display: none; margin-top: 15px; background: var(--bg);">
+                    <h4 style="color: var(--success); margin-bottom: 10px;">🚀 Application Running</h4>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <a id="url-api" href="#" target="_blank" class="badge" style="padding: 8px 16px; text-decoration: none;">API</a>
+                        <a id="url-frontend" href="#" target="_blank" class="badge built" style="padding: 8px 16px; text-decoration: none;">Frontend</a>
+                        <a id="url-dashboard" href="#" target="_blank" class="badge md" style="padding: 8px 16px; text-decoration: none;">Dashboard</a>
+                    </div>
+                    <p id="run-command" style="margin-top: 10px; font-family: monospace; font-size: 0.85rem; color: var(--text2);"></p>
+                </div>
+            </div>
+            
+            <div class="panel" style="margin-top: 20px;">
+                <h3>📋 Contract Preview</h3>
+                <div id="project-contract-preview" class="code-preview">Select a project to view contract...</div>
+            </div>
+        </div>
+        
+        <!-- Formats Tab -->
+        <div id="tab-formats" class="tab-content">
+            <div class="panel">
+                <h3>📋 Reclapp Contract Formats</h3>
+                
+                <div class="format-info">
+                    <h4>🔷 .reclapp.ts (TypeScript)</h4>
+                    <p>Fully typed contracts with compile-time validation.</p>
+                    <p><strong>Use for:</strong> Production, type safety, IDE support, validation</p>
+                    <pre class="code-preview" style="margin-top: 10px;">import type { ReclappContract } from '@reclapp/contracts';
+
+export const contract: ReclappContract = {
+  app: { name: 'My App', version: '1.0.0' },
+  entities: [
+    {
+      name: 'User',
+      fields: [
+        { name: 'email', type: 'Email', annotations: { required: true } }
+      ]
+    }
+  ]
+};</pre>
+                </div>
+                
+                <div class="format-info">
+                    <h4>📝 .reclapp.rcl (Mini-DSL)</h4>
+                    <p>Concise declarative syntax, easy to read and write.</p>
+                    <p><strong>Use for:</strong> Quick prototyping, human editing, generation</p>
+                    <pre class="code-preview" style="margin-top: 10px;">app "My App" {
+  version: "1.0.0"
+}
+
+entity User {
+  id        uuid      @unique @generated
+  email     email     @unique @required
+  name      text      @required
+  createdAt datetime  @generated
+}</pre>
+                </div>
+                
+                <div class="format-info">
+                    <h4>📄 .rcl.md (Markdown)</h4>
+                    <p>Human-readable, AI-friendly format with documentation.</p>
+                    <p><strong>Use for:</strong> Communication, AI chat, documentation, sharing</p>
+                    <pre class="code-preview" style="margin-top: 10px;"># My App
+
+> Application contract
+
+| Property | Value |
+|----------|-------|
+| Version | 1.0.0 |
+
+## Contract
+
+```rcl
+app "My App" { version: "1.0.0" }
+
+entity User {
+  email email @required
+}
+```</pre>
+                </div>
+                
+                <div class="format-info">
+                    <h4>📊 Comparison</h4>
+                    <table>
+                        <tr>
+                            <th>Feature</th>
+                            <th>.reclapp.ts</th>
+                            <th>.reclapp.rcl</th>
+                            <th>.rcl.md</th>
+                        </tr>
+                        <tr>
+                            <td>Type Safety</td>
+                            <td>✅ Full</td>
+                            <td>⚠️ Runtime</td>
+                            <td>❌ None</td>
+                        </tr>
+                        <tr>
+                            <td>IDE Support</td>
+                            <td>✅ Full</td>
+                            <td>⚠️ Basic</td>
+                            <td>✅ Markdown</td>
+                        </tr>
+                        <tr>
+                            <td>Readability</td>
+                            <td>⚠️ Verbose</td>
+                            <td>✅ Good</td>
+                            <td>✅ Best</td>
+                        </tr>
+                        <tr>
+                            <td>AI-Friendly</td>
+                            <td>⚠️ Complex</td>
+                            <td>✅ Good</td>
+                            <td>✅ Best</td>
+                        </tr>
+                        <tr>
+                            <td>Generation</td>
+                            <td>✅ Direct</td>
+                            <td>✅ Direct</td>
+                            <td>⚠️ Extract</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="format-info">
+                    <h4>🔄 Workflow Recommendation</h4>
+                    <ol style="margin-left: 20px; line-height: 2;">
+                        <li><strong>.rcl.md</strong> - Use for AI chat, communication, documentation</li>
+                        <li><strong>.reclapp.rcl</strong> - Convert to RCL for storage and generation</li>
+                        <li><strong>.reclapp.ts</strong> - Convert to TS for validation and type checking</li>
+                        <li><strong>Generate</strong> - Use .rcl or .ts to generate target/ application</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // State
+        let chatHistory = [];
+        let currentContract = '';
+        let currentTsContract = '';
+        let currentMdContract = '';
+        let selectedProject = null;
+        let projects = [];
+        let generatedFiles = [];
+        let sessionLogs = [];
+        let lastLogPath = '';
+        
+        // DOM Elements
+        const statusEl = document.getElementById('status');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const contractPreview = document.getElementById('contract-preview');
+        const projectsTable = document.getElementById('projects-table').querySelector('tbody');
+        const projectContractPreview = document.getElementById('project-contract-preview');
+        const chatResult = document.getElementById('chat-result');
+        const projectResult = document.getElementById('project-result');
+        
+        // Accordion toggle
+        function toggleAccordion(id) {
+            const acc = document.getElementById(id);
+            const header = acc.querySelector('.accordion-header');
+            const content = acc.querySelector('.accordion-content');
+            header.classList.toggle('open');
+            content.classList.toggle('open');
+        }
+        
+        // Copy to clipboard
+        async function copyToClipboard(elementId) {
+            const el = document.getElementById(elementId);
+            const text = el.textContent || el.innerText;
+            
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('📋 Copied to clipboard!');
+            } catch (e) {
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('📋 Copied!');
+            }
+        }
+        
+        // Download file
+        function downloadFile(type, ext) {
+            let content = '';
+            let filename = '';
+            const projectName = document.getElementById('project-name')?.value || 'contract';
+            
+            switch(type) {
+                case 'contract':
+                    content = currentContract;
+                    filename = `${projectName}.reclapp.rcl`;
+                    break;
+                case 'typescript':
+                    content = currentTsContract || generateTypeScript(currentContract);
+                    filename = `${projectName}.reclapp.ts`;
+                    break;
+                case 'markdown':
+                    content = currentMdContract || generateMarkdown(currentContract);
+                    filename = `${projectName}.rcl.md`;
+                    break;
+                case 'logs':
+                    content = document.getElementById('logs-content').textContent;
+                    filename = `${projectName}_session.rcl.md`;
+                    break;
+            }
+            
+            if (!content || content.includes('No contract') || content.includes('Generate')) {
+                showToast('❌ No content to download');
+                return;
+            }
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast(`⬇️ Downloaded ${filename}`);
+        }
+        
+        // Download all files
+        function downloadAllFiles() {
+            if (!currentContract) {
+                showToast('❌ No contract to download');
+                return;
+            }
+            downloadFile('contract', 'rcl');
+            setTimeout(() => downloadFile('typescript', 'ts'), 100);
+            setTimeout(() => downloadFile('markdown', 'md'), 200);
+        }
+        
+        // Open in editor (URI scheme)
+        function openInEditor(type) {
+            const projectName = document.getElementById('project-name')?.value || 'contract';
+            // Open via file URI or custom scheme
+            const uri = `vscode://file/${encodeURIComponent(`studio-lite/projects/${projectName}/contracts/main.reclapp.rcl`)}`;
+            window.open(uri, '_blank');
+            showToast('🔗 Opening in editor...');
+        }
+        
+        // Generate TypeScript from RCL
+        function generateTypeScript(rcl) {
+            if (!rcl) return '';
+            
+            const appMatch = rcl.match(/app\s+["']([^"']+)["']/);
+            const appName = appMatch ? appMatch[1] : 'App';
+            
+            let ts = `/**
+ * ${appName} - Reclapp Contract
+ * Generated: ${new Date().toISOString()}
+ */
+
+import type { ReclappContract, Entity, Event } from '@reclapp/contracts';
+
+`;
+            // Extract entities
+            const entityRegex = /entity\s+(\w+)\s*\{([^}]*)\}/g;
+            let match;
+            const entities = [];
+            
+            while ((match = entityRegex.exec(rcl)) !== null) {
+                const [, name, body] = match;
+                entities.push(name);
+                
+                ts += `export interface ${name} {\n`;
+                const lines = body.split('\\n').map(l => l.trim()).filter(Boolean);
+                for (const line of lines) {
+                    const fieldMatch = line.match(/^(\w+)\s+(\w+)/);
+                    if (fieldMatch) {
+                        const [, fname, ftype] = fieldMatch;
+                        const tsType = { uuid: 'string', text: 'string', email: 'string', int: 'number', float: 'number', bool: 'boolean', date: 'Date', datetime: 'Date' }[ftype] || ftype;
+                        ts += `  ${fname}: ${tsType};\n`;
+                    }
+                }
+                ts += `}\n\n`;
+            }
+            
+            ts += `export const contract: ReclappContract = {
+  app: { name: '${appName}', version: '1.0.0' },
+  entities: [${entities.map(e => `'${e}'`).join(', ')}]
+};
+
+export default contract;
+`;
+            return ts;
+        }
+        
+        // Generate Markdown from RCL (with conversation)
+        function generateMarkdown(rcl, includeConversation = true) {
+            if (!rcl) return '';
+            
+            const appMatch = rcl.match(/app\s+["']([^"']+)["']/);
+            const appName = appMatch ? appMatch[1] : 'Contract';
+            const projectName = document.getElementById('project-name')?.value || 'my-app';
+            const entities = (rcl.match(/entity\s+\w+/g) || []).length;
+            const events = (rcl.match(/event\s+\w+/g) || []).length;
+            const enums = (rcl.match(/enum\s+\w+/g) || []).length;
+            const now = new Date();
+            
+            let md = `# ${appName}
+
+> Generated by Reclapp Studio
+
+## Metadata
+
+| Property | Value |
+|----------|-------|
+| Project | ${projectName} |
+| Created | ${now.toISOString().split('T')[0]} |
+| Time | ${now.toTimeString().split(' ')[0]} |
+| Entities | ${entities} |
+| Events | ${events} |
+| Enums | ${enums} |
+
+---
+
+`;
+            // Add conversation if available
+            if (includeConversation && chatHistory.length > 0) {
+                md += `## 💬 Conversation
+
+<!-- reclapp:conversation -->
+
+`;
+                let msgNum = 1;
+                for (let i = 0; i < chatHistory.length; i++) {
+                    const msg = chatHistory[i];
+                    const role = msg.role === 'user' ? '🧑 User' : '🤖 Assistant';
+                    const time = now.toISOString().split('T')[0] + ' ' + now.toTimeString().split(' ')[0];
+                    
+                    md += `### ${role} (${time})
+
+${msg.content}
+
+`;
+                    if (msg.role === 'assistant') msgNum++;
+                }
+                md += `---
+
+`;
+            }
+            
+            md += `## 📦 Contract (RCL)
+
+\`\`\`rcl
+${rcl}
+\`\`\`
+
+---
+
+*Generated by Reclapp Studio*
+`;
+            return md;
+        }
+        
+        // Update all previews
+        function updatePreviews(contract) {
+            currentContract = contract;
+            contractPreview.textContent = contract;
+            
+            // Generate TypeScript preview
+            currentTsContract = generateTypeScript(contract);
+            document.getElementById('ts-preview').textContent = currentTsContract;
+            
+            // Generate Markdown preview
+            currentMdContract = generateMarkdown(contract);
+            document.getElementById('md-preview').textContent = currentMdContract;
+        }
+        
+        // Update files list
+        function updateFilesList(files) {
+            generatedFiles = files;
+            const filesList = document.getElementById('files-list');
+            document.getElementById('files-count').textContent = `${files.length} files`;
+            
+            if (files.length === 0) {
+                filesList.innerHTML = '<p style="color: var(--text2);">No files generated yet.</p>';
+                return;
+            }
+            
+            filesList.innerHTML = files.map(f => `
+                <div class="file-card">
+                    <div class="file-info">
+                        <span class="file-icon">${f.ext === 'ts' ? '🔷' : f.ext === 'md' ? '📝' : '📄'}</span>
+                        <div>
+                            <div class="file-name">${f.name}</div>
+                            <div class="file-size">${f.path}</div>
+                        </div>
+                    </div>
+                    <div class="file-actions">
+                        <button class="secondary" onclick="copyFileContent('${f.path}')">📋</button>
+                        <button class="secondary" onclick="openFileUri('${f.path}')">🔗</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Update logs
+        function updateLogs(logPath, history) {
+            lastLogPath = logPath;
+            sessionLogs.push({ path: logPath, time: new Date().toISOString() });
+            document.getElementById('logs-count').textContent = `${sessionLogs.length} logs`;
+            
+            // Build log content
+            let logContent = `# Session Log\\n\\n`;
+            logContent += `> ${new Date().toISOString()}\\n\\n`;
+            
+            history.forEach((msg, i) => {
+                const role = msg.role === 'user' ? '🧑 User' : '🤖 Assistant';
+                logContent += `### ${role}\\n${msg.content?.substring(0, 200)}...\\n\\n`;
+            });
+            
+            document.getElementById('logs-content').textContent = logContent.replace(/\\n/g, '\n');
+            document.getElementById('log-path').innerHTML = `<a href="#" onclick="openFileUri('${logPath}')">${logPath}</a>`;
+        }
+        
+        // Update contract status badge
+        function updateContractStatus(valid) {
+            const badge = document.getElementById('contract-status');
+            if (valid) {
+                badge.textContent = 'valid';
+                badge.className = 'status-badge valid';
+            } else {
+                badge.textContent = 'issues';
+                badge.className = 'status-badge invalid';
+            }
+        }
+        
+        // Toast notification
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; padding: 12px 24px; background: var(--accent); color: white; border-radius: 6px; z-index: 1000; animation: fadeIn 0.3s;';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }
+        
+        // Open file URI
+        function openFileUri(path) {
+            const uri = `file://${path}`;
+            window.open(uri, '_blank');
+        }
+        
+        // Use example prompt
+        function usePrompt(prompt) {
+            document.getElementById('chat-input').value = prompt;
+            document.getElementById('chat-input').focus();
+            showToast('💡 Prompt loaded - press Send');
+        }
+        
+        // Load existing contract for editing
+        async function loadContractForEdit(source, name) {
+            try {
+                const res = await fetch(`/api/projects/${source}/${name}/contract?format=rcl`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    updatePreviews(data.content);
+                    document.getElementById('project-name').value = name;
+                    
+                    // Add context message to chat
+                    const contextMsg = `Edytuję istniejący kontrakt "${name}". Oto aktualny kontrakt:\n\n\`\`\`rcl\n${data.content}\n\`\`\`\n\nCo chcesz zmienić?`;
+                    addMessage('assistant', contextMsg);
+                    chatHistory.push({ role: 'assistant', content: contextMsg });
+                    
+                    showToast(`📂 Loaded ${name} contract for editing`);
+                    updateContractStatus(true);
+                }
+            } catch (e) {
+                showToast(`❌ ${e.message}`);
+            }
+        }
+        
+        // Populate contract selector
+        async function populateContractSelector() {
+            const select = document.getElementById('load-contract-select');
+            try {
+                const res = await fetch('/api/projects');
+                const data = await res.json();
+                
+                if (data.success) {
+                    select.innerHTML = '<option value="">📂 Load existing contract...</option>';
+                    
+                    // Group by source
+                    const bySource = {};
+                    data.projects.forEach(p => {
+                        if (!bySource[p.source]) bySource[p.source] = [];
+                        bySource[p.source].push(p);
+                    });
+                    
+                    for (const [source, projs] of Object.entries(bySource)) {
+                        const group = document.createElement('optgroup');
+                        group.label = source === 'apps' ? '📁 Apps' : '📚 Examples';
+                        projs.forEach(p => {
+                            const opt = document.createElement('option');
+                            opt.value = `${p.source}|${p.name}`;
+                            opt.textContent = p.name;
+                            group.appendChild(opt);
+                        });
+                        select.appendChild(group);
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load contracts:', e);
+            }
+        }
+        
+        // Auto-generate formats for project
+        async function autoGenerateFormats() {
+            if (!selectedProject) {
+                showResult(projectResult, '❌ No project selected', 'error');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/auto-generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ source: selectedProject.source, name: selectedProject.name })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    showResult(projectResult, `✅ ${data.message}\n\nGenerated: ${data.generated.join(', ') || 'none'}`, 'success');
+                    loadProjects(); // Refresh table
+                } else {
+                    showResult(projectResult, `❌ ${data.error}`, 'error');
+                }
+            } catch (e) {
+                showResult(projectResult, `❌ ${e.message}`, 'error');
+            }
+        }
+        
+        // Edit project contract in chat
+        function editProjectInChat() {
+            if (!selectedProject) {
+                showResult(projectResult, '❌ No project selected', 'error');
+                return;
+            }
+            
+            // Switch to chat tab and load contract
+            document.querySelector('.tab[data-tab="chat"]').click();
+            loadContractForEdit(selectedProject.source, selectedProject.name);
+        }
+        
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+                
+                // Update URL
+                const url = new URL(window.location);
+                url.searchParams.set('tab', tab.dataset.tab);
+                history.replaceState({}, '', url);
+            });
+        });
+        
+        // Handle URL tab parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get('tab');
+        if (tabParam) {
+            const tabBtn = document.querySelector(`.tab[data-tab="${tabParam}"]`);
+            if (tabBtn) tabBtn.click();
+        }
+        
+        // Health check
+        async function checkHealth() {
+            try {
+                const res = await fetch('/api/health');
+                const data = await res.json();
+                statusEl.textContent = `✅ ${data.model} @ ${data.ollama}`;
+                statusEl.className = 'status ok';
+            } catch (e) {
+                statusEl.textContent = '❌ Server not available';
+                statusEl.className = 'status error';
+            }
+        }
+        
+        // Chat
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+            
+            chatInput.value = '';
+            addMessage('user', message);
+            chatHistory.push({ role: 'user', content: message });
+            
+            const sendBtn = document.getElementById('send-btn');
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<span class="loading"></span>';
+            
+            // Get project name
+            const projectName = document.getElementById('project-name')?.value || 'session';
+            
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        message, 
+                        history: chatHistory.slice(0, -1),
+                        projectName 
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    addMessage('assistant', data.response);
+                    chatHistory.push({ role: 'assistant', content: data.response });
+                    
+                    let resultMsg = '';
+                    let resultType = 'success';
+                    
+                    if (data.contract) {
+                        // Update all preview accordions
+                        updatePreviews(data.contract);
+                        resultMsg += '✅ Contract extracted!\n';
+                        
+                        // Update files list
+                        const projectName = document.getElementById('project-name')?.value || 'contract';
+                        updateFilesList([
+                            { name: `${projectName}.reclapp.rcl`, ext: 'rcl', path: `projects/${projectName}/contracts/` },
+                            { name: `${projectName}.reclapp.ts`, ext: 'ts', path: `projects/${projectName}/contracts/` },
+                            { name: `${projectName}.rcl.md`, ext: 'md', path: `projects/${projectName}/contracts/` }
+                        ]);
+                    }
+                    
+                    // Show validation result and update status badge
+                    if (data.validation) {
+                        updateContractStatus(data.validation.valid);
+                        if (data.validation.valid) {
+                            resultMsg += '✅ Validation passed\n';
+                        } else {
+                            resultMsg += `⚠️ Validation issues:\n${data.validation.errors.map(e => `  • ${e}`).join('\n')}\n`;
+                            resultType = 'warning';
+                        }
+                    }
+                    
+                    // Show auto-fix attempts
+                    if (data.fixes && data.fixes.length > 0) {
+                        resultMsg += `\n🔧 Auto-fix attempts: ${data.fixes.length}\n`;
+                        data.fixes.forEach(fix => {
+                            resultMsg += `  Attempt ${fix.attempt}: ${fix.errors.join(', ')}\n`;
+                        });
+                    }
+                    
+                    // Update logs accordion
+                    if (data.logPath) {
+                        updateLogs(data.logPath, chatHistory);
+                        resultMsg += `\n📄 Session log: ${data.logPath}`;
+                    }
+                    
+                    if (resultMsg) {
+                        showResult(chatResult, resultMsg, resultType);
+                    }
+                } else {
+                    addMessage('assistant', `❌ Error: ${data.error}`);
+                }
+            } catch (e) {
+                addMessage('assistant', `❌ Error: ${e.message}`);
+            }
+            
+            sendBtn.disabled = false;
+            sendBtn.textContent = 'Send';
+        }
+        
+        function addMessage(role, content) {
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            div.innerHTML = `<div class="message-role">${role === 'user' ? '🧑 You' : '🤖 Assistant'}</div>${escapeHtml(content)}`;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function escapeHtml(text) {
+            return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+        
+        // Projects
+        async function loadProjects() {
+            try {
+                const res = await fetch('/api/projects');
+                const data = await res.json();
+                
+                if (data.success) {
+                    projects = data.projects;
+                    renderProjects();
+                }
+            } catch (e) {
+                console.error('Failed to load projects:', e);
+            }
+        }
+        
+        function renderProjects() {
+            projectsTable.innerHTML = '';
+            
+            projects.forEach((p, idx) => {
+                const tr = document.createElement('tr');
+                tr.dataset.index = idx;
+                
+                const formats = [];
+                if (p.formats.md) formats.push('<span class="badge md">MD</span>');
+                if (p.formats.rcl) formats.push('<span class="badge rcl">RCL</span>');
+                if (p.formats.ts) formats.push('<span class="badge ts">TS</span>');
+                
+                tr.innerHTML = `
+                    <td>${p.name}</td>
+                    <td>${p.source}</td>
+                    <td>${formats.join('')}</td>
+                    <td><span class="badge ${p.hasTarget ? 'built' : 'not-built'}">${p.hasTarget ? '✅ Built' : '📝 Not Built'}</span></td>
+                `;
+                
+                tr.addEventListener('click', () => selectProject(idx));
+                projectsTable.appendChild(tr);
+            });
+        }
+        
+        function selectProject(idx) {
+            document.querySelectorAll('#projects-table tr').forEach(tr => tr.classList.remove('selected'));
+            document.querySelector(`#projects-table tr[data-index="${idx}"]`)?.classList.add('selected');
+            selectedProject = projects[idx];
+            projectResult.style.display = 'none';
+        }
+        
+        async function viewProjectContract(format) {
+            if (!selectedProject) {
+                showResult(projectResult, '❌ No project selected', 'error');
+                return;
+            }
+            
+            try {
+                const res = await fetch(`/api/projects/${selectedProject.source}/${selectedProject.name}/contract?format=${format}`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    projectContractPreview.textContent = data.content;
+                    showResult(projectResult, `📄 Loaded ${data.file}`, 'success');
+                } else {
+                    showResult(projectResult, `❌ ${data.error}`, 'error');
+                }
+            } catch (e) {
+                showResult(projectResult, `❌ ${e.message}`, 'error');
+            }
+        }
+        
+        async function validateProject() {
+            if (!selectedProject) {
+                showResult(projectResult, '❌ No project selected', 'error');
+                return;
+            }
+            
+            // Get contract from preview
+            const contract = projectContractPreview.textContent;
+            if (!contract || contract.includes('Select a project')) {
+                showResult(projectResult, '❌ Load a contract first', 'error');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contract })
+                });
+                
+                const data = await res.json();
+                
+                if (data.valid) {
+                    showResult(projectResult, `✅ Valid! Entities: ${data.stats.entities}, Events: ${data.stats.events}, Enums: ${data.stats.enums}`, 'success');
+                } else {
+                    showResult(projectResult, `⚠️ Issues:\n${data.errors.join('\n')}`, 'warning');
+                }
+            } catch (e) {
+                showResult(projectResult, `❌ ${e.message}`, 'error');
+            }
+        }
+        
+        async function generateProject() {
+            if (!selectedProject) {
+                showResult(projectResult, '❌ No project selected', 'error');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ source: selectedProject.source, name: selectedProject.name })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    showResult(projectResult, `🚀 Run this command:\n\n${data.command}`, 'success');
+                } else {
+                    showResult(projectResult, `❌ ${data.error}`, 'error');
+                }
+            } catch (e) {
+                showResult(projectResult, `❌ ${e.message}`, 'error');
+            }
+        }
+        
+        // Chat actions
+        async function validateChatContract() {
+            if (!currentContract) {
+                showResult(chatResult, '❌ No contract to validate', 'error');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contract: currentContract })
+                });
+                
+                const data = await res.json();
+                
+                if (data.valid) {
+                    showResult(chatResult, `✅ Valid! Entities: ${data.stats.entities}, Events: ${data.stats.events}`, 'success');
+                } else {
+                    showResult(chatResult, `⚠️ Issues:\n${data.errors.join('\n')}`, 'warning');
+                }
+            } catch (e) {
+                showResult(chatResult, `❌ ${e.message}`, 'error');
+            }
+        }
+        
+        async function saveContract(format) {
+            if (!currentContract) {
+                showResult(chatResult, '❌ No contract to save', 'error');
+                return;
+            }
+            
+            const name = document.getElementById('project-name').value.trim() || 'my-app';
+            
+            try {
+                const res = await fetch('/api/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        name, 
+                        contract: currentContract, 
+                        format,
+                        // Include conversation history for .rcl.md format
+                        history: chatHistory
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    showResult(chatResult, `✅ Saved to ${data.path}`, 'success');
+                    // Update files list
+                    if (data.files) {
+                        updateFilesList(data.files);
+                    }
+                } else {
+                    showResult(chatResult, `❌ ${data.error}`, 'error');
+                }
+            } catch (e) {
+                showResult(chatResult, `❌ ${e.message}`, 'error');
+            }
+        }
+        
+        function showResult(el, message, type) {
+            el.textContent = message;
+            el.style.display = 'block';
+            el.style.borderLeft = `3px solid var(--${type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'error'})`;
+        }
+        
+        // Event listeners
+        document.getElementById('send-btn').addEventListener('click', sendMessage);
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        document.getElementById('clear-btn').addEventListener('click', () => {
+            chatHistory = [];
+            currentContract = '';
+            currentTsContract = '';
+            currentMdContract = '';
+            generatedFiles = [];
+            sessionLogs = [];
+            chatMessages.innerHTML = '';
+            contractPreview.textContent = 'No contract yet...';
+            document.getElementById('ts-preview').textContent = 'Generate a contract first...';
+            document.getElementById('md-preview').textContent = 'Generate a contract first...';
+            document.getElementById('logs-content').textContent = 'No logs yet...';
+            document.getElementById('files-list').innerHTML = '<p style="color: var(--text2);">No files generated yet.</p>';
+            document.getElementById('contract-status').textContent = 'pending';
+            document.getElementById('contract-status').className = 'status-badge pending';
+            document.getElementById('files-count').textContent = '0 files';
+            document.getElementById('logs-count').textContent = '0 logs';
+            chatResult.style.display = 'none';
+        });
+        
+        document.getElementById('validate-btn').addEventListener('click', validateChatContract);
+        document.getElementById('save-rcl-btn').addEventListener('click', () => saveContract('rcl'));
+        document.getElementById('save-md-btn').addEventListener('click', () => saveContract('md'));
+        document.getElementById('save-ts-btn').addEventListener('click', () => saveContract('ts'));
+        
+        // Run contract from chat
+        document.getElementById('run-contract-btn').addEventListener('click', async () => {
+            if (!currentContract) {
+                showResult(chatResult, '❌ No contract to run. Generate a contract first.', 'error');
+                return;
+            }
+            
+            const projectName = document.getElementById('project-name')?.value || 'my-app';
+            
+            showResult(chatResult, '⏳ Saving contract and preparing to run...', 'warning');
+            
+            try {
+                // Send contract with run request
+                const res = await fetch('/api/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        source: 'projects', 
+                        name: projectName,
+                        contract: currentContract
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    showResult(chatResult, `🚀 ${data.message}\n\nURI: ${data.uri}\n\nCommand: ${data.command}`, 'success');
+                    
+                    // Open frontend in new tab
+                    if (data.urls.frontend) {
+                        window.open(data.urls.frontend, '_blank');
+                    }
+                } else if (data.needsGenerate) {
+                    const cmd = data.generateCommand || `./bin/reclapp generate studio-lite/projects/${projectName}/contracts/main.reclapp.rcl -o studio-lite/projects/${projectName}/target`;
+                    showResult(chatResult, `⚠️ ${data.error}\n\n📋 Contract saved to: ${data.contractPath || 'studio-lite/projects/' + projectName + '/contracts/main.reclapp.rcl'}\n\n🔧 Run this to generate:\n${cmd}\n\n💡 Or use: make generate PROJECT=${projectName}`, 'warning');
+                } else if (data.needsSave) {
+                    showResult(chatResult, `❌ ${data.error}\n\n💡 Click "💾 Save .rcl" first to save the contract.`, 'error');
+                } else {
+                    showResult(chatResult, `❌ ${data.error}`, 'error');
+                }
+            } catch (e) {
+                showResult(chatResult, `❌ ${e.message}`, 'error');
+            }
+        });
+        
+        document.getElementById('refresh-btn').addEventListener('click', loadProjects);
+        document.getElementById('view-md-btn').addEventListener('click', () => viewProjectContract('md'));
+        document.getElementById('view-rcl-btn').addEventListener('click', () => viewProjectContract('rcl'));
+        document.getElementById('view-ts-btn').addEventListener('click', () => viewProjectContract('ts'));
+        document.getElementById('auto-gen-btn').addEventListener('click', autoGenerateFormats);
+        document.getElementById('validate-project-btn').addEventListener('click', validateProject);
+        document.getElementById('generate-btn').addEventListener('click', generateProject);
+        document.getElementById('run-btn').addEventListener('click', runProject);
+        document.getElementById('edit-in-chat-btn').addEventListener('click', editProjectInChat);
+        
+        // Contract selector in chat tab
+        document.getElementById('load-contract-select').addEventListener('change', (e) => {
+            if (e.target.value) {
+                const [source, name] = e.target.value.split('|');
+                loadContractForEdit(source, name);
+                e.target.value = ''; // Reset selector
+            }
+        });
+        
+        // Run project
+        let runningUrls = null;
+        
+        async function runProject() {
+            if (!selectedProject) {
+                showResult(projectResult, '❌ No project selected', 'error');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ source: selectedProject.source, name: selectedProject.name })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    runningUrls = data.urls;
+                    
+                    // Show URLs panel
+                    const urlsPanel = document.getElementById('run-urls');
+                    urlsPanel.style.display = 'block';
+                    
+                    if (data.urls.api) {
+                        document.getElementById('url-api').href = data.urls.api;
+                        document.getElementById('url-api').textContent = `API: ${data.urls.api}`;
+                        document.getElementById('url-api').style.display = 'inline-block';
+                    } else {
+                        document.getElementById('url-api').style.display = 'none';
+                    }
+                    
+                    if (data.urls.frontend) {
+                        document.getElementById('url-frontend').href = data.urls.frontend;
+                        document.getElementById('url-frontend').textContent = `Frontend: ${data.urls.frontend}`;
+                    }
+                    
+                    if (data.urls.dashboard) {
+                        document.getElementById('url-dashboard').href = data.urls.dashboard;
+                        document.getElementById('url-dashboard').textContent = `Dashboard: ${data.urls.dashboard}`;
+                    }
+                    
+                    document.getElementById('run-command').textContent = `Command: ${data.command}`;
+                    
+                    showResult(projectResult, `✅ ${data.message}\n\nURI: ${data.uri}\n\nRun: ${data.command}`, 'success');
+                } else if (data.needsGenerate) {
+                    showResult(projectResult, `⚠️ ${data.error}\n\nClick "🚀 Generate" first to build the project.`, 'warning');
+                } else {
+                    showResult(projectResult, `❌ ${data.error}`, 'error');
+                }
+            } catch (e) {
+                showResult(projectResult, `❌ ${e.message}`, 'error');
+            }
+        }
+        
+        async function openInBrowser() {
+            if (!runningUrls || !runningUrls.frontend) {
+                // Try to open project URL directly
+                if (selectedProject) {
+                    const url = `http://localhost:7861/?tab=projects&project=${selectedProject.name}`;
+                    window.open(url, '_blank');
+                    return;
+                }
+                showResult(projectResult, '❌ No running application. Click "▶️ Run" first.', 'error');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/open', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: runningUrls.frontend })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    showResult(projectResult, `✅ ${data.message}`, 'success');
+                } else {
+                    // Fallback: open in new tab
+                    window.open(runningUrls.frontend, '_blank');
+                    showResult(projectResult, `🌐 Opened in new tab: ${runningUrls.frontend}`, 'success');
+                }
+            } catch (e) {
+                // Fallback
+                window.open(runningUrls.frontend, '_blank');
+            }
+        }
+        
+        // Init
+        checkHealth();
+        loadProjects();
+        populateContractSelector();
+    </script>
+</body>
+</html>

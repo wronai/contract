@@ -744,106 +744,65 @@ env-init: ## Initialize .env from .env.example
 	@echo "$(YELLOW)Edit .env to customize your configuration$(NC)"
 
 # ==========================================================================
-# STUDIO (Gradio UI + local Ollama)
+# RECLAPP STUDIO (Web UI + Express + Ollama)
 # ==========================================================================
 
-studio-env-init: ## Initialize studio/.env from studio/.env.example
-	@if [ -f studio/.env ]; then \
-		echo "$(YELLOW)⚠️  studio/.env already exists (leaving as-is)$(NC)"; \
-	else \
-		cp studio/.env.example studio/.env; \
-		echo "$(GREEN)✓ studio/.env initialized from studio/.env.example$(NC)"; \
-	fi
+STUDIO_PORT ?= 7861
 
-studio-pick-port: studio-env-init ## Pick a free STUDIO_PORT in studio/.env if current one is occupied
-	@python3 scripts/portenv.py --env studio/.env --pick-var STUDIO_PORT --start-port 7860 --max-port 7960 --mode free --prefix STUDIO_
+studio-install: ## Install Reclapp Studio dependencies
+	@echo "$(BLUE)📦 Installing Reclapp Studio dependencies...$(NC)"
+	@cd studio && npm install --silent
 
-studio-check-ports: studio-env-init ## Check that Studio ports are free (pre-start)
-	@python3 scripts/portenv.py --env studio/.env --mode free --prefix STUDIO_
-
-studio-up: studio-pick-port ## Start Reclapp Studio (uses local Ollama)
+studio-up: studio-install ## Start Reclapp Studio (Express + vanilla JS)
 	@echo "$(BLUE)🚀 Starting Reclapp Studio...$(NC)"
-	@docker compose --project-directory studio --env-file studio/.env -f studio/docker-compose.yml up -d --build --remove-orphans
-	@$(MAKE) studio-health
-
-studio-down: ## Stop Reclapp Studio
-	@docker compose --project-directory studio --env-file studio/.env -f studio/docker-compose.yml down --remove-orphans
-
-studio-logs: ## Follow Reclapp Studio logs
-	@docker compose --project-directory studio --env-file studio/.env -f studio/docker-compose.yml logs -f
-
-studio-health: studio-env-init ## Verify Studio is listening on STUDIO_PORT
-	@echo "$(BLUE)🏥 Checking Studio health...$(NC)"
-	@set -e; \
-	STUDIO_PORT=$$(grep -E '^STUDIO_PORT=' studio/.env | tail -1 | cut -d= -f2); \
-	if [ -z "$$STUDIO_PORT" ]; then STUDIO_PORT=7860; fi; \
-	OK=0; \
-	for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do \
-		if curl -sf "http://localhost:$$STUDIO_PORT/" >/dev/null 2>&1; then OK=1; break; fi; \
-		sleep 1; \
-	done; \
-	if [ "$$OK" = "1" ]; then \
-		echo "$(GREEN)✓ Studio responding on http://localhost:$$STUDIO_PORT$(NC)"; \
+	@if curl -sf http://localhost:$(STUDIO_PORT)/api/health >/dev/null 2>&1; then \
+		echo "$(GREEN)✓ Reclapp Studio already running on http://localhost:$(STUDIO_PORT)$(NC)"; \
 	else \
-		echo "$(YELLOW)⚠ Studio not responding yet on http://localhost:$$STUDIO_PORT$(NC)"; \
-	fi; \
-	python3 scripts/portenv.py --env studio/.env --mode used --prefix STUDIO_ || true
-
-auto-studio: ## Auto-run Studio with port diagnostics + health monitor
-	@./scripts/autorun.sh studio-up studio-down studio-health "Studio" "STUDIO_"
-
-# ============================================================================
-# STUDIO LITE (Simple Web UI without Gradio)
-# ============================================================================
-
-STUDIO_LITE_PORT ?= 7861
-
-studio-lite-install: ## Install Studio Lite dependencies
-	@echo "$(BLUE)📦 Installing Studio Lite dependencies...$(NC)"
-	@cd studio-lite && npm install --silent
-
-studio-lite-up: studio-lite-install ## Start Studio Lite (Express + vanilla JS)
-	@echo "$(BLUE)🚀 Starting Studio Lite...$(NC)"
-	@if curl -sf http://localhost:$(STUDIO_LITE_PORT)/api/health >/dev/null 2>&1; then \
-		echo "$(GREEN)✓ Studio Lite already running on http://localhost:$(STUDIO_LITE_PORT)$(NC)"; \
-	else \
-		cd studio-lite && nohup node server.js > server.log 2>&1 & \
+		cd studio && nohup node server.js > server.log 2>&1 & \
 		sleep 2; \
-		if curl -sf http://localhost:$(STUDIO_LITE_PORT)/api/health >/dev/null 2>&1; then \
-			echo "$(GREEN)✓ Studio Lite running on http://localhost:$(STUDIO_LITE_PORT)$(NC)"; \
+		if curl -sf http://localhost:$(STUDIO_PORT)/api/health >/dev/null 2>&1; then \
+			echo "$(GREEN)✓ Reclapp Studio running on http://localhost:$(STUDIO_PORT)$(NC)"; \
 		else \
-			echo "$(RED)✗ Studio Lite failed to start. Check studio-lite/server.log$(NC)"; \
+			echo "$(RED)✗ Reclapp Studio failed to start. Check studio/server.log$(NC)"; \
 		fi; \
 	fi
 
-studio-lite-down: ## Stop Studio Lite
-	@echo "$(BLUE)🛑 Stopping Studio Lite...$(NC)"
+studio-down: ## Stop Reclapp Studio
+	@echo "$(BLUE)🛑 Stopping Reclapp Studio...$(NC)"
+	@-pkill -f "node.*studio/server.js" 2>/dev/null || true
 	@-pkill -f "node server.js" 2>/dev/null || true
 	@sleep 1
-	@if curl -sf http://localhost:$(STUDIO_LITE_PORT)/api/health >/dev/null 2>&1; then \
-		echo "$(YELLOW)⚠ Studio Lite still running, force killing...$(NC)"; \
-		fuser -k $(STUDIO_LITE_PORT)/tcp 2>/dev/null || true; \
+	@if curl -sf http://localhost:$(STUDIO_PORT)/api/health >/dev/null 2>&1; then \
+		echo "$(YELLOW)⚠ Reclapp Studio still running, force killing...$(NC)"; \
+		fuser -k $(STUDIO_PORT)/tcp 2>/dev/null || true; \
 	fi
-	@echo "$(GREEN)✓ Studio Lite stopped$(NC)"
+	@echo "$(GREEN)✓ Reclapp Studio stopped$(NC)"
 
-studio-lite-restart: ## Restart Studio Lite
-	@$(MAKE) studio-lite-down
+studio-restart: ## Restart Reclapp Studio
+	@$(MAKE) studio-down
 	@sleep 1
-	@$(MAKE) studio-lite-up
+	@$(MAKE) studio-up
 
-studio-lite-status: ## Check Studio Lite status
-	@if curl -sf http://localhost:$(STUDIO_LITE_PORT)/api/health >/dev/null 2>&1; then \
-		echo "$(GREEN)✓ Studio Lite running on http://localhost:$(STUDIO_LITE_PORT)$(NC)"; \
-		curl -s http://localhost:$(STUDIO_LITE_PORT)/api/health; echo; \
+studio-status: ## Check Reclapp Studio status
+	@if curl -sf http://localhost:$(STUDIO_PORT)/api/health >/dev/null 2>&1; then \
+		echo "$(GREEN)✓ Reclapp Studio running on http://localhost:$(STUDIO_PORT)$(NC)"; \
+		curl -s http://localhost:$(STUDIO_PORT)/api/health; echo; \
 	else \
-		echo "$(RED)✗ Studio Lite not running$(NC)"; \
+		echo "$(RED)✗ Reclapp Studio not running$(NC)"; \
 	fi
 
-studio-lite-chat: ## Run Studio Lite shell chat
-	@node studio-lite/chat-shell.js
+studio-chat: ## Run Reclapp Studio shell chat
+	@node studio/chat-shell.js
 
-studio-lite-logs: ## View Studio Lite session logs
-	@ls -la studio-lite/projects/logs/ 2>/dev/null || echo "No logs yet"
+studio-logs: ## View Reclapp Studio session logs
+	@ls -la studio/projects/logs/ 2>/dev/null || echo "No logs yet"
+
+studio-test: ## Run Reclapp Studio tests
+	@echo "$(BLUE)🧪 Testing Reclapp Studio...$(NC)"
+	@$(MAKE) studio-up
+	@sleep 2
+	@curl -sf http://localhost:$(STUDIO_PORT)/api/health && echo "$(GREEN)✓ Health check passed$(NC)" || echo "$(RED)✗ Health check failed$(NC)"
+	@curl -sf http://localhost:$(STUDIO_PORT)/api/projects && echo "$(GREEN)✓ Projects API passed$(NC)" || echo "$(RED)✗ Projects API failed$(NC)"
 
 # ============================================================================
 # PACKAGE CREATION

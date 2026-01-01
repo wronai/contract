@@ -548,16 +548,16 @@ make auto-studio
 - `codellama:13b` - Good understanding, slower (~8GB)
 - `mistral:7b-instruct` - General purpose (~4GB)
 
-## 🎨 Studio Lite (Web UI)
+## 🎨 Studio (Web UI)
 
 Lightweight web interface for contract design with AI chat:
 
 ```bash
-# Start Studio Lite
-make studio-lite-up
+# Start Studio
+make studio-up
 
 # Or manually
-cd studio-lite && npm install && node server.js
+cd studio && npm install && node server.js
 ```
 
 **Available at:** http://localhost:7861
@@ -581,12 +581,12 @@ cd studio-lite && npm install && node server.js
 ### Make Commands
 
 ```bash
-make studio-lite-up       # Start server
-make studio-lite-down     # Stop server
-make studio-lite-restart  # Restart server
-make studio-lite-status   # Check status
-make studio-lite-chat     # Terminal chat
-make studio-lite-logs     # View session logs
+make studio-up       # Start server
+make studio-down     # Stop server
+make studio-restart  # Restart server
+make studio-status   # Check status
+make studio-chat     # Terminal chat
+make studio-logs     # View session logs
 ```
 
 ## 🤝 Contributing

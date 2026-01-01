@@ -47,10 +47,10 @@ Generated: 2026-01-01
 ./dsl/validator/index.ts
 ```
 
-### Studio Lite (Web UI)
+### Studio (Web UI)
 
 ```text
-./studio-lite/
+./studio/
 ├── server.js           # Express server with chat, projects, validation APIs
 ├── public/
 │   └── index.html      # Vanilla JS UI with accordions, tabs
@@ -109,7 +109,7 @@ Generated: 2026-01-01
 
 | Service | URL | Description |
 |---------|-----|-------------|
-| Studio Lite | http://localhost:7861 | Web UI for contract design |
+| Studio | http://localhost:7861 | Web UI for contract design |
 | Gradio Studio | http://localhost:7860 | Full-featured Studio (Docker) |
 | API | http://localhost:8080 | REST API |
 | Frontend | http://localhost:3000 | React Dashboard |
@@ -117,13 +117,13 @@ Generated: 2026-01-01
 ## Make Commands
 
 ```bash
-# Studio Lite
-make studio-lite-up       # Start
-make studio-lite-down     # Stop
-make studio-lite-restart  # Restart
-make studio-lite-status   # Check status
-make studio-lite-chat     # Terminal chat
-make studio-lite-logs     # View logs
+# Studio
+make studio-up       # Start
+make studio-down     # Stop
+make studio-restart  # Restart
+make studio-status   # Check status
+make studio-chat     # Terminal chat
+make studio-logs     # View logs
 
 # Development
 make install              # Install deps

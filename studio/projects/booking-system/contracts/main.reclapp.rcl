@@ -1,0 +1,7 @@
+app "Reclapp" { version:"1.0.0" }
+
+entity Contacts { email @required, name text, last_updated datetime @generated @index }
+
+entity Transactions { amount money(PLN), description text, date datetime @required  } 
+
+alert "Outdated Contact Email" { entity: Contacts, when: (current_date - last_updated > 3 months), notify: [admin@example.com], severity: high}
