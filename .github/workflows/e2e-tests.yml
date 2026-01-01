@@ -1,0 +1,139 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl jq
+
+      - name: Fix example configurations
+        run: |
+          chmod +x tests/e2e/fix-examples.sh
+          ./tests/e2e/fix-examples.sh
+
+      - name: Run E2E tests
+        run: |
+          chmod +x tests/e2e/run-all.sh
+          ./tests/e2e/run-all.sh
+        env:
+          E2E_TIMEOUT: 180
+
+      - name: Upload test logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-logs
+          path: |
+            tests/e2e/*.log
+            docker-compose.logs
+          retention-days: 7
+
+  test-root-stack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start root stack
+        run: docker compose up -d --build
+
+      - name: Wait for services
+        run: |
+          echo "Waiting for API to be healthy..."
+          timeout 120 bash -c 'until curl -sf http://localhost:8080/api/health; do sleep 5; done'
+
+      - name: Test API endpoints
+        run: |
+          echo "Testing /api/health..."
+          curl -sf http://localhost:8080/api/health | jq .
+          
+          echo "Testing /api/customers..."
+          curl -sf http://localhost:8080/api/customers | jq '.data | length'
+          
+          echo "Testing /api/contractors..."
+          curl -sf http://localhost:8080/api/contractors | jq '.data | length'
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v
+
+  test-b2b-risk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start b2b-risk-monitoring
+        working-directory: examples/b2b-risk-monitoring
+        run: docker compose up -d --build
+
+      - name: Wait for services
+        run: |
+          echo "Waiting for API to be healthy..."
+          timeout 120 bash -c 'until curl -sf http://localhost:8081/health; do sleep 5; done'
+
+      - name: Test API endpoints
+        run: |
+          curl -sf http://localhost:8081/health | jq .
+          curl -sf http://localhost:8081/api/v1/customers | jq '.customers | length'
+
+      - name: Cleanup
+        if: always()
+        working-directory: examples/b2b-risk-monitoring
+        run: docker compose down -v
+
+  test-multi-agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start multi-agent
+        working-directory: examples/multi-agent
+        run: docker compose up -d --build
+
+      - name: Wait for services
+        run: |
+          echo "Waiting for orchestrator..."
+          timeout 120 bash -c 'until curl -sf http://localhost:8090/health; do sleep 5; done'
+
+      - name: Test orchestrator and agents
+        run: |
+          curl -sf http://localhost:8090/health | jq .
+          curl -sf http://localhost:8091/health | jq .
+          curl -sf http://localhost:8092/health | jq .
+          curl -sf http://localhost:8093/health | jq .
+
+      - name: Cleanup
+        if: always()
+        working-directory: examples/multi-agent
+        run: docker compose down -v

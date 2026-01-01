@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: saas-postgres
+    environment:
+      POSTGRES_USER: saas
+      POSTGRES_PASSWORD: saas_secret
+      POSTGRES_DB: saas_db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    ports:
+      - "5435:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U saas -d saas_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - saas-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: saas-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6382:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - saas-network
+
+  # EventStoreDB
+  eventstore:
+    image: eventstore/eventstore:23.10.0-bookworm-slim
+    container_name: saas-eventstore
+    environment:
+      - EVENTSTORE_CLUSTER_SIZE=1
+      - EVENTSTORE_RUN_PROJECTIONS=All
+      - EVENTSTORE_START_STANDARD_PROJECTIONS=true
+      - EVENTSTORE_INSECURE=true
+      - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
+    ports:
+      - "2117:2113"
+    volumes:
+      - eventstore-data:/var/lib/eventstore
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2113/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - saas-network
+
+  # SaaS API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: saas-api
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+      DATABASE_URL: postgresql://saas:saas_secret@postgres:5432/saas_db
+      REDIS_URL: redis://redis:6379
+      EVENTSTORE_URL: esdb://eventstore:2113?tls=false
+      JWT_SECRET: ${JWT_SECRET:-saas-jwt-secret-change-in-production}
+      STRIPE_API_KEY: ${STRIPE_API_KEY:-sk_test_placeholder}
+    ports:
+      - "8083:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eventstore:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - saas-network
+
+networks:
+  saas-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
+  eventstore-data:

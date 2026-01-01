@@ -2,14 +2,26 @@
   "name": "reclapp-e-commerce",
   "version": "1.0.0",
   "description": "E-Commerce Example - Full platform with products, orders, inventory",
+  "main": "dist/server.js",
   "scripts": {
-    "generate": "cd ../.. && npx ts-node generator/cli.ts generate examples/e-commerce/contracts/main.reclapp -o examples/e-commerce/src -t full-stack",
-    "dev": "npm run generate && cd src && npm run dev",
-    "build": "npm run generate && cd src && npm run build",
-    "docker:up": "docker-compose up -d --build",
-    "docker:down": "docker-compose down",
-    "docker:logs": "docker-compose logs -f"
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
   },
   "keywords": ["reclapp", "e-commerce", "shop", "orders"],
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.2"
+  }
 }
