@@ -8,7 +8,7 @@
 const readline = require('readline');
 const fs = require('fs');
 const path = require('path');
-const { ReclappChat } = require('../lib/chat-core');
+const { ReclappChat, normalizeMiniRclSource } = require('../lib/chat-core');
 
 // Colors
 const colors = {
@@ -30,6 +30,18 @@ function color(c, text) {
 // Create chat instance
 const chat = new ReclappChat();
 let lastSavedDir = '';
+
+if (process.env.RECLAPP_CHAT_SEED_CONTRACT_PATH) {
+  try {
+    const seeded = fs.readFileSync(process.env.RECLAPP_CHAT_SEED_CONTRACT_PATH, 'utf-8');
+    if (seeded) chat.currentContract = normalizeMiniRclSource ? normalizeMiniRclSource(seeded) : seeded;
+  } catch (e) {
+    // ignore
+  }
+} else if (process.env.RECLAPP_CHAT_SEED_CONTRACT) {
+  const seeded = String(process.env.RECLAPP_CHAT_SEED_CONTRACT);
+  if (seeded) chat.currentContract = normalizeMiniRclSource ? normalizeMiniRclSource(seeded) : seeded;
+}
 
 // Main
 async function main() {

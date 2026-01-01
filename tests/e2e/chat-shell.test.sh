@@ -108,6 +108,51 @@ test_case "getState works" \
     "node -e \"const {ReclappChat} = require('./lib/chat-core'); const c = new ReclappChat(); console.log(JSON.stringify(c.getState()))\"" \
     "model"
 
+test_case "reclapp normalize works" \
+    "tmp=\$(mktemp -d); \
+      printf '%s\n' \
+        'app TestApp { version: "1.0.0", }' \
+        '' \
+        'entity User {' \
+        '  id: uuid @indexed,' \
+        '  company: Company @belongs_to,' \
+        '}' \
+        '' \
+        'entity Company { id uuid }' \
+        > \"\$tmp/in.reclapp.rcl\"; \
+      ./bin/reclapp normalize \"\$tmp/in.reclapp.rcl\" -o \"\$tmp/out.reclapp.rcl\" >/dev/null; \
+      grep -q '@index' \"\$tmp/out.reclapp.rcl\" && ! grep -q ':' \"\$tmp/out.reclapp.rcl\" && echo ok; \
+      rm -rf \"\$tmp\"" \
+    "ok"
+
+test_case "reclapp-chat saves and generates" \
+    "tmp=\$(mktemp -d); \
+      app=\"\$tmp/my-app\"; \
+      seed=\"\$tmp/seed.reclapp.rcl\"; \
+      mkdir -p \"\$app\"; \
+      printf '%s\n' \
+        'app CRM { version: "1.0.0", }' \
+        '' \
+        'entity Contact {' \
+        '  name: text @required,' \
+        '  email: email @indexed,' \
+        '}' \
+        > \"\$seed\"; \
+      printf '%s\n' \
+        '/name my-app' \
+        \"/save \$app\" \
+        '/validate' \
+        \"/generate \$app\" \
+        '/quit' \
+        | RECLAPP_CHAT_SEED_CONTRACT_PATH=\"\$seed\" node bin/reclapp-chat >/dev/null 2>&1; \
+      test -f \"\$app/contracts/main.reclapp.rcl\" \
+        && test -f \"\$app/contracts/main.rcl.md\" \
+        && test -f \"\$app/contracts/main.reclapp.ts\" \
+        && test -f \"\$app/target/api/package.json\" \
+        && echo ok; \
+      rm -rf \"\$tmp\"" \
+    "ok"
+
 echo ""
 echo "=============================="
 echo -e "Results: ${GREEN}$PASSED passed${NC}, ${RED}$FAILED failed${NC}"

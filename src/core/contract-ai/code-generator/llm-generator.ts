@@ -1,0 +1,422 @@
+/**
+ * LLM Code Generator
+ * 
+ * Główna klasa generująca kod z LLM na podstawie Contract AI.
+ * 
+ * @version 2.2.0
+ * @see todo/16-reclapp-implementation-todo-prompts.md
+ */
+
+import { 
+  ContractAI, 
+  GeneratedCode, 
+  GeneratedFile,
+  GenerationTarget 
+} from '../types';
+import { ApiPromptTemplate, PromptTemplate } from './prompt-templates/api';
+import { FrontendPromptTemplate } from './prompt-templates/frontend';
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+/**
+ * Opcje generatora kodu
+ */
+export interface CodeGeneratorOptions {
+  /** Maksymalna liczba tokenów na request */
+  maxTokens: number;
+  /** Temperatura LLM (0.0 - 1.0) */
+  temperature: number;
+  /** Model LLM */
+  model: string;
+  /** Czy logować szczegóły */
+  verbose: boolean;
+}
+
+/**
+ * Klient LLM (interfejs)
+ */
+export interface LLMClient {
+  generate(options: {
+    system: string;
+    user: string;
+    temperature?: number;
+    maxTokens?: number;
+  }): Promise<string>;
+}
+
+/**
+ * Błąd składniowy
+ */
+export interface SyntaxError {
+  file: string;
+  line: number;
+  column: number;
+  message: string;
+}
+
+// ============================================================================
+// DEFAULT OPTIONS
+// ============================================================================
+
+const DEFAULT_OPTIONS: CodeGeneratorOptions = {
+  maxTokens: 8000,
+  temperature: 0.3, // niższa dla kodu
+  model: 'llama3',
+  verbose: false
+};
+
+// ============================================================================
+// LLM CODE GENERATOR
+// ============================================================================
+
+/**
+ * Generator kodu używający LLM
+ */
+export class LLMCodeGenerator {
+  private options: CodeGeneratorOptions;
+  private promptTemplates: Map<GenerationTarget, PromptTemplate>;
+  private llmClient: LLMClient | null = null;
+
+  constructor(options: Partial<CodeGeneratorOptions> = {}) {
+    this.options = { ...DEFAULT_OPTIONS, ...options };
+    this.promptTemplates = new Map();
+    
+    // Rejestruj domyślne szablony
+    this.promptTemplates.set('api', new ApiPromptTemplate());
+    this.promptTemplates.set('frontend', new FrontendPromptTemplate());
+  }
+
+  /**
+   * Ustawia klienta LLM
+   */
+  setLLMClient(client: LLMClient): void {
+    this.llmClient = client;
+  }
+
+  /**
+   * Rejestruje szablon promptu dla danego targetu
+   */
+  registerTemplate(target: GenerationTarget, template: PromptTemplate): void {
+    this.promptTemplates.set(target, template);
+  }
+
+  /**
+   * Główna metoda generująca kod
+   */
+  async generate(contract: ContractAI): Promise<GeneratedCode> {
+    const startTime = Date.now();
+    const files: GeneratedFile[] = [];
+    let totalTokens = 0;
+
+    // Określ cele generacji
+    const targets = this.determineTargets(contract);
+
+    if (this.options.verbose) {
+      console.log(`\n🚀 Starting code generation for targets: ${targets.join(', ')}`);
+    }
+
+    // Generuj każdy target osobno
+    for (const target of targets) {
+      if (this.options.verbose) {
+        console.log(`\n📦 Generating ${target}...`);
+      }
+
+      try {
+        const targetFiles = await this.generateTarget(contract, target);
+        files.push(...targetFiles);
+        
+        if (this.options.verbose) {
+          console.log(`   ✅ Generated ${targetFiles.length} files for ${target}`);
+        }
+      } catch (error: any) {
+        if (this.options.verbose) {
+          console.log(`   ❌ Error generating ${target}: ${error.message}`);
+        }
+      }
+    }
+
+    return {
+      files,
+      contract,
+      metadata: {
+        generatedAt: new Date(),
+        targets,
+        tokensUsed: totalTokens,
+        timeMs: Date.now() - startTime
+      }
+    };
+  }
+
+  /**
+   * Generuje kod dla pojedynczego targetu
+   */
+  async generateTarget(
+    contract: ContractAI,
+    target: GenerationTarget
+  ): Promise<GeneratedFile[]> {
+    const template = this.promptTemplates.get(target);
+    
+    if (!template) {
+      throw new Error(`No template registered for target: ${target}`);
+    }
+
+    const systemPrompt = template.getSystemPrompt();
+    const userPrompt = template.buildPrompt(contract);
+
+    // Wywołaj LLM
+    const response = await this.callLLM(systemPrompt, userPrompt);
+
+    // Parsuj pliki z odpowiedzi
+    const files = this.parseFilesFromResponse(response, target);
+
+    // Waliduj podstawową składnię
+    for (const file of files) {
+      const errors = this.validateBasicSyntax(file);
+      if (errors.length > 0) {
+        file.syntaxErrors = errors;
+      }
+    }
+
+    return files;
+  }
+
+  /**
+   * Określa cele generacji na podstawie kontraktu
+   */
+  determineTargets(contract: ContractAI): GenerationTarget[] {
+    const targets: GenerationTarget[] = [];
+    const { techStack } = contract.generation;
+
+    // Backend jest zawsze generowany
+    if (techStack.backend) {
+      targets.push('api');
+    }
+
+    // Frontend tylko jeśli zdefiniowany
+    if (techStack.frontend && techStack.frontend.framework !== 'none') {
+      targets.push('frontend');
+    }
+
+    return targets;
+  }
+
+  /**
+   * Wywołuje LLM
+   */
+  private async callLLM(systemPrompt: string, userPrompt: string): Promise<string> {
+    if (!this.llmClient) {
+      // Fallback - symulacja dla testów
+      return this.simulateLLMResponse(userPrompt);
+    }
+
+    return this.llmClient.generate({
+      system: systemPrompt,
+      user: userPrompt,
+      temperature: this.options.temperature,
+      maxTokens: this.options.maxTokens
+    });
+  }
+
+  /**
+   * Parsuje pliki z odpowiedzi LLM
+   */
+  parseFilesFromResponse(response: string, target: GenerationTarget): GeneratedFile[] {
+    const files: GeneratedFile[] = [];
+    
+    // Regex do wyciągania plików z markdown code blocks
+    // Format: ```typescript:path/to/file.ts lub ```javascript:path/to/file.js
+    const fileRegex = /```(?:typescript|javascript|json|html|css):(.+?)\n([\s\S]*?)```/g;
+
+    let match;
+    while ((match = fileRegex.exec(response)) !== null) {
+      const path = match[1].trim();
+      const content = match[2].trim();
+
+      files.push({
+        path,
+        content,
+        target
+      });
+    }
+
+    // Fallback: spróbuj prostszego formatu
+    if (files.length === 0) {
+      const simpleRegex = /```(\w+)\n([\s\S]*?)```/g;
+      let index = 0;
+      
+      while ((match = simpleRegex.exec(response)) !== null) {
+        const lang = match[1];
+        const content = match[2].trim();
+        
+        // Generuj nazwę pliku
+        const ext = lang === 'typescript' ? 'ts' : lang === 'javascript' ? 'js' : lang;
+        const path = `${target}/src/file${index}.${ext}`;
+        
+        files.push({
+          path,
+          content,
+          target
+        });
+        index++;
+      }
+    }
+
+    return files;
+  }
+
+  /**
+   * Waliduje podstawową składnię pliku
+   */
+  validateBasicSyntax(file: GeneratedFile): SyntaxError[] {
+    const errors: SyntaxError[] = [];
+
+    // Sprawdź rozszerzenie
+    const ext = file.path.split('.').pop()?.toLowerCase();
+
+    if (ext === 'json') {
+      try {
+        JSON.parse(file.content);
+      } catch (e: any) {
+        errors.push({
+          file: file.path,
+          line: 1,
+          column: 1,
+          message: `Invalid JSON: ${e.message}`
+        });
+      }
+    }
+
+    // Podstawowe sprawdzenia dla TypeScript/JavaScript
+    if (ext === 'ts' || ext === 'tsx' || ext === 'js' || ext === 'jsx') {
+      // Sprawdź niezamknięte nawiasy
+      const openBraces = (file.content.match(/{/g) || []).length;
+      const closeBraces = (file.content.match(/}/g) || []).length;
+      
+      if (openBraces !== closeBraces) {
+        errors.push({
+          file: file.path,
+          line: 1,
+          column: 1,
+          message: `Unbalanced braces: ${openBraces} open, ${closeBraces} close`
+        });
+      }
+
+      const openParens = (file.content.match(/\(/g) || []).length;
+      const closeParens = (file.content.match(/\)/g) || []).length;
+      
+      if (openParens !== closeParens) {
+        errors.push({
+          file: file.path,
+          line: 1,
+          column: 1,
+          message: `Unbalanced parentheses: ${openParens} open, ${closeParens} close`
+        });
+      }
+    }
+
+    return errors;
+  }
+
+  /**
+   * Symulacja odpowiedzi LLM (dla testów)
+   */
+  private simulateLLMResponse(prompt: string): string {
+    // Wykryj czy to API czy frontend
+    const isApi = prompt.includes('TASK: API');
+    
+    if (isApi) {
+      return `
+\`\`\`typescript:api/src/server.ts
+import express from 'express';
+import cors from 'cors';
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.json());
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+app.listen(PORT, () => {
+  console.log(\`Server running on port \${PORT}\`);
+});
+\`\`\`
+
+\`\`\`typescript:api/src/types/index.ts
+export interface Entity {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+}
+\`\`\`
+
+\`\`\`json:api/package.json
+{
+  "name": "api",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "ts-node src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "typescript": "^5.3.0",
+    "ts-node": "^10.9.2"
+  }
+}
+\`\`\`
+`;
+    }
+
+    // Frontend response
+    return `
+\`\`\`typescript:frontend/src/App.tsx
+import React from 'react';
+
+export const App: React.FC = () => {
+  return (
+    <div className="min-h-screen bg-gray-100 p-8">
+      <h1 className="text-3xl font-bold text-gray-900">
+        Application
+      </h1>
+    </div>
+  );
+};
+
+export default App;
+\`\`\`
+
+\`\`\`typescript:frontend/src/main.tsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+\`\`\`
+`;
+  }
+}
+
+// ============================================================================
+// EXPORTS
+// ============================================================================
+
+export function createLLMCodeGenerator(options?: Partial<CodeGeneratorOptions>): LLMCodeGenerator {
+  return new LLMCodeGenerator(options);
+}
