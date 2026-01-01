@@ -1,0 +1,319 @@
+# Reclapp Studio Guide
+
+Reclapp Studio to interaktywne narzędzie do projektowania kontraktów aplikacji przy użyciu języka naturalnego i lokalnego LLM (Ollama).
+
+## Spis treści
+
+- [Wymagania](#wymagania)
+- [Instalacja](#instalacja)
+- [Uruchamianie](#uruchamianie)
+- [Interfejs Web (Gradio)](#interfejs-web-gradio)
+- [Interfejs Terminal (CLI)](#interfejs-terminal-cli)
+- [Konfiguracja LLM](#konfiguracja-llm)
+- [Walidacja kontraktów](#walidacja-kontraktów)
+- [Przykłady użycia](#przykłady-użycia)
+- [Rozwiązywanie problemów](#rozwiązywanie-problemów)
+
+---
+
+## Wymagania
+
+- **Docker** i **Docker Compose**
+- **Ollama** uruchomiona lokalnie z modelem LLM
+- **Node.js** >= 18 (dla CLI)
+- **Python** >= 3.11 (dla Studio Web)
+
+## Instalacja
+
+### 1. Zainstaluj Ollama
+
+```bash
+# Linux/macOS
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Uruchom Ollama
+ollama serve
+```
+
+### 2. Pobierz zalecany model
+
+```bash
+# Najlepszy dla generowania kontraktów (6.7B, ~4GB)
+ollama pull deepseek-coder:6.7b
+
+# Alternatywy:
+ollama pull codellama:13b        # Lepsze rozumienie kodu (~8GB)
+ollama pull mistral:7b-instruct  # Ogólnego przeznaczenia (~4GB)
+ollama pull qwen2:7b             # Dobra obsługa wielojęzyczna
+```
+
+### 3. Uruchom Studio
+
+```bash
+# Z repozytorium głównego
+make studio-up
+
+# Lub ręcznie
+cd studio && docker compose up -d
+```
+
+## Uruchamianie
+
+### Interfejs Web (Gradio)
+
+```bash
+# Automatyczne uruchomienie z diagnostyką portów
+make auto-studio
+
+# Lub standardowo
+make studio-up
+
+# Sprawdź status
+make studio-health
+
+# Logi
+make studio-logs
+
+# Zatrzymaj
+make studio-down
+```
+
+**Dostęp:** http://localhost:7860
+
+### Interfejs Terminal (CLI)
+
+```bash
+# Interaktywny chat z LLM
+./bin/reclapp chat
+
+# Lub
+./bin/reclapp ai
+```
+
+## Interfejs Web (Gradio)
+
+### Główne funkcje
+
+1. **Chatbot** - Rozmowa z LLM o projektowaniu aplikacji
+2. **Contract Preview** - Podgląd wygenerowanego kontraktu RCL
+3. **Examples** - Ładowanie przykładowych kontraktów
+4. **Save** - Zapisywanie kontraktu do projektu
+
+### Przykładowe prompty
+
+```
+"Stwórz aplikację CRM z kontaktami i transakcjami"
+"Zbuduj system zarządzania zadaniami z projektami"
+"Zaprojektuj platformę e-commerce z koszykiem"
+"Dodaj alerty dla klientów wysokiego ryzyka"
+"Dodaj dashboard do śledzenia sprzedaży"
+```
+
+### Komendy specjalne
+
+- `generate` - Wygeneruj pełny kontrakt
+- `add entity X with fields a, b, c` - Dodaj encję
+- `add alerts for...` - Dodaj alerty
+- `add dashboard for...` - Dodaj panel
+
+## Interfejs Terminal (CLI)
+
+### Komendy
+
+```bash
+/save [dir]      # Zapisz kontrakt do katalogu
+/show            # Pokaż aktualny kontrakt
+/clear           # Wyczyść rozmowę
+/model [name]    # Pokaż/zmień model LLM
+/name <name>     # Ustaw nazwę projektu
+/generate [dir]  # Zapisz i wygeneruj aplikację
+/quit            # Wyjście
+```
+
+### Przykładowa sesja
+
+```
+💬 You: Create a simple blog application
+
+🤖 Assistant: I'll create a blog application with posts and comments...
+
+{
+  "thinking": "Blog needs Post, Comment, Author entities...",
+  "contract": "app \"Blog\" {...}",
+  "summary": {"entities": ["Post", "Comment", "Author"]}
+}
+
+💬 You: /show
+
+📄 Current Contract:
+app "Blog" {
+  version: "1.0.0"
+}
+entity Post {
+  id uuid @unique @generated
+  title text @required
+  ...
+}
+
+💬 You: /save ./apps/my-blog
+✅ Saved to ./apps/my-blog/contracts/main.reclapp.rcl
+
+💬 You: /generate
+🚀 Generating application...
+✅ Generated 36 files to ./apps/my-blog/target
+```
+
+## Konfiguracja LLM
+
+### Zmienne środowiskowe
+
+```bash
+# studio/.env
+OLLAMA_HOST=http://localhost:11434
+OLLAMA_MODEL=deepseek-coder:6.7b
+CODE_MODEL=deepseek-coder:6.7b
+```
+
+### Zalecane modele (do 13B parametrów)
+
+| Model | Rozmiar | Zalety | Wady |
+|-------|---------|--------|------|
+| `deepseek-coder:6.7b` | ~4GB | Najlepszy dla kodu, szybki | - |
+| `codellama:13b` | ~8GB | Dobre rozumienie kodu | Wolniejszy |
+| `mistral:7b-instruct` | ~4GB | Dobry ogólnie | Mniej precyzyjny dla kodu |
+| `qwen2:7b` | ~4GB | Wielojęzyczny | - |
+| `llama2:13b` | ~8GB | Dobre rozumowanie | Wolniejszy |
+
+### Zmiana modelu w runtime
+
+```bash
+# W CLI
+/model codellama:13b
+
+# W .env
+OLLAMA_MODEL=codellama:13b
+```
+
+## Walidacja kontraktów
+
+Studio automatycznie waliduje wygenerowane kontrakty:
+
+### Pętla walidacji
+
+```
+User Request → LLM → JSON Schema → Parser Validation
+                ↑                          ↓
+                └──── Error Feedback ←─────┘
+```
+
+### Wykrywane błędy
+
+- Brak deklaracji `app`
+- Niezbalansowane nawiasy `{}`
+- Nieprawidłowe typy (`string` → `text`, `number` → `int`)
+- Brak `@generated` na polach `id`, `createdAt`
+- Składnia TypeScript zamiast RCL
+
+### Automatyczna korekta
+
+Studio automatycznie:
+1. Wykrywa błędy walidacji
+2. Wysyła feedback do LLM
+3. Prosi o korektę (max 2 retry)
+4. Formatuje poprawny kontrakt
+
+## Przykłady użycia
+
+### 1. Tworzenie aplikacji od zera
+
+```bash
+./bin/reclapp chat
+
+💬 You: Create a project management app with teams and tasks
+
+🤖 Assistant: I'll design a project management system...
+
+💬 You: Add real-time notifications for task assignments
+
+💬 You: /generate ./apps/project-manager
+```
+
+### 2. Rozszerzanie istniejącego kontraktu
+
+```bash
+./bin/reclapp chat
+
+💬 You: Load the CRM example and add a reporting module
+
+💬 You: Add monthly sales report dashboard
+
+💬 You: /save ./apps/crm-extended
+```
+
+### 3. Konwersja do różnych formatów
+
+```bash
+# Po wygenerowaniu kontraktu
+./bin/reclapp convert apps/my-app/contracts/main.reclapp.rcl --format md
+./bin/reclapp convert apps/my-app/contracts/main.reclapp.rcl --format ts
+```
+
+## Rozwiązywanie problemów
+
+### Ollama nie odpowiada
+
+```bash
+# Sprawdź czy Ollama działa
+curl http://localhost:11434/api/tags
+
+# Uruchom Ollama
+ollama serve
+
+# Sprawdź model
+ollama list
+```
+
+### Studio nie startuje
+
+```bash
+# Sprawdź logi
+make studio-logs
+
+# Sprawdź porty
+make studio-check-ports
+
+# Restart z nowym portem
+make studio-pick-port
+make studio-up
+```
+
+### Słaba jakość generowanych kontraktów
+
+1. **Zmień model** na `codellama:13b` lub `deepseek-coder:6.7b`
+2. **Bądź bardziej szczegółowy** w promptach
+3. **Używaj przykładów** - "Like the CRM example but with..."
+4. **Iteruj** - dodawaj elementy stopniowo
+
+### Błędy walidacji
+
+```bash
+# Ręczna walidacja
+./bin/reclapp validate path/to/contract.rcl
+
+# Sprawdź składnię RCL
+cat docs/dsl-reference.md
+```
+
+---
+
+## Linki
+
+- [DSL Reference](./dsl-reference.md) - Pełna składnia Mini-DSL
+- [CLI Reference](./cli-reference.md) - Wszystkie komendy CLI
+- [RCL.md Format](./rcl-md-format.md) - Format Markdown dla kontraktów
+- [Examples](../examples/) - Przykładowe kontrakty
+- [Apps](../apps/) - Wygenerowane aplikacje
+
+---
+
+*Dokumentacja Reclapp Studio v2.1.0*

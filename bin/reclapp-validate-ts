@@ -1,0 +1,188 @@
+#!/usr/bin/env node
+/**
+ * Reclapp TypeScript Contract Validator
+ * 
+ * Validates .reclapp.ts contracts for type correctness
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+// Colors
+const colors = {
+  reset: '\x1b[0m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  cyan: '\x1b[36m'
+};
+
+function color(c, text) {
+  return `${colors[c]}${text}${colors.reset}`;
+}
+
+// Valid RCL types
+const VALID_TYPES = [
+  'uuid', 'text', 'email', 'phone', 'url', 'slug',
+  'int', 'float', 'decimal', 'money',
+  'bool', 'date', 'datetime', 'time', 'timestamp',
+  'json', 'blob'
+];
+
+const VALID_ANNOTATIONS = [
+  'unique', 'required', 'generated', 'index', 'primary',
+  'min', 'max', 'default', 'nullable'
+];
+
+function validateContract(content) {
+  const errors = [];
+  const warnings = [];
+  const stats = { entities: 0, events: 0, enums: 0, fields: 0 };
+
+  // Check for contract export
+  if (!content.includes('export const contract')) {
+    errors.push('Missing "export const contract" declaration');
+  }
+
+  // Check for ReclappContract type
+  if (!content.includes('ReclappContract')) {
+    warnings.push('Missing ReclappContract type import');
+  }
+
+  // Check app declaration
+  const appMatch = content.match(/app:\s*\{[^}]*name:\s*['"]([^'"]+)['"]/);
+  if (!appMatch) {
+    errors.push('Missing app.name in contract');
+  }
+
+  const versionMatch = content.match(/app:\s*\{[^}]*version:\s*['"]([^'"]+)['"]/);
+  if (!versionMatch) {
+    warnings.push('Missing app.version in contract');
+  }
+
+  // Count and validate entities
+  const entityMatches = content.match(/const\s+(\w+)Entity:\s*Entity\s*=/g) || [];
+  stats.entities = entityMatches.length;
+
+  // Check entity definitions
+  const entityRegex = /const\s+(\w+)Entity:\s*Entity\s*=\s*\{([^}]+(?:\{[^}]*\}[^}]*)*)\}/g;
+  let match;
+  while ((match = entityRegex.exec(content)) !== null) {
+    const [, name, body] = match;
+    
+    // Check for name field
+    if (!body.includes(`name: '${name}'`)) {
+      warnings.push(`Entity ${name}Entity: name should match variable name`);
+    }
+    
+    // Check for fields array
+    if (!body.includes('fields:')) {
+      errors.push(`Entity ${name}Entity: missing fields array`);
+    }
+    
+    // Count fields
+    const fieldMatches = body.match(/\{\s*name:/g) || [];
+    stats.fields += fieldMatches.length;
+  }
+
+  // Count events
+  const eventMatches = content.match(/const\s+(\w+)Event:\s*Event\s*=/g) || [];
+  stats.events = eventMatches.length;
+
+  // Count enums
+  const enumMatches = content.match(/export\s+enum\s+\w+/g) || [];
+  stats.enums = enumMatches.length;
+
+  // Check interface definitions match entities
+  const interfaceMatches = content.match(/export\s+interface\s+(\w+)/g) || [];
+  const interfaces = interfaceMatches.map(m => m.replace('export interface ', ''));
+  
+  for (const entityMatch of entityMatches) {
+    const entityName = entityMatch.match(/const\s+(\w+)Entity/)[1];
+    if (!interfaces.includes(entityName)) {
+      warnings.push(`Entity ${entityName}: no matching interface found`);
+    }
+  }
+
+  // Check entities array in contract
+  if (!content.includes('entities:')) {
+    errors.push('Missing entities array in contract');
+  }
+
+  return { valid: errors.length === 0, errors, warnings, stats };
+}
+
+function main() {
+  const args = process.argv.slice(2);
+  
+  if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
+    console.log(`
+${color('cyan', 'Reclapp TypeScript Contract Validator')}
+
+Usage: reclapp-validate-ts <file.reclapp.ts> [options]
+
+Options:
+  --quiet, -q   Only show errors
+  --json        Output as JSON
+  --help, -h    Show this help
+
+Example:
+  reclapp-validate-ts apps/crm/contracts/main.reclapp.ts
+`);
+    process.exit(0);
+  }
+
+  const filePath = args[0];
+  const quiet = args.includes('--quiet') || args.includes('-q');
+  const jsonOutput = args.includes('--json');
+
+  if (!fs.existsSync(filePath)) {
+    console.error(color('red', `❌ File not found: ${filePath}`));
+    process.exit(1);
+  }
+
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const result = validateContract(content);
+
+  if (jsonOutput) {
+    console.log(JSON.stringify(result, null, 2));
+    process.exit(result.valid ? 0 : 1);
+  }
+
+  console.log(`\n${color('cyan', '📋 Validating:')} ${filePath}\n`);
+
+  if (result.errors.length > 0) {
+    console.log(color('red', '❌ Errors:'));
+    for (const error of result.errors) {
+      console.log(`   • ${error}`);
+    }
+    console.log('');
+  }
+
+  if (!quiet && result.warnings.length > 0) {
+    console.log(color('yellow', '⚠️  Warnings:'));
+    for (const warning of result.warnings) {
+      console.log(`   • ${warning}`);
+    }
+    console.log('');
+  }
+
+  if (!quiet) {
+    console.log(color('cyan', '📊 Stats:'));
+    console.log(`   • Entities: ${result.stats.entities}`);
+    console.log(`   • Events: ${result.stats.events}`);
+    console.log(`   • Enums: ${result.stats.enums}`);
+    console.log(`   • Fields: ${result.stats.fields}`);
+    console.log('');
+  }
+
+  if (result.valid) {
+    console.log(color('green', '✅ Contract is valid!'));
+    process.exit(0);
+  } else {
+    console.log(color('red', '❌ Contract has errors'));
+    process.exit(1);
+  }
+}
+
+main();

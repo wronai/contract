@@ -793,6 +793,60 @@ auto-studio: ## Auto-run Studio with port diagnostics + health monitor
 	@./scripts/autorun.sh studio-up studio-down studio-health "Studio" "STUDIO_"
 
 # ============================================================================
+# STUDIO LITE (Simple Web UI without Gradio)
+# ============================================================================
+
+STUDIO_LITE_PORT ?= 7861
+
+studio-lite-install: ## Install Studio Lite dependencies
+	@echo "$(BLUE)📦 Installing Studio Lite dependencies...$(NC)"
+	@cd studio-lite && npm install --silent
+
+studio-lite-up: studio-lite-install ## Start Studio Lite (Express + vanilla JS)
+	@echo "$(BLUE)🚀 Starting Studio Lite...$(NC)"
+	@if curl -sf http://localhost:$(STUDIO_LITE_PORT)/api/health >/dev/null 2>&1; then \
+		echo "$(GREEN)✓ Studio Lite already running on http://localhost:$(STUDIO_LITE_PORT)$(NC)"; \
+	else \
+		cd studio-lite && nohup node server.js > server.log 2>&1 & \
+		sleep 2; \
+		if curl -sf http://localhost:$(STUDIO_LITE_PORT)/api/health >/dev/null 2>&1; then \
+			echo "$(GREEN)✓ Studio Lite running on http://localhost:$(STUDIO_LITE_PORT)$(NC)"; \
+		else \
+			echo "$(RED)✗ Studio Lite failed to start. Check studio-lite/server.log$(NC)"; \
+		fi; \
+	fi
+
+studio-lite-down: ## Stop Studio Lite
+	@echo "$(BLUE)🛑 Stopping Studio Lite...$(NC)"
+	@-pkill -f "node server.js" 2>/dev/null; true
+	@-pkill -f "studio-lite" 2>/dev/null; true
+	@sleep 1
+	@if curl -sf http://localhost:$(STUDIO_LITE_PORT)/api/health >/dev/null 2>&1; then \
+		echo "$(YELLOW)⚠ Studio Lite still running, force killing...$(NC)"; \
+		fuser -k $(STUDIO_LITE_PORT)/tcp 2>/dev/null || true; \
+	fi
+	@echo "$(GREEN)✓ Studio Lite stopped$(NC)"
+
+studio-lite-restart: ## Restart Studio Lite
+	@$(MAKE) studio-lite-down
+	@sleep 1
+	@$(MAKE) studio-lite-up
+
+studio-lite-status: ## Check Studio Lite status
+	@if curl -sf http://localhost:$(STUDIO_LITE_PORT)/api/health >/dev/null 2>&1; then \
+		echo "$(GREEN)✓ Studio Lite running on http://localhost:$(STUDIO_LITE_PORT)$(NC)"; \
+		curl -s http://localhost:$(STUDIO_LITE_PORT)/api/health; echo; \
+	else \
+		echo "$(RED)✗ Studio Lite not running$(NC)"; \
+	fi
+
+studio-lite-chat: ## Run Studio Lite shell chat
+	@node studio-lite/chat-shell.js
+
+studio-lite-logs: ## View Studio Lite session logs
+	@ls -la studio-lite/projects/logs/ 2>/dev/null || echo "No logs yet"
+
+# ============================================================================
 # PACKAGE CREATION
 # ============================================================================
 

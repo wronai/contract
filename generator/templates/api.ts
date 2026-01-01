@@ -322,7 +322,14 @@ export function apiTsConfig(): string {
 
 // Utility functions
 function kebab(s: string): string { 
-  return s.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase(); 
+  return s
+    .trim()
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/[\s_]+/g, '-')
+    .replace(/[^a-zA-Z0-9-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase(); 
 }
 
 function camel(s: string): string { 

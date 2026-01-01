@@ -496,6 +496,99 @@ docker compose up -d
 | **Freeze Protection** | System freeze on critical issues |
 | **Audit Log** | Complete decision trail |
 
+## 📚 Documentation
+
+### Core Documentation
+
+| Document | Description |
+|----------|-------------|
+| [DSL Reference](docs/dsl-reference.md) | Complete Mini-DSL syntax reference |
+| [CLI Reference](docs/cli-reference.md) | All CLI commands and options |
+| [Studio Guide](docs/studio-guide.md) | LLM-powered contract designer guide |
+
+### Contract Formats
+
+| Format | Extension | Description |
+|--------|-----------|-------------|
+| TypeScript | `.reclapp.ts` | Fully typed contracts with IDE support |
+| Mini-DSL | `.reclapp.rcl` | Concise declarative syntax |
+| Markdown | `.rcl.md` | Human-readable, AI-friendly format |
+
+### Examples & Apps
+
+| Directory | Description |
+|-----------|-------------|
+| [examples/](examples/) | Example contracts (CRM, E-Commerce, etc.) |
+| [apps/](apps/) | Generated applications (Task Manager, Inventory, Booking) |
+
+### Articles & Guides
+
+| Article | Description |
+|---------|-------------|
+| [Reclapp Overview](articles/01-reclapp-overview.md) | Platform introduction |
+| [DSL Deep Dive](articles/02-reclapp-dsl-reference.md) | Detailed DSL documentation |
+| [MVP Docker Guide](articles/03-reclapp-mvp-docker.md) | Docker deployment guide |
+| [AI-Native Roadmap](articles/04-reclapp-ai-native-roadmap.md) | Future development plans |
+
+## 🤖 Reclapp Studio
+
+Interactive LLM-powered contract designer:
+
+```bash
+# Web UI (Gradio)
+make auto-studio
+# Open http://localhost:7860
+
+# Terminal Chat
+./bin/reclapp chat
+```
+
+**Recommended LLM Models** (Ollama):
+- `deepseek-coder:6.7b` - Best for code, fast (~4GB)
+- `codellama:13b` - Good understanding, slower (~8GB)
+- `mistral:7b-instruct` - General purpose (~4GB)
+
+## 🎨 Studio Lite (Web UI)
+
+Lightweight web interface for contract design with AI chat:
+
+```bash
+# Start Studio Lite
+make studio-lite-up
+
+# Or manually
+cd studio-lite && npm install && node server.js
+```
+
+**Available at:** http://localhost:7861
+
+### Features
+
+| Tab | Description |
+|-----|-------------|
+| **💬 Chat** | AI-powered contract generation with example prompts |
+| **📁 Projects** | Browse/manage projects from `apps/` and `examples/` |
+| **📋 Formats** | Documentation on .rcl, .rcl.md, .reclapp.ts formats |
+
+### Contract Formats
+
+| Format | Purpose | Use Case |
+|--------|---------|----------|
+| `.reclapp.rcl` | Mini-DSL | Storage, generation |
+| `.rcl.md` | Markdown with conversation | Documentation, AI chat logs |
+| `.reclapp.ts` | TypeScript | Validation, type checking |
+
+### Make Commands
+
+```bash
+make studio-lite-up       # Start server
+make studio-lite-down     # Stop server
+make studio-lite-restart  # Restart server
+make studio-lite-status   # Check status
+make studio-lite-chat     # Terminal chat
+make studio-lite-logs     # View session logs
+```
+
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -510,10 +603,10 @@ Apache 2 License - see [LICENSE](LICENSE) for details.
 
 ## 🔗 Links
 
-- [Documentation](https://docs.reclapp.com)
 - [GitHub](https://github.com/wronai/reclapp)
-- [npm Package](https://www.npmjs.com/package/reclapp)
-- [Discord](https://discord.gg/reclapp)
+- [Documentation](docs/)
+- [Examples](examples/)
+- [Apps](apps/)
 
 ---
 

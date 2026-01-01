@@ -15,6 +15,7 @@ services:
       - .env
     volumes:
       - ./projects:/app/projects
+      - ../apps:/app/apps:ro
       - ../examples:/app/examples:ro
       - ../dsl:/app/dsl:ro
     environment:

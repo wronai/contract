@@ -1,0 +1,386 @@
+// CRM System - Mini-DSL Contract (RCL)
+// ~87% reduction vs TypeScript format
+
+app "CRM System" {
+  version: "2.1.0"
+  description: "Customer Relationship Management with contacts, deals, and activities"
+  author: "Reclapp Team"
+  license: "MIT"
+}
+
+// Enums
+enum DealStage { Lead, Qualified, Proposal, Negotiation, Won, Lost }
+enum ActivityType { Call, Email, Meeting, Task, Note }
+enum TaskPriority { Low, Medium, High, Urgent }
+enum TaskStatus { Pending, InProgress, Completed, Cancelled }
+
+// Entities
+entity Contact {
+  email       text      @unique
+  firstName   text      @required
+  lastName    text      @required
+  phone       text?
+  company     -> Company?
+  jobTitle    text?
+  linkedInUrl text?
+  source      text
+  status      text
+  ownerId     uuid
+  tags        text[]?
+  customFields json?
+  score       int(0..100) = 50
+  lastContactedAt datetime?
+  createdAt   datetime  @generated
+}
+
+entity Company {
+  name        text      @required
+  domain      text?     @unique
+  industry    enum(IT, Finance, Healthcare, Retail, Other)
+  size        enum(Small, Medium, Large, Enterprise)
+  revenue     decimal?
+  website     text?
+  phone       text?
+  address     json?
+  ownerId     uuid
+  status      text
+  contacts    <- Contact[]
+  createdAt   datetime  @generated
+}
+
+entity Deal {
+  name        text      @required
+  company     -> Company?
+  contact     -> Contact?
+  ownerId     uuid      @required
+  stage       DealStage = Lead
+  amount      money(PLN)
+  currency    text      = "PLN"
+  probability int(0..100) = 50
+  expectedCloseDate datetime?
+  actualCloseDate   datetime?
+  lostReason  text?
+  notes       text?
+  customFields json?
+  daysInStage int       = 0
+  createdAt   datetime  @generated
+}
+
+entity Activity {
+  type        ActivityType @required
+  subject     text      @required
+  description text?
+  contact     -> Contact?
+  company     -> Company?
+  deal        -> Deal?
+  ownerId     uuid      @required
+  dueDate     datetime?
+  completedAt datetime?
+  outcome     text?
+  createdAt   datetime  @generated
+}
+
+entity Email {
+  contact     -> Contact @required
+  deal        -> Deal?
+  subject     text      @required
+  body        text
+  direction   enum(Inbound, Outbound)
+  status      enum(Draft, Sent, Delivered, Opened, Clicked, Bounced)
+  openedAt    datetime?
+  clickedAt   datetime?
+  repliedAt   datetime?
+  sentAt      datetime  @generated
+}
+
+entity Meeting {
+  title       text      @required
+  description text?
+  contacts    uuid[]
+  deal        -> Deal?
+  ownerId     uuid      @required
+  startTime   datetime  @required
+  endTime     datetime  @required
+  location    text?
+  meetingUrl  text?
+  status      enum(Scheduled, Completed, Cancelled, NoShow)
+  outcome     text?
+  notes       text?
+}
+
+entity Task {
+  title       text      @required
+  description text?
+  contact     -> Contact?
+  deal        -> Deal?
+  assignedTo  uuid      @required
+  dueDate     datetime  @required
+  priority    TaskPriority = Medium
+  status      TaskStatus = Pending
+  completedAt datetime?
+}
+
+entity Note {
+  content     text      @required
+  contact     -> Contact?
+  company     -> Company?
+  deal        -> Deal?
+  authorId    uuid      @required
+  isPinned    bool      = false
+  createdAt   datetime  @generated
+}
+
+entity Pipeline {
+  name        text      @required
+  stages      json      @required
+  defaultStage text
+  isDefault   bool      = false
+  createdAt   datetime  @generated
+}
+
+entity Team {
+  name        text      @required
+  managerId   uuid
+  memberIds   uuid[]
+  quota       decimal?
+  createdAt   datetime  @generated
+}
+
+// Events
+event ContactCreated {
+  contactId: uuid
+  source: text
+  ownerId: uuid
+  timestamp: datetime
+}
+
+event DealStageChanged {
+  dealId: uuid
+  previousStage: text
+  newStage: text
+  ownerId: uuid
+  timestamp: datetime
+}
+
+event DealWon {
+  dealId: uuid
+  amount: decimal
+  ownerId: uuid
+  daysInPipeline: int
+  timestamp: datetime
+}
+
+event DealLost {
+  dealId: uuid
+  amount: decimal
+  reason: text
+  ownerId: uuid
+  timestamp: datetime
+}
+
+event EmailOpened {
+  emailId: uuid
+  contactId: uuid
+  dealId: uuid?
+  timestamp: datetime
+}
+
+event MeetingScheduled {
+  meetingId: uuid
+  contactIds: text
+  dealId: uuid?
+  ownerId: uuid
+  timestamp: datetime
+}
+
+event TaskCompleted {
+  taskId: uuid
+  assignedTo: uuid
+  dealId: uuid?
+  timestamp: datetime
+}
+
+// Pipelines
+pipeline LeadScoring {
+  input: [ContactCreated.stream, Activity.stream, Email.stream]
+  transform: [calculateEngagement, scoreLeads, rankContacts]
+  output: [dashboard, recommendations]
+  schedule: "0 * * * *"
+}
+
+pipeline DealForecasting {
+  input: [Deal.changes, DealStageChanged.stream]
+  transform: [analyzeHistory, predictOutcome, updateForecast]
+  output: [dashboard, reports]
+  schedule: "0 0 * * *"
+}
+
+pipeline ActivityTracking {
+  input: [Email.stream, Meeting.stream, Activity.stream]
+  transform: [aggregate, enrichContact, updateTimeline]
+  output: [contactProfile, analytics]
+}
+
+// Alerts
+alert "Deal Stalled" {
+  entity: Deal
+  when: daysInStage > 14 && stage !in [Won, Lost]
+  notify: [email, slack]
+  severity: medium
+}
+
+alert "High Value Deal at Risk" {
+  entity: Deal
+  when: amount > 50000 && probability < 30
+  notify: [slack, email]
+  severity: high
+}
+
+alert "No Activity Warning" {
+  entity: Contact
+  when: daysSinceLastContact > 30 && status == "active"
+  notify: [email]
+  severity: low
+}
+
+alert "Meeting Starting" {
+  entity: Meeting
+  when: startTime - now() < 15m
+  notify: [push, email]
+  severity: low
+}
+
+alert "Task Overdue" {
+  entity: Task
+  when: dueDate < now() && status != "completed"
+  notify: [email, push]
+  severity: medium
+}
+
+alert "Quota Achievement" {
+  entity: Team
+  when: monthlyRevenue >= quota
+  notify: [slack]
+  severity: low
+}
+
+// Dashboards
+dashboard "Sales Pipeline" {
+  entity: Deal
+  metrics: [totalPipelineValue, dealsByStage, avgDealSize, winRate, avgSalesCycle]
+  stream: realtime
+  layout: grid
+}
+
+dashboard "Sales Forecast" {
+  entity: Deal
+  metrics: [forecastedRevenue, bestCase, worstCase, committed, upside]
+  layout: grid
+}
+
+dashboard "Team Performance" {
+  entity: Team
+  metrics: [revenueByRep, activitiesByRep, quotaAttainment, leaderboard]
+  layout: tabs
+}
+
+dashboard "Activity Analytics" {
+  entity: Activity
+  metrics: [callsMade, emailsSent, meetingsHeld, activityTrend]
+  stream: realtime
+}
+
+dashboard "Contact Insights" {
+  entity: Contact
+  metrics: [totalContacts, leadsBySource, conversionRate, topLeads]
+  layout: grid
+}
+
+// Workflows
+workflow LeadNurturing {
+  trigger: ContactCreated.event
+
+  step assignOwner {
+    action: roundRobinAssign
+    on_success: sendWelcome
+  }
+
+  step sendWelcome {
+    action: sendEmail
+    on_success: scheduleFollowUp
+  }
+
+  step scheduleFollowUp {
+    action: createTask
+    on_success: monitorEngagement
+  }
+
+  step monitorEngagement {
+    action: trackActivity
+    on_success: qualifyLead
+    on_failure: sendReengagement
+    timeout: "7d"
+  }
+}
+
+workflow DealClosing {
+  trigger: Deal.stageChanged
+  filter: newStage == "Negotiation"
+
+  step prepareProposal {
+    action: generateProposal
+    on_success: sendProposal
+  }
+
+  step sendProposal {
+    action: sendEmail
+    on_success: trackProposal
+  }
+
+  step followUp {
+    action: scheduleCall
+    on_success: closeOrLose
+    timeout: "3d"
+  }
+}
+
+// Sources
+source linkedInApi {
+  type: rest
+  url: "https://api.linkedin.com/v2"
+  auth: oauth2
+  cache: "1h"
+}
+
+source emailProvider {
+  type: rest
+  url: "${EMAIL_API_URL}"
+  auth: apiKey
+}
+
+source calendarApi {
+  type: rest
+  url: "https://www.googleapis.com/calendar/v3"
+  auth: oauth2
+}
+
+// Config
+config sales {
+  defaultCurrency: "PLN"
+  fiscalYearStart: "01-01"
+  quotaPeriod: "monthly"
+}
+
+config pipeline {
+  defaultStages: ["Lead", "Qualified", "Proposal", "Negotiation", "Won", "Lost"]
+  staleDealDays: 14
+  autoArchiveDays: 90
+}
+
+config scoring {
+  emailOpenWeight: 5
+  emailClickWeight: 10
+  meetingWeight: 20
+  callWeight: 15
+  websiteVisitWeight: 3
+}

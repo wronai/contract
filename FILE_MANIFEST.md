@@ -1,21 +1,23 @@
 # Reclapp 2.1.0 - File Manifest
 
-Generated: 2025-12-31T16:39:14+00:00
+Generated: 2026-01-01
 
 ## Statistics
 
 | Type | Count |
 |------|-------|
-| TypeScript files | 29 |
+| TypeScript files | 32 |
+| JavaScript files | 5 |
 | Test files | 9 |
-| Markdown files | 13 |
-| Config files | 6 |
-| Total LOC (TS) | 13153 |
+| Markdown files | 15 |
+| Config files | 8 |
+| Total source files | ~70 |
 
 ## Source Files
 
 ### Contracts System
-```
+
+```text
 ./contracts/examples/risk-monitoring-agent.ts
 ./contracts/executor.ts
 ./contracts/index.ts
@@ -24,7 +26,8 @@ Generated: 2025-12-31T16:39:14+00:00
 ```
 
 ### Core Engine
-```
+
+```text
 ./core/ai-contract/index.ts
 ./core/causal/verification-loop.ts
 ./core/cqrs/index.ts
@@ -36,15 +39,38 @@ Generated: 2025-12-31T16:39:14+00:00
 ```
 
 ### DSL Parser
-```
+
+```text
 ./dsl/ast/types.ts
 ./dsl/grammar/reclapp.pegjs
 ./dsl/parser/index.ts
 ./dsl/validator/index.ts
 ```
 
-### Tests
+### Studio Lite (Web UI)
+
+```text
+./studio-lite/
+├── server.js           # Express server with chat, projects, validation APIs
+├── public/
+│   └── index.html      # Vanilla JS UI with accordions, tabs
+├── chat-shell.js       # Terminal chat client
+├── package.json
+└── projects/           # Generated projects and logs
+    └── logs/           # Session logs in .rcl.md format
 ```
+
+### CLI Tools
+
+```text
+./bin/reclapp           # Main CLI
+./bin/reclapp-chat      # AI chat for contract generation
+./bin/reclapp-validate-ts  # TypeScript contract validator
+```
+
+### Tests
+
+```text
 ./tests/e2e/causal-loop.test.ts
 ./tests/e2e/contracts.test.ts
 ./tests/e2e/mcp-protocol.test.ts
@@ -59,7 +85,8 @@ Generated: 2025-12-31T16:39:14+00:00
 ```
 
 ### Documentation
-```
+
+```text
 ./articles/00-index.md
 ./articles/01-reclapp-overview.md
 ./articles/02-reclapp-dsl-reference.md
@@ -68,4 +95,44 @@ Generated: 2025-12-31T16:39:14+00:00
 ./articles/05-reclapp-typescript-ai-contracts.md
 ./articles/06-reclapp-mcp-integration.md
 ./articles/07-reclapp-causal-verification-loop.md
+```
+
+## Contract Formats
+
+| Format | Extension | Purpose |
+|--------|-----------|---------|
+| Mini-DSL | `.reclapp.rcl` | Storage, generation |
+| Markdown | `.rcl.md` | Documentation, AI chat logs |
+| TypeScript | `.reclapp.ts` | Validation, type checking |
+
+## Key URLs
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| Studio Lite | http://localhost:7861 | Web UI for contract design |
+| Gradio Studio | http://localhost:7860 | Full-featured Studio (Docker) |
+| API | http://localhost:8080 | REST API |
+| Frontend | http://localhost:3000 | React Dashboard |
+
+## Make Commands
+
+```bash
+# Studio Lite
+make studio-lite-up       # Start
+make studio-lite-down     # Stop
+make studio-lite-restart  # Restart
+make studio-lite-status   # Check status
+make studio-lite-chat     # Terminal chat
+make studio-lite-logs     # View logs
+
+# Development
+make install              # Install deps
+make dev                  # Start dev
+make test                 # Run tests
+make build                # Build
+
+# Docker
+make up                   # Start services
+make down                 # Stop services
+make logs                 # View logs
 ```

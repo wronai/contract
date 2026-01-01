@@ -272,6 +272,83 @@ reclapp studio
 
 ---
 
+### `reclapp chat`
+
+Interactive LLM-powered contract designer in terminal.
+
+```bash
+reclapp chat
+
+# Aliases: ai
+```
+
+**Features:**
+- Conversational contract design with local LLM (Ollama)
+- Real-time contract validation
+- Save and generate applications directly
+
+**Commands in Chat:**
+| Command | Description |
+|---------|-------------|
+| `/save [dir]` | Save contract to directory |
+| `/show` | Show current contract |
+| `/clear` | Clear conversation history |
+| `/model [name]` | Show/switch LLM model |
+| `/name <name>` | Set project name |
+| `/generate [dir]` | Save and generate application |
+| `/quit` | Exit |
+
+**Example Session:**
+```bash
+💬 You: Create a task management app
+
+🤖 Assistant: I'll design a task manager with projects and tasks...
+
+💬 You: /show
+📄 Current Contract:
+app "Task Manager" { ... }
+
+💬 You: /generate ./apps/tasks
+✅ Saved and generated to ./apps/tasks
+```
+
+**Environment Variables:**
+- `OLLAMA_HOST` - Ollama server URL (default: `http://localhost:11434`)
+- `OLLAMA_MODEL` - LLM model (default: `deepseek-coder:6.7b`)
+
+---
+
+### `reclapp convert`
+
+Convert contracts between different formats.
+
+```bash
+reclapp convert <input> --format <format> [-o output]
+
+# Aliases: conv
+```
+
+**Supported Formats:**
+| Format | Extension | Description |
+|--------|-----------|-------------|
+| `ts` | `.reclapp.ts` | TypeScript contract |
+| `rcl` | `.reclapp.rcl` | Mini-DSL contract |
+| `md` | `.rcl.md` | Markdown contract |
+
+**Examples:**
+```bash
+# Convert TypeScript to Markdown
+reclapp convert contract.reclapp.ts --format md
+
+# Convert Mini-DSL to TypeScript
+reclapp convert contract.reclapp.rcl --format ts
+
+# Convert Markdown to Mini-DSL
+reclapp convert contract.rcl.md --format rcl
+```
+
+---
+
 ### `reclapp stop`
 
 Stop all running Reclapp Docker containers.
