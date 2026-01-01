@@ -1,3 +1,4 @@
+![reclapp.png](reclapp.png)
 # Reclapp 2.1.0 - AI-Native Declarative Platform
 
 [![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/wronai/reclapp)

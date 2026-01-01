@@ -8,28 +8,28 @@ Generated: 2026-01-01
 ┌─────────────────────────────────────────────────────────────┐
 │                    RECLAPP PLATFORM                         │
 ├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
-│  │   Studio    │  │  CLI Tools  │  │    Generated Apps   │ │
-│  │  (Web UI)   │  │             │  │                     │ │
-│  │  :7861      │  │ reclapp     │  │  API :8080          │ │
-│  │             │  │ reclapp-chat│  │  Frontend :3000     │ │
-│  └──────┬──────┘  └──────┬──────┘  └──────────┬──────────┘ │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
+│  │   Studio    │  │  CLI Tools  │  │    Generated Apps   │  │
+│  │  (Web UI)   │  │             │  │                     │  │
+│  │  :7861      │  │ reclapp     │  │  API :8080          │  │
+│  │             │  │ reclapp-chat│  │  Frontend :3000     │  │
+│  └──────┬──────┘  └──────┬──────┘  └──────────┬──────────┘  │
 │         │                │                     │            │
 │         └────────────────┼─────────────────────┘            │
 │                          ▼                                  │
-│  ┌─────────────────────────────────────────────────────────┐│
-│  │              lib/chat-core.js (Shared)                  ││
-│  │  - ReclappChat class                                    ││
-│  │  - Contract extraction, validation, formatting          ││
-│  │  - TypeScript & Markdown generation                     ││
-│  │  - Ollama LLM integration                               ││
-│  └─────────────────────────────────────────────────────────┘│
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │              lib/chat-core.js (Shared)                 │ │
+│  │  - ReclappChat class                                   │ │
+│  │  - Contract extraction, validation, formatting         │ │
+│  │  - TypeScript & Markdown generation                    │ │
+│  │  - Ollama LLM integration                              │ │
+│  └────────────────────────────────────────────────────────┘ │
 │                          ▼                                  │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │  contracts/  │  │    core/     │  │     dsl/     │      │
-│  │  TypeScript  │  │  AI-Native   │  │   Parser     │      │
-│  │  Contracts   │  │  Components  │  │   Grammar    │      │
-│  └──────────────┘  └──────────────┘  └──────────────┘      │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
+│  │  contracts/  │  │    core/     │  │     dsl/     │       │
+│  │  TypeScript  │  │  AI-Native   │  │   Parser     │       │
+│  │  Contracts   │  │  Components  │  │   Grammar    │       │
+│  └──────────────┘  └──────────────┘  └──────────────┘       │
 └─────────────────────────────────────────────────────────────┘
 ```
 

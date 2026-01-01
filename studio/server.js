@@ -991,7 +991,7 @@ function scanProjects() {
 app.listen(PORT, () => {
   console.log(`
 ╔══════════════════════════════════════════════════════════════╗
-║           🚀 RECLAPP STUDIO LITE                             ║
+║           🚀 RECLAPP STUDIO                             ║
 ║           Simple Web UI (no Gradio)                          ║
 ╚══════════════════════════════════════════════════════════════╝
 
