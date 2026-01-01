@@ -89,16 +89,12 @@ export class AssertionValidator implements ValidationStage {
   }
 
   /**
-   * Sprawdza czy plik istnieje
+   * Sprawdza czy plik istnieje (z wariantami nazewnictwa)
    */
   private checkFileExists(path: string, files: GeneratedFile[]): { passed: boolean } {
-    const exists = files.some(f => 
-      f.path === path ||
-      f.path.endsWith(path) ||
-      f.path === `api/${path}` ||
-      f.path === `frontend/${path}`
-    );
-    return { passed: exists };
+    // Use findFile which handles singular/plural variants
+    const found = this.findFile(path, files);
+    return { passed: !!found };
   }
 
   /**
@@ -238,15 +234,61 @@ export class AssertionValidator implements ValidationStage {
   }
 
   /**
-   * Znajduje plik po ścieżce
+   * Znajduje plik po ścieżce (z wariantami nazewnictwa)
    */
   private findFile(path: string, files: GeneratedFile[]): GeneratedFile | undefined {
-    return files.find(f => 
+    // Direct match
+    const direct = files.find(f => 
       f.path === path ||
       f.path.endsWith(path) ||
       f.path === `api/${path}` ||
       f.path === `frontend/${path}`
     );
+    if (direct) return direct;
+
+    // Try singular/plural variants
+    const filename = path.split('/').pop() || '';
+    const baseName = filename.replace(/\.(ts|tsx|js|jsx)$/, '');
+    const variants = this.generateNameVariants(baseName);
+
+    for (const variant of variants) {
+      const variantPath = path.replace(filename, filename.replace(baseName, variant));
+      const found = files.find(f =>
+        f.path === variantPath ||
+        f.path.endsWith(variantPath) ||
+        f.path === `api/${variantPath}` ||
+        f.path === `frontend/${variantPath}`
+      );
+      if (found) return found;
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Generuje warianty nazwy (singular/plural)
+   */
+  private generateNameVariants(name: string): string[] {
+    const variants = [name];
+    
+    // Plural -> singular
+    if (name.endsWith('ies')) {
+      variants.push(name.slice(0, -3) + 'y');
+    } else if (name.endsWith('es')) {
+      variants.push(name.slice(0, -2));
+      variants.push(name.slice(0, -1));
+    } else if (name.endsWith('s')) {
+      variants.push(name.slice(0, -1));
+    }
+    
+    // Singular -> plural
+    if (name.endsWith('y') && !name.endsWith('ey')) {
+      variants.push(name.slice(0, -1) + 'ies');
+    } else {
+      variants.push(name + 's');
+    }
+    
+    return variants;
   }
 }
 

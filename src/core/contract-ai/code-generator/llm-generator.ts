@@ -218,8 +218,8 @@ export class LLMCodeGenerator {
     const files: GeneratedFile[] = [];
     
     // Regex do wyciągania plików z markdown code blocks
-    // Format: ```typescript:path/to/file.ts lub ```javascript:path/to/file.js
-    const fileRegex = /```(?:typescript|javascript|json|html|css):(.+?)\n([\s\S]*?)```/g;
+    // Format: ```typescript:path/to/file.ts lub ```dockerfile:path/to/Dockerfile
+    const fileRegex = /```(?:typescript|javascript|json|html|css|dockerfile):(.+?)\n([\s\S]*?)```/g;
 
     let match;
     while ((match = fileRegex.exec(response)) !== null) {
@@ -462,7 +462,8 @@ ${routeFiles}
   "scripts": {
     "dev": "ts-node src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "test": "jest --passWithNoTests"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -471,10 +472,32 @@ ${routeFiles}
   "devDependencies": {
     "@types/express": "^4.17.21",
     "@types/cors": "^2.8.17",
+    "@types/jest": "^29.5.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.0",
+    "supertest": "^6.3.0",
+    "@types/supertest": "^2.0.16",
     "typescript": "^5.3.0",
     "ts-node": "^10.9.2"
   }
 }
+\`\`\`
+
+\`\`\`dockerfile:docker/Dockerfile.api
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY api/package*.json ./
+RUN npm install
+
+COPY api/ ./
+
+RUN npm run build || true
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]
 \`\`\`
 `;
     }

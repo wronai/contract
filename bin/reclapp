@@ -802,6 +802,30 @@ async function cmdGenerateAI(args, options) {
       verbose: options.verbose
     });
 
+    // Check for Ollama availability
+    let llmMode = 'simulated';
+    try {
+      const ollamaAvailable = await contractAI.checkOllamaAvailable();
+      if (ollamaAvailable) {
+        const ollamaClient = contractAI.createOllamaClient();
+        const hasModel = await ollamaClient.hasModel();
+        if (hasModel) {
+          codeGenerator.setLLMClient(ollamaClient);
+          llmMode = ollamaClient.getConfig().model;
+          console.log(`🤖 Using Ollama (${llmMode}) for code generation`);
+        } else {
+          const model = ollamaClient.getConfig().model;
+          console.log(`⚠️ Ollama model '${model}' not found. Run: ollama pull ${model}`);
+          console.log('   Using simulation mode');
+        }
+      } else {
+        console.log('⚠️ Ollama not available. Run: ollama serve');
+        console.log('   Using simulation mode');
+      }
+    } catch (err) {
+      // Silently fall back to simulation
+    }
+
     const generatedCode = await codeGenerator.generate(contract);
     
     console.log(`✅ Generated ${generatedCode.files.length} files`);
@@ -829,6 +853,22 @@ async function cmdGenerateAI(args, options) {
         fs.mkdirSync(fileDir, { recursive: true });
       }
       fs.writeFileSync(filePath, file.content, 'utf-8');
+    }
+
+    // Generate .rcl.md log
+    const logsDir = path.join(outputDir, 'logs');
+    try {
+      const logWriter = contractAI.createGenerationLogWriter({ outputDir: logsDir });
+      const logPath = logWriter.writeLog({
+        timestamp: new Date(),
+        contract,
+        generatedCode,
+        pipelineResult,
+        model: llmMode
+      });
+      console.log(`\n📝 Log saved: ${logPath}`);
+    } catch (logError) {
+      // Log generation is optional, don't fail on error
     }
 
     console.log('\n' + '═'.repeat(50));

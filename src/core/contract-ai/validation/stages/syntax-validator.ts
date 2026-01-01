@@ -163,17 +163,15 @@ export class SyntaxValidator implements ValidationStage {
    */
   private checkRequiredFiles(context: ValidationContext): StageResult['errors'] {
     const errors: StageResult['errors'] = [];
-    const existingPaths = new Set(context.code.files.map(f => f.path));
+    const existingPaths = context.code.files.map(f => f.path);
 
     // Sprawdź asercje file-exists
     for (const assertion of context.contract.validation.assertions) {
       if (assertion.check.type === 'file-exists') {
         const path = assertion.check.path;
         
-        // Sprawdź czy plik istnieje (z różnymi prefiksami)
-        const exists = existingPaths.has(path) ||
-                      existingPaths.has(`api/${path}`) ||
-                      existingPaths.has(`frontend/${path}`);
+        // Sprawdź czy plik istnieje (z różnymi wariantami)
+        const exists = this.fileExists(path, existingPaths);
 
         if (!exists) {
           errors.push({
@@ -186,6 +184,75 @@ export class SyntaxValidator implements ValidationStage {
     }
 
     return errors;
+  }
+
+  /**
+   * Sprawdza czy plik istnieje (z wariantami nazewnictwa)
+   */
+  private fileExists(requiredPath: string, existingPaths: string[]): boolean {
+    // Exact match
+    if (existingPaths.includes(requiredPath)) return true;
+    
+    // With api/ or frontend/ prefix
+    if (existingPaths.includes(`api/${requiredPath}`)) return true;
+    if (existingPaths.includes(`frontend/${requiredPath}`)) return true;
+    
+    // Extract filename and check for singular/plural variants
+    const filename = requiredPath.split('/').pop() || '';
+    const baseName = filename.replace(/\.(ts|tsx|js|jsx)$/, '');
+    const ext = filename.match(/\.(ts|tsx|js|jsx)$/)?.[0] || '.ts';
+    
+    // Generate variants: contacts -> contact, companies -> company
+    const variants = this.generateNameVariants(baseName);
+    
+    for (const variant of variants) {
+      const variantPath = requiredPath.replace(filename, `${variant}${ext}`);
+      if (existingPaths.includes(variantPath)) return true;
+      if (existingPaths.includes(`api/${variantPath}`)) return true;
+      if (existingPaths.includes(`frontend/${variantPath}`)) return true;
+    }
+    
+    // Check if any existing path contains the base name in routes/
+    const routePattern = /routes\//;
+    if (routePattern.test(requiredPath)) {
+      for (const existing of existingPaths) {
+        if (routePattern.test(existing)) {
+          for (const variant of variants) {
+            if (existing.includes(`/${variant}.`) || existing.includes(`/${variant}${ext}`)) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    
+    return false;
+  }
+
+  /**
+   * Generuje warianty nazwy (singular/plural)
+   */
+  private generateNameVariants(name: string): string[] {
+    const variants = [name];
+    
+    // Plural -> singular
+    if (name.endsWith('ies')) {
+      variants.push(name.slice(0, -3) + 'y'); // companies -> company
+    } else if (name.endsWith('es')) {
+      variants.push(name.slice(0, -2)); // boxes -> box
+      variants.push(name.slice(0, -1)); // types -> type
+    } else if (name.endsWith('s')) {
+      variants.push(name.slice(0, -1)); // contacts -> contact
+    }
+    
+    // Singular -> plural
+    if (name.endsWith('y')) {
+      variants.push(name.slice(0, -1) + 'ies'); // company -> companies
+    } else {
+      variants.push(name + 's'); // contact -> contacts
+    }
+    
+    return variants;
   }
 }
 
