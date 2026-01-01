@@ -1,0 +1,915 @@
+.
+├── AGENTS.md
+├── api
+│   └── src
+│       ├── routes
+│       ├── server.ts
+│       └── services
+├── apps
+│   ├── booking-system
+│   │   └── contracts
+│   │       ├── main.rcl.md
+│   │       ├── main.reclapp.rcl
+│   │       └── main.reclapp.ts
+│   ├── inventory-system
+│   │   └── contracts
+│   │       ├── main.rcl.md
+│   │       ├── main.reclapp.rcl
+│   │       └── main.reclapp.ts
+│   ├── my-app
+│   │   └── contracts
+│   │       ├── main.rcl.md
+│   │       ├── main.reclapp.rcl
+│   │       └── main.reclapp.ts
+│   └── task-manager
+│       ├── contracts
+│       │   └── main.reclapp.rcl
+│       └── target
+│           ├── api
+│           │   ├── package.json
+│           │   ├── src
+│           │   │   ├── models
+│           │   │   │   ├── comment.ts
+│           │   │   │   ├── project-member.ts
+│           │   │   │   ├── project.ts
+│           │   │   │   ├── task.ts
+│           │   │   │   └── user.ts
+│           │   │   ├── routes
+│           │   │   │   ├── comment.ts
+│           │   │   │   ├── project-member.ts
+│           │   │   │   ├── project.ts
+│           │   │   │   ├── task.ts
+│           │   │   │   └── user.ts
+│           │   │   └── server.ts
+│           │   └── tsconfig.json
+│           ├── database
+│           │   └── migrations
+│           │       └── 001_init.sql
+│           ├── docker
+│           │   ├── Dockerfile.api
+│           │   └── Dockerfile.frontend
+│           ├── docker-compose.yml
+│           ├── frontend
+│           │   ├── index.html
+│           │   ├── nginx.conf
+│           │   ├── package.json
+│           │   ├── postcss.config.js
+│           │   ├── src
+│           │   │   ├── App.tsx
+│           │   │   ├── components
+│           │   │   │   ├── CommentList.tsx
+│           │   │   │   ├── ProjectList.tsx
+│           │   │   │   ├── ProjectMemberList.tsx
+│           │   │   │   ├── TaskList.tsx
+│           │   │   │   └── UserList.tsx
+│           │   │   ├── hooks
+│           │   │   │   └── useApi.ts
+│           │   │   ├── index.css
+│           │   │   └── main.tsx
+│           │   ├── tailwind.config.js
+│           │   ├── tsconfig.json
+│           │   └── vite.config.ts
+│           └── README.md
+├── articles
+│   ├── 01-reclapp-overview.md
+│   ├── 02-reclapp-dsl-reference.md
+│   ├── 03-reclapp-mvp-docker.md
+│   ├── 04-reclapp-ai-native-roadmap.md
+│   ├── 05-reclapp-typescript-ai-contracts.md
+│   ├── 06-reclapp-mcp-integration.md
+│   └── 07-reclapp-causal-verification-loop.md
+├── bin
+│   ├── reclapp
+│   ├── reclapp-chat
+│   └── reclapp-validate-ts
+├── contracts
+│   ├── dsl-loader.ts
+│   ├── dsl-types.ts
+│   ├── examples
+│   │   └── risk-monitoring-agent.ts
+│   ├── executor.ts
+│   ├── index.ts
+│   ├── types.ts
+│   └── validator.ts
+├── CONTRIBUTING.md
+├── core
+│   ├── ai-contract
+│   │   └── index.ts
+│   ├── causal
+│   │   └── verification-loop.ts
+│   ├── cqrs
+│   │   └── index.ts
+│   ├── eventstore
+│   │   └── index.ts
+│   ├── mcp
+│   │   └── index.ts
+│   ├── ontology
+│   │   └── types.ts
+│   ├── pipeline
+│   ├── planner
+│   │   └── index.ts
+│   └── verification
+│       └── index.ts
+├── data
+│   ├── contractors.json
+│   ├── customers.json
+│   └── risk-events.json
+├── docker
+│   ├── Dockerfile.api
+│   ├── Dockerfile.frontend
+│   ├── mosquitto
+│   │   └── mosquitto.conf
+│   ├── nginx
+│   │   └── nginx.conf
+│   └── services
+├── docker-compose.yml
+├── docs
+│   ├── cli-reference.md
+│   ├── DSL_GENERATION_PROPOSAL.md
+│   ├── dsl-reference.md
+│   ├── dsl-typescript-reference.md
+│   ├── generator-architecture.md
+│   └── studio-guide.md
+├── dsl
+│   ├── ast
+│   │   └── types.ts
+│   ├── grammar
+│   │   ├── mini.pegjs
+│   │   └── reclapp.pegjs
+│   ├── parser
+│   │   ├── index.ts
+│   │   ├── markdown.ts
+│   │   └── mini.ts
+│   ├── validator
+│   │   └── index.ts
+│   └── writer
+│       └── markdown.ts
+├── examples
+│   ├── b2b-onboarding
+│   │   ├── contracts
+│   │   │   ├── onboarding.rcl.md
+│   │   │   ├── onboarding.reclapp
+│   │   │   ├── onboarding.reclapp.rcl
+│   │   │   └── onboarding.reclapp.ts
+│   │   ├── README.md
+│   │   └── target
+│   │       ├── api
+│   │       │   ├── package.json
+│   │       │   ├── src
+│   │       │   │   ├── models
+│   │       │   │   │   ├── customer.ts
+│   │       │   │   │   └── onboarding-document.ts
+│   │       │   │   ├── routes
+│   │       │   │   │   ├── customer.ts
+│   │       │   │   │   └── onboarding-document.ts
+│   │       │   │   └── server.ts
+│   │       │   └── tsconfig.json
+│   │       ├── database
+│   │       │   └── migrations
+│   │       │       └── 001_init.sql
+│   │       ├── docker
+│   │       │   ├── Dockerfile.api
+│   │       │   └── Dockerfile.frontend
+│   │       ├── docker-compose.yml
+│   │       ├── frontend
+│   │       │   ├── index.html
+│   │       │   ├── package.json
+│   │       │   ├── postcss.config.js
+│   │       │   ├── src
+│   │       │   │   ├── App.tsx
+│   │       │   │   ├── components
+│   │       │   │   │   ├── CustomerList.tsx
+│   │       │   │   │   └── OnboardingDocumentList.tsx
+│   │       │   │   ├── hooks
+│   │       │   │   │   └── useApi.ts
+│   │       │   │   ├── index.css
+│   │       │   │   └── main.tsx
+│   │       │   ├── tailwind.config.js
+│   │       │   ├── tsconfig.json
+│   │       │   └── vite.config.ts
+│   │       └── README.md
+│   ├── b2b-risk-monitoring
+│   │   ├── contracts
+│   │   │   └── risk-agent.ts
+│   │   └── README.md
+│   ├── crm
+│   │   ├── contracts
+│   │   │   ├── main.rcl.md
+│   │   │   ├── main.reclapp
+│   │   │   ├── main.reclapp.rcl
+│   │   │   └── main.reclapp.ts
+│   │   ├── README.md
+│   │   └── target
+│   │       ├── api
+│   │       │   ├── dist
+│   │       │   │   ├── models
+│   │       │   │   │   ├── activity.js
+│   │       │   │   │   ├── company.js
+│   │       │   │   │   ├── contact.js
+│   │       │   │   │   ├── deal.js
+│   │       │   │   │   ├── pipeline.js
+│   │       │   │   │   └── task.js
+│   │       │   │   ├── routes
+│   │       │   │   │   ├── activity.js
+│   │       │   │   │   ├── company.js
+│   │       │   │   │   ├── contact.js
+│   │       │   │   │   ├── deal.js
+│   │       │   │   │   ├── pipeline.js
+│   │       │   │   │   └── task.js
+│   │       │   │   └── server.js
+│   │       │   ├── package.json
+│   │       │   ├── package-lock.json
+│   │       │   ├── src
+│   │       │   │   ├── models
+│   │       │   │   │   ├── activity.ts
+│   │       │   │   │   ├── company.ts
+│   │       │   │   │   ├── contact.ts
+│   │       │   │   │   ├── deal.ts
+│   │       │   │   │   ├── pipeline.ts
+│   │       │   │   │   └── task.ts
+│   │       │   │   ├── routes
+│   │       │   │   │   ├── activity.ts
+│   │       │   │   │   ├── company.ts
+│   │       │   │   │   ├── contact.ts
+│   │       │   │   │   ├── deal.ts
+│   │       │   │   │   ├── pipeline.ts
+│   │       │   │   │   └── task.ts
+│   │       │   │   └── server.ts
+│   │       │   └── tsconfig.json
+│   │       ├── database
+│   │       │   └── migrations
+│   │       │       └── 001_init.sql
+│   │       ├── docker
+│   │       │   ├── Dockerfile.api
+│   │       │   └── Dockerfile.frontend
+│   │       ├── docker-compose.yml
+│   │       ├── frontend
+│   │       │   ├── index.html
+│   │       │   ├── package.json
+│   │       │   ├── postcss.config.js
+│   │       │   ├── src
+│   │       │   │   ├── App.tsx
+│   │       │   │   ├── components
+│   │       │   │   │   ├── ActivityList.tsx
+│   │       │   │   │   ├── CompanyList.tsx
+│   │       │   │   │   ├── ContactList.tsx
+│   │       │   │   │   ├── DealList.tsx
+│   │       │   │   │   ├── PipelineList.tsx
+│   │       │   │   │   └── TaskList.tsx
+│   │       │   │   ├── hooks
+│   │       │   │   │   └── useApi.ts
+│   │       │   │   ├── index.css
+│   │       │   │   └── main.tsx
+│   │       │   ├── tailwind.config.js
+│   │       │   ├── tsconfig.json
+│   │       │   └── vite.config.ts
+│   │       └── README.md
+│   ├── desktop-electron
+│   │   ├── contracts
+│   │   │   ├── investment.reclapp
+│   │   │   ├── investment.reclapp.rcl
+│   │   │   └── investment.reclapp.ts
+│   │   ├── README.md
+│   │   └── target
+│   │       ├── api
+│   │       │   ├── dist
+│   │       │   │   ├── models
+│   │       │   │   │   ├── dividend-record.js
+│   │       │   │   │   ├── holding.js
+│   │       │   │   │   ├── portfolio.js
+│   │       │   │   │   ├── price-alert.js
+│   │       │   │   │   ├── transaction.js
+│   │       │   │   │   └── watchlist.js
+│   │       │   │   ├── routes
+│   │       │   │   │   ├── dividend-record.js
+│   │       │   │   │   ├── holding.js
+│   │       │   │   │   ├── portfolio.js
+│   │       │   │   │   ├── price-alert.js
+│   │       │   │   │   ├── transaction.js
+│   │       │   │   │   └── watchlist.js
+│   │       │   │   └── server.js
+│   │       │   ├── package.json
+│   │       │   ├── package-lock.json
+│   │       │   ├── src
+│   │       │   │   ├── models
+│   │       │   │   │   ├── dividend-record.ts
+│   │       │   │   │   ├── holding.ts
+│   │       │   │   │   ├── portfolio.ts
+│   │       │   │   │   ├── price-alert.ts
+│   │       │   │   │   ├── transaction.ts
+│   │       │   │   │   └── watchlist.ts
+│   │       │   │   ├── routes
+│   │       │   │   │   ├── dividend-record.ts
+│   │       │   │   │   ├── holding.ts
+│   │       │   │   │   ├── portfolio.ts
+│   │       │   │   │   ├── price-alert.ts
+│   │       │   │   │   ├── transaction.ts
+│   │       │   │   │   └── watchlist.ts
+│   │       │   │   └── server.ts
+│   │       │   └── tsconfig.json
+│   │       ├── database
+│   │       │   └── migrations
+│   │       │       └── 001_init.sql
+│   │       ├── docker
+│   │       │   ├── Dockerfile.api
+│   │       │   └── Dockerfile.frontend
+│   │       ├── docker-compose.yml
+│   │       ├── frontend
+│   │       │   ├── index.html
+│   │       │   ├── package.json
+│   │       │   ├── postcss.config.js
+│   │       │   ├── src
+│   │       │   │   ├── App.tsx
+│   │       │   │   ├── components
+│   │       │   │   │   ├── DividendRecordList.tsx
+│   │       │   │   │   ├── HoldingList.tsx
+│   │       │   │   │   ├── PortfolioList.tsx
+│   │       │   │   │   ├── PriceAlertList.tsx
+│   │       │   │   │   ├── TransactionList.tsx
+│   │       │   │   │   └── WatchlistList.tsx
+│   │       │   │   ├── hooks
+│   │       │   │   │   └── useApi.ts
+│   │       │   │   ├── index.css
+│   │       │   │   └── main.tsx
+│   │       │   ├── tailwind.config.js
+│   │       │   ├── tsconfig.json
+│   │       │   └── vite.config.ts
+│   │       └── README.md
+│   ├── e-commerce
+│   │   ├── contracts
+│   │   │   ├── main.rcl.md
+│   │   │   ├── main.reclapp
+│   │   │   ├── main.reclapp.rcl
+│   │   │   └── main.reclapp.ts
+│   │   ├── README.md
+│   │   └── target
+│   │       ├── api
+│   │       │   ├── dist
+│   │       │   │   ├── models
+│   │       │   │   │   ├── cart.js
+│   │       │   │   │   ├── category.js
+│   │       │   │   │   ├── customer.js
+│   │       │   │   │   ├── inventory.js
+│   │       │   │   │   ├── order-item.js
+│   │       │   │   │   ├── order.js
+│   │       │   │   │   ├── product.js
+│   │       │   │   │   └── shipment.js
+│   │       │   │   ├── routes
+│   │       │   │   │   ├── cart.js
+│   │       │   │   │   ├── category.js
+│   │       │   │   │   ├── customer.js
+│   │       │   │   │   ├── inventory.js
+│   │       │   │   │   ├── order-item.js
+│   │       │   │   │   ├── order.js
+│   │       │   │   │   ├── product.js
+│   │       │   │   │   └── shipment.js
+│   │       │   │   └── server.js
+│   │       │   ├── package.json
+│   │       │   ├── package-lock.json
+│   │       │   ├── src
+│   │       │   │   ├── models
+│   │       │   │   │   ├── cart.ts
+│   │       │   │   │   ├── category.ts
+│   │       │   │   │   ├── customer.ts
+│   │       │   │   │   ├── inventory.ts
+│   │       │   │   │   ├── order-item.ts
+│   │       │   │   │   ├── order.ts
+│   │       │   │   │   ├── product.ts
+│   │       │   │   │   └── shipment.ts
+│   │       │   │   ├── routes
+│   │       │   │   │   ├── cart.ts
+│   │       │   │   │   ├── category.ts
+│   │       │   │   │   ├── customer.ts
+│   │       │   │   │   ├── inventory.ts
+│   │       │   │   │   ├── order-item.ts
+│   │       │   │   │   ├── order.ts
+│   │       │   │   │   ├── product.ts
+│   │       │   │   │   └── shipment.ts
+│   │       │   │   └── server.ts
+│   │       │   └── tsconfig.json
+│   │       ├── database
+│   │       │   └── migrations
+│   │       │       └── 001_init.sql
+│   │       ├── docker
+│   │       │   ├── Dockerfile.api
+│   │       │   └── Dockerfile.frontend
+│   │       ├── docker-compose.yml
+│   │       ├── frontend
+│   │       │   ├── index.html
+│   │       │   ├── package.json
+│   │       │   ├── postcss.config.js
+│   │       │   ├── src
+│   │       │   │   ├── App.tsx
+│   │       │   │   ├── components
+│   │       │   │   │   ├── CartList.tsx
+│   │       │   │   │   ├── CategoryList.tsx
+│   │       │   │   │   ├── CustomerList.tsx
+│   │       │   │   │   ├── InventoryList.tsx
+│   │       │   │   │   ├── OrderItemList.tsx
+│   │       │   │   │   ├── OrderList.tsx
+│   │       │   │   │   ├── ProductList.tsx
+│   │       │   │   │   └── ShipmentList.tsx
+│   │       │   │   ├── hooks
+│   │       │   │   │   └── useApi.ts
+│   │       │   │   ├── index.css
+│   │       │   │   └── main.tsx
+│   │       │   ├── tailwind.config.js
+│   │       │   ├── tsconfig.json
+│   │       │   └── vite.config.ts
+│   │       └── README.md
+│   ├── iot-monitoring
+│   │   ├── contracts
+│   │   │   └── iot-agent.ts
+│   │   ├── grafana
+│   │   │   ├── dashboards
+│   │   │   └── provisioning
+│   │   └── README.md
+│   ├── monitoring
+│   │   ├── contracts
+│   │   │   ├── contractor-monitoring.reclapp
+│   │   │   ├── contractor-monitoring.reclapp.rcl
+│   │   │   └── contractor-monitoring.reclapp.ts
+│   │   ├── README.md
+│   │   └── target
+│   │       ├── api
+│   │       │   ├── dist
+│   │       │   │   ├── models
+│   │       │   │   │   ├── contractor.js
+│   │       │   │   │   ├── financial-snapshot.js
+│   │       │   │   │   ├── monitoring-rule.js
+│   │       │   │   │   └── risk-event.js
+│   │       │   │   ├── routes
+│   │       │   │   │   ├── contractor.js
+│   │       │   │   │   ├── financial-snapshot.js
+│   │       │   │   │   ├── monitoring-rule.js
+│   │       │   │   │   └── risk-event.js
+│   │       │   │   └── server.js
+│   │       │   ├── package.json
+│   │       │   ├── package-lock.json
+│   │       │   ├── src
+│   │       │   │   ├── models
+│   │       │   │   │   ├── contractor.ts
+│   │       │   │   │   ├── financial-snapshot.ts
+│   │       │   │   │   ├── monitoring-rule.ts
+│   │       │   │   │   └── risk-event.ts
+│   │       │   │   ├── routes
+│   │       │   │   │   ├── contractor.ts
+│   │       │   │   │   ├── financial-snapshot.ts
+│   │       │   │   │   ├── monitoring-rule.ts
+│   │       │   │   │   └── risk-event.ts
+│   │       │   │   └── server.ts
+│   │       │   └── tsconfig.json
+│   │       ├── database
+│   │       │   └── migrations
+│   │       │       └── 001_init.sql
+│   │       ├── docker
+│   │       │   ├── Dockerfile.api
+│   │       │   └── Dockerfile.frontend
+│   │       ├── docker-compose.yml
+│   │       ├── frontend
+│   │       │   ├── index.html
+│   │       │   ├── package.json
+│   │       │   ├── postcss.config.js
+│   │       │   ├── src
+│   │       │   │   ├── App.tsx
+│   │       │   │   ├── components
+│   │       │   │   │   ├── ContractorList.tsx
+│   │       │   │   │   ├── FinancialSnapshotList.tsx
+│   │       │   │   │   ├── MonitoringRuleList.tsx
+│   │       │   │   │   └── RiskEventList.tsx
+│   │       │   │   ├── hooks
+│   │       │   │   │   └── useApi.ts
+│   │       │   │   ├── index.css
+│   │       │   │   └── main.tsx
+│   │       │   ├── tailwind.config.js
+│   │       │   ├── tsconfig.json
+│   │       │   └── vite.config.ts
+│   │       └── README.md
+│   ├── multi-agent
+│   │   ├── contracts
+│   │   │   └── orchestrator-agent.ts
+│   │   └── README.md
+│   ├── reporting
+│   │   ├── contracts
+│   │   │   ├── analytics.reclapp
+│   │   │   ├── analytics.reclapp.rcl
+│   │   │   └── analytics.reclapp.ts
+│   │   ├── README.md
+│   │   └── target
+│   │       ├── api
+│   │       │   ├── dist
+│   │       │   │   ├── models
+│   │       │   │   │   ├── benchmark.js
+│   │       │   │   │   ├── kpi.js
+│   │       │   │   │   ├── kpivalue.js
+│   │       │   │   │   ├── report-execution.js
+│   │       │   │   │   ├── report.js
+│   │       │   │   │   └── trend-analysis.js
+│   │       │   │   ├── routes
+│   │       │   │   │   ├── benchmark.js
+│   │       │   │   │   ├── kpi.js
+│   │       │   │   │   ├── kpivalue.js
+│   │       │   │   │   ├── report-execution.js
+│   │       │   │   │   ├── report.js
+│   │       │   │   │   └── trend-analysis.js
+│   │       │   │   └── server.js
+│   │       │   ├── package.json
+│   │       │   ├── package-lock.json
+│   │       │   ├── src
+│   │       │   │   ├── models
+│   │       │   │   │   ├── benchmark.ts
+│   │       │   │   │   ├── dashboard.ts
+│   │       │   │   │   ├── data-source.ts
+│   │       │   │   │   ├── kpi.ts
+│   │       │   │   │   ├── kpivalue.ts
+│   │       │   │   │   ├── metric.ts
+│   │       │   │   │   ├── metric-value.ts
+│   │       │   │   │   ├── report-execution.ts
+│   │       │   │   │   ├── report-template.ts
+│   │       │   │   │   ├── report.ts
+│   │       │   │   │   ├── scheduled-report.ts
+│   │       │   │   │   ├── trend-analysis.ts
+│   │       │   │   │   └── widget.ts
+│   │       │   │   ├── routes
+│   │       │   │   │   ├── benchmark.ts
+│   │       │   │   │   ├── dashboard.ts
+│   │       │   │   │   ├── data-source.ts
+│   │       │   │   │   ├── kpi.ts
+│   │       │   │   │   ├── kpivalue.ts
+│   │       │   │   │   ├── metric.ts
+│   │       │   │   │   ├── metric-value.ts
+│   │       │   │   │   ├── report-execution.ts
+│   │       │   │   │   ├── report-template.ts
+│   │       │   │   │   ├── report.ts
+│   │       │   │   │   ├── scheduled-report.ts
+│   │       │   │   │   ├── trend-analysis.ts
+│   │       │   │   │   └── widget.ts
+│   │       │   │   └── server.ts
+│   │       │   └── tsconfig.json
+│   │       ├── database
+│   │       │   └── migrations
+│   │       │       └── 001_init.sql
+│   │       ├── docker
+│   │       │   ├── Dockerfile.api
+│   │       │   └── Dockerfile.frontend
+│   │       ├── docker-compose.yml
+│   │       ├── frontend
+│   │       │   ├── index.html
+│   │       │   ├── nginx.conf
+│   │       │   ├── package.json
+│   │       │   ├── postcss.config.js
+│   │       │   ├── src
+│   │       │   │   ├── App.tsx
+│   │       │   │   ├── components
+│   │       │   │   │   ├── BenchmarkList.tsx
+│   │       │   │   │   ├── DashboardList.tsx
+│   │       │   │   │   ├── DataSourceList.tsx
+│   │       │   │   │   ├── KPIList.tsx
+│   │       │   │   │   ├── KPIValueList.tsx
+│   │       │   │   │   ├── MetricList.tsx
+│   │       │   │   │   ├── MetricValueList.tsx
+│   │       │   │   │   ├── ReportExecutionList.tsx
+│   │       │   │   │   ├── ReportList.tsx
+│   │       │   │   │   ├── ReportTemplateList.tsx
+│   │       │   │   │   ├── ScheduledReportList.tsx
+│   │       │   │   │   ├── TrendAnalysisList.tsx
+│   │       │   │   │   └── WidgetList.tsx
+│   │       │   │   ├── hooks
+│   │       │   │   │   └── useApi.ts
+│   │       │   │   ├── index.css
+│   │       │   │   └── main.tsx
+│   │       │   ├── tailwind.config.js
+│   │       │   ├── tsconfig.json
+│   │       │   └── vite.config.ts
+│   │       └── README.md
+│   ├── saas-starter
+│   │   ├── contracts
+│   │   │   ├── main.reclapp
+│   │   │   ├── main.reclapp.rcl
+│   │   │   └── main.reclapp.ts
+│   │   ├── README.md
+│   │   └── target
+│   │       ├── api
+│   │       │   ├── dist
+│   │       │   │   ├── models
+│   │       │   │   │   ├── audit-log.js
+│   │       │   │   │   ├── invoice.js
+│   │       │   │   │   ├── organization.js
+│   │       │   │   │   ├── subscription.js
+│   │       │   │   │   ├── usage.js
+│   │       │   │   │   └── user.js
+│   │       │   │   ├── routes
+│   │       │   │   │   ├── audit-log.js
+│   │       │   │   │   ├── invoice.js
+│   │       │   │   │   ├── organization.js
+│   │       │   │   │   ├── subscription.js
+│   │       │   │   │   ├── usage.js
+│   │       │   │   │   └── user.js
+│   │       │   │   └── server.js
+│   │       │   ├── package.json
+│   │       │   ├── package-lock.json
+│   │       │   ├── src
+│   │       │   │   ├── middleware
+│   │       │   │   │   └── auth.ts
+│   │       │   │   ├── models
+│   │       │   │   │   ├── audit-log.ts
+│   │       │   │   │   ├── invoice.ts
+│   │       │   │   │   ├── organization.ts
+│   │       │   │   │   ├── subscription.ts
+│   │       │   │   │   ├── usage.ts
+│   │       │   │   │   └── user.ts
+│   │       │   │   ├── routes
+│   │       │   │   │   ├── audit-log.ts
+│   │       │   │   │   ├── invoice.ts
+│   │       │   │   │   ├── organization.ts
+│   │       │   │   │   ├── subscription.ts
+│   │       │   │   │   ├── usage.ts
+│   │       │   │   │   └── user.ts
+│   │       │   │   └── server.ts
+│   │       │   └── tsconfig.json
+│   │       ├── database
+│   │       │   └── migrations
+│   │       │       └── 001_init.sql
+│   │       ├── docker
+│   │       │   ├── Dockerfile.api
+│   │       │   └── Dockerfile.frontend
+│   │       ├── docker-compose.yml
+│   │       ├── frontend
+│   │       │   ├── index.html
+│   │       │   ├── nginx.conf
+│   │       │   ├── package.json
+│   │       │   ├── postcss.config.js
+│   │       │   ├── src
+│   │       │   │   ├── App.tsx
+│   │       │   │   ├── components
+│   │       │   │   │   ├── AuditLogList.tsx
+│   │       │   │   │   ├── InvoiceList.tsx
+│   │       │   │   │   ├── OrganizationList.tsx
+│   │       │   │   │   ├── SubscriptionList.tsx
+│   │       │   │   │   ├── UsageList.tsx
+│   │       │   │   │   └── UserList.tsx
+│   │       │   │   ├── hooks
+│   │       │   │   │   └── useApi.ts
+│   │       │   │   ├── index.css
+│   │       │   │   └── main.tsx
+│   │       │   ├── tailwind.config.js
+│   │       │   ├── tsconfig.json
+│   │       │   └── vite.config.ts
+│   │       └── README.md
+│   └── web-dashboard
+│       ├── contracts
+│       │   ├── analytics.reclapp
+│       │   ├── analytics.reclapp.rcl
+│       │   └── analytics.reclapp.ts
+│       ├── README.md
+│       └── target
+│           ├── api
+│           │   ├── dist
+│           │   │   ├── models
+│           │   │   │   ├── alert-rule.js
+│           │   │   │   ├── event.js
+│           │   │   │   ├── funnel.js
+│           │   │   │   ├── page-view.js
+│           │   │   │   ├── project.js
+│           │   │   │   ├── report.js
+│           │   │   │   ├── session.js
+│           │   │   │   └── user.js
+│           │   │   ├── routes
+│           │   │   │   ├── alert-rule.js
+│           │   │   │   ├── event.js
+│           │   │   │   ├── funnel.js
+│           │   │   │   ├── page-view.js
+│           │   │   │   ├── project.js
+│           │   │   │   ├── report.js
+│           │   │   │   ├── session.js
+│           │   │   │   └── user.js
+│           │   │   └── server.js
+│           │   ├── package.json
+│           │   ├── package-lock.json
+│           │   ├── src
+│           │   │   ├── models
+│           │   │   │   ├── alert-rule.ts
+│           │   │   │   ├── campaign.ts
+│           │   │   │   ├── event.ts
+│           │   │   │   ├── funnel.ts
+│           │   │   │   ├── goal-conversion.ts
+│           │   │   │   ├── goal.ts
+│           │   │   │   ├── page-view.ts
+│           │   │   │   ├── project.ts
+│           │   │   │   ├── report.ts
+│           │   │   │   ├── session.ts
+│           │   │   │   ├── user.ts
+│           │   │   │   ├── visitor.ts
+│           │   │   │   └── web-event.ts
+│           │   │   ├── routes
+│           │   │   │   ├── alert-rule.ts
+│           │   │   │   ├── campaign.ts
+│           │   │   │   ├── event.ts
+│           │   │   │   ├── funnel.ts
+│           │   │   │   ├── goal-conversion.ts
+│           │   │   │   ├── goal.ts
+│           │   │   │   ├── page-view.ts
+│           │   │   │   ├── project.ts
+│           │   │   │   ├── report.ts
+│           │   │   │   ├── session.ts
+│           │   │   │   ├── user.ts
+│           │   │   │   ├── visitor.ts
+│           │   │   │   └── web-event.ts
+│           │   │   └── server.ts
+│           │   └── tsconfig.json
+│           ├── database
+│           │   └── migrations
+│           │       └── 001_init.sql
+│           ├── docker
+│           │   ├── Dockerfile.api
+│           │   └── Dockerfile.frontend
+│           ├── docker-compose.yml
+│           ├── frontend
+│           │   ├── index.html
+│           │   ├── nginx.conf
+│           │   ├── package.json
+│           │   ├── postcss.config.js
+│           │   ├── src
+│           │   │   ├── App.tsx
+│           │   │   ├── components
+│           │   │   │   ├── AlertRuleList.tsx
+│           │   │   │   ├── CampaignList.tsx
+│           │   │   │   ├── EventList.tsx
+│           │   │   │   ├── FunnelList.tsx
+│           │   │   │   ├── GoalConversionList.tsx
+│           │   │   │   ├── GoalList.tsx
+│           │   │   │   ├── PageViewList.tsx
+│           │   │   │   ├── ProjectList.tsx
+│           │   │   │   ├── ReportList.tsx
+│           │   │   │   ├── SessionList.tsx
+│           │   │   │   ├── UserList.tsx
+│           │   │   │   ├── VisitorList.tsx
+│           │   │   │   └── WebEventList.tsx
+│           │   │   ├── hooks
+│           │   │   │   └── useApi.ts
+│           │   │   ├── index.css
+│           │   │   └── main.tsx
+│           │   ├── tailwind.config.js
+│           │   ├── tsconfig.json
+│           │   └── vite.config.ts
+│           └── README.md
+├── FILE_MANIFEST.md
+├── frontend
+│   ├── index.html
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── public
+│   └── src
+│       ├── components
+│       ├── dashboards
+│       ├── main.tsx
+│       └── streaming
+├── generator
+│   ├── cli.ts
+│   ├── core
+│   │   ├── contract-generator.ts
+│   │   ├── generator.ts
+│   │   └── simple-generator.ts
+│   ├── index.ts
+│   ├── package.json
+│   ├── targets
+│   │   ├── api.ts
+│   │   ├── cicd.ts
+│   │   ├── database.ts
+│   │   ├── docker.ts
+│   │   ├── frontend.ts
+│   │   └── kubernetes.ts
+│   ├── templates
+│   │   ├── api.ts
+│   │   ├── database.ts
+│   │   ├── docker.ts
+│   │   ├── frontend.ts
+│   │   └── index.ts
+│   ├── tsconfig.json
+│   └── utils
+│       └── index.ts
+├── generators
+│   ├── api
+│   └── web
+├── hardware
+│   ├── devices
+│   └── mqtt
+├── jest.config.js
+├── lib
+│   └── chat-core.js
+├── LICENSE
+├── Makefile
+├── modules
+│   ├── ceidg
+│   ├── data-provider
+│   │   └── index.ts
+│   ├── financial
+│   ├── krs
+│   └── mock
+│       └── index.ts
+├── package.json
+├── package-lock.json
+├── README.md
+├── reclapp.png
+├── scripts
+│   ├── autorun.sh
+│   ├── generate.ts
+│   ├── monitor.sh
+│   ├── portenv.py
+│   └── stop-examples.sh
+├── studio
+│   ├── chat-shell.js
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── projects
+│   │   ├── booking-system
+│   │   │   ├── contracts
+│   │   │   │   └── main.reclapp.rcl
+│   │   │   └── target
+│   │   │       ├── api
+│   │   │       │   ├── package.json
+│   │   │       │   ├── src
+│   │   │       │   │   ├── models
+│   │   │       │   │   │   ├── contact.ts
+│   │   │       │   │   │   └── transaction.ts
+│   │   │       │   │   ├── routes
+│   │   │       │   │   │   ├── contact.ts
+│   │   │       │   │   │   └── transaction.ts
+│   │   │       │   │   └── server.ts
+│   │   │       │   └── tsconfig.json
+│   │   │       ├── database
+│   │   │       │   └── migrations
+│   │   │       │       └── 001_init.sql
+│   │   │       ├── docker
+│   │   │       │   ├── Dockerfile.api
+│   │   │       │   └── Dockerfile.frontend
+│   │   │       ├── docker-compose.yml
+│   │   │       ├── frontend
+│   │   │       │   ├── index.html
+│   │   │       │   ├── nginx.conf
+│   │   │       │   ├── package.json
+│   │   │       │   ├── postcss.config.js
+│   │   │       │   ├── src
+│   │   │       │   │   ├── App.tsx
+│   │   │       │   │   ├── components
+│   │   │       │   │   │   ├── ContactList.tsx
+│   │   │       │   │   │   └── TransactionList.tsx
+│   │   │       │   │   ├── hooks
+│   │   │       │   │   │   └── useApi.ts
+│   │   │       │   │   ├── index.css
+│   │   │       │   │   └── main.tsx
+│   │   │       │   ├── tailwind.config.js
+│   │   │       │   ├── tsconfig.json
+│   │   │       │   └── vite.config.ts
+│   │   │       └── README.md
+│   │   ├── logs
+│   │   │   ├── booking-system_2026-01-01T13-01-28-096Z.rcl.md
+│   │   │   ├── booking-system_2026-01-01T13-07-23-323Z.rcl.md
+│   │   │   ├── booking-system_2026-01-01T13-07-42-841Z.rcl.md
+│   │   │   ├── booking-system_2026-01-01T13-14-28-194Z.rcl.md
+│   │   │   ├── booking-system_2026-01-01T13-22-14-488Z.rcl.md
+│   │   │   ├── booking-system_2026-01-01T13-23-00-148Z.rcl.md
+│   │   │   ├── booking-system_2026-01-01T13-25-57-540Z.rcl.md
+│   │   │   ├── booking-system_2026-01-01T13-26-59-932Z.rcl.md
+│   │   │   ├── booking-system_2026-01-01T13-28-25-990Z.rcl.md
+│   │   │   └── booking-system_2026-01-01T13-41-03-534Z.rcl.md
+│   │   └── my-app
+│   │       └── contracts
+│   │           ├── main.rcl.md
+│   │           └── main.reclapp.rcl
+│   ├── public
+│   │   └── index.html
+│   ├── server.js
+│   └── server.log
+├── tests
+│   ├── e2e
+│   │   ├── causal-loop.test.ts
+│   │   ├── chat-shell.test.sh
+│   │   ├── cli.test.ts
+│   │   ├── contracts.test.ts
+│   │   ├── fix-examples.sh
+│   │   ├── mcp-protocol.test.ts
+│   │   ├── onboarding.test.ts
+│   │   ├── README.md
+│   │   ├── run-all.sh
+│   │   ├── setup.ts
+│   │   ├── studio.test.ts
+│   │   └── test-example.sh
+│   ├── integration
+│   │   └── setup.ts
+│   ├── setup.ts
+│   └── unit
+│       ├── ai-contract.test.ts
+│       ├── contract-generator.test.ts
+│       ├── core-generator.test.ts
+│       ├── eventstore.test.ts
+│       ├── mini-parser.test.ts
+│       ├── parser.test.ts
+│       ├── simple-generator.test.ts
+│       ├── validator.test.ts
+│       └── verification.test.ts
+├── todo.md
+├── tree.sh
+└── tsconfig.json
+
+245 directories, 668 files
