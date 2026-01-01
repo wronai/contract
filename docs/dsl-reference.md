@@ -1,5 +1,28 @@
 # Reclapp DSL Reference
 
+## Important: Full DSL vs Mini-DSL
+
+This document describes the **full Reclapp DSL** (the grammar in `dsl/grammar/reclapp.pegjs`) which uses uppercase keywords like `ENTITY` and `FIELD`.
+
+For the **Mini-DSL** used by Reclapp Studio and stored as `.reclapp.rcl` (lowercase `app`, `entity`, `enum`, etc.), see:
+
+- [Reclapp Studio Guide](./studio-guide.md)
+- Example Mini-DSL contracts in [`examples/*/contracts/*.reclapp.rcl`](../examples/)
+
+Mini-DSL quick example:
+
+```rcl
+app "CRM" {
+  version: "1.0.0"
+}
+
+entity Contact {
+  id uuid @unique @generated
+  email email @unique
+  createdAt datetime @generated
+}
+```
+
 ## Overview
 
 Reclapp DSL is a declarative domain-specific language for building multi-platform business applications. Instead of describing *how* to build an application, you describe *what* the application should contain and do.

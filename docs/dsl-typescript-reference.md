@@ -2,9 +2,10 @@
 
 ## Overview
 
-Reclapp contracts can be defined in two formats:
-1. **`.reclapp`** - Declarative DSL format (human-friendly)
+Reclapp contracts can be defined in three complementary formats:
+1. **`.reclapp.rcl`** - Mini-DSL format (human-friendly, source-of-truth for generation)
 2. **`.reclapp.ts`** - TypeScript format (type-safe, validated at compile-time)
+3. **`.rcl.md`** - Markdown format (readable + chat conversation history)
 
 At runtime, all formats are converted to TypeScript for validation and execution.
 
@@ -12,19 +13,20 @@ At runtime, all formats are converted to TypeScript for validation and execution
 
 ### Format Comparison
 
-| Feature | `.reclapp` | `.reclapp.ts` |
-|---------|------------|---------------|
-| Human readable | ✅ Excellent | ✅ Good |
-| Type safety | ❌ Runtime only | ✅ Compile-time |
-| IDE support | ⚠️ Limited | ✅ Full |
-| Validation | Runtime | Compile + Runtime |
-| Refactoring | Manual | IDE-assisted |
+| Feature | `.reclapp.rcl` | `.reclapp.ts` | `.rcl.md` |
+|---------|----------------|--------------|----------|
+| Human readable | ✅ Excellent | ✅ Good | ✅ Excellent |
+| Type safety | ❌ Runtime only | ✅ Compile-time | ❌ Runtime only |
+| IDE support | ⚠️ Limited | ✅ Full | ⚠️ Limited |
+| Validation | Runtime | Compile + Runtime | Runtime |
+| Refactoring | Manual | IDE-assisted | Manual |
 
 ### Recommended Workflow
 
-1. **Development**: Use `.reclapp.ts` for type safety and IDE support
-2. **Documentation**: Use `.reclapp` for sharing and documentation
-3. **Runtime**: Both formats are validated and converted to TypeScript
+1. **Interactive design (Studio / Shell Chat)**: generate `.reclapp.rcl` + `.rcl.md`
+2. **Development/refactors**: use `.reclapp.ts` for type safety and IDE support
+3. **Documentation**: keep `.rcl.md` (includes conversation history)
+4. **Generation**: `./bin/reclapp generate <contract>` supports all formats
 
 ## TypeScript Contract Structure
 

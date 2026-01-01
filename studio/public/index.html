@@ -836,7 +836,7 @@ entity User {
         function openInEditor(type) {
             const projectName = document.getElementById('project-name')?.value || 'contract';
             // Open via file URI or custom scheme
-            const uri = `vscode://file/${encodeURIComponent(`studio-lite/projects/${projectName}/contracts/main.reclapp.rcl`)}`;
+            const uri = `vscode://file/${encodeURIComponent(`studio/projects/${projectName}/contracts/main.reclapp.rcl`)}`;
             window.open(uri, '_blank');
             showToast('🔗 Opening in editor...');
         }
@@ -987,12 +987,12 @@ ${rcl}
                         <span class="file-icon">${f.ext === 'ts' ? '🔷' : f.ext === 'md' ? '📝' : '📄'}</span>
                         <div>
                             <div class="file-name">${f.name}</div>
-                            <div class="file-size">${f.path}</div>
+                            <div class="file-size">${f.absPath || f.path}</div>
                         </div>
                     </div>
                     <div class="file-actions">
-                        <button class="secondary" onclick="copyFileContent('${f.path}')">📋</button>
-                        <button class="secondary" onclick="openFileUri('${f.path}')">🔗</button>
+                        <button class="secondary" onclick="copyFileContent('${(f.absPath || f.path).replace(/'/g, "\\'")}')">📋</button>
+                        <button class="secondary" onclick="openFileUri('${(f.absPath || f.path).replace(/'/g, "\\'")}')">🔗</button>
                     </div>
                 </div>
             `).join('');
@@ -1040,8 +1040,40 @@ ${rcl}
         
         // Open file URI
         function openFileUri(path) {
-            const uri = `file://${path}`;
+            const p = String(path || '');
+            const uri = p.startsWith('/') ? `file://${encodeURI(p)}` : `file://${encodeURI('/' + p)}`;
             window.open(uri, '_blank');
+        }
+
+        async function copyFileContent(filePath) {
+            const p = String(filePath || '');
+            let text = '';
+
+            if (p.endsWith('.reclapp.rcl') || p.endsWith('.rcl')) {
+                text = currentContract || '';
+            } else if (p.endsWith('.reclapp.ts') || p.endsWith('.ts')) {
+                text = currentTsContract || '';
+            } else if (p.endsWith('.rcl.md') || p.endsWith('.md')) {
+                text = currentMdContract || '';
+            }
+
+            if (!text) {
+                showToast('❌ Nothing to copy');
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('📋 Copied to clipboard!');
+            } catch (e) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('📋 Copied!');
+            }
         }
         
         // Use example prompt
@@ -1544,8 +1576,8 @@ ${rcl}
                         window.open(data.urls.frontend, '_blank');
                     }
                 } else if (data.needsGenerate) {
-                    const cmd = data.generateCommand || `./bin/reclapp generate studio-lite/projects/${projectName}/contracts/main.reclapp.rcl -o studio-lite/projects/${projectName}/target`;
-                    showResult(chatResult, `⚠️ ${data.error}\n\n📋 Contract saved to: ${data.contractPath || 'studio-lite/projects/' + projectName + '/contracts/main.reclapp.rcl'}\n\n🔧 Run this to generate:\n${cmd}\n\n💡 Or use: make generate PROJECT=${projectName}`, 'warning');
+                    const cmd = data.generateCommand || `./bin/reclapp generate studio/projects/${projectName}/contracts/main.reclapp.rcl -o studio/projects/${projectName}/target`;
+                    showResult(chatResult, `⚠️ ${data.error}\n\n📋 Contract saved to: ${data.contractPath || 'studio/projects/' + projectName + '/contracts/main.reclapp.rcl'}\n\n🔧 Run this to generate:\n${cmd}`, 'warning');
                 } else if (data.needsSave) {
                     showResult(chatResult, `❌ ${data.error}\n\n💡 Click "💾 Save .rcl" first to save the contract.`, 'error');
                 } else {

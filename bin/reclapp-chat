@@ -6,6 +6,7 @@
  */
 
 const readline = require('readline');
+const fs = require('fs');
 const path = require('path');
 const { ReclappChat } = require('../lib/chat-core');
 
@@ -28,6 +29,7 @@ function color(c, text) {
 
 // Create chat instance
 const chat = new ReclappChat();
+let lastSavedDir = '';
 
 // Main
 async function main() {
@@ -44,6 +46,8 @@ ${color('yellow', 'Commands:')}
   ${color('cyan', '/save-rcl [dir]')}  Save only .reclapp.rcl (minimized)
   ${color('cyan', '/save-md [dir]')}   Save only .rcl.md (readable)
   ${color('cyan', '/save-ts [dir]')}   Save only .reclapp.ts (executable)
+  ${color('cyan', '/generate [dir|contract]')} Generate target/ from saved contract
+  ${color('cyan', '/run [dir|contract]')}      Generate + run dev servers (API+Frontend)
   ${color('cyan', '/show')}            Show current contract
   ${color('cyan', '/show-ts')}         Show TypeScript version
   ${color('cyan', '/validate')}        Validate contract
@@ -65,6 +69,42 @@ ${color('dim', 'Start by describing what you want to build...')}
     input: process.stdin,
     output: process.stdout
   });
+
+  const repoRoot = path.join(__dirname, '..');
+  const reclappBin = path.join(__dirname, 'reclapp');
+
+  const resolveContractPath = (arg) => {
+    const isContractPath = (p) =>
+      typeof p === 'string' &&
+      (p.endsWith('.reclapp.rcl') || p.endsWith('.rcl') || p.endsWith('.rcl.md') || p.endsWith('.reclapp.ts') || p.endsWith('.ts') || p.endsWith('.md'));
+
+    if (arg && isContractPath(arg)) {
+      const resolved = path.resolve(arg);
+      if (!fs.existsSync(resolved)) throw new Error(`Contract not found: ${resolved}`);
+      return resolved;
+    }
+
+    const candidateDirs = [];
+    if (arg) candidateDirs.push(arg);
+    if (lastSavedDir) candidateDirs.push(lastSavedDir);
+    candidateDirs.push(path.join('apps', chat.projectName));
+    candidateDirs.push(`./${chat.projectName}`);
+
+    for (const d of candidateDirs) {
+      if (!d) continue;
+      const dirAbs = path.resolve(d);
+      const rcl = path.join(dirAbs, 'contracts', 'main.reclapp.rcl');
+      const md = path.join(dirAbs, 'contracts', 'main.rcl.md');
+      const ts = path.join(dirAbs, 'contracts', 'main.reclapp.ts');
+      if (fs.existsSync(rcl)) return rcl;
+      if (fs.existsSync(md)) return md;
+      if (fs.existsSync(ts)) return ts;
+    }
+
+    throw new Error(
+      `Could not find contract. Try /save ./apps/${chat.projectName} then /generate, or pass a contract path (e.g. /generate ./apps/${chat.projectName}/contracts/main.reclapp.rcl).`
+    );
+  };
 
   const prompt = () => {
     rl.question(`\n${color('green', '�� You:')} `, async (input) => {
@@ -97,6 +137,8 @@ ${color('yellow', 'Commands:')}
   ${color('cyan', '/save-rcl [dir]')}  Save .reclapp.rcl
   ${color('cyan', '/save-md [dir]')}   Save .rcl.md (with conversation)
   ${color('cyan', '/save-ts [dir]')}   Save .reclapp.ts
+  ${color('cyan', '/generate [dir|contract]')} Generate target/ from saved contract
+  ${color('cyan', '/run [dir|contract]')}      Generate + run dev servers (API+Frontend)
   ${color('cyan', '/show')}            Show contract
   ${color('cyan', '/show-ts')}         Show TypeScript
   ${color('cyan', '/validate')}        Validate
@@ -147,6 +189,7 @@ ${color('yellow', 'Commands:')}
             const saveDir = arg || `./${chat.projectName}`;
             const saveResult = chat.saveContract(saveDir, 'all');
             if (saveResult.success) {
+              lastSavedDir = saveDir;
               console.log(color('green', `✅ Saved ${saveResult.files.length} files:`));
               saveResult.files.forEach(f => console.log(color('dim', `   ${f.path}`)));
             } else {
@@ -162,6 +205,7 @@ ${color('yellow', 'Commands:')}
             const rclDir = arg || `./${chat.projectName}`;
             const rclResult = chat.saveContract(rclDir, 'rcl');
             if (rclResult.success) {
+              lastSavedDir = rclDir;
               console.log(color('green', `✅ Saved: ${rclResult.files[0]?.path}`));
             }
             break;
@@ -174,6 +218,7 @@ ${color('yellow', 'Commands:')}
             const mdDir = arg || `./${chat.projectName}`;
             const mdResult = chat.saveContract(mdDir, 'md');
             if (mdResult.success) {
+              lastSavedDir = mdDir;
               console.log(color('green', `✅ Saved: ${mdResult.files[0]?.path}`));
             }
             break;
@@ -186,9 +231,50 @@ ${color('yellow', 'Commands:')}
             const tsDir = arg || `./${chat.projectName}`;
             const tsResult = chat.saveContract(tsDir, 'ts');
             if (tsResult.success) {
+              lastSavedDir = tsDir;
               console.log(color('green', `✅ Saved: ${tsResult.files[0]?.path}`));
             }
             break;
+
+          case 'generate':
+          case 'gen': {
+            try {
+              const contractPath = resolveContractPath(arg);
+              console.log(color('dim', `\n🚀 Generating from: ${contractPath}`));
+              const { spawn } = require('child_process');
+              await new Promise((resolve, reject) => {
+                const p = spawn(process.execPath, [reclappBin, 'generate', contractPath], {
+                  cwd: repoRoot,
+                  stdio: 'inherit',
+                  shell: false
+                });
+                p.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`generate exited with code ${code}`))));
+              });
+            } catch (e) {
+              console.log(color('red', `❌ ${e.message}`));
+            }
+            break;
+          }
+
+          case 'run': {
+            try {
+              const contractPath = resolveContractPath(arg);
+              console.log(color('dim', `\n🚀 Running dev servers from: ${contractPath}`));
+              console.log(color('dim', `   (Press Ctrl+C to stop)`));
+              const { spawn } = require('child_process');
+              rl.close();
+              const p = spawn(process.execPath, [reclappBin, 'dev', contractPath], {
+                cwd: repoRoot,
+                stdio: 'inherit',
+                shell: false
+              });
+              p.on('close', (code) => process.exit(code || 0));
+              return;
+            } catch (e) {
+              console.log(color('red', `❌ ${e.message}`));
+            }
+            break;
+          }
             
           case 'name':
             if (arg) {

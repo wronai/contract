@@ -15,7 +15,7 @@
 .PHONY: help install dev build test lint clean publish release stop stop-docker stop-examples stop-dev up down \
 	docker-build docker-up docker-down docker-logs docker-restart docker-full docker-clean docker-shell \
 	docker-check-ports docker-health \
-	studio-env-init studio-check-ports studio-pick-port studio-up studio-down studio-logs studio-health \
+	studio-up studio-down studio-restart studio-status studio-chat studio-logs studio-test \
 	example-b2b-build example-b2b-up example-b2b-down example-b2b-logs example-b2b-check-ports example-b2b-health \
 	example-iot-build example-iot-up example-iot-down example-iot-logs example-iot-check-ports example-iot-health \
 	example-agent-build example-agent-up example-agent-down example-agent-logs example-agent-check-ports example-agent-health \
@@ -55,7 +55,7 @@ POSTGRES_PORT ?= 5432
 
 # Studio defaults (Studio has its own studio/.env, but these provide global defaults)
 STUDIO_HOST ?= 0.0.0.0
-STUDIO_PORT ?= 7860
+STUDIO_PORT ?= 7861
 OLLAMA_HOST ?= http://localhost:11434
 OLLAMA_MODEL ?= mistral:7b-instruct
 CODE_MODEL ?= codellama:7b-instruct
@@ -222,6 +222,9 @@ auto-iot: ## Stop everything, then start IoT example
 auto-agent: ## Stop everything, then start Multi-Agent example
 	@$(MAKE) stop
 	@$(MAKE) example-agent-up
+
+auto-studio: ## Start Reclapp Studio
+	@$(MAKE) studio-up
 
 dev-api: ## Start only API server
 	@echo "$(BLUE)🚀 Starting API server...$(NC)"

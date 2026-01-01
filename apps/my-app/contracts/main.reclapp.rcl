@@ -1,0 +1,16 @@
+app "CRM" {
+  version: "1.0.0"
+}
+entity Contact {
+  id uuid @unique @generated
+  name text @required
+  email email @unique @required
+  phone phone @required
+}
+entity Transaction  {
+  id uuid @unique @generated
+  description text @required
+  amount decimal @required
+  contact -> Contact?
+  createdAt datetime @generated
+}

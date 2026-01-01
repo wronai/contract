@@ -195,6 +195,53 @@ function validateContractSyntax(contract) {
   if (!contract.match(/entity\s+\w+/)) {
     errors.push('No entities defined');
   }
+
+  // Common Mini-DSL field mistakes inside entity blocks
+  // - Missing type: "email @required" (should be: "email email @required")
+  // - Using modifiers without a type
+  const entityBlocks = contract.match(/entity\s+\w+\s*\{[\s\S]*?\}/g) || [];
+  const knownTypes = new Set([
+    'text', 'email', 'phone', 'url', 'int', 'float', 'decimal', 'bool', 'date', 'datetime', 'uuid', 'json'
+  ]);
+  for (const block of entityBlocks) {
+    const body = block.replace(/^entity\s+\w+\s*\{/, '').replace(/\}\s*$/, '');
+    const lines = body.split('\n');
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line) continue;
+      if (line.startsWith('//')) continue;
+
+      // Ignore braces and anything that doesn't look like a field
+      if (line === '{' || line === '}') continue;
+      if (/^(app|entity|enum|event|alert|dashboard|pipeline|source|config)\b/.test(line)) continue;
+
+      // If line contains modifiers but only one token before modifiers => missing type
+      const tokens = line.split(/\s+/).filter(Boolean);
+      const hasModifier = tokens.some(t => t.startsWith('@'));
+      if (!hasModifier) continue;
+
+      const idxFirstModifier = tokens.findIndex(t => t.startsWith('@'));
+      const pre = tokens.slice(0, idxFirstModifier);
+
+      // Expect: <fieldName> <type> ...
+      if (pre.length === 1) {
+        errors.push(`Entity field missing type: "${line}"`);
+        continue;
+      }
+
+      // Detect "fieldName @required" etc.
+      if (pre.length >= 2) {
+        const typeTok = pre[1];
+        if (!knownTypes.has(typeTok) && !/^->|^<-$/.test(typeTok)) {
+          // Might be relation or custom type - allow Identifier-like types
+          // but reject obvious modifier-as-type cases
+          if (typeTok.startsWith('@')) {
+            errors.push(`Entity field missing type: "${line}"`);
+          }
+        }
+      }
+    }
+  }
   
   return { valid: errors.length === 0, errors };
 }
