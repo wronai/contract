@@ -2,137 +2,191 @@
 
 Generated: 2026-01-01
 
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    RECLAPP PLATFORM                         │
+├─────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │   Studio    │  │  CLI Tools  │  │    Generated Apps   │ │
+│  │  (Web UI)   │  │             │  │                     │ │
+│  │  :7861      │  │ reclapp     │  │  API :8080          │ │
+│  │             │  │ reclapp-chat│  │  Frontend :3000     │ │
+│  └──────┬──────┘  └──────┬──────┘  └──────────┬──────────┘ │
+│         │                │                     │            │
+│         └────────────────┼─────────────────────┘            │
+│                          ▼                                  │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │              lib/chat-core.js (Shared)                  ││
+│  │  - ReclappChat class                                    ││
+│  │  - Contract extraction, validation, formatting          ││
+│  │  - TypeScript & Markdown generation                     ││
+│  │  - Ollama LLM integration                               ││
+│  └─────────────────────────────────────────────────────────┘│
+│                          ▼                                  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │  contracts/  │  │    core/     │  │     dsl/     │      │
+│  │  TypeScript  │  │  AI-Native   │  │   Parser     │      │
+│  │  Contracts   │  │  Components  │  │   Grammar    │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+└─────────────────────────────────────────────────────────────┘
+```
+
 ## Statistics
 
 | Type | Count |
 |------|-------|
 | TypeScript files | 32 |
-| JavaScript files | 5 |
-| Test files | 9 |
+| JavaScript files | 6 |
+| Test files | 12 |
 | Markdown files | 15 |
 | Config files | 8 |
-| Total source files | ~70 |
 
 ## Source Files
+
+### Shared Library
+
+```text
+./lib/
+└── chat-core.js        # Shared ReclappChat class
+    ├── chat()          # LLM conversation
+    ├── extractContract()
+    ├── formatContract()
+    ├── validateContract()
+    ├── saveContract()  # Save in 3 formats
+    ├── toMarkdown()    # With conversation history
+    └── toTypeScript()  # Type-safe contracts
+```
+
+### Reclapp Studio (Web UI)
+
+```text
+./studio/
+├── server.js           # Express server (API endpoints)
+├── public/
+│   └── index.html      # Vanilla JS UI (tabs, accordions)
+├── chat-shell.js       # Terminal chat (uses lib/chat-core)
+├── package.json
+└── projects/           # Generated projects
+    └── logs/           # Session logs (.rcl.md)
+```
+
+**Web UI Features:**
+- 💬 Chat tab - AI contract generation with example prompts
+- 📁 Projects tab - Browse apps/ and examples/
+- 📋 Formats tab - Documentation on contract formats
+- Accordion UI for contract, TypeScript, Markdown previews
+
+### CLI Tools
+
+```text
+./bin/
+├── reclapp             # Main CLI (generate, list, dev)
+├── reclapp-chat        # AI chat (uses lib/chat-core)
+└── reclapp-validate-ts # TypeScript validator
+```
 
 ### Contracts System
 
 ```text
-./contracts/examples/risk-monitoring-agent.ts
-./contracts/executor.ts
-./contracts/index.ts
-./contracts/types.ts
-./contracts/validator.ts
+./contracts/
+├── types.ts            # 450+ type definitions
+├── validator.ts        # Zod validation schemas
+├── executor.ts         # Runtime executor
+├── index.ts            # Public exports
+└── examples/
+    └── risk-monitoring-agent.ts
 ```
 
 ### Core Engine
 
 ```text
-./core/ai-contract/index.ts
-./core/causal/verification-loop.ts
-./core/cqrs/index.ts
-./core/eventstore/index.ts
-./core/mcp/index.ts
-./core/ontology/types.ts
-./core/planner/index.ts
-./core/verification/index.ts
+./core/
+├── ai-contract/        # AI Contract Enforcer
+├── causal/             # Causal Verification Loop
+├── cqrs/               # CQRS Infrastructure
+├── eventstore/         # Event Sourcing
+├── mcp/                # MCP Protocol Server
+├── ontology/           # Semantic-Causal Ontology
+├── planner/            # Execution DAG Planner
+└── verification/       # Verification Engine
 ```
 
 ### DSL Parser
 
 ```text
-./dsl/ast/types.ts
-./dsl/grammar/reclapp.pegjs
-./dsl/parser/index.ts
-./dsl/validator/index.ts
-```
-
-### Studio (Web UI)
-
-```text
-./studio/
-├── server.js           # Express server with chat, projects, validation APIs
-├── public/
-│   └── index.html      # Vanilla JS UI with accordions, tabs
-├── chat-shell.js       # Terminal chat client
-├── package.json
-└── projects/           # Generated projects and logs
-    └── logs/           # Session logs in .rcl.md format
-```
-
-### CLI Tools
-
-```text
-./bin/reclapp           # Main CLI
-./bin/reclapp-chat      # AI chat for contract generation
-./bin/reclapp-validate-ts  # TypeScript contract validator
+./dsl/
+├── ast/types.ts        # AST type definitions
+├── grammar/reclapp.pegjs  # PEG.js grammar
+├── parser/index.ts     # Parser implementation
+└── validator/index.ts  # Semantic validator
 ```
 
 ### Tests
 
 ```text
-./tests/e2e/causal-loop.test.ts
-./tests/e2e/contracts.test.ts
-./tests/e2e/mcp-protocol.test.ts
-./tests/e2e/onboarding.test.ts
-./tests/e2e/setup.ts
-./tests/setup.ts
-./tests/unit/ai-contract.test.ts
-./tests/unit/eventstore.test.ts
-./tests/unit/parser.test.ts
-./tests/unit/validator.test.ts
-./tests/unit/verification.test.ts
+./tests/
+├── e2e/
+│   ├── studio.test.ts       # Studio API tests
+│   ├── chat-shell.test.sh   # Chat module tests
+│   ├── contracts.test.ts
+│   └── causal-loop.test.ts
+├── unit/
+│   ├── ai-contract.test.ts
+│   ├── parser.test.ts
+│   └── validator.test.ts
+└── setup.ts
 ```
 
 ### Documentation
 
 ```text
-./articles/00-index.md
-./articles/01-reclapp-overview.md
-./articles/02-reclapp-dsl-reference.md
-./articles/03-reclapp-mvp-docker.md
-./articles/04-reclapp-ai-native-roadmap.md
-./articles/05-reclapp-typescript-ai-contracts.md
-./articles/06-reclapp-mcp-integration.md
-./articles/07-reclapp-causal-verification-loop.md
+./articles/
+├── 01-reclapp-overview.md
+├── 02-reclapp-dsl-reference.md
+├── 03-reclapp-mvp-docker.md
+├── 04-reclapp-ai-native-roadmap.md
+├── 05-reclapp-typescript-ai-contracts.md
+├── 06-reclapp-mcp-integration.md
+└── 07-reclapp-causal-verification-loop.md
 ```
 
 ## Contract Formats
 
-| Format | Extension | Purpose |
-|--------|-----------|---------|
-| Mini-DSL | `.reclapp.rcl` | Storage, generation |
-| Markdown | `.rcl.md` | Documentation, AI chat logs |
-| TypeScript | `.reclapp.ts` | Validation, type checking |
+| Format | Extension | Purpose | Example |
+|--------|-----------|---------|---------|
+| Mini-DSL | `.reclapp.rcl` | Storage, generation | [examples/crm/contracts/](examples/crm/contracts/) |
+| Markdown | `.rcl.md` | Documentation, chat logs | [studio/projects/logs/](studio/projects/logs/) |
+| TypeScript | `.reclapp.ts` | Validation, types | [contracts/examples/](contracts/examples/) |
 
 ## Key URLs
 
 | Service | URL | Description |
 |---------|-----|-------------|
-| Studio | http://localhost:7861 | Web UI for contract design |
-| Gradio Studio | http://localhost:7860 | Full-featured Studio (Docker) |
+| Reclapp Studio | http://localhost:7861 | Web UI for contract design |
 | API | http://localhost:8080 | REST API |
 | Frontend | http://localhost:3000 | React Dashboard |
 
 ## Make Commands
 
 ```bash
-# Studio
-make studio-up       # Start
-make studio-down     # Stop
-make studio-restart  # Restart
-make studio-status   # Check status
-make studio-chat     # Terminal chat
-make studio-logs     # View logs
+# Reclapp Studio
+make studio-up        # Start
+make studio-down      # Stop
+make studio-restart   # Restart
+make studio-status    # Check status
+make studio-chat      # Terminal chat
+make studio-logs      # View session logs
+make studio-test      # Run Studio tests
 
 # Development
-make install              # Install deps
-make dev                  # Start dev
-make test                 # Run tests
-make build                # Build
+make install          # Install dependencies
+make dev              # Start dev server
+make test             # Run all tests
+make build            # Build project
 
-# Docker
-make up                   # Start services
-make down                 # Stop services
-make logs                 # View logs
-```
+# Docker Examples
+make auto-up          # Start main stack
+make auto-b2b         # B2B Risk Monitoring
+make auto-crm         # CRM example
