@@ -1,8 +1,21 @@
 /**
- * Template Utilities
- * Helpers for code generation templates
+ * Template Utilities and Exports
+ * Central export point for all code generation templates
  */
 
+// API Templates
+export * from './api';
+
+// Frontend Templates
+export * from './frontend';
+
+// Docker Templates
+export * from './docker';
+
+// Database Templates
+export * from './database';
+
+// Utility Functions
 export function indent(code: string, spaces: number = 2): string {
   const indentation = ' '.repeat(spaces);
   return code.split('\n').map(line => indentation + line).join('\n');

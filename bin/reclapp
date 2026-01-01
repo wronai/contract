@@ -2,11 +2,7 @@
 /**
  * Reclapp CLI - Generate applications from DSL contracts
  * 
- * Usage:
- *   reclapp generate <contract> [--output <dir>]
- *   reclapp dev <contract>
- *   reclapp validate <contract>
- *   reclapp --help
+ * Uses generator modules from generator/ folder
  */
 
 const path = require('path');
@@ -24,17 +20,19 @@ try {
     }
   });
 } catch (e) {
-  // ts-node not available, try tsx
-  try {
-    require('tsx/cjs');
-  } catch (e2) {
-    // Continue without TypeScript support - will only work with .js files
-  }
+  try { require('tsx/cjs'); } catch (e2) { }
 }
 
-// ============================================================================
-// HELP
-// ============================================================================
+// Import generator after ts-node registration
+let SimpleGenerator, generateFromContract;
+try {
+  const gen = require('../generator/core/simple-generator');
+  SimpleGenerator = gen.SimpleGenerator;
+  generateFromContract = gen.generateFromContract;
+} catch (e) {
+  // Fallback: use inline generator if module not found
+  SimpleGenerator = null;
+}
 
 const HELP = `
 Reclapp CLI - Generate applications from DSL contracts
@@ -47,6 +45,8 @@ Usage:
   reclapp deploy <contract.reclapp.ts>       Generate and deploy with Docker
   reclapp validate <contract.reclapp.ts>     Validate contract
   reclapp list                               List available contracts
+  reclapp studio                             Interactive examples browser
+  reclapp stop                               Stop all running containers
 
 Commands:
   generate    Generate full application to target/ folder
@@ -56,10 +56,11 @@ Commands:
   deploy      Generate and deploy with Docker Compose
   validate    Validate contract without generating
   list        List all available contract files
+  studio      Interactive examples browser with tests
+  stop        Stop all running Docker containers
 
 Options:
   --output, -o <dir>    Output directory (default: ./target)
-  --only <part>         Generate only: api, frontend, database, docker
   --port <port>         API port (default: 8080)
   --verbose, -v         Verbose output
   --help, -h            Show this help
@@ -67,326 +68,12 @@ Options:
 Examples:
   reclapp examples/crm/contracts/main.reclapp.ts
   reclapp run examples/crm/contracts/main.reclapp.ts
-  reclapp test examples/crm/contracts/main.reclapp.ts
-  reclapp deploy examples/crm/contracts/main.reclapp.ts
+  reclapp studio
+  reclapp stop
 `;
 
 // ============================================================================
-// GENERATOR (inline)
-// ============================================================================
-
-class Generator {
-  constructor(contract, output) {
-    this.contract = contract;
-    this.output = output;
-    this.files = [];
-  }
-
-  generate() {
-    console.log(`\n🚀 Generating ${this.contract.app.name} v${this.contract.app.version}...`);
-    console.log(`📁 Output: ${this.output}\n`);
-
-    this.generateApi();
-    this.generateFrontend();
-    this.generateDatabase();
-    this.generateDocker();
-    this.generateProjectFiles();
-
-    return this.files;
-  }
-
-  addFile(relativePath, content) {
-    this.files.push({ path: path.join(this.output, relativePath), content });
-  }
-
-  generateApi() {
-    const entities = this.contract.entities || [];
-
-    this.addFile('api/src/server.ts', this.serverTemplate(entities));
-    
-    for (const entity of entities) {
-      this.addFile(`api/src/routes/${this.kebab(entity.name)}.ts`, this.routeTemplate(entity));
-      this.addFile(`api/src/models/${this.kebab(entity.name)}.ts`, this.modelTemplate(entity));
-    }
-
-    this.addFile('api/package.json', JSON.stringify({
-      name: `${this.kebab(this.contract.app.name)}-api`,
-      version: this.contract.app.version,
-      scripts: {
-        dev: "ts-node-dev --respawn src/server.ts",
-        build: "tsc",
-        start: "node dist/server.js"
-      },
-      dependencies: { express: "^4.18.2", cors: "^2.8.5", helmet: "^7.1.0" },
-      devDependencies: {
-        "@types/express": "^4.17.21", "@types/cors": "^2.8.17",
-        "@types/node": "^20.10.0", typescript: "^5.3.2", "ts-node-dev": "^2.0.0"
-      }
-    }, null, 2));
-
-    this.addFile('api/tsconfig.json', JSON.stringify({
-      compilerOptions: {
-        target: "ES2022", module: "commonjs", outDir: "./dist", rootDir: "./src",
-        strict: true, esModuleInterop: true, skipLibCheck: true
-      },
-      include: ["src/**/*"]
-    }, null, 2));
-  }
-
-  serverTemplate(entities) {
-    const imports = entities.map(e => `import ${this.camel(e.name)}Routes from './routes/${this.kebab(e.name)}';`).join('\n');
-    const routes = entities.map(e => `app.use('/api/${this.kebab(e.name)}s', ${this.camel(e.name)}Routes);`).join('\n  ');
-
-    return `import express, { Request, Response, NextFunction } from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-
-${imports}
-
-const app = express();
-
-app.use(helmet());
-app.use(cors());
-app.use(express.json());
-
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'healthy', name: '${this.contract.app.name}', version: '${this.contract.app.version}' });
-});
-
-${routes}
-
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err);
-  res.status(500).json({ error: 'Internal server error' });
-});
-
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(\`🚀 API running on http://localhost:\${PORT}\`));
-
-export default app;
-`;
-  }
-
-  routeTemplate(entity) {
-    const name = entity.name;
-    const lower = this.camel(name);
-
-    return `import { Router, Request, Response } from 'express';
-
-const router = Router();
-let ${lower}s: any[] = [];
-let nextId = 1;
-
-router.get('/', (req, res) => res.json({ data: ${lower}s, total: ${lower}s.length }));
-
-router.get('/:id', (req, res) => {
-  const item = ${lower}s.find(i => i.id === req.params.id);
-  if (!item) return res.status(404).json({ error: 'Not found' });
-  res.json({ data: item });
-});
-
-router.post('/', (req, res) => {
-  const item = { id: String(nextId++), ...req.body, createdAt: new Date().toISOString() };
-  ${lower}s.push(item);
-  res.status(201).json({ data: item });
-});
-
-router.put('/:id', (req, res) => {
-  const idx = ${lower}s.findIndex(i => i.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Not found' });
-  ${lower}s[idx] = { ...${lower}s[idx], ...req.body, updatedAt: new Date().toISOString() };
-  res.json({ data: ${lower}s[idx] });
-});
-
-router.delete('/:id', (req, res) => {
-  const idx = ${lower}s.findIndex(i => i.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Not found' });
-  ${lower}s.splice(idx, 1);
-  res.status(204).send();
-});
-
-export default router;
-`;
-  }
-
-  modelTemplate(entity) {
-    const entityFields = entity.fields || [];
-    const hasCreatedAt = entityFields.some(f => f.name === 'createdAt');
-    const hasUpdatedAt = entityFields.some(f => f.name === 'updatedAt');
-    const fields = entityFields
-      .filter(f => f.name !== 'createdAt' && f.name !== 'updatedAt')
-      .map(f => `  ${f.name}${f.nullable ? '?' : ''}: ${this.tsType(f.type)};`).join('\n');
-    return `export interface ${entity.name} {\n  id: string;\n${fields}\n  createdAt: string;\n  updatedAt?: string;\n}\n`;
-  }
-
-  generateFrontend() {
-    const entities = this.contract.entities || [];
-
-    this.addFile('frontend/src/App.tsx', this.appTemplate(entities));
-    this.addFile('frontend/src/main.tsx', `import React from 'react';\nimport ReactDOM from 'react-dom/client';\nimport App from './App';\nimport './index.css';\n\nReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);\n`);
-
-    for (const entity of entities) {
-      this.addFile(`frontend/src/components/${entity.name}List.tsx`, this.componentTemplate(entity));
-    }
-
-    this.addFile('frontend/src/hooks/useApi.ts', this.hooksTemplate(entities));
-    this.addFile('frontend/src/index.css', '@tailwind base;\n@tailwind components;\n@tailwind utilities;\n');
-
-    this.addFile('frontend/package.json', JSON.stringify({
-      name: `${this.kebab(this.contract.app.name)}-frontend`,
-      version: this.contract.app.version,
-      type: "module",
-      scripts: { dev: "vite", build: "vite build" },
-      dependencies: { react: "^18.2.0", "react-dom": "^18.2.0" },
-      devDependencies: {
-        "@types/react": "^18.2.43", "@types/react-dom": "^18.2.17",
-        "@vitejs/plugin-react": "^4.2.1", tailwindcss: "^3.3.6",
-        autoprefixer: "^10.4.16", postcss: "^8.4.32", typescript: "^5.3.2", vite: "^5.0.8"
-      }
-    }, null, 2));
-
-    this.addFile('frontend/vite.config.ts', `import { defineConfig } from 'vite';\nimport react from '@vitejs/plugin-react';\nexport default defineConfig({\n  plugins: [react()],\n  server: { port: 3000, proxy: { '/api': 'http://localhost:8080' } }\n});\n`);
-    this.addFile('frontend/index.html', `<!DOCTYPE html>\n<html><head><meta charset="UTF-8" /><title>${this.contract.app.name}</title></head>\n<body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body>\n</html>`);
-    this.addFile('frontend/tailwind.config.js', `export default { content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'], theme: { extend: {} }, plugins: [] };`);
-    this.addFile('frontend/postcss.config.js', `export default { plugins: { tailwindcss: {}, autoprefixer: {} } };`);
-    this.addFile('frontend/tsconfig.json', JSON.stringify({ compilerOptions: { target: "ES2020", useDefineForClassFields: true, lib: ["ES2020", "DOM"], module: "ESNext", skipLibCheck: true, moduleResolution: "bundler", allowImportingTsExtensions: true, resolveJsonModule: true, isolatedModules: true, noEmit: true, jsx: "react-jsx", strict: true }, include: ["src"] }, null, 2));
-  }
-
-  appTemplate(entities) {
-    const imports = entities.map(e => `import ${e.name}List from './components/${e.name}List';`).join('\n');
-    const navItems = entities.map(e => `{ id: '${this.kebab(e.name)}s', label: '${e.name}s' }`).join(', ');
-    const cases = entities.map(e => `case '${this.kebab(e.name)}s': return <${e.name}List />;`).join('\n      ');
-
-    return `import React, { useState } from 'react';
-import './index.css';
-${imports}
-
-function App() {
-  const [tab, setTab] = useState('${entities[0] ? this.kebab(entities[0].name) + 's' : 'home'}');
-  const navItems = [${navItems}];
-
-  const renderContent = () => {
-    switch (tab) {
-      ${cases}
-      default: return <div className="text-center py-8">Welcome to ${this.contract.app.name}</div>;
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <aside className="w-64 bg-white border-r p-4">
-        <h1 className="text-xl font-bold mb-4">${this.contract.app.name}</h1>
-        <nav className="space-y-1">
-          {navItems.map(item => (
-            <button key={item.id} onClick={() => setTab(item.id)}
-              className={\`w-full text-left px-3 py-2 rounded \${tab === item.id ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100'}\`}>
-              {item.label}
-            </button>
-          ))}
-        </nav>
-      </aside>
-      <main className="flex-1 p-8">{renderContent()}</main>
-    </div>
-  );
-}
-export default App;
-`;
-  }
-
-  componentTemplate(entity) {
-    const name = entity.name;
-    const fields = (entity.fields || []).slice(0, 4);
-
-    return `import React, { useEffect, useState } from 'react';
-
-function ${name}List() {
-  const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('/api/${this.kebab(name)}s')
-      .then(r => r.json())
-      .then(d => { setItems(d.data || []); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, []);
-
-  if (loading) return <div className="text-center py-8">Loading...</div>;
-
-  return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-bold">${name}s</h2>
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-${fields.map(f => `              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">${f.name}</th>`).join('\n')}
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {items.map((item: any) => (
-              <tr key={item.id}>
-                <td className="px-4 py-3 text-sm">{item.id}</td>
-${fields.map(f => `                <td className="px-4 py-3 text-sm">{String(item.${f.name} ?? '-')}</td>`).join('\n')}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-export default ${name}List;
-`;
-  }
-
-  hooksTemplate(entities) {
-    return `import { useState, useEffect } from 'react';\n\n${entities.map(e => `
-export function use${e.name}s() {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const refetch = async () => {
-    setLoading(true);
-    const res = await fetch('/api/${this.kebab(e.name)}s');
-    setData(await res.json());
-    setLoading(false);
-  };
-  useEffect(() => { refetch(); }, []);
-  return { data, loading, refetch };
-}`).join('\n')}\n`;
-  }
-
-  generateDatabase() {
-    const entities = this.contract.entities || [];
-    const tables = entities.map(e => {
-      const cols = (e.fields || []).map(f => `  ${this.snake(f.name)} ${this.sqlType(f.type)}${f.nullable ? '' : ' NOT NULL'}`).join(',\n');
-      return `CREATE TABLE IF NOT EXISTS ${this.snake(e.name)}s (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n${cols},\n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  updated_at TIMESTAMPTZ DEFAULT NOW()\n);`;
-    }).join('\n\n');
-
-    this.addFile('database/migrations/001_init.sql', `-- ${this.contract.app.name} Database\n\n${tables}\n`);
-  }
-
-  generateDocker() {
-    this.addFile('docker/Dockerfile.api', `FROM node:20-alpine AS builder\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci\nCOPY . .\nRUN npm run build\n\nFROM node:20-alpine\nWORKDIR /app\nCOPY --from=builder /app/dist ./dist\nCOPY --from=builder /app/node_modules ./node_modules\nEXPOSE 8080\nCMD ["node", "dist/server.js"]\n`);
-    this.addFile('docker/Dockerfile.frontend', `FROM node:20-alpine AS builder\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci\nCOPY . .\nRUN npm run build\n\nFROM nginx:alpine\nCOPY --from=builder /app/dist /usr/share/nginx/html\nEXPOSE 80\n`);
-    this.addFile('docker-compose.yml', `version: '3.8'\n\nservices:\n  api:\n    build: { context: ./api, dockerfile: ../docker/Dockerfile.api }\n    ports: ["8080:8080"]\n    depends_on: [postgres]\n\n  frontend:\n    build: { context: ./frontend, dockerfile: ../docker/Dockerfile.frontend }\n    ports: ["3000:80"]\n    depends_on: [api]\n\n  postgres:\n    image: postgres:15-alpine\n    environment:\n      POSTGRES_DB: ${this.snake(this.contract.app.name)}\n      POSTGRES_USER: app\n      POSTGRES_PASSWORD: password\n    volumes:\n      - pgdata:/var/lib/postgresql/data\n      - ./database/migrations:/docker-entrypoint-initdb.d\n\nvolumes:\n  pgdata:\n`);
-  }
-
-  generateProjectFiles() {
-    this.addFile('README.md', `# ${this.contract.app.name}\n\n${this.contract.app.description || ''}\n\n## Quick Start\n\n\`\`\`bash\ncd api && npm install && npm run dev\ncd frontend && npm install && npm run dev\n\`\`\`\n\n## Docker\n\n\`\`\`bash\ndocker-compose up -d\n\`\`\`\n`);
-    this.addFile('.env.example', `NODE_ENV=development\nPORT=8080\nDATABASE_URL=postgresql://app:password@localhost:5432/${this.snake(this.contract.app.name)}\n`);
-    this.addFile('.gitignore', `node_modules/\ndist/\n.env\n*.log\n`);
-  }
-
-  kebab(s) { return s.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase(); }
-  camel(s) { return s.charAt(0).toLowerCase() + s.slice(1); }
-  snake(s) { return s.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase(); }
-  tsType(t) { return { String: 'string', Int: 'number', Float: 'number', Decimal: 'number', Boolean: 'boolean', DateTime: 'string', Date: 'string', UUID: 'string', JSON: 'Record<string, any>', Money: 'number', Email: 'string', URL: 'string' }[t] || 'any'; }
-  sqlType(t) { return { String: 'TEXT', Int: 'INTEGER', Float: 'DOUBLE PRECISION', Decimal: 'DECIMAL(10,2)', Boolean: 'BOOLEAN', DateTime: 'TIMESTAMPTZ', Date: 'DATE', UUID: 'UUID', JSON: 'JSONB', Money: 'DECIMAL(12,2)', Email: 'VARCHAR(255)', URL: 'TEXT' }[t] || 'TEXT'; }
-}
-
-// ============================================================================
-// COMMANDS
+// CONTRACT LOADING
 // ============================================================================
 
 async function loadContract(contractPath) {
@@ -397,9 +84,7 @@ async function loadContract(contractPath) {
     process.exit(1);
   }
 
-  // Clear require cache for hot reload
   delete require.cache[require.resolve(fullPath)];
-  
   const module = require(fullPath);
   const contract = module.contract || module.default || module;
 
@@ -411,31 +96,30 @@ async function loadContract(contractPath) {
   return contract;
 }
 
-async function writeFiles(files, verbose) {
-  let written = 0;
-  for (const file of files) {
-    const dir = path.dirname(file.path);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    fs.writeFileSync(file.path, file.content, 'utf-8');
-    if (verbose) {
-      console.log(`  ✓ ${path.basename(path.dirname(file.path))}/${path.basename(file.path)}`);
-    }
-    written++;
-  }
-  return written;
-}
+// ============================================================================
+// COMMANDS
+// ============================================================================
 
 async function cmdGenerate(contractPath, options) {
   const contract = await loadContract(contractPath);
   const outputDir = options.output || path.join(path.dirname(contractPath), '..', 'target');
   
-  const generator = new Generator(contract, outputDir);
-  const files = generator.generate();
-  const written = await writeFiles(files, options.verbose);
+  if (SimpleGenerator) {
+    const generator = new SimpleGenerator(contract, outputDir);
+    const files = generator.generate();
+    const written = generator.writeFiles(options.verbose);
+    console.log(`\n✅ Generated ${written} files to ${outputDir}`);
+  } else {
+    // Fallback inline generator (simplified)
+    console.log(`\n🚀 Generating ${contract.app.name} v${contract.app.version}...`);
+    console.log(`📁 Output: ${outputDir}\n`);
+    const InlineGenerator = require('./inline-generator');
+    const gen = new InlineGenerator(contract, outputDir);
+    const files = gen.generate();
+    const written = gen.writeFiles(options.verbose);
+    console.log(`\n✅ Generated ${written} files to ${outputDir}`);
+  }
 
-  console.log(`\n✅ Generated ${written} files to ${outputDir}`);
   console.log(`
 📦 Next steps:
   cd ${path.relative(process.cwd(), outputDir)}/api && npm install && npm run dev
@@ -446,7 +130,6 @@ async function cmdGenerate(contractPath, options) {
 async function cmdDev(contractPath, options) {
   const { spawn } = require('child_process');
   
-  // First generate
   await cmdGenerate(contractPath, { ...options, verbose: false });
   
   const outputDir = options.output || path.join(path.dirname(contractPath), '..', 'target');
@@ -455,27 +138,19 @@ async function cmdDev(contractPath, options) {
 
   console.log('\n📦 Installing dependencies...');
   
-  // Install API deps
-  await new Promise((resolve) => {
-    const proc = spawn('npm', ['install'], { cwd: apiDir, stdio: 'inherit', shell: true });
-    proc.on('close', resolve);
+  await new Promise(resolve => {
+    spawn('npm', ['install'], { cwd: apiDir, stdio: 'inherit', shell: true }).on('close', resolve);
   });
 
-  // Install Frontend deps
-  await new Promise((resolve) => {
-    const proc = spawn('npm', ['install'], { cwd: frontendDir, stdio: 'inherit', shell: true });
-    proc.on('close', resolve);
+  await new Promise(resolve => {
+    spawn('npm', ['install'], { cwd: frontendDir, stdio: 'inherit', shell: true }).on('close', resolve);
   });
 
   console.log('\n🚀 Starting development servers...\n');
 
-  // Start API
   const apiProc = spawn('npm', ['run', 'dev'], { cwd: apiDir, stdio: 'inherit', shell: true });
-
-  // Start Frontend
   const frontendProc = spawn('npm', ['run', 'dev'], { cwd: frontendDir, stdio: 'inherit', shell: true });
 
-  // Handle exit
   process.on('SIGINT', () => {
     apiProc.kill();
     frontendProc.kill();
@@ -483,31 +158,178 @@ async function cmdDev(contractPath, options) {
   });
 }
 
-async function cmdValidate(contractPath) {
-  console.log(`\n🔍 Validating ${contractPath}...`);
+async function cmdRun(contractPath, options) {
+  const { spawn, execSync } = require('child_process');
+  
+  await cmdGenerate(contractPath, { ...options, verbose: false });
+  
+  const outputDir = options.output || path.join(path.dirname(contractPath), '..', 'target');
+  const apiDir = path.join(outputDir, 'api');
+
+  console.log('\n📦 Installing API dependencies...');
+  execSync('npm install', { cwd: apiDir, stdio: 'inherit' });
+
+  console.log('\n🚀 Starting API server...\n');
+  const apiProc = spawn('npm', ['run', 'dev'], { cwd: apiDir, stdio: 'inherit', shell: true });
+
+  await new Promise(resolve => setTimeout(resolve, 3000));
+
+  console.log('\n✅ Server running at http://localhost:8080');
+  console.log('   Press Ctrl+C to stop\n');
+
+  process.on('SIGINT', () => {
+    apiProc.kill();
+    process.exit(0);
+  });
+
+  await new Promise(() => {});
+}
+
+async function cmdTest(contractPath, options) {
+  const { spawn, execSync } = require('child_process');
+  const http = require('http');
   
   const contract = await loadContract(contractPath);
+  await cmdGenerate(contractPath, { ...options, verbose: false });
   
-  const errors = [];
-  const warnings = [];
+  const outputDir = options.output || path.join(path.dirname(contractPath), '..', 'target');
+  const apiDir = path.join(outputDir, 'api');
 
+  console.log('\n📦 Installing API dependencies...');
+  execSync('npm install', { cwd: apiDir, stdio: 'pipe' });
+
+  console.log('🚀 Starting API server for testing...');
+  const apiProc = spawn('npm', ['run', 'dev'], { cwd: apiDir, stdio: 'pipe', shell: true });
+
+  await new Promise(resolve => setTimeout(resolve, 3000));
+
+  console.log('\n🧪 Running API tests...\n');
+
+  const entities = contract.entities || [];
+  let passed = 0, failed = 0;
+
+  const request = (method, reqPath, body = null) => {
+    return new Promise((resolve, reject) => {
+      const opts = { hostname: 'localhost', port: 8080, path: reqPath, method, headers: { 'Content-Type': 'application/json' } };
+      const req = http.request(opts, res => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          try { resolve({ status: res.statusCode, data: JSON.parse(data) }); }
+          catch { resolve({ status: res.statusCode, data }); }
+        });
+      });
+      req.on('error', reject);
+      if (body) req.write(JSON.stringify(body));
+      req.end();
+    });
+  };
+
+  const test = async (name, fn) => {
+    try { await fn(); console.log(`  ✅ ${name}`); passed++; }
+    catch (err) { console.log(`  ❌ ${name}: ${err.message}`); failed++; }
+  };
+
+  const assert = (cond, msg) => { if (!cond) throw new Error(msg); };
+
+  await test('GET /api/health returns 200', async () => {
+    const res = await request('GET', '/api/health');
+    assert(res.status === 200, `Expected 200, got ${res.status}`);
+  });
+
+  for (const entity of entities) {
+    const kebab = entity.name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+    const endpoint = `/api/${kebab}s`;
+
+    await test(`GET ${endpoint} returns 200`, async () => {
+      const res = await request('GET', endpoint);
+      assert(res.status === 200, `Expected 200, got ${res.status}`);
+    });
+
+    await test(`POST ${endpoint} creates item`, async () => {
+      const res = await request('POST', endpoint, { name: `Test ${entity.name}` });
+      assert(res.status === 201, `Expected 201, got ${res.status}`);
+    });
+
+    await test(`GET ${endpoint}/1 returns item`, async () => {
+      const res = await request('GET', `${endpoint}/1`);
+      assert(res.status === 200, `Expected 200, got ${res.status}`);
+    });
+
+    await test(`PUT ${endpoint}/1 updates item`, async () => {
+      const res = await request('PUT', `${endpoint}/1`, { name: 'Updated' });
+      assert(res.status === 200, `Expected 200, got ${res.status}`);
+    });
+
+    await test(`DELETE ${endpoint}/1 removes item`, async () => {
+      const res = await request('DELETE', `${endpoint}/1`);
+      assert(res.status === 204, `Expected 204, got ${res.status}`);
+    });
+  }
+
+  apiProc.kill();
+  console.log(`\n📊 Results: ${passed} passed, ${failed} failed\n`);
+  if (failed > 0) process.exit(1);
+}
+
+async function cmdDeploy(contractPath, options) {
+  const { execSync } = require('child_process');
+  
+  await cmdGenerate(contractPath, { ...options, verbose: false });
+  
+  const outputDir = options.output || path.join(path.dirname(contractPath), '..', 'target');
+  
+  // Stop any existing containers first
+  console.log('\n🛑 Stopping existing containers...');
+  try {
+    execSync('docker compose down --remove-orphans 2>/dev/null || true', { cwd: outputDir, stdio: 'pipe' });
+    // Also stop any containers using our ports
+    execSync('docker ps -q --filter "publish=8080" | xargs -r docker stop 2>/dev/null || true', { stdio: 'pipe' });
+    execSync('docker ps -q --filter "publish=3000" | xargs -r docker stop 2>/dev/null || true', { stdio: 'pipe' });
+    execSync('docker ps -q --filter "publish=5432" | xargs -r docker stop 2>/dev/null || true', { stdio: 'pipe' });
+  } catch (e) { /* ignore */ }
+  
+  console.log('🐳 Building Docker containers...\n');
+  
+  try {
+    execSync('docker compose build', { cwd: outputDir, stdio: 'inherit' });
+    console.log('\n🚀 Starting containers...\n');
+    execSync('docker compose up -d', { cwd: outputDir, stdio: 'inherit' });
+    
+    console.log('\n✅ Deployment complete!');
+    console.log('   API:      http://localhost:8080');
+    console.log('   Frontend: http://localhost:3000');
+    console.log('   Database: localhost:5432');
+    console.log('\n   View logs: docker compose logs -f');
+    console.log('   Stop:      docker compose down\n');
+  } catch (err) {
+    console.error('❌ Docker deployment failed. Make sure Docker is running.');
+    process.exit(1);
+  }
+}
+
+async function cmdValidate(contractPath) {
+  console.log(`\n🔍 Validating ${contractPath}...`);
+  const contract = await loadContract(contractPath);
+  
+  const errors = [], warnings = [];
   if (!contract.app) errors.push('Missing app section');
   if (!contract.app?.name) errors.push('Missing app.name');
   if (!contract.app?.version) errors.push('Missing app.version');
-  if (!contract.entities || contract.entities.length === 0) warnings.push('No entities defined');
+  if (!contract.entities?.length) warnings.push('No entities defined');
 
   for (const entity of (contract.entities || [])) {
-    if (!entity.name) errors.push(`Entity missing name`);
-    if (!entity.fields || entity.fields.length === 0) warnings.push(`Entity ${entity.name} has no fields`);
+    if (!entity.name) errors.push('Entity missing name');
+    if (!entity.fields?.length) warnings.push(`Entity ${entity.name} has no fields`);
   }
 
-  if (errors.length > 0) {
+  if (errors.length) {
     console.log('\n❌ Validation failed:');
     errors.forEach(e => console.log(`  - ${e}`));
     process.exit(1);
   }
 
-  if (warnings.length > 0) {
+  if (warnings.length) {
     console.log('\n⚠️  Warnings:');
     warnings.forEach(w => console.log(`  - ${w}`));
   }
@@ -525,12 +347,9 @@ async function cmdList() {
   const findContracts = (dir, prefix = '') => {
     if (!fs.existsSync(dir)) return [];
     const results = [];
-    const items = fs.readdirSync(dir);
-    
-    for (const item of items) {
+    for (const item of fs.readdirSync(dir)) {
       const fullPath = path.join(dir, item);
       const stat = fs.statSync(fullPath);
-      
       if (stat.isDirectory() && !item.startsWith('.') && item !== 'node_modules' && item !== 'target') {
         results.push(...findContracts(fullPath, path.join(prefix, item)));
       } else if (item.endsWith('.reclapp.ts')) {
@@ -541,190 +360,160 @@ async function cmdList() {
   };
 
   const contracts = findContracts(process.cwd());
-  
-  if (contracts.length === 0) {
-    console.log('  No .reclapp.ts contracts found.');
-  } else {
-    contracts.forEach(c => console.log(`  ${c}`));
-  }
+  if (contracts.length === 0) console.log('  No .reclapp.ts contracts found.');
+  else contracts.forEach(c => console.log(`  ${c}`));
   console.log('');
 }
 
-async function cmdRun(contractPath, options) {
-  const { spawn, execSync } = require('child_process');
-  
-  // First generate
-  await cmdGenerate(contractPath, { ...options, verbose: false });
-  
-  const outputDir = options.output || path.join(path.dirname(contractPath), '..', 'target');
-  const apiDir = path.join(outputDir, 'api');
-
-  console.log('\n📦 Installing API dependencies...');
-  execSync('npm install', { cwd: apiDir, stdio: 'inherit' });
-
-  console.log('\n🚀 Starting API server...\n');
-  const apiProc = spawn('npm', ['run', 'dev'], { cwd: apiDir, stdio: 'inherit', shell: true });
-
-  // Wait for server to start
-  await new Promise(resolve => setTimeout(resolve, 3000));
-
-  console.log('\n✅ Server running at http://localhost:8080');
-  console.log('   Press Ctrl+C to stop\n');
-
-  process.on('SIGINT', () => {
-    apiProc.kill();
-    process.exit(0);
-  });
-
-  // Keep process alive
-  await new Promise(() => {});
-}
-
-async function cmdTest(contractPath, options) {
-  const { spawn, execSync } = require('child_process');
-  const http = require('http');
-  
-  // First generate
-  const contract = await loadContract(contractPath);
-  await cmdGenerate(contractPath, { ...options, verbose: false });
-  
-  const outputDir = options.output || path.join(path.dirname(contractPath), '..', 'target');
-  const apiDir = path.join(outputDir, 'api');
-
-  console.log('\n📦 Installing API dependencies...');
-  execSync('npm install', { cwd: apiDir, stdio: 'pipe' });
-
-  console.log('🚀 Starting API server for testing...');
-  const apiProc = spawn('npm', ['run', 'dev'], { cwd: apiDir, stdio: 'pipe', shell: true });
-
-  // Wait for server to start
-  await new Promise(resolve => setTimeout(resolve, 3000));
-
-  console.log('\n🧪 Running API tests...\n');
-
-  const entities = contract.entities || [];
-  let passed = 0;
-  let failed = 0;
-
-  const request = (method, path, body = null) => {
-    return new Promise((resolve, reject) => {
-      const options = {
-        hostname: 'localhost',
-        port: 8080,
-        path: path,
-        method: method,
-        headers: { 'Content-Type': 'application/json' }
-      };
-      
-      const req = http.request(options, (res) => {
-        let data = '';
-        res.on('data', chunk => data += chunk);
-        res.on('end', () => {
-          try {
-            resolve({ status: res.statusCode, data: JSON.parse(data) });
-          } catch {
-            resolve({ status: res.statusCode, data: data });
-          }
-        });
-      });
-      
-      req.on('error', reject);
-      if (body) req.write(JSON.stringify(body));
-      req.end();
-    });
-  };
-
-  const test = async (name, fn) => {
-    try {
-      await fn();
-      console.log(`  ✅ ${name}`);
-      passed++;
-    } catch (err) {
-      console.log(`  ❌ ${name}: ${err.message}`);
-      failed++;
-    }
-  };
-
-  const assert = (condition, message) => {
-    if (!condition) throw new Error(message);
-  };
-
-  // Test health endpoint
-  await test('GET /api/health returns 200', async () => {
-    const res = await request('GET', '/api/health');
-    assert(res.status === 200, `Expected 200, got ${res.status}`);
-    assert(res.data.status === 'healthy', 'Expected healthy status');
-  });
-
-  // Test each entity CRUD
-  for (const entity of entities) {
-    const kebab = entity.name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-    const endpoint = `/api/${kebab}s`;
-
-    await test(`GET ${endpoint} returns 200`, async () => {
-      const res = await request('GET', endpoint);
-      assert(res.status === 200, `Expected 200, got ${res.status}`);
-      assert(Array.isArray(res.data.data), 'Expected data array');
-    });
-
-    await test(`POST ${endpoint} creates item`, async () => {
-      const testData = { name: `Test ${entity.name}` };
-      const res = await request('POST', endpoint, testData);
-      assert(res.status === 201, `Expected 201, got ${res.status}`);
-      assert(res.data.data.id, 'Expected id in response');
-    });
-
-    await test(`GET ${endpoint}/1 returns created item`, async () => {
-      const res = await request('GET', `${endpoint}/1`);
-      assert(res.status === 200, `Expected 200, got ${res.status}`);
-    });
-
-    await test(`PUT ${endpoint}/1 updates item`, async () => {
-      const res = await request('PUT', `${endpoint}/1`, { name: 'Updated' });
-      assert(res.status === 200, `Expected 200, got ${res.status}`);
-    });
-
-    await test(`DELETE ${endpoint}/1 removes item`, async () => {
-      const res = await request('DELETE', `${endpoint}/1`);
-      assert(res.status === 204, `Expected 204, got ${res.status}`);
-    });
-  }
-
-  // Stop server
-  apiProc.kill();
-
-  console.log(`\n📊 Results: ${passed} passed, ${failed} failed\n`);
-
-  if (failed > 0) {
-    process.exit(1);
-  }
-}
-
-async function cmdDeploy(contractPath, options) {
+async function cmdStop() {
   const { execSync } = require('child_process');
   
-  // First generate
-  await cmdGenerate(contractPath, { ...options, verbose: false });
-  
-  const outputDir = options.output || path.join(path.dirname(contractPath), '..', 'target');
-  
-  console.log('\n🐳 Building Docker containers...\n');
+  console.log('\n🛑 Stopping all Reclapp containers...\n');
   
   try {
-    execSync('docker compose build', { cwd: outputDir, stdio: 'inherit' });
+    // Stop containers on common ports
+    execSync('docker ps -q --filter "publish=8080" | xargs -r docker stop 2>/dev/null || true', { stdio: 'pipe' });
+    execSync('docker ps -q --filter "publish=3000" | xargs -r docker stop 2>/dev/null || true', { stdio: 'pipe' });
+    execSync('docker ps -q --filter "publish=5432" | xargs -r docker stop 2>/dev/null || true', { stdio: 'pipe' });
     
-    console.log('\n🚀 Starting containers...\n');
-    execSync('docker compose up -d', { cwd: outputDir, stdio: 'inherit' });
+    // Stop target containers by name
+    execSync('docker ps -q --filter "name=target" | xargs -r docker stop 2>/dev/null || true', { stdio: 'pipe' });
     
-    console.log('\n✅ Deployment complete!');
-    console.log('   API:      http://localhost:8080');
-    console.log('   Frontend: http://localhost:3000');
-    console.log('\n   View logs: docker compose logs -f');
-    console.log('   Stop:      docker compose down\n');
-  } catch (err) {
-    console.error('❌ Docker deployment failed. Make sure Docker is running.');
-    process.exit(1);
+    console.log('✅ All containers stopped.\n');
+  } catch (e) {
+    console.log('✅ No running containers found.\n');
   }
+}
+
+async function cmdStudio() {
+  const readline = require('readline');
+  const { execSync } = require('child_process');
+  
+  const findContracts = (dir, prefix = '') => {
+    if (!fs.existsSync(dir)) return [];
+    const results = [];
+    for (const item of fs.readdirSync(dir)) {
+      const fullPath = path.join(dir, item);
+      const stat = fs.statSync(fullPath);
+      if (stat.isDirectory() && !item.startsWith('.') && item !== 'node_modules' && item !== 'target') {
+        results.push(...findContracts(fullPath, path.join(prefix, item)));
+      } else if (item.endsWith('.reclapp.ts')) {
+        results.push({ path: path.join(prefix, item), full: fullPath });
+      }
+    }
+    return results;
+  };
+
+  const contracts = findContracts(process.cwd());
+  
+  console.log(`
+╔══════════════════════════════════════════════════════════════╗
+║                    🚀 RECLAPP STUDIO                         ║
+║              Interactive Examples Browser                     ║
+╚══════════════════════════════════════════════════════════════╝
+`);
+
+  if (contracts.length === 0) {
+    console.log('  No .reclapp.ts contracts found.\n');
+    return;
+  }
+
+  // Load contract info
+  const examples = [];
+  for (const c of contracts) {
+    try {
+      delete require.cache[require.resolve(c.full)];
+      const mod = require(c.full);
+      const contract = mod.contract || mod.default || mod;
+      examples.push({
+        path: c.path,
+        full: c.full,
+        name: contract.app?.name || path.basename(c.path, '.reclapp.ts'),
+        version: contract.app?.version || '1.0.0',
+        description: contract.app?.description || '',
+        entities: contract.entities?.length || 0,
+        events: contract.events?.length || 0
+      });
+    } catch (e) {
+      examples.push({ path: c.path, full: c.full, name: path.basename(c.path), error: true });
+    }
+  }
+
+  console.log('Available Examples:\n');
+  examples.forEach((ex, i) => {
+    if (ex.error) {
+      console.log(`  ${i + 1}. ❌ ${ex.path} (invalid contract)`);
+    } else {
+      console.log(`  ${i + 1}. ${ex.name} v${ex.version}`);
+      console.log(`     ${ex.description || 'No description'}`);
+      console.log(`     📦 ${ex.entities} entities, ${ex.events} events`);
+      console.log(`     📄 ${ex.path}\n`);
+    }
+  });
+
+  console.log(`
+Commands:
+  [1-${examples.length}]  Select example
+  g <n>    Generate example
+  t <n>    Test example
+  d <n>    Deploy example
+  s        Stop all containers
+  q        Quit
+`);
+
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  
+  const prompt = () => {
+    rl.question('studio> ', async (answer) => {
+      const parts = answer.trim().split(/\s+/);
+      const cmd = parts[0];
+      const num = parseInt(parts[1] || parts[0]) - 1;
+      
+      if (cmd === 'q' || cmd === 'quit' || cmd === 'exit') {
+        console.log('\n👋 Goodbye!\n');
+        rl.close();
+        return;
+      }
+      
+      if (cmd === 's' || cmd === 'stop') {
+        await cmdStop();
+        prompt();
+        return;
+      }
+      
+      if ((cmd === 'g' || cmd === 'generate') && num >= 0 && num < examples.length) {
+        await cmdGenerate(examples[num].full, { verbose: true });
+        prompt();
+        return;
+      }
+      
+      if ((cmd === 't' || cmd === 'test') && num >= 0 && num < examples.length) {
+        await cmdTest(examples[num].full, {});
+        prompt();
+        return;
+      }
+      
+      if ((cmd === 'd' || cmd === 'deploy') && num >= 0 && num < examples.length) {
+        await cmdDeploy(examples[num].full, {});
+        prompt();
+        return;
+      }
+      
+      // Direct number selection - show menu
+      if (!isNaN(parseInt(cmd)) && parseInt(cmd) >= 1 && parseInt(cmd) <= examples.length) {
+        const ex = examples[parseInt(cmd) - 1];
+        console.log(`\n  Selected: ${ex.name}\n`);
+        console.log(`  Actions:`);
+        console.log(`    g ${cmd}  - Generate`);
+        console.log(`    t ${cmd}  - Test`);
+        console.log(`    d ${cmd}  - Deploy\n`);
+      }
+      
+      prompt();
+    });
+  };
+  
+  prompt();
 }
 
 // ============================================================================
@@ -740,89 +529,51 @@ async function main() {
   }
 
   const command = args[0];
-  const options = {
-    output: null,
-    verbose: args.includes('--verbose') || args.includes('-v'),
-    only: null
-  };
+  const options = { output: null, verbose: args.includes('--verbose') || args.includes('-v') };
 
-  // Parse options
   for (let i = 0; i < args.length; i++) {
     if ((args[i] === '--output' || args[i] === '-o') && args[i + 1]) {
-      options.output = args[i + 1];
-      i++;
-    }
-    if (args[i] === '--only' && args[i + 1]) {
-      options.only = args[i + 1];
-      i++;
+      options.output = args[i + 1]; i++;
     }
   }
 
   const contractPath = args[1];
 
   switch (command) {
-    case 'generate':
-    case 'gen':
-    case 'g':
-      if (!contractPath) {
-        console.error('❌ Missing contract path. Usage: reclapp generate <contract.reclapp.ts>');
-        process.exit(1);
-      }
-      await cmdGenerate(contractPath, options);
-      break;
+    case 'generate': case 'gen': case 'g':
+      if (!contractPath) { console.error('❌ Missing contract path'); process.exit(1); }
+      await cmdGenerate(contractPath, options); break;
 
-    case 'dev':
-    case 'd':
-      if (!contractPath) {
-        console.error('❌ Missing contract path. Usage: reclapp dev <contract.reclapp.ts>');
-        process.exit(1);
-      }
-      await cmdDev(contractPath, options);
-      break;
+    case 'dev': case 'd':
+      if (!contractPath) { console.error('❌ Missing contract path'); process.exit(1); }
+      await cmdDev(contractPath, options); break;
 
-    case 'validate':
-    case 'v':
-      if (!contractPath) {
-        console.error('❌ Missing contract path. Usage: reclapp validate <contract.reclapp.ts>');
-        process.exit(1);
-      }
-      await cmdValidate(contractPath);
-      break;
+    case 'run': case 'r':
+      if (!contractPath) { console.error('❌ Missing contract path'); process.exit(1); }
+      await cmdRun(contractPath, options); break;
 
-    case 'list':
-    case 'ls':
-    case 'l':
-      await cmdList();
-      break;
-
-    case 'run':
-    case 'r':
-      if (!contractPath) {
-        console.error('❌ Missing contract path. Usage: reclapp run <contract.reclapp.ts>');
-        process.exit(1);
-      }
-      await cmdRun(contractPath, options);
-      break;
-
-    case 'test':
-    case 't':
-      if (!contractPath) {
-        console.error('❌ Missing contract path. Usage: reclapp test <contract.reclapp.ts>');
-        process.exit(1);
-      }
-      await cmdTest(contractPath, options);
-      break;
+    case 'test': case 't':
+      if (!contractPath) { console.error('❌ Missing contract path'); process.exit(1); }
+      await cmdTest(contractPath, options); break;
 
     case 'deploy':
-      if (!contractPath) {
-        console.error('❌ Missing contract path. Usage: reclapp deploy <contract.reclapp.ts>');
-        process.exit(1);
-      }
-      await cmdDeploy(contractPath, options);
-      break;
+      if (!contractPath) { console.error('❌ Missing contract path'); process.exit(1); }
+      await cmdDeploy(contractPath, options); break;
+
+    case 'validate': case 'v':
+      if (!contractPath) { console.error('❌ Missing contract path'); process.exit(1); }
+      await cmdValidate(contractPath); break;
+
+    case 'list': case 'ls': case 'l':
+      await cmdList(); break;
+
+    case 'stop':
+      await cmdStop(); break;
+
+    case 'studio':
+      await cmdStudio(); break;
 
     default:
-      // If first arg is a file path, assume generate
       if (command.endsWith('.reclapp.ts') || command.endsWith('.ts')) {
         await cmdGenerate(command, options);
       } else {

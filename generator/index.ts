@@ -17,6 +17,7 @@
  */
 
 export { Generator, GeneratorOptions, GeneratorResult } from './core/generator';
+export { SimpleGenerator, generateFromContract, GeneratedFile } from './core/simple-generator';
 export { ApiGenerator } from './targets/api';
 export { FrontendGenerator } from './targets/frontend';
 export { DockerGenerator } from './targets/docker';

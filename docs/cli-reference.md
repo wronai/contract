@@ -246,6 +246,47 @@ reclapp list
 
 ---
 
+### `reclapp studio`
+
+Interactive examples browser with generate, test, and deploy capabilities.
+
+```bash
+reclapp studio
+```
+
+**Features:**
+- Lists all available contracts with metadata
+- Interactive menu for selecting examples
+- Generate, test, or deploy selected examples
+- Stop all running containers
+
+**Commands in Studio:**
+| Command | Description |
+|---------|-------------|
+| `[1-N]` | Select example by number |
+| `g <n>` | Generate example |
+| `t <n>` | Test example |
+| `d <n>` | Deploy example |
+| `s` | Stop all containers |
+| `q` | Quit studio |
+
+---
+
+### `reclapp stop`
+
+Stop all running Reclapp Docker containers.
+
+```bash
+reclapp stop
+```
+
+Stops containers on ports:
+- 8080 (API)
+- 3000 (Frontend)
+- 5432 (PostgreSQL)
+
+---
+
 ## Quick Start
 
 ```bash
@@ -300,6 +341,14 @@ export default contract;
 ```
 
 See [DSL TypeScript Reference](./dsl-typescript-reference.md) for complete documentation.
+
+---
+
+## Related Documentation
+
+- [Generator Architecture](./generator-architecture.md) - How code generation works
+- [DSL TypeScript Reference](./dsl-typescript-reference.md) - Contract format
+- [DSL Reference](./dsl-reference.md) - DSL syntax
 
 ---
 
