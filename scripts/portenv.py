@@ -155,10 +155,21 @@ if __name__ == '__main__':
 
     if args.pick_var:
         host = env.get('HOST', 'localhost').replace('0.0.0.0', '127.0.0.1')
-        picked = find_free_port(host, args.start_port, args.max_port)
-        update_env_file(args.env, {args.pick_var: str(picked)})
-        env = load_env(args.env)
-        print(f"Picked {args.pick_var}={picked} in {args.env}")
+        current = env.get(args.pick_var)
+        picked = None
+
+        if current and current.isdigit():
+            current_port = int(current)
+            if not check_port(host, current_port):
+                picked = current_port
+
+        if picked is None:
+            picked = find_free_port(host, args.start_port, args.max_port)
+            update_env_file(args.env, {args.pick_var: str(picked)})
+            env = load_env(args.env)
+            print(f"Picked {args.pick_var}={picked} in {args.env}")
+        else:
+            print(f"Keeping existing {args.pick_var}={picked} (free)")
 
     success = scan_ports(env, args.mode, args.prefix)
     

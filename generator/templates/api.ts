@@ -71,6 +71,12 @@ export function routeTemplate(
     .map(f => `  ${f.name}: ${fieldToZod(f, 'update')}`)
     .join(',\n');
 
+  const generatedFields = fields
+    .filter(f => !isSystemFieldName(f.name))
+    .filter(f => isFieldGenerated(f))
+    .map(f => `    ${f.name}: ${generatedFieldValueExpr(f)},`)
+    .join('\n');
+
   const authImport = authRequired ? `import { requireAuth } from '../middleware/auth';\n` : '';
   const authUse = authRequired ? `\nrouter.use(requireAuth);\n` : '';
 
@@ -113,6 +119,7 @@ router.post('/', (req, res) => {
   const item: ${entityName} = {
     id: randomUUID(),
     ...input,
+${generatedFields ? generatedFields + '\n' : ''}
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -171,14 +178,23 @@ export function modelTemplate(
 ): string {
   const modelFields = fields.filter(f => !isSystemFieldName(f.name));
   const fieldDefs = modelFields
-    .map(f => `  ${f.name}${f.nullable ? '?' : ''}: ${tsType(f.type)};`)
+    .map(f => {
+      const required = isFieldRequired(f);
+      const optional = !required || !!f.nullable ? '?' : '';
+      const baseType = tsFieldType(f);
+      const nullableSuffix = f.nullable ? ' | null' : '';
+      return `  ${f.name}${optional}: ${baseType}${nullableSuffix};`;
+    })
     .join('\n');
 
   const createFieldDefs = modelFields
     .filter(f => !isFieldGenerated(f))
     .map(f => {
-      const optional = !!f.nullable || fieldDefaultValue(f) !== undefined ? '?' : '';
-      return `  ${f.name}${optional}: ${tsType(f.type)};`;
+      const required = isFieldRequired(f);
+      const optional = !required || !!f.nullable || fieldDefaultValue(f) !== undefined ? '?' : '';
+      const baseType = tsFieldType(f);
+      const nullableSuffix = f.nullable ? ' | null' : '';
+      return `  ${f.name}${optional}: ${baseType}${nullableSuffix};`;
     })
     .join('\n');
 
@@ -322,14 +338,61 @@ function tsType(t: string): string {
   return map[t] || 'any';
 }
 
+function tsFieldType(field: any): string {
+  const base = tsType(String(field?.type || 'any'));
+  return field?.array ? `${base}[]` : base;
+}
+
 function isSystemFieldName(name: string): boolean {
   return name === 'id' || name === 'createdAt' || name === 'updatedAt';
+}
+
+function isFieldRequired(field: any): boolean {
+  const requiredFlag = field?.annotations?.required;
+  if (typeof requiredFlag === 'boolean') return requiredFlag;
+  if (typeof field?.required === 'boolean') return field.required;
+  return true;
 }
 
 function isFieldGenerated(field: any): boolean {
   if (field?.annotations?.generated) return true;
   if (field?.generated) return true;
   return field?.annotations?.some?.((a: any) => a?.name === 'generated') || false;
+}
+
+function generatedFieldValueExpr(field: any): string {
+  const type = String(field?.type || '');
+  const name = String(field?.name || '').toLowerCase();
+
+  if (field?.array) {
+    return '[]';
+  }
+
+  if (type === 'DateTime' || type === 'Date') {
+    return 'new Date().toISOString()';
+  }
+
+  if (type === 'UUID') {
+    return 'randomUUID()';
+  }
+
+  if (type === 'Int' || type === 'Float' || type === 'Decimal' || type === 'Money') {
+    return '0';
+  }
+
+  if (type === 'Boolean') {
+    return 'false';
+  }
+
+  if (type === 'JSON') {
+    return '{}';
+  }
+
+  if (name.includes('token') || name.includes('key')) {
+    return 'Math.random().toString(36).slice(2)';
+  }
+
+  return "''";
 }
 
 function fieldDefaultValue(field: any): any {
@@ -352,7 +415,7 @@ function fieldTypeToZod(field: any): string {
     Email: 'z.string().email()',
     URL: 'z.string().url()',
     UUID: 'z.string().uuid()',
-    JSON: 'z.unknown()'
+    JSON: 'z.record(z.string(), z.unknown())'
   }[type] || 'z.unknown()';
 
   return base;
@@ -395,7 +458,7 @@ function fieldToZod(field: any, mode: 'create' | 'update'): string {
     const def = fieldDefaultValue(field);
     if (def !== undefined) {
       zodType += `.default(${JSON.stringify(def)})`;
-    } else if (field?.nullable || !(field?.annotations?.required ?? field?.required)) {
+    } else if (field?.nullable || !isFieldRequired(field)) {
       zodType += '.optional()';
     }
   } else {
@@ -405,7 +468,10 @@ function fieldToZod(field: any, mode: 'create' | 'update'): string {
   return zodType;
 }
 
-function generateSampleData(entityName: string, fields: Array<{ name: string; type: string }>): string {
+function generateSampleData(
+  entityName: string,
+  fields: Array<{ name: string; type: string; array?: boolean; nullable?: boolean }>
+): string {
   const samples: any[] = [];
   const names = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon'];
   
@@ -418,6 +484,42 @@ function generateSampleData(entityName: string, fields: Array<{ name: string; ty
     
     for (const field of fields) {
       if (field.name === 'createdAt' || field.name === 'updatedAt' || field.name === 'id') continue;
+
+      if (field.array) {
+        switch (field.type) {
+          case 'UUID':
+            item[field.name] = [
+              `${i + 1}`.padStart(8, '0') + '-0000-0000-0000-000000000000',
+              `${i + 2}`.padStart(8, '0') + '-0000-0000-0000-000000000000'
+            ];
+            break;
+          case 'Int':
+          case 'Float':
+          case 'Decimal':
+          case 'Money':
+            item[field.name] = [
+              Math.floor(Math.random() * 1000) + i * 100,
+              Math.floor(Math.random() * 1000) + i * 100 + 1
+            ];
+            break;
+          case 'Boolean':
+            item[field.name] = [i % 2 === 0, i % 2 !== 0];
+            break;
+          case 'DateTime':
+          case 'Date':
+            item[field.name] = [
+              new Date(Date.now() - i * 86400000).toISOString(),
+              new Date(Date.now() - (i + 1) * 86400000).toISOString()
+            ];
+            break;
+          case 'JSON':
+            item[field.name] = [{ sample: `${names[i]} ${field.name}` }];
+            break;
+          default:
+            item[field.name] = [`${names[i]} ${field.name}`, `${names[i]} ${field.name} 2`];
+        }
+        continue;
+      }
       
       switch (field.type) {
         case 'String':
@@ -435,6 +537,9 @@ function generateSampleData(entityName: string, fields: Array<{ name: string; ty
           } else {
             item[field.name] = `${names[i]} ${field.name}`;
           }
+          break;
+        case 'JSON':
+          item[field.name] = { sample: `${names[i]} ${field.name}` };
           break;
         case 'Int':
         case 'Float':

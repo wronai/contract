@@ -15,12 +15,13 @@
 .PHONY: help install dev build test lint clean publish release stop stop-docker stop-examples stop-dev up down \
 	docker-build docker-up docker-down docker-logs docker-restart docker-full docker-clean docker-shell \
 	docker-check-ports docker-health \
+	studio-env-init studio-check-ports studio-pick-port studio-up studio-down studio-logs studio-health \
 	example-b2b-build example-b2b-up example-b2b-down example-b2b-logs example-b2b-check-ports example-b2b-health \
 	example-iot-build example-iot-up example-iot-down example-iot-logs example-iot-check-ports example-iot-health \
 	example-agent-build example-agent-up example-agent-down example-agent-logs example-agent-check-ports example-agent-health \
 	examples-build-all examples-down-all \
 	env-check env-show env-init \
-	auto-up auto-b2b auto-iot auto-agent
+	auto-up auto-b2b auto-iot auto-agent auto-studio
 
 # Colors for output
 BLUE := \033[0;34m
@@ -51,6 +52,13 @@ FRONTEND_PORT ?= 3000
 EVENTSTORE_HTTP_PORT ?= 2113
 REDIS_PORT ?= 6379
 POSTGRES_PORT ?= 5432
+
+# Studio defaults (Studio has its own studio/.env, but these provide global defaults)
+STUDIO_HOST ?= 0.0.0.0
+STUDIO_PORT ?= 7860
+OLLAMA_HOST ?= http://localhost:11434
+OLLAMA_MODEL ?= mistral:7b-instruct
+CODE_MODEL ?= codellama:7b-instruct
 
 # Docker port defaults
 DOCKER_API_PORT ?= $(PORT)
@@ -734,6 +742,55 @@ env-init: ## Initialize .env from .env.example
 	cp .env.example .env
 	@echo "$(GREEN)✓ .env initialized from .env.example$(NC)"
 	@echo "$(YELLOW)Edit .env to customize your configuration$(NC)"
+
+# ==========================================================================
+# STUDIO (Gradio UI + local Ollama)
+# ==========================================================================
+
+studio-env-init: ## Initialize studio/.env from studio/.env.example
+	@if [ -f studio/.env ]; then \
+		echo "$(YELLOW)⚠️  studio/.env already exists (leaving as-is)$(NC)"; \
+	else \
+		cp studio/.env.example studio/.env; \
+		echo "$(GREEN)✓ studio/.env initialized from studio/.env.example$(NC)"; \
+	fi
+
+studio-pick-port: studio-env-init ## Pick a free STUDIO_PORT in studio/.env if current one is occupied
+	@python3 scripts/portenv.py --env studio/.env --pick-var STUDIO_PORT --start-port 7860 --max-port 7960 --mode free --prefix STUDIO_
+
+studio-check-ports: studio-env-init ## Check that Studio ports are free (pre-start)
+	@python3 scripts/portenv.py --env studio/.env --mode free --prefix STUDIO_
+
+studio-up: studio-pick-port ## Start Reclapp Studio (uses local Ollama)
+	@echo "$(BLUE)🚀 Starting Reclapp Studio...$(NC)"
+	@docker compose --project-directory studio --env-file studio/.env -f studio/docker-compose.yml up -d --build --remove-orphans
+	@$(MAKE) studio-health
+
+studio-down: ## Stop Reclapp Studio
+	@docker compose --project-directory studio --env-file studio/.env -f studio/docker-compose.yml down --remove-orphans
+
+studio-logs: ## Follow Reclapp Studio logs
+	@docker compose --project-directory studio --env-file studio/.env -f studio/docker-compose.yml logs -f
+
+studio-health: studio-env-init ## Verify Studio is listening on STUDIO_PORT
+	@echo "$(BLUE)🏥 Checking Studio health...$(NC)"
+	@set -e; \
+	STUDIO_PORT=$$(grep -E '^STUDIO_PORT=' studio/.env | tail -1 | cut -d= -f2); \
+	if [ -z "$$STUDIO_PORT" ]; then STUDIO_PORT=7860; fi; \
+	OK=0; \
+	for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do \
+		if curl -sf "http://localhost:$$STUDIO_PORT/" >/dev/null 2>&1; then OK=1; break; fi; \
+		sleep 1; \
+	done; \
+	if [ "$$OK" = "1" ]; then \
+		echo "$(GREEN)✓ Studio responding on http://localhost:$$STUDIO_PORT$(NC)"; \
+	else \
+		echo "$(YELLOW)⚠ Studio not responding yet on http://localhost:$$STUDIO_PORT$(NC)"; \
+	fi; \
+	python3 scripts/portenv.py --env studio/.env --mode used --prefix STUDIO_ || true
+
+auto-studio: ## Auto-run Studio with port diagnostics + health monitor
+	@./scripts/autorun.sh studio-up studio-down studio-health "Studio" "STUDIO_"
 
 # ============================================================================
 # PACKAGE CREATION

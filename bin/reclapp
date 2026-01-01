@@ -45,6 +45,19 @@ try {
   parseMiniFile = null;
 }
 
+// Import Markdown parser (.rcl.md)
+let parseMarkdownFile, irToContract, writeMarkdownContract, contractToIR;
+try {
+  const md = require('../dsl/parser/markdown');
+  parseMarkdownFile = md.parseMarkdownFile;
+  irToContract = md.irToContract;
+  const writer = require('../dsl/writer/markdown');
+  writeMarkdownContract = writer.writeMarkdownContract;
+  contractToIR = writer.contractToIR;
+} catch (e) {
+  parseMarkdownFile = null;
+}
+
 const HELP = `
 Reclapp CLI - Generate applications from DSL contracts
 
@@ -58,6 +71,7 @@ Usage:
   reclapp convert <input> -o <output>        Convert between formats
   reclapp list                               List available contracts
   reclapp studio                             Interactive examples browser
+  reclapp chat                               Interactive LLM contract designer
   reclapp stop                               Stop all running containers
 
 Commands:
@@ -75,6 +89,7 @@ Commands:
 Supported Formats:
   .reclapp.ts    TypeScript contract (original format)
   .reclapp.rcl   Mini-DSL contract (~87% less code)
+  .rcl.md        Markdown contract (human-readable, AI-friendly)
 
 Options:
   --output, -o <dir>    Output directory (default: ./target)
@@ -85,7 +100,9 @@ Options:
 Examples:
   reclapp examples/crm/contracts/main.reclapp.ts
   reclapp examples/crm/contracts/main.reclapp.rcl
-  reclapp convert contract.rcl -o contract.reclapp.ts
+  reclapp examples/crm/contracts/main.rcl.md
+  reclapp convert contract.rcl --format md
+  reclapp convert contract.rcl.md --format ts
   reclapp studio
 `;
 
@@ -99,6 +116,23 @@ async function loadContract(contractPath) {
   if (!fs.existsSync(fullPath)) {
     console.error(`❌ Contract file not found: ${fullPath}`);
     process.exit(1);
+  }
+
+  // Handle Markdown (.rcl.md or .md) files
+  if (fullPath.endsWith('.rcl.md') || (fullPath.endsWith('.md') && fs.readFileSync(fullPath, 'utf-8').includes('# entity:'))) {
+    if (!parseMarkdownFile) {
+      console.error('❌ Markdown parser not available');
+      process.exit(1);
+    }
+    const result = parseMarkdownFile(fullPath);
+    if (!result.success) {
+      console.error('❌ Parse error:', result.errors[0]?.message || 'Unknown error');
+      if (result.errors[0]?.line) {
+        console.error(`   Line ${result.errors[0].line}`);
+      }
+      process.exit(1);
+    }
+    return irToContract(result.ir);
   }
 
   // Handle Mini-DSL (.rcl) files
@@ -385,57 +419,103 @@ async function cmdValidate(contractPath) {
   console.log(`   Dashboards: ${contract.dashboards?.length || 0}`);
 }
 
-async function cmdConvert(inputPath, outputPath) {
-  if (!parseMiniFile) {
-    console.error('❌ Mini-DSL parser not available');
-    process.exit(1);
-  }
-
+async function cmdConvert(inputPath, options = {}) {
   const fullInput = path.resolve(inputPath);
   if (!fs.existsSync(fullInput)) {
     console.error(`❌ Input file not found: ${fullInput}`);
     process.exit(1);
   }
 
-  console.log(`\n🔄 Converting ${inputPath}...`);
+  const targetFormat = options.format || 'md';
+  console.log(`\n🔄 Converting ${inputPath} to ${targetFormat}...`);
 
-  if (fullInput.endsWith('.rcl')) {
-    // RCL -> TypeScript
+  // Load source contract
+  let ir;
+  
+  if (fullInput.endsWith('.rcl.md') || fullInput.endsWith('.md')) {
+    // From Markdown
+    if (!parseMarkdownFile) {
+      console.error('❌ Markdown parser not available');
+      process.exit(1);
+    }
+    const result = parseMarkdownFile(fullInput);
+    if (!result.success) {
+      console.error('❌ Parse error:', result.errors[0]?.message);
+      process.exit(1);
+    }
+    ir = result.ir;
+  } else if (fullInput.endsWith('.rcl')) {
+    // From Mini-DSL
+    if (!parseMiniFile) {
+      console.error('❌ Mini-DSL parser not available');
+      process.exit(1);
+    }
     const result = parseMiniFile(fullInput);
     if (!result.success) {
       console.error('❌ Parse error:', result.errors[0]?.message);
       process.exit(1);
     }
-    const ir = miniToIR(result.ast);
-    const tsOutput = generateTypeScriptContract(ir);
-    const outPath = outputPath || inputPath.replace('.rcl', '.ts');
-    fs.writeFileSync(outPath, tsOutput);
-    console.log(`✅ Converted to ${outPath}`);
+    ir = miniToIR(result.ast);
   } else if (fullInput.endsWith('.ts')) {
-    // TypeScript -> RCL
+    // From TypeScript
     delete require.cache[require.resolve(fullInput)];
     const mod = require(fullInput);
     const contract = mod.contract || mod.default || mod;
-    const ir = {
+    ir = {
       app: contract.app,
       entities: contract.entities || [],
-      enums: [],
+      enums: contract.enums || [],
       events: contract.events || [],
       pipelines: contract.pipelines || [],
       alerts: contract.alerts || [],
       dashboards: contract.dashboards || [],
       sources: contract.sources || [],
       workflows: contract.workflows || [],
-      config: contract.config || {}
+      config: contract.config || {},
+      env: contract.env || []
     };
-    const rclOutput = irToMini(ir);
-    const outPath = outputPath || inputPath.replace('.reclapp.ts', '.reclapp.rcl').replace('.ts', '.rcl');
-    fs.writeFileSync(outPath, rclOutput);
-    console.log(`✅ Converted to ${outPath}`);
   } else {
-    console.error('❌ Unknown file format. Use .rcl or .ts');
+    console.error('❌ Unknown input format. Use .rcl, .rcl.md, or .ts');
     process.exit(1);
   }
+
+  // Convert to target format
+  let output, outPath;
+
+  switch (targetFormat) {
+    case 'md':
+    case 'markdown':
+      if (!writeMarkdownContract) {
+        console.error('❌ Markdown writer not available');
+        process.exit(1);
+      }
+      output = writeMarkdownContract(ir, [], { includeConversation: false });
+      outPath = options.output || inputPath.replace(/\.(reclapp\.ts|reclapp\.rcl|rcl|ts)$/, '.rcl.md');
+      break;
+
+    case 'ts':
+    case 'typescript':
+      output = generateTypeScriptContract(ir);
+      outPath = options.output || inputPath.replace(/\.(rcl\.md|rcl|md)$/, '.reclapp.ts');
+      break;
+
+    case 'rcl':
+    case 'mini':
+      if (!irToMini) {
+        console.error('❌ Mini-DSL writer not available');
+        process.exit(1);
+      }
+      output = irToMini(ir);
+      outPath = options.output || inputPath.replace(/\.(rcl\.md|reclapp\.ts|ts|md)$/, '.reclapp.rcl');
+      break;
+
+    default:
+      console.error(`❌ Unknown target format: ${targetFormat}. Use md, ts, or rcl`);
+      process.exit(1);
+  }
+
+  fs.writeFileSync(outPath, output);
+  console.log(`✅ Converted to ${outPath}`);
 }
 
 function generateTypeScriptContract(ir) {
@@ -472,7 +552,7 @@ async function cmdList() {
       const stat = fs.statSync(fullPath);
       if (stat.isDirectory() && !item.startsWith('.') && item !== 'node_modules' && item !== 'target') {
         results.push(...findContracts(fullPath, path.join(prefix, item)));
-      } else if (item.endsWith('.reclapp.ts') || item.endsWith('.reclapp.rcl')) {
+      } else if (item.endsWith('.reclapp.ts') || item.endsWith('.reclapp.rcl') || item.endsWith('.rcl.md')) {
         results.push(path.join(prefix, item));
       }
     }
@@ -480,10 +560,11 @@ async function cmdList() {
   };
 
   const contracts = findContracts(process.cwd());
-  if (contracts.length === 0) console.log('  No contracts found (.reclapp.ts or .reclapp.rcl)');
+  if (contracts.length === 0) console.log('  No contracts found (.reclapp.ts, .reclapp.rcl, or .rcl.md)');
   else {
     const tsContracts = contracts.filter(c => c.endsWith('.ts'));
-    const rclContracts = contracts.filter(c => c.endsWith('.rcl'));
+    const rclContracts = contracts.filter(c => c.endsWith('.rcl') && !c.endsWith('.rcl.md'));
+    const mdContracts = contracts.filter(c => c.endsWith('.rcl.md'));
     if (tsContracts.length) {
       console.log('  TypeScript (.reclapp.ts):');
       tsContracts.forEach(c => console.log(`    ${c}`));
@@ -491,6 +572,10 @@ async function cmdList() {
     if (rclContracts.length) {
       console.log('  Mini-DSL (.reclapp.rcl):');
       rclContracts.forEach(c => console.log(`    ${c}`));
+    }
+    if (mdContracts.length) {
+      console.log('  Markdown (.rcl.md):');
+      mdContracts.forEach(c => console.log(`    ${c}`));
     }
   }
   console.log('');
@@ -516,6 +601,24 @@ async function cmdStop() {
   }
 }
 
+async function cmdChat() {
+  // Launch the interactive chat CLI
+  const { spawn } = require('child_process');
+  const chatPath = path.join(__dirname, 'reclapp-chat');
+  
+  if (!fs.existsSync(chatPath)) {
+    console.error('❌ Chat module not found. Run from project root.');
+    process.exit(1);
+  }
+  
+  const child = spawn('node', [chatPath], {
+    stdio: 'inherit',
+    cwd: process.cwd()
+  });
+  
+  child.on('close', (code) => process.exit(code));
+}
+
 async function cmdStudio() {
   const readline = require('readline');
   const { execSync } = require('child_process');
@@ -528,7 +631,7 @@ async function cmdStudio() {
       const stat = fs.statSync(fullPath);
       if (stat.isDirectory() && !item.startsWith('.') && item !== 'node_modules' && item !== 'target') {
         results.push(...findContracts(fullPath, path.join(prefix, item)));
-      } else if (item.endsWith('.reclapp.ts') || item.endsWith('.reclapp.rcl')) {
+      } else if (item.endsWith('.reclapp.ts') || item.endsWith('.reclapp.rcl') || item.endsWith('.rcl.md')) {
         results.push({ path: path.join(prefix, item), full: fullPath });
       }
     }
@@ -540,12 +643,12 @@ async function cmdStudio() {
   console.log(`
 ╔══════════════════════════════════════════════════════════════╗
 ║                    🚀 RECLAPP STUDIO                         ║
-║        Interactive Examples Browser (TS + RCL)               ║
+║        Interactive Examples Browser (TS + RCL + MD)          ║
 ╚══════════════════════════════════════════════════════════════╝
 `);
 
   if (contracts.length === 0) {
-    console.log('  No contracts found (.reclapp.ts or .reclapp.rcl)\n');
+    console.log('  No contracts found (.reclapp.ts, .reclapp.rcl, or .rcl.md)\n');
     return;
   }
 
@@ -554,7 +657,19 @@ async function cmdStudio() {
   for (const c of contracts) {
     try {
       let contract;
-      if (c.full.endsWith('.rcl')) {
+      if (c.full.endsWith('.rcl.md')) {
+        // Load Markdown file
+        if (parseMarkdownFile) {
+          const result = parseMarkdownFile(c.full);
+          if (result.success) {
+            contract = irToContract(result.ir);
+          } else {
+            throw new Error('Parse error');
+          }
+        } else {
+          throw new Error('Markdown parser not available');
+        }
+      } else if (c.full.endsWith('.rcl')) {
         // Load RCL file
         if (parseMiniFile) {
           const result = parseMiniFile(c.full);
@@ -573,7 +688,10 @@ async function cmdStudio() {
         const mod = require(c.full);
         contract = mod.contract || mod.default || mod;
       }
-      const ext = c.full.endsWith('.rcl') ? '.reclapp.rcl' : '.reclapp.ts';
+      let ext = '.reclapp.ts';
+      let format = 'ts';
+      if (c.full.endsWith('.rcl.md')) { ext = '.rcl.md'; format = 'md'; }
+      else if (c.full.endsWith('.rcl')) { ext = '.reclapp.rcl'; format = 'rcl'; }
       examples.push({
         path: c.path,
         full: c.full,
@@ -582,7 +700,7 @@ async function cmdStudio() {
         description: contract.app?.description || '',
         entities: contract.entities?.length || 0,
         events: contract.events?.length || 0,
-        format: c.full.endsWith('.rcl') ? 'rcl' : 'ts'
+        format
       });
     } catch (e) {
       examples.push({ path: c.path, full: c.full, name: path.basename(c.path), error: true });
@@ -723,12 +841,21 @@ async function main() {
     case 'studio':
       await cmdStudio(); break;
 
+    case 'chat': case 'ai':
+      await cmdChat(); break;
+
     case 'convert': case 'conv':
       if (!contractPath) { console.error('❌ Missing input path'); process.exit(1); }
-      await cmdConvert(contractPath, options.output); break;
+      // Parse --format option
+      for (let i = 0; i < args.length; i++) {
+        if (args[i] === '--format' && args[i + 1]) {
+          options.format = args[i + 1]; i++;
+        }
+      }
+      await cmdConvert(contractPath, options); break;
 
     default:
-      if (command.endsWith('.reclapp.ts') || command.endsWith('.ts') || command.endsWith('.rcl')) {
+      if (command.endsWith('.reclapp.ts') || command.endsWith('.ts') || command.endsWith('.rcl') || command.endsWith('.rcl.md')) {
         await cmdGenerate(command, options);
       } else {
         console.error(`❌ Unknown command: ${command}`);

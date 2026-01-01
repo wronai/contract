@@ -119,4 +119,57 @@ describe('SimpleGenerator (bin/reclapp path)', () => {
     expect(routeFile!.content).not.toContain("import { requireAuth }");
     expect(routeFile!.content).not.toContain('router.use(requireAuth)');
   });
+
+  it('handles JSON + nullable + generated fields in a way that compiles (schema/types/sample data)', async () => {
+    const Thing: Entity = {
+      name: 'Thing',
+      fields: [
+        { name: 'name', type: 'String' },
+        { name: 'payload', type: 'JSON' },
+        { name: 'note', type: 'String', nullable: true },
+        { name: 'recordedAt', type: 'DateTime', annotations: { generated: true } }
+      ]
+    };
+
+    const api: ApiConfig = {
+      version: 'v1',
+      prefix: '/api/v1',
+      resources: [
+        {
+          name: 'things',
+          entity: 'Thing',
+          operations: ['list', 'get', 'create', 'update', 'delete']
+        }
+      ]
+    };
+
+    const contract: ReclappContract = {
+      app: {
+        name: 'Test App',
+        version: '2.1.0',
+        description: 'Test'
+      },
+      entities: [Thing],
+      api
+    };
+
+    const generator = new SimpleGenerator(contract, '/tmp/reclapp-simple-generator-test');
+    const files = generator.generate();
+
+    const modelFile = files.find(f => f.path.endsWith('api/src/models/thing.ts'));
+    expect(modelFile).toBeDefined();
+    expect(modelFile!.content).toContain('payload: Record<string, any>');
+    expect(modelFile!.content).toContain('note?: string | null;');
+
+    const routeFile = files.find(f => f.path.endsWith('api/src/routes/thing.ts'));
+    expect(routeFile).toBeDefined();
+
+    expect(routeFile!.content).toContain('name: z.string()');
+    expect(routeFile!.content).not.toContain('name: z.string().optional()');
+
+    expect(routeFile!.content).toContain('payload: z.record(z.string(), z.unknown())');
+    expect(routeFile!.content).not.toMatch(/"payload"\s*:\s*"/);
+
+    expect(routeFile!.content).toContain('recordedAt: new Date().toISOString()');
+  });
 });

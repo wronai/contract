@@ -74,6 +74,39 @@ describe('Mini-DSL Parser', () => {
       expect(result.ast.statements[0].schedule).toBe('0 * * * *');
     });
 
+    it('should parse pipeline output as DotPath (e.g. Entity.update)', () => {
+      const source = `
+        pipeline RegistrySync {
+          input: Customer.pending
+          transform: [enrichFromKRS, enrichFromCEIDG]
+          output: Customer.update
+          schedule: "0 */6 * * *"
+        }
+      `;
+
+      const result = parseMini(source);
+      expect(result.success).toBe(true);
+      expect(result.ast).toBeDefined();
+      expect(result.ast.statements[0].type).toBe('PipelineDeclaration');
+      expect(result.ast.statements[0].output).toEqual(['Customer.update']);
+    });
+
+    it('should parse pipeline output list with DotPath values', () => {
+      const source = `
+        pipeline DashboardRefresh {
+          input: MetricUpdated.stream
+          transform: [aggregateByDashboard, updateCache]
+          output: [dashboard.refresh, Report.create]
+        }
+      `;
+
+      const result = parseMini(source);
+      expect(result.success).toBe(true);
+      expect(result.ast).toBeDefined();
+      expect(result.ast.statements[0].type).toBe('PipelineDeclaration');
+      expect(result.ast.statements[0].output).toEqual(['dashboard.refresh', 'Report.create']);
+    });
+
     it('should parse alert declarations', () => {
       const source = `
         alert "High Risk" {

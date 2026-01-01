@@ -234,7 +234,7 @@ PipelineDeclaration
 PipelineProp
   = "input" _ ":" _ value:ArrayOrPath { return ['input', value]; }
   / "output" _ ":" _ value:ArrayOrPath { return ['output', value]; }
-  / "transform" _ ":" _ value:ArrayOrIdentifier { return ['transform', value]; }
+  / "transform" _ ":" _ value:ArrayOrPath { return ['transform', value]; }
   / "schedule" _ ":" _ value:StringLiteral { return ['schedule', value]; }
   / "filter" _ ":" _ value:ExpressionText { return ['filter', value]; }
 

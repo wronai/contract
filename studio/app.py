@@ -15,21 +15,32 @@ from typing import Generator, Optional
 import gradio as gr
 import httpx
 
+from contract_validator import ContractValidator, ValidationResult
+
 # Configuration
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "mistral:7b-instruct-q4_0")
 CODE_MODEL = os.environ.get("CODE_MODEL", "codellama:7b-instruct-q4_0")
+STUDIO_HOST = os.environ.get("STUDIO_HOST", "0.0.0.0")
+STUDIO_PORT = int(os.environ.get("STUDIO_PORT", "7860"))
 PROJECTS_DIR = Path("projects")
 EXAMPLES_DIR = Path("examples")
 
-# Load system prompt
+# Load system prompt (prefer v2 with structured output)
+SYSTEM_PROMPT_V2_PATH = Path("prompts/system_v2.txt")
 SYSTEM_PROMPT_PATH = Path("prompts/system.txt")
-if SYSTEM_PROMPT_PATH.exists():
+
+if SYSTEM_PROMPT_V2_PATH.exists():
+    SYSTEM_PROMPT = SYSTEM_PROMPT_V2_PATH.read_text()
+elif SYSTEM_PROMPT_PATH.exists():
     SYSTEM_PROMPT = SYSTEM_PROMPT_PATH.read_text()
 else:
     SYSTEM_PROMPT = """You are a contract designer for Reclapp.
 Help users design application contracts using the Reclapp Mini-DSL format.
 When the user says "generate", output the complete contract.rcl file."""
+
+# Validator for contract output
+validator = ContractValidator()
 
 
 class ReclappStudio:
@@ -37,9 +48,11 @@ class ReclappStudio:
         self.conversation_history = []
         self.current_contract = ""
         self.project_name = "my-app"
+        self.validation_errors = []
+        self.max_retries = 2  # Max validation retries
 
     async def chat(self, message: str, history: list) -> Generator[str, None, None]:
-        """Chat with Ollama to design contract"""
+        """Chat with Ollama to design contract with validation loop"""
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
         for h in history:
@@ -49,39 +62,88 @@ class ReclappStudio:
                     messages.append({"role": "assistant", "content": h[1]})
 
         messages.append({"role": "user", "content": message})
-
-        try:
-            async with httpx.AsyncClient(timeout=120.0) as client:
-                response = await client.post(
-                    f"{OLLAMA_HOST}/api/chat",
-                    json={
-                        "model": OLLAMA_MODEL,
-                        "messages": messages,
-                        "stream": True
-                    },
-                    timeout=120.0
-                )
-
+        
+        retry_count = 0
+        while retry_count <= self.max_retries:
+            try:
                 full_response = ""
-                async for line in response.aiter_lines():
-                    if line:
-                        try:
-                            data = json.loads(line)
-                            if "message" in data:
-                                chunk = data["message"].get("content", "")
-                                full_response += chunk
-                                yield full_response
-                        except json.JSONDecodeError:
+                async with httpx.AsyncClient(timeout=120.0) as client:
+                    response = await client.post(
+                        f"{OLLAMA_HOST}/api/chat",
+                        json={
+                            "model": OLLAMA_MODEL,
+                            "messages": messages,
+                            "stream": True,
+                            "options": {"temperature": 0.7}
+                        },
+                        timeout=120.0
+                    )
+
+                    async for line in response.aiter_lines():
+                        if line:
+                            try:
+                                data = json.loads(line)
+                                if "message" in data:
+                                    chunk = data["message"].get("content", "")
+                                    full_response += chunk
+                                    yield full_response
+                            except json.JSONDecodeError:
+                                continue
+
+                # Validate contract if response looks like it contains one
+                if "entity " in full_response or "app " in full_response or '"contract"' in full_response:
+                    validation = validator.validate(full_response)
+                    
+                    if validation.valid:
+                        # Success - format and store contract
+                        self.current_contract = validator.format_contract(validation.contract)
+                        self.validation_errors = []
+                        
+                        # Add summary to response if available
+                        if validation.summary:
+                            summary_text = f"\n\n✅ **Contract validated successfully!**\n"
+                            if validation.summary.get('entities'):
+                                summary_text += f"- Entities: {', '.join(validation.summary['entities'])}\n"
+                            if validation.summary.get('events'):
+                                summary_text += f"- Events: {', '.join(validation.summary['events'])}\n"
+                            yield full_response + summary_text
+                        return
+                    else:
+                        # Validation failed - store errors
+                        self.validation_errors = validation.errors + validation.warnings
+                        
+                        # Try to use partial contract if available
+                        if validation.contract:
+                            self.current_contract = validation.contract
+                        
+                        # If we have retries left, ask LLM to fix
+                        if retry_count < self.max_retries and validation.errors:
+                            error_feedback = validator.generate_error_feedback(validation)
+                            messages.append({"role": "assistant", "content": full_response})
+                            messages.append({"role": "user", "content": error_feedback})
+                            
+                            yield full_response + f"\n\n⚠️ **Validation issues found, retrying ({retry_count + 1}/{self.max_retries})...**\n" + '\n'.join(f"- {e}" for e in validation.errors)
+                            retry_count += 1
                             continue
+                        else:
+                            # No more retries or just warnings
+                            warning_text = ""
+                            if validation.errors:
+                                warning_text = "\n\n⚠️ **Contract has issues:**\n" + '\n'.join(f"- {e}" for e in validation.errors)
+                            if validation.warnings:
+                                warning_text += "\n\n💡 **Suggestions:**\n" + '\n'.join(f"- {w}" for w in validation.warnings)
+                            yield full_response + warning_text
+                            return
+                else:
+                    # No contract in response - just return as-is
+                    return
 
-                # Check if this looks like a contract
-                if "entity " in full_response or "app " in full_response:
-                    self.current_contract = self.extract_contract(full_response)
-
-        except httpx.ConnectError:
-            yield "❌ Cannot connect to Ollama. Make sure it's running at " + OLLAMA_HOST
-        except Exception as e:
-            yield f"❌ Error: {str(e)}"
+            except httpx.ConnectError:
+                yield "❌ Cannot connect to Ollama. Make sure it's running at " + OLLAMA_HOST
+                return
+            except Exception as e:
+                yield f"❌ Error: {str(e)}"
+                return
 
     def extract_contract(self, text: str) -> str:
         """Extract RCL contract from response"""
@@ -205,24 +267,29 @@ def create_ui():
         async def respond(message, history):
             history = history or []
 
-            # Normalize history for broad Gradio compatibility (list[tuple[str, str]])
+            # Normalize history to list of tuples
             normalized_history = []
             for h in history:
                 if isinstance(h, (list, tuple)) and len(h) >= 2:
-                    normalized_history.append((h[0], h[1]))
+                    normalized_history.append((str(h[0]) if h[0] else "", str(h[1]) if h[1] else ""))
 
             response = ""
             async for chunk in studio.chat(message, normalized_history):
                 response = chunk
+                # Yield tuple format (user_msg, assistant_msg)
                 yield normalized_history + [(message, response)], studio.current_contract or ""
             
-            # Update contract preview if we have a contract
+            # Final yield with contract
             if studio.current_contract:
                 yield normalized_history + [(message, response)], studio.current_contract
 
         def clear_chat():
             studio.current_contract = ""
             return [], ""
+
+        def on_message_submit(message, history):
+            """Clear input after submit"""
+            return ""
 
         def load_example(name):
             if name:
@@ -254,8 +321,8 @@ def create_ui():
 if __name__ == "__main__":
     app = create_ui()
     app.launch(
-        server_name="0.0.0.0",
-        server_port=7860,
+        server_name=STUDIO_HOST,
+        server_port=STUDIO_PORT,
         theme=gr.themes.Soft(),
         css="""
         .container { max-width: 1200px; margin: auto; }
