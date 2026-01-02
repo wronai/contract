@@ -7,19 +7,15 @@ Evolution mode using Python modules instead of Node.js.
 """
 
 import asyncio
-import sys
 from pathlib import Path
 from typing import Optional
 
 from rich.console import Console
 from rich.panel import Panel
 
-# Add src/python to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "src" / "python"))
-
-from reclapp.evolution import EvolutionManager, EvolutionOptions
-from reclapp.generator import ContractGenerator, CodeGenerator, ContractGeneratorOptions, CodeGeneratorOptions
-from reclapp.llm import OllamaClient, OllamaConfig, LLMManager
+from .evolution import EvolutionManager, EvolutionOptions
+from .generator import ContractGenerator, CodeGenerator, ContractGeneratorOptions, CodeGeneratorOptions
+from .llm import OllamaClient, OllamaConfig, LLMManager
 
 console = Console()
 
