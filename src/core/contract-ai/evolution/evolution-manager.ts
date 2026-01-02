@@ -2912,6 +2912,64 @@ MIT
       lower.includes('github workflow') ||
       (lower.includes('ci') && lower.includes('github'));
 
+    // Detect backend language/framework preferences
+    const wantsPython = lower.includes('python') || lower.includes('flask') || lower.includes('fastapi') || lower.includes('django');
+    const wantsGo = lower.includes('golang') || lower.includes(' go ') || lower.includes('gin') || lower.includes('fiber');
+    const wantsRust = lower.includes('rust') || lower.includes('actix') || lower.includes('axum');
+    const wantsJava = lower.includes('java') || lower.includes('spring') || lower.includes('quarkus');
+    const wantsFastify = lower.includes('fastify');
+    const wantsNest = lower.includes('nestjs') || lower.includes('nest.js');
+    const wantsKoa = lower.includes('koa');
+
+    // Detect frontend framework preferences
+    const wantsVue = lower.includes('vue') || lower.includes('vuejs');
+    const wantsSvelte = lower.includes('svelte') || lower.includes('sveltekit');
+    const wantsAngular = lower.includes('angular');
+    const wantsNextjs = lower.includes('nextjs') || lower.includes('next.js');
+
+    // Determine backend config
+    let backendFramework = 'express';
+    let backendLanguage = 'typescript';
+    let backendRuntime = 'node';
+
+    if (wantsPython) {
+      backendLanguage = 'python';
+      backendRuntime = 'python';
+      backendFramework = lower.includes('fastapi') ? 'fastapi' : lower.includes('django') ? 'django' : 'flask';
+    } else if (wantsGo) {
+      backendLanguage = 'go';
+      backendRuntime = 'go';
+      backendFramework = lower.includes('fiber') ? 'fiber' : 'gin';
+    } else if (wantsRust) {
+      backendLanguage = 'rust';
+      backendRuntime = 'rust';
+      backendFramework = lower.includes('axum') ? 'axum' : 'actix';
+    } else if (wantsJava) {
+      backendLanguage = 'java';
+      backendRuntime = 'jvm';
+      backendFramework = lower.includes('quarkus') ? 'quarkus' : 'spring';
+    } else if (wantsFastify) {
+      backendFramework = 'fastify';
+    } else if (wantsNest) {
+      backendFramework = 'nestjs';
+    } else if (wantsKoa) {
+      backendFramework = 'koa';
+    }
+
+    // Determine frontend config
+    let frontendFramework = 'react';
+    let frontendStyling = 'tailwind';
+
+    if (wantsVue) {
+      frontendFramework = 'vue';
+    } else if (wantsSvelte) {
+      frontendFramework = 'svelte';
+    } else if (wantsAngular) {
+      frontendFramework = 'angular';
+    } else if (wantsNextjs) {
+      frontendFramework = 'nextjs';
+    }
+
     const dbType = wantsPostgres
       ? 'postgresql'
       : wantsMysql
@@ -2962,8 +3020,8 @@ MIT
         patterns: [],
         constraints: [],
         techStack: {
-          backend: { framework: 'express', language: 'typescript', runtime: 'node' },
-          frontend: { framework: 'react', language: 'typescript', styling: 'tailwind' },
+          backend: { framework: backendFramework, language: backendLanguage, runtime: backendRuntime },
+          frontend: { framework: frontendFramework, language: 'typescript', styling: frontendStyling },
           database: { type: dbType }
         }
       },
@@ -2982,6 +3040,13 @@ MIT
     const entities: Array<{name: string; fields: any[]; relations: any[]}> = [];
     const lowerPrompt = prompt.toLowerCase();
     const foundEntities = new Set<string>();
+
+    const hasKeyword = (keyword: string): boolean => {
+      if (!keyword) return false;
+      const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp(`\\b${escaped}\\b`, 'i');
+      return re.test(lowerPrompt);
+    };
     
     // Known domain entities (priority)
     const domainEntities: Record<string, string[]> = {
@@ -3013,7 +3078,7 @@ MIT
     // Check for domain entities first
     for (const [entity, keywords] of Object.entries(domainEntities)) {
       for (const keyword of keywords) {
-        if (lowerPrompt.includes(keyword)) {
+        if (hasKeyword(keyword)) {
           foundEntities.add(this.capitalize(entity));
           break;
         }
@@ -3046,22 +3111,155 @@ MIT
       foundEntities.add('Item');
     }
 
-    // Create entity definitions
+    // Create entity definitions with domain-specific fields
     for (const entityName of foundEntities) {
       entities.push({
         name: entityName,
-        fields: [
-          { name: 'id', type: 'UUID', annotations: { primary: true } },
-          { name: 'name', type: 'String', annotations: { required: true } },
-          { name: 'description', type: 'String', annotations: {} },
-          { name: 'createdAt', type: 'DateTime', annotations: {} },
-          { name: 'updatedAt', type: 'DateTime', annotations: {} }
-        ],
-        relations: []
+        fields: this.getEntityFields(entityName, lowerPrompt),
+        relations: this.getEntityRelations(entityName, foundEntities)
       });
     }
 
     return entities;
+  }
+
+  /**
+   * Get domain-specific fields for entity
+   */
+  private getEntityFields(entityName: string, prompt: string): any[] {
+    const baseFields = [
+      { name: 'id', type: 'UUID', annotations: { primary: true } },
+      { name: 'createdAt', type: 'DateTime', annotations: {} },
+      { name: 'updatedAt', type: 'DateTime', annotations: {} }
+    ];
+
+    const domainFields: Record<string, any[]> = {
+      'Ticket': [
+        { name: 'subject', type: 'String', annotations: { required: true } },
+        { name: 'description', type: 'String', annotations: {} },
+        { name: 'status', type: 'String', annotations: { enum: ['open', 'in_progress', 'resolved', 'closed'], default: 'open' } },
+        { name: 'priority', type: 'String', annotations: { enum: ['low', 'medium', 'high', 'urgent'], default: 'medium' } },
+        { name: 'customerEmail', type: 'Email', annotations: {} }
+      ],
+      'Task': [
+        { name: 'title', type: 'String', annotations: { required: true } },
+        { name: 'description', type: 'String', annotations: {} },
+        { name: 'status', type: 'String', annotations: { enum: ['todo', 'in_progress', 'done'], default: 'todo' } },
+        { name: 'priority', type: 'String', annotations: { enum: ['low', 'medium', 'high'], default: 'medium' } },
+        { name: 'dueDate', type: 'DateTime', annotations: {} }
+      ],
+      'Todo': [
+        { name: 'title', type: 'String', annotations: { required: true } },
+        { name: 'completed', type: 'Boolean', annotations: { default: false } },
+        { name: 'dueDate', type: 'DateTime', annotations: {} }
+      ],
+      'Note': [
+        { name: 'title', type: 'String', annotations: { required: true } },
+        { name: 'content', type: 'String', annotations: {} }
+      ],
+      'Post': [
+        { name: 'title', type: 'String', annotations: { required: true } },
+        { name: 'content', type: 'String', annotations: {} },
+        { name: 'slug', type: 'String', annotations: { unique: true } },
+        { name: 'published', type: 'Boolean', annotations: { default: false } }
+      ],
+      'Product': [
+        { name: 'name', type: 'String', annotations: { required: true } },
+        { name: 'description', type: 'String', annotations: {} },
+        { name: 'price', type: 'Decimal', annotations: { required: true } },
+        { name: 'sku', type: 'String', annotations: { unique: true } },
+        { name: 'quantity', type: 'Integer', annotations: { default: 0 } }
+      ],
+      'Order': [
+        { name: 'orderNumber', type: 'String', annotations: { unique: true } },
+        { name: 'status', type: 'String', annotations: { enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'], default: 'pending' } },
+        { name: 'total', type: 'Decimal', annotations: {} }
+      ],
+      'Invoice': [
+        { name: 'invoiceNumber', type: 'String', annotations: { unique: true } },
+        { name: 'amount', type: 'Decimal', annotations: { required: true } },
+        { name: 'status', type: 'String', annotations: { enum: ['draft', 'sent', 'paid', 'overdue'], default: 'draft' } },
+        { name: 'dueDate', type: 'DateTime', annotations: {} }
+      ],
+      'Customer': [
+        { name: 'name', type: 'String', annotations: { required: true } },
+        { name: 'email', type: 'Email', annotations: { required: true, unique: true } },
+        { name: 'phone', type: 'String', annotations: {} }
+      ],
+      'Employee': [
+        { name: 'name', type: 'String', annotations: { required: true } },
+        { name: 'email', type: 'Email', annotations: { required: true, unique: true } },
+        { name: 'department', type: 'String', annotations: {} },
+        { name: 'position', type: 'String', annotations: {} }
+      ],
+      'Booking': [
+        { name: 'guestName', type: 'String', annotations: { required: true } },
+        { name: 'guestEmail', type: 'Email', annotations: {} },
+        { name: 'checkIn', type: 'DateTime', annotations: { required: true } },
+        { name: 'checkOut', type: 'DateTime', annotations: { required: true } },
+        { name: 'status', type: 'String', annotations: { enum: ['pending', 'confirmed', 'cancelled'], default: 'pending' } }
+      ],
+      'Event': [
+        { name: 'title', type: 'String', annotations: { required: true } },
+        { name: 'description', type: 'String', annotations: {} },
+        { name: 'startDate', type: 'DateTime', annotations: { required: true } },
+        { name: 'endDate', type: 'DateTime', annotations: {} },
+        { name: 'location', type: 'String', annotations: {} }
+      ],
+      'Contact': [
+        { name: 'firstName', type: 'String', annotations: { required: true } },
+        { name: 'lastName', type: 'String', annotations: { required: true } },
+        { name: 'email', type: 'Email', annotations: { unique: true } },
+        { name: 'phone', type: 'String', annotations: {} },
+        { name: 'company', type: 'String', annotations: {} }
+      ],
+      'Comment': [
+        { name: 'content', type: 'String', annotations: { required: true } },
+        { name: 'authorName', type: 'String', annotations: {} }
+      ],
+      'Category': [
+        { name: 'name', type: 'String', annotations: { required: true, unique: true } },
+        { name: 'description', type: 'String', annotations: {} }
+      ]
+    };
+
+    // Get domain-specific fields or default
+    const specificFields = domainFields[entityName] || [
+      { name: 'name', type: 'String', annotations: { required: true } },
+      { name: 'description', type: 'String', annotations: {} }
+    ];
+
+    return [...baseFields.slice(0, 1), ...specificFields, ...baseFields.slice(1)];
+  }
+
+  /**
+   * Get relations between entities
+   */
+  private getEntityRelations(entityName: string, allEntities: Set<string>): any[] {
+    const relations: any[] = [];
+    
+    const relationMap: Record<string, string[]> = {
+      'Ticket': ['Customer', 'Employee'],
+      'Order': ['Customer', 'Product'],
+      'Invoice': ['Customer'],
+      'Task': ['User', 'Project'],
+      'Comment': ['Post', 'User'],
+      'Booking': ['Room', 'Customer'],
+      'Post': ['Category', 'User']
+    };
+
+    const entityRelations = relationMap[entityName] || [];
+    for (const relatedEntity of entityRelations) {
+      if (allEntities.has(relatedEntity)) {
+        relations.push({
+          name: relatedEntity.toLowerCase(),
+          type: 'belongsTo',
+          target: relatedEntity
+        });
+      }
+    }
+
+    return relations;
   }
 
   /**

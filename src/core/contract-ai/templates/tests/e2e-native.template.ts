@@ -54,11 +54,7 @@ async function runE2ETests(): Promise<void> {
     const res = await fetch(\`\${BASE_URL}\${API_PATH}\`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        name: 'E2E Test {{ENTITY}}',
-        title: 'E2E Test {{ENTITY}}',
-        description: 'Created by E2E test'
-      })
+      body: JSON.stringify({{TEST_PAYLOAD}})
     });
     if (!res.ok) {
       const text = await res.text().catch(() => '');
@@ -87,11 +83,7 @@ async function runE2ETests(): Promise<void> {
     const res = await fetch(\`\${BASE_URL}\${API_PATH}/\${createdId}\`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        name: 'Updated {{ENTITY}}',
-        title: 'Updated {{ENTITY}}',
-        description: 'Updated by E2E test'
-      })
+      body: JSON.stringify({{UPDATE_PAYLOAD}})
     });
     if (res.status !== 200 && res.status !== 404) throw new Error(\`Status: \${res.status}\`);
   });

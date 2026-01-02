@@ -295,12 +295,70 @@ app.listen(PORT, () => console.log(\`Server on port \${PORT}\`));
   /**
    * Generate E2E tests using template
    */
-  static generateE2ETests(port: number, entityName: string, basePath: string): string {
+  static generateE2ETests(port: number, entityName: string, basePath: string, entityFields?: any[]): string {
+    const testPayload = this.generateTestPayload(entityName, entityFields);
+    const updatePayload = this.generateUpdatePayload(entityName, entityFields);
+    
     return e2eTestsTemplate
       .replace(/\{\{PORT\}\}/g, String(port))
       .replace(/\{\{ENTITY\}\}/g, entityName)
       .replace(/\{\{PLURAL\}\}/g, entityName.toLowerCase() + 's')
-      .replace(/\{\{BASE_PATH\}\}/g, basePath);
+      .replace(/\{\{BASE_PATH\}\}/g, basePath)
+      .replace(/\{\{TEST_PAYLOAD\}\}/g, testPayload)
+      .replace(/\{\{UPDATE_PAYLOAD\}\}/g, updatePayload);
+  }
+
+  /**
+   * Generate test payload based on entity fields
+   */
+  private static generateTestPayload(entityName: string, fields?: any[]): string {
+    // Domain-specific test data
+    const domainPayloads: Record<string, object> = {
+      'Ticket': { subject: 'Test Ticket', description: 'E2E test', status: 'open', priority: 'medium', customerEmail: 'test@example.com' },
+      'Task': { title: 'Test Task', description: 'E2E test', status: 'todo', priority: 'medium', dueDate: new Date().toISOString() },
+      'Todo': { title: 'Test Todo', completed: false },
+      'Note': { title: 'Test Note', content: 'E2E test content' },
+      'Post': { title: 'Test Post', content: 'E2E test content', published: false },
+      'Product': { name: 'Test Product', description: 'E2E test', price: 99.99, sku: 'TEST-001', quantity: 10 },
+      'Order': { orderNumber: 'ORD-001', status: 'pending', total: 99.99 },
+      'Invoice': { invoiceNumber: 'INV-001', amount: 100.00, status: 'draft', dueDate: new Date().toISOString() },
+      'Customer': { name: 'Test Customer', email: 'test@example.com', phone: '123-456-7890' },
+      'Employee': { name: 'Test Employee', email: 'employee@example.com', department: 'IT' },
+      'Booking': { guestName: 'Test Guest', guestEmail: 'guest@example.com', checkIn: new Date().toISOString(), checkOut: new Date().toISOString(), status: 'pending' },
+      'Event': { title: 'Test Event', description: 'E2E test', startDate: new Date().toISOString(), location: 'Test Location' },
+      'Contact': { firstName: 'Test', lastName: 'Contact', email: 'contact@example.com', phone: '123-456-7890' },
+      'Comment': { content: 'Test comment', authorName: 'Test Author' },
+      'Category': { name: 'Test Category', description: 'E2E test' }
+    };
+
+    const payload = domainPayloads[entityName] || { name: `Test ${entityName}`, description: 'E2E test' };
+    return JSON.stringify(payload);
+  }
+
+  /**
+   * Generate update payload based on entity fields
+   */
+  private static generateUpdatePayload(entityName: string, fields?: any[]): string {
+    const domainPayloads: Record<string, object> = {
+      'Ticket': { subject: 'Updated Ticket', description: 'Updated', status: 'in_progress', priority: 'high', customerEmail: 'updated@example.com' },
+      'Task': { title: 'Updated Task', description: 'Updated', status: 'in_progress', priority: 'high', dueDate: new Date().toISOString() },
+      'Todo': { title: 'Updated Todo', completed: true },
+      'Note': { title: 'Updated Note', content: 'Updated content' },
+      'Post': { title: 'Updated Post', content: 'Updated content', published: true },
+      'Product': { name: 'Updated Product', description: 'Updated', price: 149.99, sku: 'TEST-002', quantity: 5 },
+      'Order': { orderNumber: 'ORD-001', status: 'confirmed', total: 149.99 },
+      'Invoice': { invoiceNumber: 'INV-001', amount: 150.00, status: 'sent', dueDate: new Date().toISOString() },
+      'Customer': { name: 'Updated Customer', email: 'updated@example.com', phone: '987-654-3210' },
+      'Employee': { name: 'Updated Employee', email: 'updated@example.com', department: 'HR' },
+      'Booking': { guestName: 'Updated Guest', status: 'confirmed' },
+      'Event': { title: 'Updated Event', description: 'Updated', location: 'Updated Location' },
+      'Contact': { firstName: 'Updated', lastName: 'Contact', email: 'updated@example.com' },
+      'Comment': { content: 'Updated comment', authorName: 'Updated Author' },
+      'Category': { name: 'Updated Category', description: 'Updated' }
+    };
+
+    const payload = domainPayloads[entityName] || { name: `Updated ${entityName}`, description: 'Updated' };
+    return JSON.stringify(payload);
   }
 
   /**

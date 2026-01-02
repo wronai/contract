@@ -1,4 +1,7 @@
 test-verify/
+output_p3_verify2/
+output_*/
+output_p3_*/
 output/
 test-todo-prompt
 test-lifecycle
