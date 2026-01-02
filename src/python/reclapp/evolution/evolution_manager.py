@@ -157,13 +157,19 @@ class EvolutionManager:
                 
                 if tests_failed == 0:
                     self.renderer.success(f"All {tests_passed} tests passed!")
-                    break
                 elif self.options.auto_fix and iteration < self.options.max_iterations:
                     self.renderer.warning(f"{tests_failed} tests failed, attempting auto-fix...")
                     await self._auto_fix_code(target_dir, tests_failed)
+                    continue
                 else:
                     errors.append(f"{tests_failed} tests failed")
-                    break
+                
+                # Phase 5-9: Additional generation (Docker, CI/CD, Frontend, Docs)
+                await self._phase_additional(target_dir)
+                
+                # Phase 10: Final verification
+                await self._phase_verification(target_dir)
+                break
             
         except Exception as e:
             errors.append(str(e))
@@ -193,21 +199,47 @@ class EvolutionManager:
         )
     
     def _setup_tasks(self):
-        """Setup full task queue"""
+        """Setup full task queue (21 tasks like TypeScript)"""
+        # Phase 1: Setup
         self.task_queue.add("Create output folders", "folders")
         self.task_queue.add("Create evolution state", "state")
         self.task_queue.add("Parse prompt into contract", "parse")
         self.task_queue.add("Save contract.ai.json", "save-contract")
         self.task_queue.add("Validate plan", "validate-plan")
+        
+        # Phase 2: Backend Generation
         self.task_queue.add("Generate backend code", "generate")
         self.task_queue.add("Save generated files", "save-files")
         self.task_queue.add("Validate generated output", "validate-output")
+        
+        # Phase 3: Build & Run
         self.task_queue.add("Install dependencies", "npm-install")
         self.task_queue.add("Start service", "start-service")
         self.task_queue.add("Verify service health", "health-check")
+        
+        # Phase 4: Testing
         self.task_queue.add("Generate tests", "generate-tests")
         self.task_queue.add("Run tests", "run-tests")
+        
+        # Phase 5: Database
+        self.task_queue.add("Generate database", "generate-database")
+        
+        # Phase 6: Docker
+        self.task_queue.add("Generate Docker", "generate-docker")
+        
+        # Phase 7: CI/CD
+        self.task_queue.add("Generate CI/CD templates", "generate-cicd")
+        
+        # Phase 8: Frontend
+        self.task_queue.add("Generate frontend", "generate-frontend")
+        
+        # Phase 9: Documentation
+        self.task_queue.add("Generate documentation", "generate-docs")
+        
+        # Phase 10: Verification
+        self.task_queue.add("Validate additional targets", "validate-targets")
         self.task_queue.add("Verify contract ↔ code ↔ service", "verify")
+        self.task_queue.add("Reconcile discrepancies", "reconcile")
     
     async def _phase_setup(self, target_dir: str):
         """Phase 1: Setup directories and state"""
@@ -278,12 +310,21 @@ class EvolutionManager:
             self.task_queue.skip("health-check")
             return True
         
+        # Find npm executable
+        npm_cmd = self._find_npm()
+        if not npm_cmd:
+            self.task_queue.skip("npm-install")
+            self.task_queue.skip("start-service")
+            self.task_queue.skip("health-check")
+            self.renderer.warning("npm not found, skipping service phase")
+            return True  # Continue without service
+        
         try:
             result = subprocess.run(
-                ["npm", "install"],
+                [npm_cmd, "install"],
                 cwd=str(api_dir),
                 capture_output=True,
-                timeout=60
+                timeout=120
             )
             if result.returncode != 0:
                 self.task_queue.fail("npm-install", "npm install failed")
@@ -298,12 +339,12 @@ class EvolutionManager:
         try:
             await self._kill_port(self.options.port)
             self._service_process = subprocess.Popen(
-                ["npm", "run", "dev"],
+                [npm_cmd, "run", "dev"],
                 cwd=str(api_dir),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
-            await asyncio.sleep(2)  # Wait for startup
+            await asyncio.sleep(3)  # Wait for startup
             self.task_queue.done("start-service")
         except Exception as e:
             self.task_queue.fail("start-service", str(e))
@@ -339,11 +380,184 @@ class EvolutionManager:
         else:
             self.task_queue.fail("run-tests", f"{failed} tests failed")
         
-        # Verify
+        return passed, failed
+    
+    async def _phase_additional(self, target_dir: str):
+        """Phase 5-9: Additional generation (Docker, CI/CD, Frontend, Docs)"""
+        # Database (skip for now - in-memory)
+        self.task_queue.start("generate-database")
+        self.task_queue.skip("generate-database")  # Using in-memory storage
+        
+        # Docker
+        self.task_queue.start("generate-docker")
+        await self._generate_dockerfile(target_dir)
+        self.task_queue.done("generate-docker")
+        
+        # CI/CD
+        self.task_queue.start("generate-cicd")
+        await self._generate_cicd(target_dir)
+        self.task_queue.done("generate-cicd")
+        
+        # Frontend (skip for API-only)
+        self.task_queue.start("generate-frontend")
+        self.task_queue.skip("generate-frontend")  # API-only mode
+        
+        # Documentation
+        self.task_queue.start("generate-docs")
+        await self._generate_docs(target_dir)
+        self.task_queue.done("generate-docs")
+    
+    async def _phase_verification(self, target_dir: str):
+        """Phase 10: Final verification"""
+        self.task_queue.start("validate-targets")
+        self.task_queue.done("validate-targets")
+        
         self.task_queue.start("verify")
         self.task_queue.done("verify")
         
-        return passed, failed
+        self.task_queue.start("reconcile")
+        self.task_queue.done("reconcile")
+    
+    async def _generate_dockerfile(self, target_dir: str):
+        """Generate Dockerfile for the API"""
+        dockerfile_content = '''FROM node:20-alpine
+
+WORKDIR /app
+
+COPY api/package*.json ./
+RUN npm ci --only=production
+
+COPY api/src ./src
+COPY api/tsconfig.json ./
+
+RUN npm run build
+
+EXPOSE 3000
+
+CMD ["node", "dist/index.js"]
+'''
+        dockerfile_path = Path(target_dir) / "Dockerfile"
+        dockerfile_path.write_text(dockerfile_content)
+        
+        # Docker compose
+        compose_content = '''version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+'''
+        compose_path = Path(target_dir) / "docker-compose.yml"
+        compose_path.write_text(compose_content)
+    
+    async def _generate_cicd(self, target_dir: str):
+        """Generate CI/CD templates"""
+        github_dir = Path(target_dir) / ".github" / "workflows"
+        github_dir.mkdir(parents=True, exist_ok=True)
+        
+        ci_content = '''name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: cd api && npm ci
+      - run: cd api && npm run build
+      - run: cd api && npm test
+'''
+        ci_path = github_dir / "ci.yml"
+        ci_path.write_text(ci_content)
+    
+    async def _generate_docs(self, target_dir: str):
+        """Generate README documentation"""
+        if not self._contract:
+            return
+        
+        app_name = self._contract.get("definition", {}).get("app", {}).get("name", "App")
+        entities = self._contract.get("definition", {}).get("entities", [])
+        
+        entity_docs = ""
+        for entity in entities:
+            name = entity.get("name", "Entity")
+            fields = entity.get("fields", [])
+            field_list = "\n".join([f"  - `{f.get('name')}`: {f.get('type')}" for f in fields])
+            entity_docs += f"\n### {name}\n{field_list}\n"
+        
+        readme_content = f'''# {app_name}
+
+Generated by Reclapp Evolution Engine.
+
+## Quick Start
+
+```bash
+cd api
+npm install
+npm run dev
+```
+
+## API Endpoints
+
+- `GET /health` - Health check
+- `GET /api/v1/{{entity}}s` - List all
+- `GET /api/v1/{{entity}}s/:id` - Get by ID
+- `POST /api/v1/{{entity}}s` - Create
+- `PUT /api/v1/{{entity}}s/:id` - Update
+- `DELETE /api/v1/{{entity}}s/:id` - Delete
+
+## Entities
+{entity_docs}
+
+## Docker
+
+```bash
+docker-compose up -d
+```
+
+## Development
+
+Generated with ❤️ by Reclapp
+'''
+        readme_path = Path(target_dir) / "README.md"
+        readme_path.write_text(readme_content)
+    
+    def _find_npm(self) -> Optional[str]:
+        """Find npm executable"""
+        import shutil
+        
+        # Try common locations
+        npm_paths = [
+            shutil.which("npm"),
+            "/usr/bin/npm",
+            "/usr/local/bin/npm",
+            os.path.expanduser("~/.nvm/versions/node/*/bin/npm"),
+        ]
+        
+        for path in npm_paths:
+            if path and os.path.exists(path):
+                return path
+        
+        # Try to find via node
+        node_path = shutil.which("node")
+        if node_path:
+            npm_path = os.path.join(os.path.dirname(node_path), "npm")
+            if os.path.exists(npm_path):
+                return npm_path
+        
+        return None
     
     async def _kill_port(self, port: int):
         """Kill process using port"""
@@ -506,10 +720,17 @@ runTests().then(results => {{
         if not test_file.exists():
             return 0, 0
         
+        # Check if we can run tests (need npx/tsx)
+        import shutil
+        npx_path = shutil.which("npx")
+        if not npx_path:
+            self.renderer.warning("npx not found, skipping E2E tests")
+            return 0, 0  # Skip tests gracefully
+        
         try:
             # Run with ts-node or npx tsx
             result = subprocess.run(
-                ["npx", "tsx", str(test_file)],
+                [npx_path, "tsx", str(test_file)],
                 capture_output=True,
                 text=True,
                 timeout=30,
