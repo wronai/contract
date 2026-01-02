@@ -41,11 +41,12 @@ class LLMManager:
             print(response.content)
     """
     
-    def __init__(self):
+    def __init__(self, verbose: bool = False):
         self._providers: dict[str, LLMProvider] = {}
         self._provider_info: dict[str, ProviderInfo] = {}
         self._primary_provider: Optional[str] = None
         self._initialized = False
+        self._verbose = verbose
     
     @property
     def is_available(self) -> bool:
