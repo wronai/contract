@@ -1,33 +1,12 @@
 #!/bin/bash
 # Auto-generated duplicate cleanup script
-# Generated: 2026-01-02T22:33:17.467670
+# Generated: 2026-01-02T22:34:10.721879
 # Review before running!
 
 set -e
 cd "$(dirname "$0")/.."
 
 # === PIP Package Copies (safe to remove - will be re-copied) ===
-# rm -f "reclapp/generator/code_generator.py"  # duplicate of src/python/reclapp/generator/code_generator.py
-# rm -f "reclapp/generator/__init__.py"  # duplicate of src/python/reclapp/generator/__init__.py
-# rm -f "reclapp/generator/contract_generator.py"  # duplicate of src/python/reclapp/generator/contract_generator.py
-# rm -f "reclapp/generator/prompt_builder.py"  # duplicate of src/python/reclapp/generator/prompt_builder.py
-# rm -f "reclapp/models/contract.py"  # duplicate of src/python/reclapp/models/contract.py
-# rm -f "reclapp/models/__init__.py"  # duplicate of src/python/reclapp/models/__init__.py
-# rm -f "reclapp/models/validation.py"  # duplicate of src/python/reclapp/models/validation.py
-# rm -f "reclapp/models/generation.py"  # duplicate of src/python/reclapp/models/generation.py
-# rm -f "reclapp/models/definition.py"  # duplicate of src/python/reclapp/models/definition.py
-# rm -f "reclapp/llm/manager.py"  # duplicate of src/python/reclapp/llm/manager.py
-# rm -f "reclapp/llm/ollama.py"  # duplicate of src/python/reclapp/llm/ollama.py
-# rm -f "reclapp/llm/__init__.py"  # duplicate of src/python/reclapp/llm/__init__.py
-# rm -f "reclapp/llm/provider.py"  # duplicate of src/python/reclapp/llm/provider.py
-# rm -f "reclapp/parser/__init__.py"  # duplicate of src/python/reclapp/parser/__init__.py
-# rm -f "reclapp/parser/markdown_parser.py"  # duplicate of src/python/reclapp/parser/markdown_parser.py
-# rm -f "reclapp/evolution/shell_renderer.py"  # duplicate of src/python/reclapp/evolution/shell_renderer.py
-# rm -f "reclapp/evolution/__init__.py"  # duplicate of src/python/reclapp/evolution/__init__.py
-# rm -f "reclapp/evolution/task_queue.py"  # duplicate of src/python/reclapp/evolution/task_queue.py
-# rm -f "reclapp/validation/stages.py"  # duplicate of src/python/reclapp/validation/stages.py
-# rm -f "reclapp/validation/__init__.py"  # duplicate of src/python/reclapp/validation/__init__.py
-# rm -f "reclapp/validation/pipeline.py"  # duplicate of src/python/reclapp/validation/pipeline.py
 
 # === Example/Target Duplicates (review carefully) ===
 # rm -f "examples/monitoring/target/frontend/tsconfig.json"  # duplicate of examples/e-commerce/target/frontend/tsconfig.json
