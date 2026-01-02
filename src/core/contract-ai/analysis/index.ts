@@ -18,3 +18,12 @@ export type {
   RefactoringType,
   RefactoringContract
 } from './refactoring-contract';
+
+export { ProjectStateGenerator } from './project-state';
+export type {
+  ProjectState,
+  ModuleInfo,
+  EntityInfo,
+  EndpointInfo,
+  HotspotInfo
+} from './project-state';

@@ -451,11 +451,102 @@ See [DSL TypeScript Reference](./dsl-typescript-reference.md) for complete docum
 
 ---
 
+---
+
+## Code Analysis & Refactoring (NEW in 2.4)
+
+### `reclapp analyze`
+
+Analyze existing codebase for metrics, complexity, and refactoring opportunities.
+
+```bash
+reclapp analyze <directory> [options]
+
+# Options:
+#   --json      Output as JSON
+#   --contract  Output as contract format
+```
+
+**What it does:**
+1. Scans source files (TypeScript, JavaScript, Python, C#, Java, Go, C++)
+2. Extracts functions, classes, imports
+3. Calculates metrics (LOC, cyclomatic complexity, parameters)
+4. Identifies refactoring opportunities
+5. Generates analysis report
+
+**Example:**
+```bash
+./bin/reclapp analyze ./src/core
+./bin/reclapp analyze ./my-project --json
+```
+
+---
+
+### `reclapp refactor`
+
+Clone repository (if URL) and generate refactoring contract.
+
+```bash
+reclapp refactor <git-url|directory> [options]
+
+# Options:
+#   -o, --output  Output directory for cloned repos
+```
+
+**What it does:**
+1. Clones repository (if GitHub URL)
+2. Analyzes codebase
+3. Generates refactoring contract:
+   - `refactoring_contract.json` (machine-readable)
+   - `analysis_report.md` (human-readable)
+   - `todo_list.md` (actionable tasks)
+
+**Example:**
+```bash
+./bin/reclapp refactor https://github.com/expressjs/express
+./bin/reclapp refactor ./my-legacy-project
+```
+
+---
+
+### `reclapp evolve`
+
+Evolution mode - generate full application from prompt with auto-healing.
+
+```bash
+reclapp evolve --prompt "..." [options]
+
+# Options:
+#   -p, --prompt   Natural language description
+#   -o, --output   Output directory (default: ./output)
+#   -k, --keep     Keep running (watch mode)
+#   -v, --verbose  Verbose output
+```
+
+**What it does:**
+1. Parses prompt into contract
+2. Generates API (Express.js + TypeScript)
+3. Generates tests (E2E with native fetch)
+4. Generates frontend (React + Vite) - optional
+5. Generates CI/CD (GitHub Actions) - optional
+6. Generates Docker (Dockerfile + compose) - optional
+7. Runs tests and validates
+
+**Example:**
+```bash
+./bin/reclapp evolve -p "Create a todo app" -o ./output
+./bin/reclapp evolve -p "Create a blog with cicd and docker" -o ./output
+./bin/reclapp evolve -p "Create an inventory app" -o ./output -k
+```
+
+---
+
 ## Related Documentation
 
 - [Generator Architecture](./generator-architecture.md) - How code generation works
 - [DSL TypeScript Reference](./dsl-typescript-reference.md) - Contract format
 - [DSL Reference](./dsl-reference.md) - DSL syntax
+- [Evolution System](./30-evolution-system.md) - Evolution pipeline details
 
 ---
 

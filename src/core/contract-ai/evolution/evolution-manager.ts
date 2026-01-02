@@ -12,6 +12,7 @@ import { LLMClient, ContractGenerator } from '../generator/contract-generator';
 import { spawn, ChildProcess, execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as net from 'net';
 import { ShellRenderer } from './shell-renderer';
 import { CodeRAG, CodeChunk, SearchResult } from './code-rag';
 import { TemplateRAG, Template } from '../templates';
@@ -110,6 +111,7 @@ export class EvolutionManager {
   private llmClient: LLMClient | null = null;
   private contract: ContractAI | null = null;
   private serviceProcess: ChildProcess | null = null;
+  private lastServiceExit: { code: number | null; signal: NodeJS.Signals | null } | null = null;
   private evolutionHistory: EvolutionCycle[] = [];
   private serviceLogs: LogEntry[] = [];
   private healthCheckTimer: NodeJS.Timeout | null = null;
@@ -2892,10 +2894,49 @@ MIT
   private createMinimalContract(prompt: string): ContractAI {
     // Extract entity names from prompt using multiple patterns
     const entities = this.extractEntitiesFromPrompt(prompt);
+    const lower = prompt.toLowerCase();
     
     // Get app name from prompt
     const appNameMatch = prompt.match(/(?:create|build|make)\s+(?:a|an)?\s*(\w+(?:\s+\w+)?)\s+(?:app|application|system|service|api)/i);
     const appName = appNameMatch ? this.capitalize(appNameMatch[1]) + ' App' : 'Generated App';
+
+    const wantsPostgres = lower.includes('postgres') || lower.includes('postgresql');
+    const wantsMysql = lower.includes('mysql');
+    const wantsSqlite = lower.includes('sqlite');
+    const wantsMongo = lower.includes('mongodb') || lower.includes('mongo');
+    const wantsDocker = lower.includes('docker') || lower.includes('docker compose') || lower.includes('docker-compose');
+    const wantsCicd =
+      lower.includes('cicd') ||
+      lower.includes('ci/cd') ||
+      lower.includes('github actions') ||
+      lower.includes('github workflow') ||
+      (lower.includes('ci') && lower.includes('github'));
+
+    const dbType = wantsPostgres
+      ? 'postgresql'
+      : wantsMysql
+        ? 'mysql'
+        : wantsSqlite
+          ? 'sqlite'
+          : wantsMongo
+            ? 'mongodb'
+            : 'in-memory';
+
+    const instructions: any[] = [
+      { target: 'api', priority: 'must', content: `Generate REST API for: ${prompt}` },
+      { target: 'tests', priority: 'must', content: 'Generate comprehensive API tests' },
+      { target: 'frontend', priority: 'must', content: 'Generate React frontend with Tailwind CSS' }
+    ];
+
+    if (dbType !== 'in-memory') {
+      instructions.push({ target: 'database', priority: 'should', content: `Generate database artifacts (migrations + env) for ${dbType}` });
+    }
+    if (wantsDocker) {
+      instructions.push({ target: 'docker', priority: 'should', content: 'Generate Dockerfiles and docker-compose.yml for API (and frontend if present)' });
+    }
+    if (wantsCicd) {
+      instructions.push({ target: 'cicd', priority: 'should', content: 'Generate CI workflow (GitHub Actions) for API (and frontend if present)' });
+    }
 
     return {
       definition: {
@@ -2917,17 +2958,13 @@ MIT
         }
       },
       generation: {
-        instructions: [
-          { target: 'api', priority: 'must', content: `Generate REST API for: ${prompt}` },
-          { target: 'tests', priority: 'must', content: 'Generate comprehensive API tests' },
-          { target: 'frontend', priority: 'must', content: 'Generate React frontend with Tailwind CSS' }
-        ],
+        instructions,
         patterns: [],
         constraints: [],
         techStack: {
           backend: { framework: 'express', language: 'typescript', runtime: 'node' },
           frontend: { framework: 'react', language: 'typescript', styling: 'tailwind' },
-          database: { type: 'memory', name: 'in-memory' }
+          database: { type: dbType }
         }
       },
       validation: {
@@ -3296,8 +3333,29 @@ MIT
       console.log(`\n🚀 Starting service on port ${this.options.port}...`);
     }
 
-    // Kill any existing process on the port first
-    await this.killProcessOnPort(this.options.port);
+    this.lastServiceExit = null;
+
+    // If port is busy, try to free it, otherwise fall back to a free port.
+    const initialPort = this.options.port;
+    if (!(await this.isPortAvailable(initialPort))) {
+      if (this.options.verbose) {
+        this.renderer.codeblock('yaml', `# @type: port_conflict\nport: ${initialPort}\naction: "attempt_kill_then_find_free_port"`);
+      }
+
+      await this.killProcessOnPort(initialPort);
+
+      if (!(await this.isPortAvailable(initialPort))) {
+        const next = await this.findAvailablePort(initialPort + 1, 25);
+        if (next !== null) {
+          if (this.options.verbose) {
+            this.renderer.codeblock('yaml', `# @type: port_changed\nfrom: ${initialPort}\nto: ${next}`);
+          }
+          this.options.port = next;
+        } else {
+          throw new Error(`EADDRINUSE: port ${initialPort} is busy and no free port was found`);
+        }
+      }
+    }
 
     const env = this.getNodeEnv();
     env.PORT = String(this.options.port);
@@ -3326,6 +3384,8 @@ MIT
     });
 
     this.serviceProcess.on('exit', (code, signal) => {
+      this.lastServiceExit = { code, signal };
+      this.serviceProcess = null;
       if (this.options.verbose) {
         if (signal) {
           console.log(`   Service stopped (signal: ${signal}) - graceful shutdown`);
@@ -3429,6 +3489,9 @@ MIT
    */
   private async waitForHealth(maxAttempts = 30): Promise<boolean> {
     for (let i = 0; i < maxAttempts; i++) {
+      if (!this.serviceProcess) {
+        return false;
+      }
       const ok = await this.checkHealth();
       if (ok) {
         if (this.options.verbose) {
@@ -3497,6 +3560,7 @@ MIT
    * Checks service health
    */
   async checkHealth(): Promise<boolean> {
+    if (!this.serviceProcess) return false;
     const attempts = Number(process.env.RECLAPP_HEALTH_RETRY_ATTEMPTS || 3);
     const delayMs = Number(process.env.RECLAPP_HEALTH_RETRY_DELAY_MS || 250);
     try {
@@ -3515,6 +3579,25 @@ MIT
     } catch {
       return false;
     }
+  }
+
+  private async isPortAvailable(port: number): Promise<boolean> {
+    return new Promise((resolve) => {
+      const srv = net.createServer();
+      srv.once('error', () => resolve(false));
+      srv.once('listening', () => {
+        srv.close(() => resolve(true));
+      });
+      srv.listen(port, '0.0.0.0');
+    });
+  }
+
+  private async findAvailablePort(startPort: number, tries: number): Promise<number | null> {
+    const max = Math.max(1, tries);
+    for (let p = startPort; p < startPort + max; p++) {
+      if (await this.isPortAvailable(p)) return p;
+    }
+    return null;
   }
 
   /**

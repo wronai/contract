@@ -1314,9 +1314,14 @@ async function cmdRefactor(args, options) {
   try {
     const { CodeAnalyzer } = require('../src/core/contract-ai/analysis/code-analyzer');
     const { RefactoringContractGenerator } = require('../src/core/contract-ai/analysis/refactoring-contract');
+    const { ProjectStateGenerator } = require('../src/core/contract-ai/analysis/project-state');
     
     const analyzer = new CodeAnalyzer(workDir);
     const report = await analyzer.analyze();
+
+    // Generate project state (source of knowledge about current state)
+    const stateGen = new ProjectStateGenerator(report, workDir);
+    const projectState = stateGen.generate();
 
     // Generate refactoring contract
     const contractGen = new RefactoringContractGenerator(report, repoUrl);
@@ -1344,12 +1349,26 @@ async function cmdRefactor(args, options) {
     const analysisPath = path.join(contractDir, 'code_analysis.md');
     fs.writeFileSync(analysisPath, analyzer.toMarkdown(report), 'utf-8');
 
+    // 5. Project state (source of knowledge about current state)
+    const stateDir = path.join(workDir, 'state');
+    if (!fs.existsSync(stateDir)) {
+      fs.mkdirSync(stateDir, { recursive: true });
+    }
+    const statePath = path.join(stateDir, 'project-state.json');
+    fs.writeFileSync(statePath, JSON.stringify(projectState, null, 2), 'utf-8');
+
+    // 6. LLM summary (for small context windows)
+    const summaryPath = path.join(stateDir, 'llm-summary.md');
+    fs.writeFileSync(summaryPath, stateGen.toLLMSummary(), 'utf-8');
+
     console.log('\n✅ Refactoring contract generated!\n');
     console.log('Output files:');
     console.log(`  - ${jsonPath}`);
     console.log(`  - ${mdPath}`);
     console.log(`  - ${todoPath}`);
     console.log(`  - ${analysisPath}`);
+    console.log(`  - ${statePath} (project state)`);
+    console.log(`  - ${summaryPath} (LLM summary)`);
 
     console.log('\n## Summary\n');
     console.log(`Files: ${report.summary.totalFiles}`);
@@ -1540,9 +1559,21 @@ async function cmdEvolution(args, options) {
     if (prompt) {
       console.log(`💬 Starting iterative evolution from prompt: "${prompt}"\n`);
       await evolutionManager.evolveIteratively(prompt, 5);
+      try {
+        const st = evolutionManager.getStatus();
+        if (st && typeof st.port === 'number') {
+          port = st.port;
+        }
+      } catch (e) {}
     } else {
       const contract = require(path.resolve(contractPath)).default || require(path.resolve(contractPath));
       await evolutionManager.start(contract);
+      try {
+        const st = evolutionManager.getStatus();
+        if (st && typeof st.port === 'number') {
+          port = st.port;
+        }
+      } catch (e) {}
     }
 
     if (keepRunning) {

@@ -20,6 +20,7 @@ export type GenerationTarget =
   | 'database'
   | 'tests'
   | 'docker'
+  | 'cicd'
   | 'all';
 
 /**

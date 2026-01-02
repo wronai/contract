@@ -25,6 +25,10 @@ export interface FunctionInfo {
   isExported: boolean;
   complexity: number;
   calls: string[];
+  // Call graph metrics
+  fanIn?: number;   // How many functions call this one
+  fanOut?: number;  // How many functions this calls
+  couplingScore?: number;  // fanIn * fanOut (high = central/risky)
 }
 
 export interface FileInfo {
@@ -96,6 +100,9 @@ export class CodeAnalyzer {
         callGraph.set(key, fn.calls);
       }
     }
+
+    // Calculate call graph metrics (fanIn, fanOut)
+    this.calculateCallGraphMetrics(allFunctions, callGraph);
 
     // Find duplicates
     const duplicates = this.findDuplicates(allFunctions);
@@ -528,6 +535,38 @@ export class CodeAnalyzer {
     }
     
     return calls;
+  }
+
+  /**
+   * Calculate call graph metrics (fanIn, fanOut, couplingScore)
+   */
+  private calculateCallGraphMetrics(functions: FunctionInfo[], callGraph: Map<string, string[]>): void {
+    // Build function name -> FunctionInfo map
+    const fnByName = new Map<string, FunctionInfo[]>();
+    for (const fn of functions) {
+      if (!fnByName.has(fn.name)) {
+        fnByName.set(fn.name, []);
+      }
+      fnByName.get(fn.name)!.push(fn);
+    }
+
+    // Calculate fanOut (how many functions this calls)
+    for (const fn of functions) {
+      fn.fanOut = fn.calls.filter(c => fnByName.has(c)).length;
+    }
+
+    // Calculate fanIn (how many functions call this one)
+    const incomingCalls = new Map<string, number>();
+    for (const fn of functions) {
+      for (const call of fn.calls) {
+        incomingCalls.set(call, (incomingCalls.get(call) || 0) + 1);
+      }
+    }
+
+    for (const fn of functions) {
+      fn.fanIn = incomingCalls.get(fn.name) || 0;
+      fn.couplingScore = (fn.fanIn || 0) * (fn.fanOut || 0);
+    }
   }
 
   /**

@@ -56,6 +56,34 @@ reclapp prompts                      # Show example prompts
 reclapp validate                     # Validate Pydantic contracts
 ```
 
+### Code Analysis & Refactoring (NEW in 2.4)
+
+```bash
+# Analyze existing codebase
+./bin/reclapp analyze ./src
+
+# Refactor from GitHub (clone + analyze + generate contract)
+./bin/reclapp refactor https://github.com/user/repo
+
+# Refactor local directory
+./bin/reclapp refactor ./my-project
+
+# Output: refactoring_contract.json, analysis_report.md, todo_list.md
+```
+
+### Evolution Mode (NEW in 2.4)
+
+```bash
+# Generate full application from prompt
+./bin/reclapp evolve -p "Create a todo app" -o ./output
+
+# With CI/CD and Docker
+./bin/reclapp evolve -p "Create a blog with cicd and docker" -o ./output
+
+# Keep running (watch mode)
+./bin/reclapp evolve -p "Create an inventory app" -o ./output -k
+```
+
 ### Full Lifecycle (NEW in 2.3)
 
 ```bash
@@ -122,23 +150,24 @@ make test
 ```
 reclapp/
 ├── bin/                      # CLI Tools
-│   ├── reclapp               # Main Node.js CLI
-│   └── reclapp-full-lifecycle.sh  # Full lifecycle runner
-│
-├── reclapp/                  # Python CLI Package
-│   ├── __init__.py
-│   └── cli.py                # Click-based CLI
+│   └── reclapp               # Main Node.js CLI (analyze, refactor, evolve)
 │
 ├── src/core/contract-ai/     # Contract AI Core
+│   ├── analysis/             # Code analysis & refactoring
+│   │   ├── code-analyzer.ts  # Multi-language parser (9 languages)
+│   │   └── refactoring-contract.ts  # Contract generator
+│   ├── evolution/            # Evolution pipeline
+│   │   ├── evolution-manager.ts  # Main orchestrator
+│   │   ├── task-handlers.ts  # Task handlers
+│   │   └── llm-orchestrator.ts   # LLM integration
 │   ├── types/                # 3-Layer types
 │   ├── generator/            # Contract generator
-│   ├── code-generator/       # Code generator (LLM)
 │   └── validation/           # 8-stage validation pipeline
 │
 ├── examples/
+│   ├── prompts/              # Example prompts (10 files)
 │   ├── contract-ai/          # TypeScript contracts
-│   ├── pydantic-contracts/   # Python contracts
-│   └── full-lifecycle/       # Full lifecycle examples
+│   └── pydantic-contracts/   # Python contracts
 │
 ├── pyproject.toml            # Python package config
 ├── package.json              # Node.js dependencies

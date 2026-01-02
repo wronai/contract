@@ -30,11 +30,20 @@ export interface RefactoringIssue {
     complexity?: number;
     params?: number;
     nesting?: number;
+    fanIn?: number;
+    fanOut?: number;
+    couplingScore?: number;
   };
   severity: 'critical' | 'high' | 'medium' | 'low';
   effort: number; // days
   rationale: string;
   action: string;
+  // LLM-friendly context
+  llmContext?: {
+    focusArea: string;
+    suggestedSteps: string[];
+    testStrategy: string;
+  };
 }
 
 export type RefactoringType = 
@@ -149,6 +158,16 @@ export class RefactoringContractGenerator {
             params: fn.params.length
           }));
         }
+
+        // Check High Coupling (fanIn * fanOut > 20 = risky central function)
+        const coupling = (fn.fanIn || 0) * (fn.fanOut || 0);
+        if (coupling > 20) {
+          issues.push(this.createIssue(id++, file, fn, 'split_class', {
+            fanIn: fn.fanIn,
+            fanOut: fn.fanOut,
+            couplingScore: coupling
+          }));
+        }
       }
     }
 
@@ -172,6 +191,11 @@ export class RefactoringContractGenerator {
     const severity = this.determineSeverity(metrics);
     const effort = this.estimateEffort(type, metrics, severity);
 
+    // Add call graph metrics
+    metrics.fanIn = fn.fanIn;
+    metrics.fanOut = fn.fanOut;
+    metrics.couplingScore = fn.couplingScore;
+
     return {
       id,
       file: file.relativePath,
@@ -182,8 +206,77 @@ export class RefactoringContractGenerator {
       severity,
       effort,
       rationale: this.generateRationale(type, metrics),
-      action: this.getAction(type)
+      action: this.getAction(type),
+      llmContext: this.generateLLMContext(fn, type, metrics)
     };
+  }
+
+  /**
+   * Generate LLM-friendly context for refactoring
+   */
+  private generateLLMContext(
+    fn: FunctionInfo,
+    type: RefactoringType,
+    metrics: RefactoringIssue['metrics']
+  ): RefactoringIssue['llmContext'] {
+    const steps: string[] = [];
+    let focusArea = '';
+    let testStrategy = '';
+
+    switch (type) {
+      case 'extract_method':
+        focusArea = `Function ${fn.name} has ${metrics.loc} lines. Identify cohesive blocks that can be extracted.`;
+        steps.push('1. Identify repeated or cohesive code blocks');
+        steps.push('2. Extract each block to a new private method');
+        steps.push('3. Give extracted methods descriptive names');
+        steps.push('4. Replace original code with method calls');
+        testStrategy = 'Write unit tests for extracted methods before extraction';
+        break;
+
+      case 'simplify_conditional':
+        focusArea = `Function ${fn.name} has complexity ${metrics.complexity}. Reduce branching.`;
+        steps.push('1. Use guard clauses for early returns');
+        steps.push('2. Extract complex conditions to named boolean methods');
+        steps.push('3. Consider strategy/state pattern for switch statements');
+        steps.push('4. Flatten nested if-else chains');
+        testStrategy = 'Add test cases for each conditional branch before refactoring';
+        break;
+
+      case 'introduce_parameter_object':
+        focusArea = `Function ${fn.name} has ${metrics.params} parameters. Group related params.`;
+        steps.push('1. Identify parameters that belong together');
+        steps.push('2. Create interface/type for parameter group');
+        steps.push('3. Update function signature');
+        steps.push('4. Update all call sites');
+        testStrategy = 'Ensure existing tests cover parameter combinations';
+        break;
+
+      case 'reduce_nesting':
+        focusArea = `Function ${fn.name} has deep nesting. Flatten structure.`;
+        steps.push('1. Invert conditions and use early returns');
+        steps.push('2. Extract nested blocks to separate methods');
+        steps.push('3. Use guard clauses at function start');
+        testStrategy = 'Test edge cases that trigger deep nesting paths';
+        break;
+
+      case 'split_class':
+        focusArea = `Function ${fn.name} has high coupling (fanIn=${metrics.fanIn}, fanOut=${metrics.fanOut}). Central hub - risky to change.`;
+        steps.push('1. Identify distinct responsibilities in this function');
+        steps.push('2. Create separate modules/classes for each responsibility');
+        steps.push('3. Use dependency injection to reduce coupling');
+        steps.push('4. Apply facade pattern if function coordinates many operations');
+        testStrategy = 'Integration tests critical - function touches many parts of system';
+        break;
+
+      default:
+        focusArea = `Refactor ${fn.name} to improve maintainability`;
+        steps.push('1. Analyze current structure');
+        steps.push('2. Apply appropriate refactoring pattern');
+        steps.push('3. Verify tests pass');
+        testStrategy = 'Ensure test coverage before changes';
+    }
+
+    return { focusArea, suggestedSteps: steps, testStrategy };
   }
 
   /**
