@@ -326,6 +326,8 @@ export class EvolutionManager {
    * Run multi-level state analysis to detect discrepancies
    */
   async analyzeState(): Promise<MultiLevelState> {
+    // Ensure analyzer uses the latest selected port
+    this.stateAnalyzer.setPort(this.options.port);
     const state = await this.stateAnalyzer.analyze();
     
     if (this.options.verbose) {
@@ -343,6 +345,7 @@ export class EvolutionManager {
         `    detected_endpoints: ${state.sourceCode.detectedEndpoints.length}`,
         `    detected_entities: [${state.sourceCode.detectedEntities.join(', ')}]`,
         '  service:',
+        `    port: ${state.service.port ?? this.options.port}`,
         `    running: ${state.service.running}`,
         `    health: ${state.service.healthEndpoint}`,
         '  logs:',
@@ -352,6 +355,69 @@ export class EvolutionManager {
         `    reconciled: ${state.reconciled}`,
         `    discrepancies: ${state.discrepancies.length}`
       ].join('\n'));
+
+      const errCount = state.discrepancies.filter(d => d.severity === 'error').length;
+      const warnCount = state.discrepancies.filter(d => d.severity === 'warning').length;
+      const probes = (state.service as any).probes || [];
+      const probesOk = probes.filter((p: any) => p && p.ok).length;
+      const probesFail = probes.filter((p: any) => p && !p.ok).length;
+      const lastLogError = state.logs.errors.length > 0 ? state.logs.errors[state.logs.errors.length - 1] : '';
+
+      this.renderer.codeblock('yaml', [
+        '# @type: decision_trace',
+        'decision:',
+        `  service_port: ${state.service.port ?? this.options.port}`,
+        `  service_running: ${state.service.running}`,
+        `  health_ok: ${state.service.healthEndpoint}`,
+        `  probes_total: ${probes.length}`,
+        `  probes_ok: ${probesOk}`,
+        `  probes_failed: ${probesFail}`,
+        `  discrepancies_total: ${state.discrepancies.length}`,
+        `  discrepancies_errors: ${errCount}`,
+        `  discrepancies_warnings: ${warnCount}`,
+        `  logs_errors: ${state.logs.errors.length}`,
+        `  logs_last_error: ${JSON.stringify(lastLogError).substring(0, 220)}`
+      ].join('\n'));
+
+      if (probes.length > 0) {
+        const sample = probes.slice(0, 12).map((p: any) => {
+          const base = [`  - endpoint: ${JSON.stringify(String(p.endpoint || ''))}`];
+          base.push(`    ok: ${Boolean(p.ok)}`);
+          if (typeof p.status === 'number') base.push(`    status: ${p.status}`);
+          if (p.error) base.push(`    error: ${JSON.stringify(String(p.error)).substring(0, 220)}`);
+          return base.join('\n');
+        });
+        this.renderer.codeblock('yaml', [
+          '# @type: service_probes',
+          `port: ${state.service.port ?? this.options.port}`,
+          `count: ${probes.length}`,
+          'probes:',
+          ...sample
+        ].join('\n'));
+      }
+
+      try {
+        const statePath = path.join(this.options.outputDir, 'state', 'evolution-state.json');
+        if (fs.existsSync(statePath)) {
+          const snap = JSON.parse(fs.readFileSync(statePath, 'utf-8'));
+          const tasks = Array.isArray(snap.tasks) ? snap.tasks : [];
+          const done = tasks.filter((t: any) => t && t.status === 'done').length;
+          const pending = tasks.filter((t: any) => t && t.status === 'pending').length;
+          const failed = tasks.filter((t: any) => t && t.status === 'failed').length;
+          this.renderer.codeblock('yaml', [
+            '# @type: state_snapshot',
+            `file: ${JSON.stringify(statePath)}`,
+            `timestamp: ${JSON.stringify(String(snap.timestamp || ''))}`,
+            'tasks:',
+            `  done: ${done}`,
+            `  pending: ${pending}`,
+            `  failed: ${failed}`,
+            'service:',
+            `  port: ${Number((snap.service || {}).port || 0) || this.options.port}`,
+            `  outputDir: ${JSON.stringify(String((snap.service || {}).outputDir || this.options.outputDir))}`
+          ].join('\n'));
+        }
+      } catch {}
 
       if (state.discrepancies.length > 0) {
         this.renderer.codeblock('yaml', [
@@ -707,6 +773,9 @@ export class EvolutionManager {
 
     const outPath = path.join(stateDir, 'evolution-state.json');
     fs.writeFileSync(outPath, JSON.stringify(state, null, 2), 'utf-8');
+
+    const todoPath = path.join(stateDir, 'todo.json');
+    fs.writeFileSync(todoPath, JSON.stringify(state.tasks, null, 2), 'utf-8');
 
     // Only log state snapshot every 5 seconds or on force (to reduce noise)
     const now = Date.now();
@@ -3688,6 +3757,7 @@ MIT
             this.renderer.codeblock('yaml', `# @type: port_changed\nfrom: ${initialPort}\nto: ${next}`);
           }
           this.options.port = next;
+          this.stateAnalyzer.setPort(next);
         } else {
           throw new Error(`EADDRINUSE: port ${initialPort} is busy and no free port was found`);
         }

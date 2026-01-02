@@ -222,12 +222,12 @@ export const DEPENDENCIES: Dependency[] = [
     description: 'TypeScript compiler for type-safe development',
     priority: 'required',
     category: 'tool',
-    checkCommand: 'npx tsc --version',
+    checkCommand: 'tsc --version || npx tsc --version',
     versionCommand: 'npx tsc --version',
     website: 'https://typescriptlang.org',
     installGuide: {
       description: 'TypeScript is installed via npm',
-      linux: ['npm install -g typescript'],
+      linux: ['bash -c "source ~/.nvm/nvm.sh 2>/dev/null || true; npm install -g typescript"'],
       macos: ['npm install -g typescript'],
       windows: ['npm install -g typescript']
     }

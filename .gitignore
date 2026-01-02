@@ -3,6 +3,7 @@ output_p3_verify2/
 output_*/
 output_p3_*/
 output/
+setup/
 test-todo-prompt
 test-lifecycle
 test-lifecycle-*

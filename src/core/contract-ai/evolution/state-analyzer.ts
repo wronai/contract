@@ -35,9 +35,11 @@ export interface MultiLevelState {
     detectedEntities: string[];
   };
   service: {
+    port: number;
     running: boolean;
     healthEndpoint: boolean;
     respondingEndpoints: string[];
+    probes: Array<{ endpoint: string; ok: boolean; status?: number; error?: string }>;
   };
   logs: {
     errors: string[];
@@ -61,6 +63,10 @@ export class StateAnalyzer {
     this.port = port;
   }
 
+  setPort(port: number): void {
+    this.port = port;
+  }
+
   analyzeContract(): { entities: string[]; endpoints: string[]; targets: string[] } {
     const contractPath = path.join(this.outputDir, 'contract', 'contract.ai.json');
     if (!fs.existsSync(contractPath)) {
@@ -76,10 +82,30 @@ export class StateAnalyzer {
           .filter(t => t && t !== 'all')
       ));
       
-      const endpoints: string[] = ['/health'];
-      for (const entity of entities) {
-        const plural = entity.toLowerCase() + 's';
-        endpoints.push(`GET /${plural}`, `POST /${plural}`, `GET /${plural}/:id`, `PUT /${plural}/:id`, `DELETE /${plural}/:id`);
+      const apiPrefix = contract.definition?.api?.prefix || '/api/v1';
+      const resources: any[] = (contract.definition?.api as any)?.resources || [];
+
+      const endpoints: string[] = ['GET /health'];
+
+      for (const r of resources) {
+        const name = String(r?.name || '').trim();
+        if (!name) continue;
+        const base = `${apiPrefix}/${name}`.replace(/\/+/g, '/');
+        const ops: string[] = Array.isArray(r?.operations) ? r.operations : [];
+
+        if (ops.includes('list')) endpoints.push(`GET ${base}`);
+        if (ops.includes('create')) endpoints.push(`POST ${base}`);
+        if (ops.includes('get')) endpoints.push(`GET ${base}/:id`);
+        if (ops.includes('update')) endpoints.push(`PUT ${base}/:id`);
+        if (ops.includes('delete')) endpoints.push(`DELETE ${base}/:id`);
+
+        const custom: any[] = Array.isArray(r?.customEndpoints) ? r.customEndpoints : [];
+        for (const c of custom) {
+          const method = String(c?.method || 'GET').toUpperCase();
+          const rel = String(c?.path || '').startsWith('/') ? String(c?.path || '') : `/${String(c?.path || '')}`;
+          const full = `${base}${rel}`.replace(/\/+/g, '/');
+          endpoints.push(`${method} ${full}`);
+        }
       }
 
       return { entities, endpoints, targets };
@@ -146,30 +172,50 @@ export class StateAnalyzer {
     }
   }
 
-  async analyzeService(): Promise<{ running: boolean; healthEndpoint: boolean; respondingEndpoints: string[] }> {
-    const result = { running: false, healthEndpoint: false, respondingEndpoints: [] as string[] };
+  async analyzeService(endpointsToProbe: string[]): Promise<{ running: boolean; healthEndpoint: boolean; respondingEndpoints: string[]; probes: Array<{ endpoint: string; ok: boolean; status?: number; error?: string }>; port: number }> {
+    const result = { running: false, healthEndpoint: false, respondingEndpoints: [] as string[], probes: [] as Array<{ endpoint: string; ok: boolean; status?: number; error?: string }>, port: this.port };
 
+    const probe = async (endpoint: string, method: string, urlPath: string, timeoutMs: number): Promise<void> => {
+      try {
+        const res = await fetch(`http://localhost:${this.port}${urlPath}`, {
+          method,
+          signal: AbortSignal.timeout(timeoutMs)
+        });
+        const ok = res.ok;
+        result.probes.push({ endpoint, ok, status: res.status });
+        if (ok) result.respondingEndpoints.push(endpoint);
+      } catch (e: any) {
+        result.probes.push({ endpoint, ok: false, error: (e && e.message) ? String(e.message) : String(e) });
+      }
+    };
+
+    // Health probe defines "running" (server responded)
     try {
-      const healthRes = await fetch(`http://localhost:${this.port}/health`, { signal: AbortSignal.timeout(2000) });
+      const res = await fetch(`http://localhost:${this.port}/health`, { signal: AbortSignal.timeout(2000) });
       result.running = true;
-      result.healthEndpoint = healthRes.ok;
-    } catch {
+      result.healthEndpoint = res.ok;
+      result.probes.push({ endpoint: 'GET /health', ok: res.ok, status: res.status });
+      if (res.ok) result.respondingEndpoints.push('GET /health');
+    } catch (e: any) {
+      result.probes.push({ endpoint: 'GET /health', ok: false, error: (e && e.message) ? String(e.message) : String(e) });
       return result;
     }
 
-    const testEndpoints = ['/', '/api', '/todos', '/items', '/users'];
-    for (const endpoint of testEndpoints) {
-      try {
-        const res = await fetch(`http://localhost:${this.port}${endpoint}`, { 
-          method: 'GET',
-          signal: AbortSignal.timeout(1000) 
-        });
-        if (res.ok || res.status === 200 || res.status === 404) {
-          result.respondingEndpoints.push(`GET ${endpoint}`);
-        }
-      } catch {
-        // Endpoint not responding
-      }
+    const unique = Array.from(new Set(endpointsToProbe || []));
+    const candidates = unique
+      .map(s => String(s || '').trim())
+      .filter(s => s.includes(' '))
+      .slice(0, 20);
+
+    for (const ep of candidates) {
+      const [methodRaw, pathRaw] = ep.split(' ', 2);
+      const method = String(methodRaw || '').toUpperCase();
+      const urlPath = String(pathRaw || '').trim();
+      if (method !== 'GET') continue;
+      if (!urlPath.startsWith('/')) continue;
+      if (urlPath.includes(':')) continue;
+      if (urlPath === '/health') continue;
+      await probe(`GET ${urlPath}`, 'GET', urlPath, 1500);
     }
 
     return result;
@@ -186,23 +232,34 @@ export class StateAnalyzer {
     }
 
     try {
-      const logFiles = fs.readdirSync(logsDir).filter(f => f.endsWith('.log') || f.endsWith('.md'));
-      for (const file of logFiles.slice(-3)) {
+      const logFiles = fs.readdirSync(logsDir)
+        .filter(f => f.endsWith('.rcl.md') || f.endsWith('.log'))
+        .map(f => ({
+          file: f,
+          mtime: fs.statSync(path.join(logsDir, f)).mtimeMs
+        }))
+        .sort((a, b) => a.mtime - b.mtime)
+        .slice(-2)
+        .map(x => x.file);
+
+      for (const file of logFiles) {
         const content = fs.readFileSync(path.join(logsDir, file), 'utf-8');
-        
-        const errorMatches = content.matchAll(/(?:error|Error|ERROR)[:\s]+(.+?)(?:\n|$)/g);
-        for (const match of errorMatches) {
-          errors.push(match[1].substring(0, 100));
-        }
+        const tail = content.split('\n').slice(-250);
 
-        const warnMatches = content.matchAll(/(?:warn|Warning|WARN)[:\s]+(.+?)(?:\n|$)/g);
-        for (const match of warnMatches) {
-          warnings.push(match[1].substring(0, 100));
-        }
+        for (const line of tail) {
+          const t = (line || '').trim();
+          if (!t) continue;
+          if (t.startsWith('```')) continue;
+          if (t.startsWith('# @type')) continue;
+          if (t.includes('[error]') || t.startsWith('Error:') || t.includes('EADDRINUSE') || t.includes('TSError') || t.includes('Exception')) {
+            errors.push(t.substring(0, 160));
+          }
+          if (t.includes('[warn]') || t.startsWith('Warning:') || t.startsWith('WARN') || t.includes('Deprecation')) {
+            warnings.push(t.substring(0, 160));
+          }
 
-        const timeMatches = content.matchAll(/(\d{4}-\d{2}-\d{2}T[\d:]+)/g);
-        for (const match of timeMatches) {
-          lastActivity = match[1];
+          const m = t.match(/(\d{4}-\d{2}-\d{2}T[\d:]+)/);
+          if (m) lastActivity = m[1];
         }
       }
     } catch {
@@ -219,6 +276,11 @@ export class StateAnalyzer {
     logs: ReturnType<typeof this.analyzeLogs>
   ): StateDiscrepancy[] {
     const discrepancies: StateDiscrepancy[] = [];
+
+    const probeMap = new Map<string, { endpoint: string; ok: boolean; status?: number; error?: string }>();
+    for (const p of (service as any).probes || []) {
+      probeMap.set(String(p.endpoint), p);
+    }
 
     for (const entity of contract.entities) {
       const found = sourceCode.detectedEntities.some(e => 
@@ -254,21 +316,43 @@ export class StateAnalyzer {
     }
 
     if (service.running) {
-      for (const endpoint of sourceCode.detectedEndpoints.slice(0, 5)) {
-        const method = endpoint.split(' ')[0];
-        const path = endpoint.split(' ')[1];
-        if (method === 'GET' && path && !path.includes(':')) {
-          const found = service.respondingEndpoints.some(e => e.includes(path));
-          if (!found) {
-            discrepancies.push({
-              level: 'code-service',
-              severity: 'warning',
-              source: 'sourceCode.endpoints',
-              expected: `${endpoint} should respond`,
-              actual: 'Endpoint not responding or returning errors',
-              suggestion: 'Check if service started correctly and endpoint is registered'
-            });
-          }
+      // Health must respond if service is marked running
+      if (!service.healthEndpoint) {
+        const healthProbe = probeMap.get('GET /health');
+        discrepancies.push({
+          level: 'code-service',
+          severity: 'error',
+          source: 'service.health',
+          expected: 'GET /health should respond',
+          actual: healthProbe?.error ? `health probe error: ${healthProbe.error}` : `health status: ${healthProbe?.status ?? 'unknown'}`,
+          suggestion: 'Ensure the server registers /health and is listening on the configured port'
+        });
+      }
+
+      const expectedGets = contract.endpoints
+        .map(e => String(e || '').trim())
+        .filter(e => e.startsWith('GET '))
+        .filter(e => !e.includes(':id'))
+        .filter(e => e !== 'GET /health');
+
+      for (const ep of expectedGets.slice(0, 10)) {
+        // Only validate endpoints that exist in source code (avoid false positives from contract)
+        const existsInCode = sourceCode.detectedEndpoints.includes(ep);
+        if (!existsInCode) continue;
+
+        const probe = probeMap.get(ep);
+        if (!probe || !probe.ok) {
+          const actual = probe
+            ? (probe.error ? `probe error: ${probe.error}` : `status: ${probe.status ?? 'unknown'}`)
+            : 'not probed';
+          discrepancies.push({
+            level: 'code-service',
+            severity: 'warning',
+            source: 'service.probe',
+            expected: `${ep} should respond`,
+            actual,
+            suggestion: 'Check route registration, API prefix, and that the service is still running'
+          });
         }
       }
     } else {
@@ -283,13 +367,29 @@ export class StateAnalyzer {
     }
 
     if (logs.errors.length > 0) {
+      const criticalPatterns = [
+        'TSError',
+        'Unable to compile TypeScript',
+        'Cannot find module',
+        'Cannot find name',
+        'UnhandledPromiseRejection',
+        'ReferenceError',
+        'TypeError',
+        'SyntaxError',
+        'Exception'
+      ];
+      const critical = logs.errors.filter(e => criticalPatterns.some(p => String(e).includes(p)));
+      const severity: StateDiscrepancy['severity'] = critical.length > 0 ? 'error' : 'warning';
+      const sample = (critical.length > 0 ? critical : logs.errors)[(critical.length > 0 ? critical : logs.errors).length - 1];
       discrepancies.push({
         level: 'service-logs',
-        severity: 'error',
+        severity,
         source: 'logs.errors',
-        expected: 'No errors in logs',
-        actual: `${logs.errors.length} errors found: ${logs.errors[0]}`,
-        suggestion: 'Fix the errors shown in logs'
+        expected: severity === 'error' ? 'No critical errors in logs' : 'No recent warnings in logs',
+        actual: `${logs.errors.length} log issues detected. Example: ${String(sample || '').substring(0, 160)}`,
+        suggestion: severity === 'error'
+          ? 'Fix the critical errors shown in logs'
+          : 'Investigate warnings; if they are historical, clear logs or rotate to reduce noise'
       });
     }
 
@@ -299,7 +399,7 @@ export class StateAnalyzer {
   async analyze(): Promise<MultiLevelState> {
     const contract = this.analyzeContract();
     const sourceCode = this.analyzeSourceCode();
-    const service = await this.analyzeService();
+    const service = await this.analyzeService(sourceCode.detectedEndpoints);
     const logs = this.analyzeLogs();
     const discrepancies = this.findDiscrepancies(contract, sourceCode, service, logs);
 
