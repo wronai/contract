@@ -7,6 +7,7 @@
  */
 
 import { ContractAI } from '../types';
+import { getStageRequirements } from '../templates/contracts';
 
 // ============================================================================
 // TYPES
@@ -29,7 +30,8 @@ export class PromptBuilder {
    * Build system prompt for code generation
    */
   static buildSystemPrompt(): string {
-    return `You are an expert TypeScript developer. Generate a REST API.
+    const stage = getStageRequirements('api');
+    const base = `You are an expert TypeScript developer. Generate a REST API.
 
 RULES:
 1. Use ONLY these packages: express, cors (NO moment, NO uuid, NO other packages)
@@ -67,6 +69,7 @@ app.listen(PORT, () => console.log(\`Server on port \${PORT}\`));
 \`\`\`
 
 IMPORTANT: Copy package.json EXACTLY as shown above. Do NOT add moment, uuid, or any other packages.`;
+    return stage ? `${base}\n\n${stage}` : base;
   }
 
   /**
@@ -127,7 +130,8 @@ Generate the COMPLETE code now. Do not use placeholders or comments like "// add
       prompt += `\n\n📝 USER REQUEST:\n${ctx.context}\n\nModify the code to implement this request.`;
     }
 
-    return prompt;
+    const stage = getStageRequirements('api');
+    return stage ? `${prompt}\n\n${stage}` : prompt;
   }
 
   /**

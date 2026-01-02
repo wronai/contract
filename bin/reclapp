@@ -135,6 +135,8 @@ Usage:
   reclapp chat                               Interactive LLM contract designer
   reclapp generate-ai <contract|--prompt>    Generate code with Contract AI 2.2
   reclapp evolve --prompt "..." [-k]         Evolution mode with auto-healing
+  reclapp analyze <dir>                      Analyze codebase, find duplicates
+  reclapp refactor <git-url|dir>             Clone repo, analyze, generate contract
   reclapp tasks <file.tasks>                 Run tasks from file (Dockerfile-style)
   reclapp stop                               Stop all running containers
 
@@ -1234,6 +1236,122 @@ Commands:
 }
 
 // ============================================================================
+// ANALYZE COMMAND
+// ============================================================================
+
+async function cmdAnalyze(args, options) {
+  const targetDir = args[0] || '.';
+  const outputJson = args.includes('--json');
+  const outputContract = args.includes('--contract');
+
+  console.log(`\n📊 Analyzing: ${path.resolve(targetDir)}\n`);
+
+  try {
+    const { CodeAnalyzer } = require('../src/core/contract-ai/analysis/code-analyzer');
+    const analyzer = new CodeAnalyzer(targetDir);
+    const report = await analyzer.analyze();
+
+    if (outputJson) {
+      console.log(JSON.stringify(report, (key, value) => {
+        if (value instanceof Map) return Object.fromEntries(value);
+        return value;
+      }, 2));
+    } else if (outputContract) {
+      const contract = analyzer.toContract(report);
+      console.log(JSON.stringify(contract, null, 2));
+    } else {
+      console.log(analyzer.toMarkdown(report));
+    }
+
+    // Save report
+    const reportsDir = path.join(targetDir, 'reports');
+    if (!fs.existsSync(reportsDir)) {
+      fs.mkdirSync(reportsDir, { recursive: true });
+    }
+    const reportPath = path.join(reportsDir, `analysis-${Date.now()}.md`);
+    fs.writeFileSync(reportPath, analyzer.toMarkdown(report), 'utf-8');
+    console.log(`\n📝 Report saved: ${reportPath}`);
+  } catch (e) {
+    console.error(`❌ Analysis failed: ${e.message}`);
+    process.exit(1);
+  }
+}
+
+// ============================================================================
+// REFACTOR COMMAND
+// ============================================================================
+
+async function cmdRefactor(args, options) {
+  const { execSync } = require('child_process');
+  const target = args[0];
+  
+  if (!target) {
+    console.error('❌ Missing target (git URL or directory)');
+    process.exit(1);
+  }
+
+  let workDir = target;
+
+  // Check if it's a git URL
+  if (target.startsWith('http') || target.startsWith('git@') || target.includes('github.com')) {
+    const repoName = target.split('/').pop()?.replace('.git', '') || 'repo';
+    workDir = path.join(options.output || './refactor-workspace', repoName);
+
+    console.log(`\n📦 Cloning ${target}...`);
+    if (fs.existsSync(workDir)) {
+      console.log(`   Directory exists, pulling latest...`);
+      execSync('git pull', { cwd: workDir, stdio: 'inherit' });
+    } else {
+      execSync(`git clone ${target} ${workDir}`, { stdio: 'inherit' });
+    }
+  }
+
+  console.log(`\n📊 Analyzing ${workDir}...`);
+
+  try {
+    const { CodeAnalyzer } = require('../src/core/contract-ai/analysis/code-analyzer');
+    const analyzer = new CodeAnalyzer(workDir);
+    const report = await analyzer.analyze();
+
+    // Generate contract from analysis
+    const contract = analyzer.toContract(report);
+    
+    // Save contract
+    const contractDir = path.join(workDir, 'contract');
+    if (!fs.existsSync(contractDir)) {
+      fs.mkdirSync(contractDir, { recursive: true });
+    }
+    const contractPath = path.join(contractDir, 'contract.ai.json');
+    fs.writeFileSync(contractPath, JSON.stringify(contract, null, 2), 'utf-8');
+
+    // Save analysis report
+    const reportPath = path.join(contractDir, 'analysis-report.md');
+    fs.writeFileSync(reportPath, analyzer.toMarkdown(report), 'utf-8');
+
+    console.log('\n✅ Refactoring analysis complete!\n');
+    console.log('Generated files:');
+    console.log(`  - ${contractPath}`);
+    console.log(`  - ${reportPath}`);
+    console.log('\n## Summary\n');
+    console.log(`Files: ${report.summary.totalFiles}`);
+    console.log(`Lines: ${report.summary.totalLines}`);
+    console.log(`Functions: ${report.summary.totalFunctions}`);
+    console.log(`Duplicates: ${report.summary.duplicates.length}`);
+    console.log(`Recommendations: ${report.recommendations.length}`);
+
+    if (report.recommendations.length > 0) {
+      console.log('\n## Recommendations\n');
+      for (const rec of report.recommendations.slice(0, 10)) {
+        console.log(`- ${rec}`);
+      }
+    }
+  } catch (e) {
+    console.error(`❌ Refactor analysis failed: ${e.message}`);
+    process.exit(1);
+  }
+}
+
+// ============================================================================
 // EVOLUTION COMMAND
 // ============================================================================
 
@@ -1906,6 +2024,12 @@ async function main() {
 
     case 'evolve': case 'evolution': case 'evo':
       await cmdEvolution(args.slice(1), options); break;
+
+    case 'analyze': case 'analyse':
+      await cmdAnalyze(args.slice(1), options); break;
+
+    case 'refactor': case 'refac':
+      await cmdRefactor(args.slice(1), options); break;
 
     case 'tasks': case 'task':
       await cmdTasks(args.slice(1), options); break;

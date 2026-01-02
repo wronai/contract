@@ -22,6 +22,8 @@ import { TestGenerator } from './test-generator';
 import { DocGenerator } from './doc-generator';
 import { PromptBuilder } from './llm-prompts';
 import { FallbackTemplates } from './fallback-templates';
+import { getStageRequirements } from '../templates/contracts';
+import { handleFolders, handleValidateApi, TaskContext } from './task-handlers';
 
 // Re-export types for backward compatibility
 export { GitState } from './git-analyzer';
@@ -1231,7 +1233,8 @@ reusable: true
     if (!this.llmClient) return false;
 
     const entities = this.contract?.definition?.entities || [];
-    const prompt = `Generate a minimal React frontend for a ${entities[0]?.name || 'Item'} management app.
+    const stage = getStageRequirements('frontend');
+    const basePrompt = `Generate a minimal React frontend for a ${entities[0]?.name || 'Item'} management app.
 
 Requirements:
 - Use Vite + React + TypeScript
@@ -1247,6 +1250,7 @@ Generate files:
 5. frontend/src/App.tsx
 
 Output each file with \`\`\`filepath:path/to/file format.`;
+    const prompt = stage ? `${basePrompt}\n\n${stage}` : basePrompt;
 
     try {
       const response = await this.llmClient.generate({
@@ -1535,16 +1539,17 @@ Output files with \`\`\`filepath:path/to/file format.`;
             // Phase 1: Setup
             case 'folders':
               this.narrate('Creating project structure', 'Setting up output directories for API, tests, contract, and state');
-              const dirs = ['api/src', 'tests/e2e', 'tests/fixtures', 'contract', 'state'];
-              for (const dir of dirs) {
-                const fullPath = path.join(this.options.outputDir, dir);
-                if (!fs.existsSync(fullPath)) {
-                  fs.mkdirSync(fullPath, { recursive: true });
-                }
-              }
-              if (this.options.verbose) {
-                this.renderer.codeblock('yaml', `# @type: folders_created\nfolders:\n${dirs.map(d => `  - "${d}"`).join('\n')}`);
-              }
+              const foldersCtx: TaskContext = {
+                outputDir: this.options.outputDir,
+                port: this.options.port,
+                verbose: this.options.verbose,
+                contract: this.contract,
+                renderer: this.renderer,
+                taskQueue: this.taskQueue,
+                stateContext,
+                prompt
+              };
+              await handleFolders(foldersCtx);
               this.taskQueue.done(task.id);
               break;
 
@@ -1893,6 +1898,7 @@ Output files with \`\`\`filepath:path/to/file format.`;
 
     if (this.llmClient) {
       try {
+        const stage = getStageRequirements('docs');
         const entities = this.contract.definition?.entities || [];
         const targets = Array.from(new Set((this.contract.generation?.instructions || []).map(i => i.target).filter(t => t && t !== 'all')));
         const projectName = this.contract.definition?.app?.name || 'Generated App';
@@ -1906,7 +1912,7 @@ Output files with \`\`\`filepath:path/to/file format.`;
           'Ask LLM to create README from contract spec, fallback to template if fails'
         );
 
-        const prompt = `Generate a comprehensive README.md for a project with the following specification:
+        const basePrompt = `Generate a comprehensive README.md for a project with the following specification:
 
 Project: ${projectName}
 Description: ${projectDescription}
@@ -1938,6 +1944,8 @@ Include sections:
 7. License (MIT)
 
 Output ONLY the Markdown content, no explanation.`;
+
+        const prompt = stage ? `${basePrompt}\n\n${stage}` : basePrompt;
 
         this.logLLMRequest('Generate README.md', prompt);
 

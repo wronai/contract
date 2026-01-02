@@ -12,6 +12,7 @@ import * as path from 'path';
 import { ContractAI } from '../types';
 import { LLMClient } from '../generator/contract-generator';
 import { ShellRenderer } from './shell-renderer';
+import { getStageRequirements } from '../templates/contracts';
 
 // ============================================================================
 // TYPES
@@ -46,6 +47,7 @@ export class DocGenerator {
 
     if (this.llmClient) {
       try {
+        const stage = getStageRequirements('docs');
         const entities = contract.definition?.entities || [];
         const targets = Array.from(new Set(
           (contract.generation?.instructions || [])
@@ -88,7 +90,9 @@ Include sections:
 6. Development commands
 7. License (MIT)
 
-Output ONLY the Markdown content, no explanation.`;
+Output ONLY the Markdown content, no explanation.
+
+${stage ? stage : ''}`;
 
         const response = await this.llmClient.generate({
           system: 'You generate professional README.md files in Markdown. Output only the README content.',

@@ -13,6 +13,7 @@ import { ContractAI } from '../types';
 import { LLMClient } from '../generator/contract-generator';
 import { FallbackTemplates } from './fallback-templates';
 import { ShellRenderer } from './shell-renderer';
+import { getStageRequirements } from '../templates/contracts';
 
 // ============================================================================
 // TYPES
@@ -81,6 +82,7 @@ export class TestGenerator {
 
     if (this.llmClient) {
       try {
+        const stage = getStageRequirements('tests');
         const prompt = `Generate a TypeScript test configuration file for E2E tests.
 
 Requirements:
@@ -91,7 +93,9 @@ Requirements:
 - Layers: api (enabled), frontend (disabled), integration (enabled)
 - Export config and endpoints objects
 
-Output ONLY the TypeScript code, no explanation.`;
+Output ONLY the TypeScript code, no explanation.
+
+${stage ? stage : ''}`;
 
         const response = await this.llmClient.generate({
           system: 'You generate clean TypeScript configuration files. Output only code.',
@@ -151,7 +155,8 @@ export const endpoints = {
 
     if (this.llmClient) {
       try {
-        const prompt = `Generate TypeScript E2E tests for a REST API.
+        const stage = getStageRequirements('tests');
+        const basePrompt = `Generate TypeScript E2E tests for a REST API.
 
 Entity: ${entityName}
 Base URL: http://localhost:${port}
@@ -173,6 +178,8 @@ Structure:
 - Call runE2ETests() at the end
 
 Output ONLY the TypeScript code, no explanation.`;
+
+        const prompt = stage ? `${basePrompt}\n\n${stage}` : basePrompt;
 
         const response = await this.llmClient.generate({
           system: 'You generate E2E test files in TypeScript. Output only code.',
