@@ -511,43 +511,84 @@ class UniversalParser:
         return classes
 
     def _extract_class_methods_js_ts(self, class_body: str, full_content: str) -> List[FunctionInfo]:
-        """Ekstrahuje metody z ciała klasy JS/TS."""
+        """Ekstrahuje metody z ciała klasy JS/TS - line-by-line approach."""
         methods = []
+        seen_methods = set()
 
-        # Pattern dla metod
-        method_pattern = r'''
-            (?:(?:public|private|protected|static|async|abstract|readonly)\s+)*
-            (\w+)                           # nazwa metody
-            (?:<[^>]+>)?                    # generyki
-            \s*\(([^)]*)\)                  # parametry
-            (?:\s*:\s*([^{;]+))?           # typ zwracany
-            \s*[{;]
-        '''
+        # Słowa kluczowe i builtiny do wykluczenia
+        not_methods = {
+            # JS/TS keywords
+            'if', 'for', 'while', 'switch', 'return', 'const', 'let', 'var',
+            'new', 'this', 'super', 'throw', 'catch', 'try', 'else', 'await',
+            'typeof', 'instanceof', 'delete', 'void', 'yield', 'import', 'export',
+            'class', 'function', 'interface', 'type', 'enum', 'extends', 'implements',
+            'true', 'false', 'null', 'undefined', 'break', 'continue', 'default',
+            'case', 'finally', 'with', 'debugger', 'in', 'of', 'from', 'as',
+        }
 
-        for match in re.finditer(method_pattern, class_body, re.VERBOSE):
-            name = match.group(1)
+        lines = class_body.split('\n')
 
-            # Pomiń constructor property definitions i gettery/settery bez ciała
-            if name in ('constructor', 'get', 'set', 'if', 'for', 'while', 'switch', 'return', 'const', 'let', 'var',
-                        'new', 'this', 'super', 'throw', 'catch', 'try', 'else'):
-                if name == 'constructor':
-                    # Zachowaj constructor
-                    pass
-                else:
-                    continue
+        for i, line in enumerate(lines):
+            stripped = line.strip()
 
-            params_str = match.group(2) or ''
+            # Pomiń puste linie i komentarze
+            if not stripped or stripped.startswith('//') or stripped.startswith('/*') or stripped.startswith('*'):
+                continue
+
+            # Pomiń linie które wyglądają jak wywołania (zaczynają się od operatora lub małej litery po kropce)
+            if stripped.startswith('.') or stripped.startswith('?.'):
+                continue
+
+            # Pattern dla definicji metody na początku linii
+            # Format: [modifiers] methodName(params)[: returnType] {
+            method_match = re.match(
+                r'^(?:(public|private|protected)\s+)?'
+                r'(?:(static)\s+)?'
+                r'(?:(async)\s+)?'
+                r'(?:(abstract|readonly)\s+)?'
+                r'(?:(get|set)\s+)?'
+                r'([a-zA-Z_$][a-zA-Z0-9_$]*)'  # method name
+                r'\s*(?:<[^>]+>)?'  # optional generics
+                r'\s*\(([^)]*)\)'  # parameters
+                r'(?:\s*:\s*([^{;=]+?))?'  # optional return type
+                r'\s*[{;]',  # body start or semicolon
+                stripped
+            )
+
+            if not method_match:
+                continue
+
+            access = method_match.group(1)
+            is_static = method_match.group(2) is not None
+            is_async = method_match.group(3) is not None
+            is_abstract = method_match.group(4) == 'abstract'
+            getter_setter = method_match.group(5)
+            name = method_match.group(6)
+            params_str = method_match.group(7) or ''
+            return_type = method_match.group(8).strip() if method_match.group(8) else None
+
+            # Pomiń słowa kluczowe
+            if name.lower() in not_methods:
+                continue
+
+            # Pomiń duplikaty
+            method_key = f"{getter_setter or ''}{name}"
+            if method_key in seen_methods:
+                continue
+            seen_methods.add(method_key)
+
+            # Parsuj parametry
             params = self._parse_params_js_ts(params_str)
-            return_type = match.group(3).strip() if match.group(3) else None
 
-            # Sprawdź modyfikatory
-            prefix = class_body[:match.start()].split('\n')[-1]
-            is_async = 'async' in prefix
-            is_static = 'static' in prefix
-            is_private = name.startswith('_') or 'private' in prefix
+            # Konstruktor
+            display_name = name
+            if getter_setter:
+                display_name = f"{getter_setter} {name}"
+
+            is_private = name.startswith('_') or name.startswith('#') or access == 'private'
 
             methods.append(FunctionInfo(
-                name=name,
+                name=display_name,
                 params=params,
                 return_type=return_type,
                 docstring=None,
@@ -1264,21 +1305,34 @@ class ProjectAnalyzer:
         for m in self.modules:
             # Różne formy nazwy modułu
             name = self._module_name(m.path)
+            stem = Path(m.path).stem
+
+            # Użyj pełnej ścieżki jako klucza
             module_names[name] = m.path
             module_names[m.path] = m.path
-            module_names[Path(m.path).stem] = m.path
+
+            # Dla stem użyj tylko jeśli unikalny
+            if stem not in module_names:
+                module_names[stem] = m.path
 
         for module in self.modules:
-            deps = []
+            deps = set()
             for imp in module.imports:
                 # Spróbuj dopasować import do lokalnego modułu
-                parts = imp.replace('/', '.').split('.')
+                imp_clean = imp.replace('/', '.').replace('\\', '.')
+
+                # Usuń względne prefiksy
+                imp_clean = imp_clean.lstrip('.')
+
+                parts = imp_clean.split('.')
                 for i in range(len(parts), 0, -1):
                     candidate = '.'.join(parts[:i])
                     if candidate in module_names and module_names[candidate] != module.path:
-                        deps.append(module_names[candidate])
+                        deps.add(module_names[candidate])
                         break
-            graph[module.path] = list(set(deps))
+
+            # Użyj pełnej ścieżki jako klucza
+            graph[module.path] = list(deps)
 
         return graph
 
@@ -1362,11 +1416,29 @@ class MarkdownGenerator:
             lines.append("## 🔗 Dependencies")
             lines.append("")
             lines.append("```yaml")
-            for module, deps in sorted(deps_with_content.items())[:30]:
-                short_deps = [Path(d).stem for d in deps[:5]]
+
+            # Użyj krótkich nazw ale unikaj kolizji
+            seen_short_names = {}
+            for module_path in sorted(deps_with_content.keys()):
+                short_name = Path(module_path).stem
+                if short_name in seen_short_names:
+                    # Dodaj część ścieżki dla unikatowości
+                    parent = Path(module_path).parent.name
+                    short_name = f"{parent}/{short_name}"
+                seen_short_names[short_name] = module_path
+
+            # Odwrotne mapowanie
+            path_to_short = {v: k for k, v in seen_short_names.items()}
+
+            for module_path, deps in sorted(deps_with_content.items())[:30]:
+                short_name = path_to_short.get(module_path, Path(module_path).stem)
+                short_deps = []
+                for d in deps[:5]:
+                    dep_short = path_to_short.get(d, Path(d).stem)
+                    short_deps.append(dep_short)
                 if len(deps) > 5:
                     short_deps.append(f"+{len(deps) - 5}")
-                lines.append(f"{Path(module).stem}: [{', '.join(short_deps)}]")
+                lines.append(f"{short_name}: [{', '.join(short_deps)}]")
             lines.append("```")
             lines.append("")
 
