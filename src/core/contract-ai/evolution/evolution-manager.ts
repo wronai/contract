@@ -26,6 +26,13 @@ import { FallbackTemplates } from './fallback-templates';
 import { getStageRequirements } from '../templates/contracts';
 import { handleFolders, handleValidateApi, TaskContext } from './task-handlers';
 import { LLMOrchestrator } from './llm-orchestrator';
+import { 
+  ParallelExecutor, 
+  createFreeModelsExecutor,
+  LLMManager,
+  createLLMManagerFromEnv,
+  ContextGenerator
+} from '../llm';
 
 // Re-export types for backward compatibility
 export { GitState } from './git-analyzer';
@@ -123,6 +130,11 @@ export class EvolutionManager {
   private codeRag: CodeRAG | null = null;
   private templateRag: TemplateRAG;
   private importMode: boolean = false;
+  
+  // Multi-LLM parallel execution
+  private parallelExecutor: ParallelExecutor | null = null;
+  private llmManager: LLMManager | null = null;
+  private contextGenerator: ContextGenerator | null = null;
 
   constructor(options: Partial<EvolutionOptions> = {}) {
     this.options = { ...DEFAULT_OPTIONS, ...options };
@@ -456,6 +468,133 @@ export class EvolutionManager {
   }
 
   /**
+   * Initialize parallel LLM execution for multi-provider generation
+   */
+  async initParallelLLM(): Promise<{ providers: number; available: number }> {
+    try {
+      // Create parallel executor with free models
+      this.parallelExecutor = createFreeModelsExecutor();
+      
+      // Create LLM manager from env
+      this.llmManager = createLLMManagerFromEnv();
+      const statuses = await this.llmManager.checkAvailability();
+      
+      // Create context generator
+      this.contextGenerator = new ContextGenerator(this.llmManager);
+      
+      const available = statuses.filter(s => s.available).length;
+      
+      if (this.options.verbose) {
+        this.narrate('Parallel LLM initialized', `${available}/${statuses.length} providers available`);
+        for (const status of statuses) {
+          console.log(`   ${status.available ? '✅' : '❌'} ${status.provider}${status.latencyMs ? ` (${status.latencyMs}ms)` : ''}`);
+        }
+      }
+      
+      return { providers: statuses.length, available };
+    } catch (error) {
+      if (this.options.verbose) {
+        console.log('   ⚠️  Parallel LLM init failed, using single provider');
+      }
+      return { providers: 0, available: 0 };
+    }
+  }
+
+  /**
+   * Generate code for multiple entities in parallel
+   */
+  async generateEntitiesParallel(): Promise<GeneratedFile[]> {
+    if (!this.contract || !this.parallelExecutor) {
+      return [];
+    }
+
+    const entities = this.contract.definition?.entities || [];
+    if (entities.length === 0) return [];
+
+    if (this.options.verbose) {
+      this.narrate('Parallel generation', `Generating ${entities.length} entities across multiple LLMs`);
+    }
+
+    const prompts = entities.map(entity => ({
+      messages: [
+        {
+          role: 'system' as const,
+          content: `You are an expert TypeScript developer. Generate Express.js CRUD API code for the ${entity.name} entity. Output only TypeScript code.`
+        },
+        {
+          role: 'user' as const,
+          content: `Generate complete CRUD API routes for entity:\n${JSON.stringify(entity, null, 2)}\n\nInclude: GET all, GET by id, POST create, PUT update, DELETE. Use in-memory Map storage.`
+        }
+      ]
+    }));
+
+    try {
+      const responses = await this.parallelExecutor.parallelGenerate(prompts, {
+        onProgress: (completed, total) => {
+          if (this.options.verbose) {
+            process.stdout.write(`\r   → Generated ${completed}/${total} entities`);
+          }
+        }
+      });
+
+      if (this.options.verbose) {
+        console.log(''); // newline after progress
+      }
+
+      // Parse responses into files
+      const files: GeneratedFile[] = [];
+      for (let i = 0; i < responses.length; i++) {
+        const entity = entities[i];
+        const response = responses[i];
+        if (response?.content) {
+          files.push({
+            path: `api/src/routes/${entity.name.toLowerCase()}.routes.ts`,
+            content: this.extractCode(response.content),
+            target: 'api'
+          });
+        }
+      }
+
+      return files;
+    } catch (error) {
+      if (this.options.verbose) {
+        console.log('   ⚠️  Parallel generation failed, falling back to sequential');
+      }
+      return [];
+    }
+  }
+
+  /**
+   * Generate contract using context-based LLM (no templates)
+   */
+  async generateContractFromPrompt(prompt: string): Promise<ContractAI | null> {
+    if (!this.contextGenerator) {
+      await this.initParallelLLM();
+    }
+    
+    if (!this.contextGenerator) {
+      return null;
+    }
+
+    if (this.options.verbose) {
+      this.narrate('Context-based generation', 'Using LLM to generate contract from prompt');
+    }
+
+    return this.contextGenerator.generateContract(prompt);
+  }
+
+  /**
+   * Extract code from LLM response
+   */
+  private extractCode(content: string): string {
+    const codeMatch = content.match(/```(?:typescript|ts|javascript|js)?\n?([\s\S]*?)```/);
+    if (codeMatch) {
+      return codeMatch[1].trim();
+    }
+    return content.trim();
+  }
+
+  /**
    * Sets the contract for evolution
    */
   setContract(contract: ContractAI): void {
@@ -580,7 +719,7 @@ export class EvolutionManager {
       const failed = tasks.filter(t => t.status === 'failed').length;
       
       // Compact single-line progress
-      console.log(`\n📊 Progress: ${done}/${tasks.length} done${failed > 0 ? `, ${failed} failed` : ''}`);
+      this.renderer.codeblock('log', `📊 Progress: ${done}/${tasks.length} done${failed > 0 ? `, ${failed} failed` : ''}`);
     }
   }
 
@@ -1358,7 +1497,7 @@ Output files with \`\`\`filepath:path/to/file format.`;
   private narrate(action: string, details?: string): void {
     if (this.options.verbose) {
       const msg = details ? `${action}: ${details}` : action;
-      console.log(`\n→ ${msg}\n`);
+      this.renderer.codeblock('log', `→ ${msg}`);
     }
   }
 
@@ -1367,12 +1506,12 @@ Output files with \`\`\`filepath:path/to/file format.`;
    */
   private logReasoning(task: string, problem?: string, approach?: string): void {
     if (!this.options.verbose) return;
-    
-    console.log('\n' + '─'.repeat(60));
-    console.log(`🤔 **Reasoning: ${task}**`);
-    if (problem) console.log(`   Problem: ${problem}`);
-    if (approach) console.log(`   Approach: ${approach}`);
-    console.log('─'.repeat(60));
+
+    const lines: string[] = [];
+    lines.push(`## 🤔 Reasoning: ${task}`);
+    if (problem) lines.push(`- **Problem**: ${problem}`);
+    if (approach) lines.push(`- **Approach**: ${approach}`);
+    this.renderer.codeblock('markdown', lines.join('\n'));
   }
 
   /**
@@ -3514,21 +3653,21 @@ MIT
     
     if (!fs.existsSync(path.join(apiDir, 'package.json'))) {
       if (this.options.verbose) {
-        console.log('   ⚠️ No package.json, skipping service start');
+        this.renderer.codeblock('log', '⚠️ No package.json, skipping service start');
       }
       return;
     }
 
     // Install dependencies
     if (this.options.verbose) {
-      console.log('\n📦 Installing dependencies...');
+      this.renderer.codeblock('log', '📦 Installing dependencies...');
     }
 
     await this.runCommand('npm', ['install'], apiDir);
 
     // Start server
     if (this.options.verbose) {
-      console.log(`\n🚀 Starting service on port ${this.options.port}...`);
+      this.renderer.codeblock('log', `🚀 Starting service on port ${this.options.port}...`);
     }
 
     this.lastServiceExit = null;
@@ -3665,7 +3804,7 @@ MIT
       this.serviceProcess = null;
       
       if (this.options.verbose) {
-        console.log('   🛑 Service stopped');
+        this.renderer.codeblock('log', '🛑 Service stopped');
       }
     }
   }
@@ -3675,7 +3814,7 @@ MIT
    */
   async restartService(): Promise<void> {
     if (this.options.verbose) {
-      console.log('\n🔄 Restarting service...');
+      this.renderer.codeblock('log', '🔄 Restarting service...');
     }
     
     await this.stopService();
@@ -3693,7 +3832,7 @@ MIT
       const ok = await this.checkHealth();
       if (ok) {
         if (this.options.verbose) {
-          console.log('   ✅ Service is healthy');
+          this.renderer.codeblock('log', '✅ Service is healthy');
         }
         return true;
       }
@@ -3803,7 +3942,7 @@ MIT
    */
   private async handleHealthFailure(): Promise<void> {
     if (this.options.verbose) {
-      console.log('\n⚠️ Health check failed, attempting recovery...');
+      this.renderer.codeblock('log', '⚠️ Health check failed, attempting recovery...');
     }
 
     const recentErrors = this.getRecentErrors();
@@ -3864,7 +4003,7 @@ MIT
    */
   async evolveWithFeedback(issueDescription: string): Promise<void> {
     if (this.options.verbose) {
-      console.log(`\n🎫 Processing fix ticket: "${issueDescription}"`);
+      this.renderer.codeblock('log', `🎫 Processing fix ticket: "${issueDescription}"`);
     }
 
     if (this.evolutionHistory.length >= this.options.maxEvolutionCycles) {

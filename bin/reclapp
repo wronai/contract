@@ -138,6 +138,7 @@ Usage:
   reclapp analyze <dir>                      Analyze codebase, find duplicates
   reclapp refactor <git-url|dir>             Clone repo, analyze, generate contract
   reclapp tasks <file.tasks>                 Run tasks from file (Dockerfile-style)
+  reclapp setup                              Check environment and create setup tasks
   reclapp stop                               Stop all running containers
 
 Commands:
@@ -155,6 +156,7 @@ Commands:
   generate-ai Generate code using Contract AI 2.2 (LLM-driven)
   evolve      Evolution mode - dynamic code gen, monitoring, auto-fix
   tasks       Run tasks from file (parallel, with live markdown output)
+  setup       Check environment, detect missing dependencies, create setup tasks
   stop        Stop all running Docker containers
 
 Supported Formats:
@@ -1599,8 +1601,9 @@ async function cmdEvolution(args, options) {
         '  k: "keep running - monitor for issues"',
         '  r: "restart - regenerate service"',
         '  f: "fix - create ticket for LLM"',
+        '  s: "support - create interactive ticket (type freely)"',
         '  l: "logs - view service logs"',
-        '  s: "tasks - show task queue"',
+        '  S: "tasks - show task queue"',
         '  t: "test - run API health check"',
         `  o: "open - browser http://localhost:${port}"`,
         '  q: "quit - stop and exit"'
@@ -1636,7 +1639,16 @@ async function cmdEvolution(args, options) {
             process.exit(0);
           }
 
-          const k = key.trim().toLowerCase();
+          const trimmed = key.trim();
+
+          // Uppercase shortcuts (Shift+key)
+          if (trimmed === 'S') {
+            evolutionManager.printTasks();
+            process.stdout.write('> Press key: ');
+            return;
+          }
+
+          const k = trimmed.toLowerCase();
 
           switch (k) {
             case 'k':
@@ -1659,15 +1671,15 @@ async function cmdEvolution(args, options) {
               // Switch to line mode for ticket input (disable menu shortcuts)
               disableMenuInput();
               process.stdin.setRawMode(false);
-              console.log('\n🎫 Create Fix Ticket for LLM');
-              console.log('─────────────────────────────────────────────────────────────');
-              console.log('Describe the issue you want the LLM to fix.');
-              console.log('Examples:');
-              console.log('  • "Add pagination to the /api/v1/tasks endpoint"');
-              console.log('  • "Fix the 500 error when creating a task without title"');
-              console.log('  • "Add validation for email field in User entity"');
-              console.log('─────────────────────────────────────────────────────────────');
-              console.log('');
+              cliRenderer.codeblock('markdown', [
+                '## 🎫 Create Fix Ticket for LLM',
+                'Describe the issue you want the LLM to fix.',
+                '',
+                'Examples:',
+                '- "Add pagination to the /api/v1/tasks endpoint"',
+                '- "Fix the 500 error when creating a task without title"',
+                '- "Add validation for email field in User entity"'
+              ].join('\n'));
               
               const ticketRl = readline.createInterface({ 
                 input: process.stdin, 
@@ -1675,7 +1687,7 @@ async function cmdEvolution(args, options) {
                 terminal: true
               });
               ticketRl.on('SIGINT', () => {
-                console.log('\n⚠️ Ticket input canceled. Returning to menu.\n');
+                cliRenderer.codeblock('log', '⚠️ Ticket input canceled. Returning to menu.');
                 ticketRl.close();
                 process.stdin.setRawMode(true);
                 enableMenuInput();
@@ -1686,15 +1698,17 @@ async function cmdEvolution(args, options) {
                 ticketRl.close();
                 
                 if (!issueDescription.trim()) {
-                  console.log('\n⚠️ No issue description provided. Returning to menu.\n');
+                  cliRenderer.codeblock('log', '⚠️ No issue description provided. Returning to menu.');
                   process.stdin.setRawMode(true);
                   enableMenuInput();
                   process.stdout.write('> Press key: ');
                   return;
                 }
                 
-                console.log('\n📝 Creating ticket...');
-                console.log(`   Issue: "${issueDescription}"`);
+                cliRenderer.codeblock('log', [
+                  '📝 Creating ticket...',
+                  `Issue: "${issueDescription}"`
+                ].join('\n'));
 
                 // Save ticket to file
                 const ticketDir = path.join(outputDir, 'tickets');
@@ -1748,23 +1762,25 @@ ${recentLogsBlock}
 `;
                 
                 fs.writeFileSync(ticketPath, ticketContent);
-                console.log(`   ✅ Ticket saved: ${ticketPath}`);
+                cliRenderer.codeblock('log', `✅ Ticket saved: ${ticketPath}`);
                 
                 // Try to fix with LLM if available
-                console.log('\n🤖 Attempting to fix with LLM...');
+                cliRenderer.codeblock('log', '🤖 Attempting to fix with LLM...');
                 
                 try {
                   const contractAI = require('../src/core/contract-ai');
                   const ollamaAvailable = await contractAI.checkOllamaAvailable();
                   
                   if (ollamaAvailable) {
-                    console.log('   Analyzing issue and generating fix...');
+                    cliRenderer.codeblock('log', 'Analyzing issue and generating fix...');
                     
                     // Trigger evolution with the issue as context
                     await evolutionManager.evolveWithFeedback(issueDescription);
                     
-                    console.log('\n✅ LLM fix applied!');
-                    console.log('   Restarting service to apply changes...\n');
+                    cliRenderer.codeblock('log', [
+                      '✅ LLM fix applied!',
+                      'Restarting service to apply changes...'
+                    ].join('\n'));
                     
                     // Update ticket status
                     const updatedTicket = ticketContent
@@ -1773,16 +1789,24 @@ ${recentLogsBlock}
                     fs.writeFileSync(ticketPath, updatedTicket);
                     
                   } else {
-                    console.log('   ⚠️ Ollama not available. Ticket saved for manual review.');
-                    console.log('   💡 Start Ollama: ollama serve && ollama pull llama3');
+                    cliRenderer.codeblock('log', [
+                      '⚠️ Ollama not available. Ticket saved for manual review.',
+                      '💡 Start Ollama: ollama serve && ollama pull llama3'
+                    ].join('\n'));
                   }
                 } catch (e) {
-                  console.log(`   ⚠️ Auto-fix failed: ${e.message}`);
-                  console.log('   Ticket saved for manual review.');
+                  cliRenderer.codeblock('log', [
+                    `⚠️ Auto-fix failed: ${e.message}`,
+                    'Ticket saved for manual review.'
+                  ].join('\n'));
                 }
                 
-                console.log('\n📋 Ticket location: ' + ticketPath);
-                console.log('💡 You can also manually edit the ticket and re-run evolution.\n');
+                cliRenderer.codeblock('markdown', [
+                  '## 📋 Ticket',
+                  `Path: \`${ticketPath}\``,
+                  '',
+                  'You can manually edit the ticket and re-run evolution.'
+                ].join('\n'));
                 
                 // Return to raw mode for menu
                 process.stdin.setRawMode(true);
@@ -1792,8 +1816,129 @@ ${recentLogsBlock}
               return;
 
             case 's':
-              evolutionManager.printTasks();
-              process.stdout.write('> Press key: ');
+              // Switch to line mode for ticket input (disable menu shortcuts)
+              disableMenuInput();
+              process.stdin.setRawMode(false);
+              cliRenderer.codeblock('markdown', [
+                '## 🎫 Create Ticket',
+                'Type freely — shortcuts are disabled while you write.',
+                '',
+                'Press Enter to submit, Ctrl+C to cancel.'
+              ].join('\n'));
+
+              const supportRl = readline.createInterface({
+                input: process.stdin,
+                output: process.stdout,
+                terminal: true
+              });
+              supportRl.on('SIGINT', () => {
+                cliRenderer.codeblock('log', '⚠️ Ticket input canceled. Returning to menu.');
+                supportRl.close();
+                process.stdin.setRawMode(true);
+                enableMenuInput();
+                process.stdout.write('> Press key: ');
+              });
+
+              supportRl.question('🎫 Ticket: ', async (issueDescription) => {
+                supportRl.close();
+
+                if (!issueDescription.trim()) {
+                  cliRenderer.codeblock('log', '⚠️ Empty ticket. Returning to menu.');
+                  process.stdin.setRawMode(true);
+                  enableMenuInput();
+                  process.stdout.write('> Press key: ');
+                  return;
+                }
+
+                // Reuse the same behavior as fix ticket: save + attempt evolveWithFeedback
+                cliRenderer.codeblock('log', [
+                  '📝 Creating ticket...',
+                  `Issue: "${issueDescription}"`
+                ].join('\n'));
+
+                const ticketDir = path.join(outputDir, 'tickets');
+                if (!fs.existsSync(ticketDir)) {
+                  fs.mkdirSync(ticketDir, { recursive: true });
+                }
+
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const ticketPath = path.join(ticketDir, `ticket_${timestamp}.md`);
+
+                const recentLogs = (() => {
+                  try {
+                    const logsDir = path.join(outputDir, 'logs');
+                    const logFiles = fs.readdirSync(logsDir).filter(f => f.endsWith('.rcl.md'));
+                    if (logFiles.length > 0) {
+                      const latestLog = path.join(logsDir, logFiles[logFiles.length - 1]);
+                      return fs.readFileSync(latestLog, 'utf8').substring(0, 4000);
+                    }
+                  } catch (e) {}
+                  return 'No logs available';
+                })();
+
+                const recentLogsBlock = fencedBlockString(recentLogs, 'markdown');
+
+                const ticketContent = `# Ticket
+
+## Issue
+${issueDescription}
+
+## Context
+- **Created**: ${new Date().toISOString()}
+- **Service Port**: ${port}
+- **Output Dir**: ${outputDir}
+- **Original Prompt**: ${prompt}
+
+## Status
+- [ ] Pending LLM analysis
+- [ ] Code changes generated
+- [ ] Tests passing
+- [ ] Deployed
+
+## LLM Instructions
+Please analyze this issue and generate the necessary code changes to fix it.
+
+## Recent Logs
+${recentLogsBlock}
+`;
+
+                fs.writeFileSync(ticketPath, ticketContent);
+                cliRenderer.codeblock('log', `✅ Ticket saved: ${ticketPath}`);
+
+                cliRenderer.codeblock('log', '🤖 Attempting to fix with LLM...');
+                try {
+                  const contractAI = require('../src/core/contract-ai');
+                  const ollamaAvailable = await contractAI.checkOllamaAvailable();
+
+                  if (ollamaAvailable) {
+                    cliRenderer.codeblock('log', 'Analyzing issue and generating fix...');
+                    await evolutionManager.evolveWithFeedback(issueDescription);
+
+                    cliRenderer.codeblock('log', '✅ LLM fix applied!');
+
+                    const updatedTicket = ticketContent
+                      .replace('- [ ] Pending LLM analysis', '- [x] Pending LLM analysis')
+                      .replace('- [ ] Code changes generated', '- [x] Code changes generated');
+                    fs.writeFileSync(ticketPath, updatedTicket);
+                  } else {
+                    cliRenderer.codeblock('log', '⚠️ Ollama not available. Ticket saved for manual review.');
+                  }
+                } catch (e) {
+                  cliRenderer.codeblock('log', [
+                    `⚠️ Auto-fix failed: ${e.message}`,
+                    'Ticket saved for manual review.'
+                  ].join('\n'));
+                }
+
+                cliRenderer.codeblock('markdown', [
+                  '## 📋 Ticket',
+                  `Path: \`${ticketPath}\``
+                ].join('\n'));
+
+                process.stdin.setRawMode(true);
+                enableMenuInput();
+                process.stdout.write('> Press key: ');
+              });
               return;
 
             case 'l':
@@ -1998,6 +2143,130 @@ async function cmdTasks(args, options) {
 }
 
 // ============================================================================
+// SETUP COMMAND
+// ============================================================================
+
+async function cmdSetup(args, options) {
+  console.log('\n╔════════════════════════════════════════════════════════════╗');
+  console.log('║          🔧 Reclapp Environment Setup                       ║');
+  console.log('╚════════════════════════════════════════════════════════════╝\n');
+
+  let outputDir = '.';
+  let install = false;
+
+  for (let i = 0; i < args.length; i++) {
+    if ((args[i] === '--output' || args[i] === '-o') && args[i + 1]) {
+      outputDir = args[i + 1]; i++;
+    } else if (args[i] === '--install' || args[i] === '-i') {
+      install = true;
+    }
+  }
+
+  try {
+    const { DependencyChecker } = require('../src/core/contract-ai/setup/dependency-checker');
+    const checker = new DependencyChecker();
+    
+    console.log('Checking dependencies...\n');
+    const report = await checker.generateReport();
+    
+    // Print status
+    checker.printStatus(report);
+
+    // Save setup tasks if there are missing dependencies
+    if (report.setupTasks.length > 0) {
+      const tasksPath = checker.saveSetupTasks(outputDir, report.setupTasks);
+      
+      console.log('📋 Setup tasks created:\n');
+      console.log(`   ${path.join(outputDir, 'setup', 'SETUP.md')} - Human-readable guide`);
+      console.log(`   ${tasksPath} - Machine-readable tasks\n`);
+
+      // Print quick install commands
+      console.log('Quick install commands:\n');
+      
+      const requiredTasks = report.setupTasks.filter(t => t.priority === 'required');
+      const recommendedTasks = report.setupTasks.filter(t => t.priority === 'recommended');
+
+      if (requiredTasks.length > 0) {
+        console.log('⚠️  Required (must install):');
+        for (const task of requiredTasks) {
+          if (task.commands[0]) {
+            console.log(`   ${task.commands[0]}`);
+          }
+        }
+        console.log('');
+      }
+
+      if (recommendedTasks.length > 0) {
+        console.log('📦 Recommended:');
+        for (const task of recommendedTasks) {
+          if (task.commands[0]) {
+            console.log(`   ${task.commands[0]}`);
+          }
+        }
+        console.log('');
+      }
+
+      // Offer to run install commands
+      if (install) {
+        console.log('🚀 Running install commands...\n');
+        const { execSync } = require('child_process');
+        
+        for (const task of [...requiredTasks, ...recommendedTasks]) {
+          console.log(`→ ${task.name}...`);
+          try {
+            for (const cmd of task.commands) {
+              if (cmd.startsWith('#')) continue; // Skip comments
+              execSync(cmd, { stdio: 'inherit' });
+            }
+            task.status = 'completed';
+            console.log(`  ✅ ${task.name} installed\n`);
+          } catch (error) {
+            console.log(`  ❌ ${task.name} failed - see SETUP.md for manual install\n`);
+          }
+        }
+      }
+    } else {
+      console.log('✅ All dependencies installed! You can start using reclapp:\n');
+      console.log('   reclapp evolve -p "Create a todo app" -o ./my-app\n');
+    }
+
+    // Check for .env file
+    const envPath = path.join(outputDir, '.env');
+    const envExamplePath = path.join(__dirname, '..', '.env.example');
+    
+    if (!fs.existsSync(envPath) && fs.existsSync(envExamplePath)) {
+      console.log('💡 Tip: Copy .env.example to .env for configuration:\n');
+      console.log(`   cp ${envExamplePath} ${envPath}\n`);
+    }
+
+    // Check Ollama models
+    if (report.dependencies.find(d => d.dependency.name === 'ollama' && d.status === 'installed')) {
+      console.log('🤖 Ollama detected! Checking models...\n');
+      try {
+        const { execSync } = require('child_process');
+        const models = execSync('ollama list', { encoding: 'utf-8' });
+        const hasCodeModel = models.includes('codellama') || models.includes('deepseek-coder') || models.includes('qwen');
+        
+        if (!hasCodeModel) {
+          console.log('   No code model found. Pull one with:');
+          console.log('   ollama pull codellama:7b\n');
+        } else {
+          console.log('   ✅ Code model available\n');
+        }
+      } catch (e) {
+        console.log('   ⚠️  Could not check Ollama models. Is Ollama running?\n');
+        console.log('   Start with: ollama serve\n');
+      }
+    }
+
+  } catch (error) {
+    console.error(`\n❌ Error: ${error.message}\n`);
+    if (options.verbose) console.error(error.stack);
+    process.exit(1);
+  }
+}
+
+// ============================================================================
 // MAIN
 // ============================================================================
 
@@ -2094,6 +2363,9 @@ async function main() {
 
     case 'tasks': case 'task':
       await cmdTasks(args.slice(1), options); break;
+
+    case 'setup': case 'init': case 'doctor':
+      await cmdSetup(args.slice(1), options); break;
 
     default:
       if (command.endsWith('.reclapp.ts') || command.endsWith('.ts') || command.endsWith('.rcl') || command.endsWith('.rcl.md') || command.endsWith('.contract.md')) {

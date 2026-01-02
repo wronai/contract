@@ -198,6 +198,30 @@ export class ShellRenderer {
 
   private highlightLog(line: string): string {
     const trimmed = line.trim();
+    if (trimmed.startsWith('🛑')) {
+      return this.c('red', line);
+    }
+    if (trimmed.startsWith('⚠️')) {
+      return this.c('yellow', line);
+    }
+    if (trimmed.startsWith('🚀')) {
+      return this.c('green', line);
+    }
+    if (trimmed.startsWith('📦')) {
+      return this.c('cyan', line);
+    }
+    if (trimmed.startsWith('💬')) {
+      return this.c('cyan', line);
+    }
+    if (trimmed.startsWith('🎫') || trimmed.startsWith('📝')) {
+      return this.c('yellow', line);
+    }
+    if (trimmed.startsWith('🔄')) {
+      return this.c('cyan', line);
+    }
+    if (trimmed.startsWith('📊') || trimmed.includes('📊 Progress')) {
+      return this.c('magenta', line);
+    }
     if (trimmed.startsWith('## ')) {
       return this.c('cyan', line);
     }

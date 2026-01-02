@@ -17,3 +17,4 @@ export * from './llm-provider';
 export * from './llm-manager';
 export * from './llm-config';
 export * from './context-generator';
+export * from './parallel-executor';
