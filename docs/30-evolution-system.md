@@ -287,6 +287,72 @@ Check that npm is in PATH. The evolution manager looks for npm in:
 
 ---
 
+## Task Queue (NEW in 2.4.1)
+
+The evolution system now shows live task status in YAML format:
+
+```yaml
+## Config
+
+evolution:
+  prompt: "Create a todo app"
+  output: "./output"
+  port: 3000
+
+🔄 Parse prompt & create contract
+✅ Parse prompt & create contract (0s)
+🔄 Generate code with LLM
+✅ Generate code with LLM (20s)
+🔄 Write files to disk
+✅ Write files to disk (0s)
+🔄 Install dependencies
+🔄 Start service
+✅ Install dependencies (7s)
+✅ Start service (7s)
+🔄 Health check
+✅ Health check (0s)
+```
+
+### Dynamic Task Adding
+
+When issues are detected (e.g., missing LLM model), tasks are added dynamically:
+
+```yaml
+❌ Pull LLM model: qwen2.5-coder:14b
+   └─ Run: ollama pull qwen2.5-coder:14b
+🔄 Use fallback code generator
+✅ Use fallback code generator (0s)
+```
+
+---
+
+## Task Executor
+
+Run tasks from Dockerfile-style files:
+
+```bash
+# Run tasks
+./bin/reclapp tasks build.tasks
+
+# Watch mode
+./bin/reclapp tasks build.tasks --watch
+
+# Parallel workers
+./bin/reclapp tasks build.tasks --workers 5
+```
+
+### Task File Format
+
+```bash
+# build.tasks
+echo "Setup"
+npm install
+npm run build  # timeout: 120
+npm test
+```
+
+---
+
 ## Related Documentation
 
 - [Architecture Overview](00-architecture-overview.md)

@@ -60,8 +60,8 @@ export class OllamaClient implements LLMClient {
 
   constructor(config?: Partial<OllamaConfig>) {
     this.config = {
-      host: process.env.OLLAMA_HOST || config?.host || 'http://localhost:11434',
-      model: process.env.OLLAMA_MODEL || config?.model || 'qwen2.5-coder:14b',
+      host: config?.host || process.env.OLLAMA_HOST || 'http://localhost:11434',
+      model: config?.model || process.env.OLLAMA_MODEL || 'mistral:7b-instruct',
       timeout: config?.timeout || 120000,
       retries: config?.retries || 3
     };
@@ -89,7 +89,19 @@ export class OllamaClient implements LLMClient {
       
       const data = JSON.parse(response.body);
       const model = modelName || this.config.model;
-      return data.models?.some((m: any) => m.name.startsWith(model)) || false;
+      const modelBase = model.split(':')[0];
+      const hasTag = model.includes(':');
+      
+      const found = data.models?.some((m: any) => {
+        const name = String(m?.name || '');
+        if (!name) return false;
+        if (hasTag) {
+          return name === model;
+        }
+        return name === modelBase || name.startsWith(modelBase + ':');
+      }) || false;
+      
+      return found;
     } catch {
       return false;
     }

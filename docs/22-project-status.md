@@ -1,7 +1,7 @@
-# Reclapp 2.3 - Status Projektu
+# Reclapp 2.4 - Status Projektu
 
-**Data:** 1 Stycznia 2026  
-**Wersja:** 2.3.1  
+**Data:** 2 Stycznia 2026  
+**Wersja:** 2.4.1  
 **Status:** ✅ PRODUCTION READY
 
 ## Podsumowanie
@@ -120,6 +120,14 @@ pytest tests/contracts/ -v
 - Pydantic >= 2.5
 - Ollama z llama3 (opcjonalne, dla generacji)
 
+## Changelog 2.4.1
+
+- ✅ **TaskQueue** - live task status with YAML markdown output
+- ✅ **TaskExecutor** - parallel task execution with file watching
+- ✅ **CLI `tasks` command** - run tasks from Dockerfile-style files
+- ✅ **Markdown output** - all logs in parseable YAML codeblocks
+- ✅ **Dynamic task adding** - tasks added on-the-fly when issues detected
+
 ## Changelog 2.4.0
 
 - ✅ **Contract Markdown 3.0** (`.contract.md`) - new LLM-optimized contract format
@@ -228,4 +236,50 @@ reclapp --prompt "$(cat examples/prompts/01-notes-app.txt)"
 
 ---
 
-**Reclapp 2.3.1 | 1 Stycznia 2026 | PRODUCTION READY**
+## Task Executor (NEW in 2.4.1)
+
+Run tasks from Dockerfile-style files with parallel execution:
+
+```bash
+# Run tasks from file
+./bin/reclapp tasks build.tasks
+
+# Watch mode (dynamic task adding)
+./bin/reclapp tasks build.tasks --watch
+
+# Custom worker count
+./bin/reclapp tasks build.tasks --workers 5
+```
+
+### Task File Format
+
+```bash
+# Comments start with #
+echo "Step 1: Setup"
+npm install
+npm run build  # timeout: 120
+npm test
+```
+
+### Live Output Format
+
+```yaml
+## Task Status
+
+tasks:
+  total: 4
+  pending: 0
+  running: 2
+  done: 2
+  failed: 0
+
+queue:
+  - ✅ "echo Step 1": done # 0s
+  - ✅ "npm install": done # 3s
+  - 🔄 "npm run build": running
+  - ⏳ "npm test": pending
+```
+
+---
+
+**Reclapp 2.4.1 | 2 Stycznia 2026 | PRODUCTION READY**

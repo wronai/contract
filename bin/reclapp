@@ -8,6 +8,44 @@
 const path = require('path');
 const fs = require('fs');
 
+function loadEnvFromFile() {
+  try {
+    const envPath = path.join(__dirname, '..', '.env');
+    if (!fs.existsSync(envPath)) return;
+    const raw = fs.readFileSync(envPath, 'utf-8');
+    const skippedKeys = [];
+    for (const lineRaw of raw.split(/\r?\n/)) {
+      const line = lineRaw.trim();
+      if (!line || line.startsWith('#')) continue;
+      const idx = line.indexOf('=');
+      if (idx <= 0) continue;
+      const key = line.slice(0, idx).trim();
+      if (!key) continue;
+      if (process.env[key] !== undefined) {
+        skippedKeys.push(key);
+        continue;
+      }
+      let value = line.slice(idx + 1).trim();
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1);
+      }
+      process.env[key] = value;
+    }
+
+    if ((process.argv.includes('--verbose') || process.argv.includes('-v')) && skippedKeys.length > 0) {
+      const uniq = Array.from(new Set(skippedKeys));
+      console.log(`ℹ️  .env loaded (did not override existing env): ${uniq.slice(0, 12).join(', ')}${uniq.length > 12 ? '…' : ''}`);
+    }
+  } catch {
+    return;
+  }
+}
+
+loadEnvFromFile();
+
 // Register TypeScript support
 try {
   require('ts-node').register({
@@ -97,6 +135,7 @@ Usage:
   reclapp chat                               Interactive LLM contract designer
   reclapp generate-ai <contract|--prompt>    Generate code with Contract AI 2.2
   reclapp evolve --prompt "..." [-k]         Evolution mode with auto-healing
+  reclapp tasks <file.tasks>                 Run tasks from file (Dockerfile-style)
   reclapp stop                               Stop all running containers
 
 Commands:
@@ -113,6 +152,7 @@ Commands:
   studio      Interactive examples browser with tests
   generate-ai Generate code using Contract AI 2.2 (LLM-driven)
   evolve      Evolution mode - dynamic code gen, monitoring, auto-fix
+  tasks       Run tasks from file (parallel, with live markdown output)
   stop        Stop all running Docker containers
 
 Supported Formats:
@@ -948,7 +988,9 @@ async function cmdGenerateAI(args, options) {
     try {
       const ollamaAvailable = await contractAI.checkOllamaAvailable();
       if (ollamaAvailable) {
-        const ollamaClient = contractAI.createOllamaClient();
+        const selectedModel = process.env.CODE_MODEL || process.env.OLLAMA_MODEL;
+        const selectedFrom = process.env.CODE_MODEL ? 'CODE_MODEL' : 'OLLAMA_MODEL';
+        const ollamaClient = contractAI.createOllamaClient({ model: selectedModel });
         const hasModel = await ollamaClient.hasModel();
         if (hasModel) {
           codeGenerator.setLLMClient(ollamaClient);
@@ -956,12 +998,13 @@ async function cmdGenerateAI(args, options) {
           console.log(`🤖 Using Ollama (${llmMode}) for code generation`);
         } else {
           const model = ollamaClient.getConfig().model;
-          console.log(`⚠️ Ollama model '${model}' not found. Run: ollama pull ${model}`);
+          console.log(`⚠️ Ollama model '${model}' not found (from ${selectedFrom})`);
+          console.log(`   Fix: ollama pull ${model}`);
+          console.log(`   Or update .env: ${selectedFrom}=<installed_model>`);
           console.log('   Using simulation mode');
         }
       } else {
-        console.log('⚠️ Ollama not available. Run: ollama serve');
-        console.log('   Using simulation mode');
+        console.log('⚠️ Ollama not available. Using simulation mode');
       }
     } catch (err) {
       // Silently fall back to simulation
@@ -1195,6 +1238,38 @@ Commands:
 // ============================================================================
 
 async function cmdEvolution(args, options) {
+  const readline = require('readline');
+
+  const maxBackticks = (s) => {
+    let max = 0;
+    let cur = 0;
+    for (let i = 0; i < s.length; i++) {
+      if (s[i] === '`') {
+        cur++;
+        if (cur > max) max = cur;
+      } else {
+        cur = 0;
+      }
+    }
+    return max;
+  };
+
+  const getFence = (content) => '`'.repeat(Math.max(3, maxBackticks(content) + 1));
+
+  const printFencedBlock = (content, lang) => {
+    const safe = (content ?? '').toString().replace(/\s+$/, '');
+    const fence = getFence(safe);
+    console.log(`${fence}${lang ? lang : ''}`);
+    console.log(safe);
+    console.log(fence);
+  };
+
+  const fencedBlockString = (content, lang) => {
+    const safe = (content ?? '').toString().replace(/\s+$/, '');
+    const fence = getFence(safe);
+    return `${fence}${lang ? lang : ''}\n${safe}\n${fence}\n`;
+  };
+
   // Parse evolution-specific options
   let prompt = null;
   let contractPath = null;
@@ -1221,7 +1296,7 @@ async function cmdEvolution(args, options) {
     process.exit(1);
   }
 
-  console.log('\n🧬 Reclapp Evolution Mode v2.3.1\n');
+  console.log('\n## Reclapp Evolution v2.4.1\n');
 
   try {
     const contractAI = require('../src/core/contract-ai');
@@ -1237,18 +1312,45 @@ async function cmdEvolution(args, options) {
 
     // Setup LLM for evolution
     const ollamaAvailable = await contractAI.checkOllamaAvailable();
+    let llmStatus = { available: false, model: null, source: null };
+    
     if (ollamaAvailable) {
-      const ollamaClient = contractAI.createOllamaClient();
-      if (await ollamaClient.hasModel()) {
+      const selectedModel = process.env.CODE_MODEL || process.env.OLLAMA_MODEL;
+      const selectedFrom = process.env.CODE_MODEL ? 'CODE_MODEL' : 'OLLAMA_MODEL';
+      const ollamaClient = contractAI.createOllamaClient({ model: selectedModel });
+      const configuredModel = ollamaClient.getConfig().model;
+      const hasModel = await ollamaClient.hasModel();
+      
+      llmStatus = { available: hasModel, model: configuredModel, source: selectedFrom };
+      
+      if (hasModel) {
         evolutionManager.setLLMClient(ollamaClient);
-        console.log(`🤖 Using Ollama (${ollamaClient.getConfig().model}) for code generation`);
       }
     }
+    
+    // Print setup info in YAML with colors
+    const { ShellRenderer } = contractAI;
+    const cliRenderer = new ShellRenderer(true);
+    
+    const setupYaml = [
+      '# @type: evolution_setup',
+      '# @description: Initial configuration for evolution pipeline',
+      'setup:',
+      `  prompt: "${prompt ? prompt.substring(0, 60) : contractPath}"`,
+      `  output: "${outputDir}"`,
+      `  port: ${port}`,
+      '  llm:',
+      `    available: ${llmStatus.available}`,
+      `    model: "${llmStatus.model || 'none'}"`,
+      ...((!llmStatus.available && llmStatus.model) ? [`    fix: "ollama pull ${llmStatus.model}"`] : [])
+    ].join('\n');
+    cliRenderer.codeblock('yaml', setupYaml);
+    console.log('');
 
-    // Start evolution lifecycle
+    // Start evolution lifecycle (iterative mode by default)
     if (prompt) {
-      console.log(`💬 Starting evolution from prompt: "${prompt}"\n`);
-      await evolutionManager.startFromPrompt(prompt);
+      console.log(`💬 Starting iterative evolution from prompt: "${prompt}"\n`);
+      await evolutionManager.evolveIteratively(prompt, 5);
     } else {
       const contract = require(path.resolve(contractPath)).default || require(path.resolve(contractPath));
       await evolutionManager.start(contract);
@@ -1269,29 +1371,33 @@ async function cmdEvolution(args, options) {
       await new Promise(() => {}); // Never resolves
     } else {
       // Interactive mode - ask user what to do next
-      console.log('\n✅ Evolution complete');
-      console.log('');
-      console.log('╭─────────────────────────────────────────────────────────────╮');
-      console.log('│  💡 What would you like to do next?                         │');
-      console.log('├─────────────────────────────────────────────────────────────┤');
-      console.log('│  [k] Keep running - monitor service for issues              │');
-      console.log('│  [r] Restart - regenerate and restart service               │');
-      console.log('│  [f] Fix - describe issue for LLM to fix (ticket)           │');
-      console.log('│  [l] Logs - view service logs                               │');
-      console.log('│  [t] Test - run API tests                                   │');
-      console.log('│  [o] Open - open in browser (http://localhost:' + port + '/health) │');
-      console.log('│  [q] Quit - stop service and exit                           │');
-      console.log('╰─────────────────────────────────────────────────────────────╯');
-      console.log('');
-      console.log('💡 Tip: Use --keep-running (-k) to skip this menu next time');
-      console.log('   Example: ./bin/reclapp evolve -p "..." -o ./output -k');
-      console.log('');
+      console.log('\n✅ Evolution complete\n');
+      console.log('## Actions\n');
+      console.log('```yaml');
+      console.log('commands:');
+      console.log('  k: "keep running - monitor for issues"');
+      console.log('  r: "restart - regenerate service"');
+      console.log('  f: "fix - create ticket for LLM"');
+      console.log('  l: "logs - view service logs"');
+      console.log('  s: "tasks - show task queue"');
+      console.log('  t: "test - run API health check"');
+      console.log(`  o: "open - browser http://localhost:${port}"`);
+      console.log('  q: "quit - stop and exit"');
+      console.log('```\n');
+      console.log('> Tip: Use `--keep-running` (`-k`) to skip this menu\n');
 
       // Enable raw mode for single keypress detection
       if (process.stdin.isTTY) {
+        // Clear any buffered input
         process.stdin.setRawMode(true);
         process.stdin.resume();
         process.stdin.setEncoding('utf8');
+        
+        // Small delay to clear buffer
+        await new Promise(r => setTimeout(r, 100));
+        
+        // Show prompt
+        process.stdout.write('> Press key: ');
 
         const handleKeypress = async (key) => {
           // Ctrl+C
@@ -1342,12 +1448,13 @@ async function cmdEvolution(args, options) {
                 if (!issueDescription.trim()) {
                   console.log('\n⚠️ No issue description provided. Returning to menu.\n');
                   process.stdin.setRawMode(true);
+                  process.stdout.write('> Press key: ');
                   return;
                 }
                 
                 console.log('\n📝 Creating ticket...');
                 console.log(`   Issue: "${issueDescription}"`);
-                
+
                 // Save ticket to file
                 const ticketDir = path.join(outputDir, 'tickets');
                 if (!fs.existsSync(ticketDir)) {
@@ -1356,6 +1463,20 @@ async function cmdEvolution(args, options) {
                 
                 const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
                 const ticketPath = path.join(ticketDir, `ticket_${timestamp}.md`);
+
+                const recentLogs = (() => {
+                  try {
+                    const logsDir = path.join(outputDir, 'logs');
+                    const logFiles = fs.readdirSync(logsDir).filter(f => f.endsWith('.rcl.md'));
+                    if (logFiles.length > 0) {
+                      const latestLog = path.join(logsDir, logFiles[logFiles.length - 1]);
+                      return fs.readFileSync(latestLog, 'utf8').substring(0, 4000);
+                    }
+                  } catch (e) {}
+                  return 'No logs available';
+                })();
+
+                const recentLogsBlock = fencedBlockString(recentLogs, 'markdown');
                 
                 const ticketContent = `# Fix Ticket
 
@@ -1382,19 +1503,7 @@ Consider:
 3. How can we add tests to prevent regression?
 
 ## Recent Logs
-\`\`\`
-${(() => {
-  try {
-    const logsDir = path.join(outputDir, 'logs');
-    const logFiles = fs.readdirSync(logsDir).filter(f => f.endsWith('.rcl.md'));
-    if (logFiles.length > 0) {
-      const latestLog = path.join(logsDir, logFiles[logFiles.length - 1]);
-      return fs.readFileSync(latestLog, 'utf8').substring(0, 2000);
-    }
-  } catch (e) {}
-  return 'No logs available';
-})()}
-\`\`\`
+${recentLogsBlock}
 `;
                 
                 fs.writeFileSync(ticketPath, ticketContent);
@@ -1436,32 +1545,55 @@ ${(() => {
                 
                 // Return to raw mode for menu
                 process.stdin.setRawMode(true);
+                process.stdout.write('> Press key: ');
               });
               return;
 
+            case 's':
+              evolutionManager.printTasks();
+              process.stdout.write('> Press key: ');
+              return;
+
             case 'l':
-              console.log('\n📋 Recent service logs:\n');
+              cliRenderer.heading(2, 'Logs');
               try {
                 const logsDir = path.join(outputDir, 'logs');
                 const logFiles = fs.readdirSync(logsDir).filter(f => f.endsWith('.rcl.md'));
                 if (logFiles.length > 0) {
                   const latestLog = path.join(logsDir, logFiles[logFiles.length - 1]);
-                  console.log(fs.readFileSync(latestLog, 'utf8'));
+                  const content = fs.readFileSync(latestLog, 'utf8');
+                  const tailLines = 80;
+                  const lines = content.split('\n');
+                  const tail = lines.slice(-tailLines).join('\n');
+                  cliRenderer.codeblock('yaml', `# @type: log_view\nlog:\n  file: "${latestLog}"\n  tail_lines: ${tailLines}`);
+                  console.log('');
+                  cliRenderer.codeblock('markdown', tail);
+                  console.log(`\n> Full log: \`${latestLog}\``);
                 }
               } catch (e) {
-                console.log('   No logs available yet.');
+                console.log('> No logs available yet.');
               }
+              process.stdout.write('> Press key: ');
               return;
 
             case 't':
-              console.log('\n🧪 Running API tests...\n');
+              cliRenderer.heading(2, 'Health Check');
               try {
-                const { execSync } = require('child_process');
-                execSync(`curl -s http://localhost:${port}/health | jq .`, { stdio: 'inherit' });
-                console.log('\n✅ Health check passed');
+                const url = `http://localhost:${port}/health`;
+                const res = await fetch(url);
+                const text = await res.text();
+                let jsonOut = text.trim();
+                try {
+                  jsonOut = JSON.stringify(JSON.parse(text), null, 2);
+                } catch (e) {}
+                cliRenderer.codeblock('json', jsonOut);
+                console.log('');
+                cliRenderer.codeblock('yaml', `# @type: health_result\nresult: ${res.ok ? 'passed' : 'failed'}\nstatus: ${res.status}`);
               } catch (e) {
-                console.log('❌ Tests failed:', e.message);
+                const msg = (e && e.message) ? e.message : String(e);
+                cliRenderer.codeblock('yaml', `# @type: health_result\nresult: failed\nerror: "${msg.replace(/\"/g, '\\\"').substring(0, 180)}"`);
               }
+              process.stdout.write('> Press key: ');
               return;
 
             case 'o':
@@ -1480,6 +1612,7 @@ ${(() => {
                 const { exec } = require('child_process');
                 exec(`xdg-open ${openUrl} 2>/dev/null || open ${openUrl} 2>/dev/null`);
               } catch (e) {}
+              process.stdout.write('> Press key: ');
               return;
 
             case 'q':
@@ -1490,7 +1623,7 @@ ${(() => {
 
             default:
               // Ignore other keys, show hint
-              process.stdout.write('\r💡 Press: [k]eep [r]estart [f]ix [l]ogs [t]est [o]pen [q]uit ');
+              process.stdout.write('\r> Press key: ');
           }
         };
 
@@ -1507,40 +1640,116 @@ ${(() => {
     }
 
   } catch (error) {
-    console.error(`\n❌ Error: ${error.message}`);
-    console.error('');
-    console.error('╭─────────────────────────────────────────────────────────────╮');
-    console.error('│  💡 Troubleshooting Tips                                    │');
-    console.error('├─────────────────────────────────────────────────────────────┤');
+    console.error(`\n❌ Error: ${error.message}\n`);
+    console.error('## Troubleshooting\n');
+    console.error('```yaml');
+    console.error('error:');
+    console.error(`  message: "${error.message.substring(0, 80)}"`);
     
     // Context-specific error hints
     if (error.message.includes('EADDRINUSE') || error.message.includes('port')) {
-      console.error('│  Port already in use. Try:                                  │');
-      console.error('│    --port 3001  (use different port)                        │');
-      console.error('│    pkill -f "node.*server"  (kill existing process)         │');
+      console.error('  type: "port_in_use"');
+      console.error('  fix:');
+      console.error('    - "--port 3001  # use different port"');
+      console.error('    - "pkill -f node.*server  # kill existing"');
     } else if (error.message.includes('npm') || error.message.includes('install')) {
-      console.error('│  Dependency installation failed. Try:                       │');
-      console.error('│    cd <output-dir>/api && npm install                       │');
-      console.error('│    Check your npm/node version (requires Node 18+)          │');
+      console.error('  type: "npm_install_failed"');
+      console.error('  fix:');
+      console.error('    - "cd <output>/api && npm install"');
+      console.error('    - "node --version  # requires 18+"');
     } else if (error.message.includes('ENOENT') || error.message.includes('not found')) {
-      console.error('│  File or directory not found. Try:                          │');
-      console.error('│    Check the output directory exists                        │');
-      console.error('│    Verify contract file path is correct                     │');
+      console.error('  type: "file_not_found"');
+      console.error('  fix:');
+      console.error('    - "check output directory exists"');
+      console.error('    - "verify contract file path"');
     } else if (error.message.includes('Ollama') || error.message.includes('LLM')) {
-      console.error('│  LLM connection failed. Try:                                │');
-      console.error('│    ollama serve  (start Ollama server)                      │');
-      console.error('│    ollama pull llama3  (download model)                     │');
+      console.error('  type: "llm_connection_failed"');
+      console.error('  fix:');
+      console.error('    - "ollama serve  # start server"');
+      console.error('    - "ollama pull mistral:7b-instruct"');
     } else {
-      console.error('│  General troubleshooting:                                   │');
-      console.error('│    --verbose  (get more details)                            │');
-      console.error('│    Check logs in <output>/logs/*.rcl.md                     │');
+      console.error('  type: "unknown"');
+      console.error('  fix:');
+      console.error('    - "--verbose  # more details"');
+      console.error('    - "cat <output>/logs/*.rcl.md"');
     }
+    console.error('```\n');
+    console.error('> Docs: `./docs/30-evolution-system.md`');
+    console.error('> Issues: https://github.com/wronai/contract/issues\n');
     
-    console.error('╰─────────────────────────────────────────────────────────────╯');
+    if (options.verbose) console.error(error.stack);
+    process.exit(1);
+  }
+}
+
+// ============================================================================
+// TASKS COMMAND
+// ============================================================================
+
+async function cmdTasks(args, options) {
+  let taskFile = null;
+  let watch = false;
+  let workers = 3;
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--watch' || args[i] === '-w') {
+      watch = true;
+    } else if (args[i] === '--workers' && args[i + 1]) {
+      workers = parseInt(args[i + 1]); i++;
+    } else if (!args[i].startsWith('-')) {
+      taskFile = args[i];
+    }
+  }
+
+  if (!taskFile) {
+    console.error('❌ Usage: reclapp tasks <file.tasks> [--watch] [--workers N]');
     console.error('');
-    console.error('📚 Documentation: ./docs/30-evolution-system.md');
-    console.error('🐛 Report issues: https://github.com/wronai/contract/issues\n');
-    
+    console.error('## Task File Format\n');
+    console.error('```bash');
+    console.error('# Comments start with #');
+    console.error('echo "Hello World"');
+    console.error('npm install');
+    console.error('npm run build  # timeout: 120');
+    console.error('```\n');
+    process.exit(1);
+  }
+
+  console.log('\n## Task Executor v1.0\n');
+  console.log('```yaml');
+  console.log('config:');
+  console.log(`  file: "${taskFile}"`);
+  console.log(`  workers: ${workers}`);
+  console.log(`  watch: ${watch}`);
+  console.log('```\n');
+
+  try {
+    const contractAI = require('../src/core/contract-ai');
+    const executor = contractAI.createTaskExecutor({
+      maxWorkers: workers,
+      verbose: true
+    });
+
+    if (watch) {
+      executor.startWatching(taskFile);
+      console.log('> Watching for changes. Press Ctrl+C to stop.\n');
+      
+      process.on('SIGINT', () => {
+        console.log('\n🛑 Stopping task executor...');
+        executor.stopWatching();
+        executor.printMarkdown();
+        process.exit(0);
+      });
+
+      await new Promise(() => {});
+    } else {
+      executor.addTasksFromFile(taskFile);
+      await executor.waitForAll();
+      
+      console.log('\n## Final Status\n');
+      executor.printMarkdown();
+    }
+  } catch (error) {
+    console.error(`\n❌ Error: ${error.message}\n`);
     if (options.verbose) console.error(error.stack);
     process.exit(1);
   }
@@ -1634,6 +1843,9 @@ async function main() {
 
     case 'evolve': case 'evolution': case 'evo':
       await cmdEvolution(args.slice(1), options); break;
+
+    case 'tasks': case 'task':
+      await cmdTasks(args.slice(1), options); break;
 
     default:
       if (command.endsWith('.reclapp.ts') || command.endsWith('.ts') || command.endsWith('.rcl') || command.endsWith('.rcl.md') || command.endsWith('.contract.md')) {

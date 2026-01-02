@@ -4,7 +4,7 @@
  * Manages dynamic code generation, service monitoring, and hot-reload.
  * Enables continuous evolution of applications based on Contract AI.
  * 
- * @version 2.3.1
+ * @version 2.4.1
  */
 
 import { ContractAI, GeneratedCode, GeneratedFile } from '../types';
@@ -12,6 +12,153 @@ import { LLMClient, ContractGenerator } from '../generator/contract-generator';
 import { spawn, ChildProcess } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import { ShellRenderer } from './shell-renderer';
+
+// ============================================================================
+// TASK QUEUE
+// ============================================================================
+
+export type TaskStatus = 'pending' | 'running' | 'done' | 'failed' | 'skipped';
+
+export interface Task {
+  id: string;
+  name: string;
+  status: TaskStatus;
+  startedAt?: Date;
+  completedAt?: Date;
+  error?: string;
+  children?: Task[];
+}
+
+export class TaskQueue {
+  private tasks: Task[] = [];
+  private verbose: boolean;
+  private lastPrintedStatus: string = '';
+  private renderer: ShellRenderer;
+
+  constructor(verbose = true) {
+    this.verbose = verbose;
+    this.renderer = new ShellRenderer(verbose);
+  }
+
+  add(name: string, id?: string): Task {
+    const task: Task = {
+      id: id || `task-${this.tasks.length + 1}`,
+      name,
+      status: 'pending'
+    };
+    this.tasks.push(task);
+    return task;
+  }
+
+  start(id: string): void {
+    const task = this.tasks.find(t => t.id === id);
+    if (task) {
+      task.status = 'running';
+      task.startedAt = new Date();
+      this.printTodoList();
+    }
+  }
+
+  done(id: string): void {
+    const task = this.tasks.find(t => t.id === id);
+    if (task) {
+      task.status = 'done';
+      task.completedAt = new Date();
+      // Only print full list when all done, not on each completion
+      const allDone = this.tasks.every(t => t.status === 'done' || t.status === 'failed' || t.status === 'skipped');
+      if (allDone) {
+        this.printTodoList();
+      }
+    }
+  }
+
+  fail(id: string, error: string): void {
+    const task = this.tasks.find(t => t.id === id);
+    if (task) {
+      task.status = 'failed';
+      task.error = error;
+      task.completedAt = new Date();
+      this.printTodoList();
+    }
+  }
+
+  skip(id: string): void {
+    const task = this.tasks.find(t => t.id === id);
+    if (task) {
+      task.status = 'skipped';
+      task.completedAt = new Date();
+    }
+  }
+
+  printTodoList(): void {
+    if (!this.verbose) return;
+    
+    const pending = this.tasks.filter(t => t.status === 'pending').length;
+    const running = this.tasks.filter(t => t.status === 'running').length;
+    const done = this.tasks.filter(t => t.status === 'done').length;
+    const failed = this.tasks.filter(t => t.status === 'failed').length;
+    
+    // Only print full list at start and end
+    const allDone = pending === 0 && running === 0;
+    const justStarted = done === 0 && running === 1;
+    
+    if (justStarted) {
+      this.renderer.heading(2, 'TODO');
+      const yaml = [
+        '# @type: task_queue',
+        '# @description: Evolution pipeline task list',
+        'progress:',
+        `  done: ${done}`,
+        `  total: ${this.tasks.length}`,
+        'tasks:',
+        ...this.tasks.map(t => `  - name: "${t.name}"\n    status: ${t.status}`)
+      ].join('\n');
+      this.renderer.codeblock('yaml', yaml);
+    } else if (allDone) {
+      this.renderer.heading(2, 'COMPLETED');
+      const yaml = [
+        '# @type: task_queue_result',
+        '# @description: Final task execution results',
+        'progress:',
+        `  done: ${done}`,
+        `  total: ${this.tasks.length}`,
+        ...(failed > 0 ? [`  failed: ${failed}`] : []),
+        'tasks:',
+        ...this.tasks.map(t => {
+          const duration = t.startedAt && t.completedAt 
+            ? Math.round((t.completedAt.getTime() - t.startedAt.getTime()) / 1000)
+            : 0;
+          return `  - name: "${t.name}"\n    status: ${t.status}\n    duration_sec: ${duration}`;
+        })
+      ].join('\n');
+      this.renderer.codeblock('yaml', yaml);
+    }
+  }
+
+  print(): void {
+    this.printTodoList();
+  }
+
+  private getIcon(status: TaskStatus): string {
+    switch (status) {
+      case 'pending': return '⏳';
+      case 'running': return '🔄';
+      case 'done': return '✅';
+      case 'failed': return '❌';
+      case 'skipped': return '⏭️';
+      default: return '•';
+    }
+  }
+
+  getTasks(): Task[] {
+    return [...this.tasks];
+  }
+
+  clear(): void {
+    this.tasks = [];
+  }
+}
 
 // ============================================================================
 // TYPES
@@ -86,9 +233,13 @@ export class EvolutionManager {
   private serviceLogs: LogEntry[] = [];
   private healthCheckTimer: NodeJS.Timeout | null = null;
   private logAnalysisTimer: NodeJS.Timeout | null = null;
+  private taskQueue: TaskQueue;
+  private renderer: ShellRenderer;
 
   constructor(options: Partial<EvolutionOptions> = {}) {
     this.options = { ...DEFAULT_OPTIONS, ...options };
+    this.taskQueue = new TaskQueue(this.options.verbose);
+    this.renderer = new ShellRenderer(this.options.verbose);
   }
 
   /**
@@ -105,28 +256,489 @@ export class EvolutionManager {
     this.contract = contract;
   }
 
+  printTasks(): void {
+    this.taskQueue.print();
+  }
+
+  getTasks(): Task[] {
+    return this.taskQueue.getTasks();
+  }
+
+  /**
+   * Builds current state context for LLM - what's done, what's pending, what failed
+   */
+  private buildStateContext(): string {
+    const tasks = this.taskQueue.getTasks();
+    const done = tasks.filter(t => t.status === 'done').map(t => t.name);
+    const failed = tasks.filter(t => t.status === 'failed').map(t => `${t.name}: ${t.error}`);
+    const pending = tasks.filter(t => t.status === 'pending').map(t => t.name);
+    
+    // Get list of existing files
+    const existingFiles: string[] = [];
+    const apiDir = path.join(this.options.outputDir, 'api');
+    if (fs.existsSync(apiDir)) {
+      const walk = (dir: string, prefix = '') => {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const entry of entries) {
+          if (entry.name === 'node_modules') continue;
+          const fullPath = path.join(dir, entry.name);
+          const relPath = prefix ? `${prefix}/${entry.name}` : entry.name;
+          if (entry.isDirectory()) {
+            walk(fullPath, relPath);
+          } else {
+            existingFiles.push(`api/${relPath}`);
+          }
+        }
+      };
+      walk(apiDir);
+    }
+
+    return JSON.stringify({
+      state: {
+        completed_tasks: done,
+        failed_tasks: failed,
+        pending_tasks: pending,
+        existing_files: existingFiles,
+        service: {
+          port: this.options.port,
+          running: this.serviceProcess !== null,
+          healthy: this.serviceLogs.filter(l => l.level === 'error').length === 0
+        }
+      },
+      instructions: failed.length > 0 
+        ? 'Fix the errors and regenerate failed components'
+        : pending.length > 0 
+          ? 'Continue with pending tasks'
+          : 'All tasks complete, verify everything works'
+    }, null, 2);
+  }
+
+  /**
+   * Writes current state to JSON file for LLM context
+   */
+  private writeStateSnapshot(): void {
+    const stateDir = path.join(this.options.outputDir, 'state');
+    if (!fs.existsSync(stateDir)) {
+      fs.mkdirSync(stateDir, { recursive: true });
+    }
+
+    const state = {
+      timestamp: new Date().toISOString(),
+      tasks: this.taskQueue.getTasks().map(t => ({
+        id: t.id,
+        name: t.name,
+        status: t.status,
+        error: t.error,
+        duration_sec: t.startedAt && t.completedAt 
+          ? Math.round((t.completedAt.getTime() - t.startedAt.getTime()) / 1000)
+          : null
+      })),
+      contract: this.contract,
+      service: {
+        port: this.options.port,
+        outputDir: this.options.outputDir
+      }
+    };
+
+    const outPath = path.join(stateDir, 'evolution-state.json');
+    fs.writeFileSync(outPath, JSON.stringify(state, null, 2), 'utf-8');
+
+    if (this.options.verbose) {
+      this.renderer.codeblock('yaml', `# @type: state_snapshot\n# @description: Evolution state for LLM context\nstate:\n  file: "${outPath}"\n  tasks_done: ${state.tasks.filter(t => t.status === 'done').length}\n  tasks_pending: ${state.tasks.filter(t => t.status === 'pending').length}`);
+    }
+  }
+
+  /**
+   * Iterative evolution - runs LLM in loop until all tasks complete
+   */
+  async evolveIteratively(prompt: string, maxIterations = 5): Promise<void> {
+    this.taskQueue.clear();
+    
+    // Initial tasks with test generation
+    this.taskQueue.add('Parse prompt & create contract', 'contract');
+    this.taskQueue.add('Generate code with LLM', 'generate');
+    this.taskQueue.add('Generate tests for validation', 'generate-tests');
+    this.taskQueue.add('Write files to disk', 'write');
+    this.taskQueue.add('Install dependencies', 'install');
+    this.taskQueue.add('Start service', 'start');
+    this.taskQueue.add('Run tests', 'run-tests');
+    this.taskQueue.add('Health check', 'health');
+
+    if (this.options.verbose) {
+      this.renderer.heading(2, 'Iterative Evolution');
+      this.renderer.codeblock('yaml', `# @type: iterative_config\niterations:\n  max: ${maxIterations}\n  mode: "loop until success"`);
+    }
+
+    for (let iteration = 0; iteration < maxIterations; iteration++) {
+      if (this.options.verbose) {
+        this.renderer.heading(3, `Iteration ${iteration + 1}`);
+      }
+
+      // Write current state for LLM context
+      this.writeStateSnapshot();
+
+      // Check what needs to be done
+      const tasks = this.taskQueue.getTasks();
+      const pendingTasks = tasks.filter(t => t.status === 'pending');
+      const failedTasks = tasks.filter(t => t.status === 'failed');
+
+      if (pendingTasks.length === 0 && failedTasks.length === 0) {
+        if (this.options.verbose) {
+          this.renderer.codeblock('yaml', `# @type: iteration_complete\nresult: success\nmessage: "All tasks completed"`);
+        }
+        break;
+      }
+
+      // Build context with current state
+      const stateContext = this.buildStateContext();
+
+      // Process tasks based on state
+      for (const task of tasks) {
+        if (task.status !== 'pending' && task.status !== 'failed') continue;
+
+        this.taskQueue.start(task.id);
+
+        try {
+          switch (task.id) {
+            case 'contract':
+              this.contract = this.createMinimalContract(prompt);
+              this.writeContractSnapshot();
+              this.taskQueue.done(task.id);
+              break;
+
+            case 'generate':
+              // Pass state context to LLM
+              const code = await this.generateCode(
+                failedTasks.length > 0 ? 'error' : 'initial',
+                stateContext
+              );
+              if (code.files.length > 0) {
+                await this.writeFiles(code.files);
+                this.taskQueue.done(task.id);
+                // Also mark write as done
+                const writeTask = tasks.find(t => t.id === 'write');
+                if (writeTask && writeTask.status === 'pending') {
+                  this.taskQueue.start('write');
+                  this.taskQueue.done('write');
+                }
+              } else {
+                this.taskQueue.fail(task.id, 'No files generated');
+              }
+              break;
+
+            case 'generate-tests':
+              // Generate test files for API validation
+              await this.generateTestFiles();
+              this.taskQueue.done(task.id);
+              break;
+
+            case 'install':
+            case 'start':
+              await this.startService();
+              this.taskQueue.done('install');
+              this.taskQueue.done('start');
+              break;
+
+            case 'run-tests':
+              // Run generated tests
+              const testsPassed = await this.runTests();
+              if (testsPassed) {
+                this.taskQueue.done(task.id);
+              } else {
+                this.taskQueue.fail(task.id, 'Tests failed');
+              }
+              break;
+
+            case 'health':
+              const healthy = await this.checkHealth();
+              if (healthy) {
+                this.taskQueue.done(task.id);
+              } else {
+                this.taskQueue.fail(task.id, 'Service not responding');
+                // Add retry task dynamically
+                if (iteration < maxIterations - 1) {
+                  this.taskQueue.add('Retry health check', 'health-retry');
+                }
+              }
+              break;
+          }
+        } catch (error: any) {
+          this.taskQueue.fail(task.id, error.message);
+        }
+
+        // Update state after each task
+        this.writeStateSnapshot();
+      }
+    }
+
+    // Final state
+    this.writeStateSnapshot();
+    this.startMonitoring();
+  }
+
+  /**
+   * Generates test files for API validation
+   */
+  private async generateTestFiles(): Promise<void> {
+    if (!this.contract) return;
+
+    const testDir = path.join(this.options.outputDir, 'api', 'tests');
+    if (!fs.existsSync(testDir)) {
+      fs.mkdirSync(testDir, { recursive: true });
+    }
+
+    const entities = this.contract.definition?.entities || [];
+    const mainEntity = entities[0]?.name || 'Item';
+    const lowerName = mainEntity.toLowerCase();
+    const pluralName = lowerName + 's';
+
+    // Generate API test file
+    const testContent = `/**
+ * API Tests - Auto-generated by Reclapp Evolution
+ * @type: api_tests
+ * @entity: ${mainEntity}
+ */
+
+const BASE_URL = 'http://localhost:${this.options.port}';
+
+interface TestResult {
+  name: string;
+  passed: boolean;
+  error?: string;
+  duration_ms: number;
+}
+
+const results: TestResult[] = [];
+
+async function test(name: string, fn: () => Promise<void>): Promise<void> {
+  const start = Date.now();
+  try {
+    await fn();
+    results.push({ name, passed: true, duration_ms: Date.now() - start });
+    console.log(\`✅ \${name}\`);
+  } catch (error: any) {
+    results.push({ name, passed: false, error: error.message, duration_ms: Date.now() - start });
+    console.log(\`❌ \${name}: \${error.message}\`);
+  }
+}
+
+async function runTests(): Promise<void> {
+  console.log('\\n## API Tests\\n');
+
+  // Health check
+  await test('Health endpoint responds', async () => {
+    const res = await fetch(\`\${BASE_URL}/health\`);
+    if (!res.ok) throw new Error(\`Status: \${res.status}\`);
+  });
+
+  // CRUD tests for ${mainEntity}
+  let createdId: string | null = null;
+
+  await test('POST /${pluralName} - create', async () => {
+    const res = await fetch(\`\${BASE_URL}/${pluralName}\`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Test ${mainEntity}' })
+    });
+    if (!res.ok) throw new Error(\`Status: \${res.status}\`);
+    const data = await res.json();
+    createdId = data.id;
+    if (!createdId) throw new Error('No ID returned');
+  });
+
+  await test('GET /${pluralName} - list', async () => {
+    const res = await fetch(\`\${BASE_URL}/${pluralName}\`);
+    if (!res.ok) throw new Error(\`Status: \${res.status}\`);
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error('Expected array');
+  });
+
+  await test('GET /${pluralName}/:id - read', async () => {
+    if (!createdId) throw new Error('No ID from create test');
+    const res = await fetch(\`\${BASE_URL}/${pluralName}/\${createdId}\`);
+    if (!res.ok) throw new Error(\`Status: \${res.status}\`);
+  });
+
+  await test('DELETE /${pluralName}/:id - delete', async () => {
+    if (!createdId) throw new Error('No ID from create test');
+    const res = await fetch(\`\${BASE_URL}/${pluralName}/\${createdId}\`, { method: 'DELETE' });
+    if (!res.ok) throw new Error(\`Status: \${res.status}\`);
+  });
+
+  // Summary
+  const passed = results.filter(r => r.passed).length;
+  const failed = results.filter(r => !r.passed).length;
+  
+  console.log(\`\\n## Test Results\\n\`);
+  console.log(\`\\\`\\\`\\\`yaml\`);
+  console.log(\`# @type: test_results\`);
+  console.log(\`summary:\`);
+  console.log(\`  total: \${results.length}\`);
+  console.log(\`  passed: \${passed}\`);
+  console.log(\`  failed: \${failed}\`);
+  console.log(\`tests:\`);
+  for (const r of results) {
+    console.log(\`  - name: "\${r.name}"\`);
+    console.log(\`    passed: \${r.passed}\`);
+    console.log(\`    duration_ms: \${r.duration_ms}\`);
+    if (r.error) console.log(\`    error: "\${r.error}"\`);
+  }
+  console.log(\`\\\`\\\`\\\`\`);
+
+  // Exit with error if tests failed
+  if (failed > 0) process.exit(1);
+}
+
+runTests().catch(e => {
+  console.error('Test runner error:', e);
+  process.exit(1);
+});
+`;
+
+    const testPath = path.join(testDir, 'api.test.ts');
+    fs.writeFileSync(testPath, testContent, 'utf-8');
+
+    if (this.options.verbose) {
+      this.renderer.codeblock('yaml', `# @type: tests_generated\ntests:\n  dir: "${testDir}"\n  files:\n    - api.test.ts\n  entity: "${mainEntity}"`);
+    }
+  }
+
+  /**
+   * Runs the generated tests
+   */
+  private async runTests(): Promise<boolean> {
+    const testFile = path.join(this.options.outputDir, 'api', 'tests', 'api.test.ts');
+    
+    if (!fs.existsSync(testFile)) {
+      if (this.options.verbose) {
+        this.renderer.codeblock('yaml', `# @type: test_skip\nreason: "No test files found"`);
+      }
+      return true; // Skip if no tests
+    }
+
+    if (this.options.verbose) {
+      this.renderer.codeblock('yaml', `# @type: test_run\nfile: "${testFile}"`);
+    }
+
+    return new Promise((resolve) => {
+      const testProcess = spawn('npx', ['tsx', testFile], {
+        cwd: path.join(this.options.outputDir, 'api'),
+        stdio: 'pipe'
+      });
+
+      let output = '';
+      testProcess.stdout?.on('data', (data) => {
+        output += data.toString();
+        if (this.options.verbose) {
+          process.stdout.write(data);
+        }
+      });
+      testProcess.stderr?.on('data', (data) => {
+        output += data.toString();
+      });
+
+      testProcess.on('close', (code) => {
+        resolve(code === 0);
+      });
+
+      testProcess.on('error', () => {
+        resolve(false);
+      });
+
+      // Timeout after 30 seconds
+      setTimeout(() => {
+        testProcess.kill();
+        resolve(false);
+      }, 30000);
+    });
+  }
+
+  private writeContractSnapshot(): void {
+    if (!this.contract) {
+      return;
+    }
+
+    const contractDir = path.join(this.options.outputDir, 'contract');
+    if (!fs.existsSync(contractDir)) {
+      fs.mkdirSync(contractDir, { recursive: true });
+    }
+
+    const outPath = path.join(contractDir, 'contract.ai.json');
+    fs.writeFileSync(outPath, JSON.stringify(this.contract, null, 2), 'utf-8');
+
+    if (this.options.verbose) {
+      this.renderer.codeblock('yaml', `# @type: contract_snapshot\n# @description: ContractAI snapshot\ncontract:\n  file: "${outPath}"`);
+    }
+  }
+
   /**
    * Starts the evolution lifecycle from a prompt (without pre-generated contract)
    */
   async startFromPrompt(prompt: string): Promise<void> {
+    // Initialize task queue
+    this.taskQueue.clear();
+    
+    // Add initial tasks
+    const taskContract = this.taskQueue.add('Parse prompt & create contract', 'contract');
+    const taskContractWrite = this.taskQueue.add('Write contract to disk', 'contract-write');
+    const taskGenerate = this.taskQueue.add('Generate code with LLM', 'generate');
+    const taskWrite = this.taskQueue.add('Write files to disk', 'write');
+    const taskInstall = this.taskQueue.add('Install dependencies', 'install');
+    const taskStart = this.taskQueue.add('Start service', 'start');
+    const taskHealth = this.taskQueue.add('Health check', 'health');
+
     if (this.options.verbose) {
-      console.log('\n🧬 Starting Evolution Manager (from prompt)');
-      console.log(`   Prompt: ${prompt}`);
-      console.log(`   Output: ${this.options.outputDir}`);
-      console.log(`   Port: ${this.options.port}`);
+      this.renderer.heading(2, 'Config');
+      const configYaml = [
+        '# @type: evolution_config',
+        '# @description: Evolution pipeline configuration',
+        'evolution:',
+        `  prompt: "${prompt.substring(0, 50)}"`,
+        `  output: "${this.options.outputDir}"`,
+        `  port: ${this.options.port}`
+      ].join('\n');
+      this.renderer.codeblock('yaml', configYaml);
     }
 
-    // Create a minimal contract from prompt
+    // Task 1: Create contract
+    this.taskQueue.start('contract');
     this.contract = this.createMinimalContract(prompt);
+    this.taskQueue.done('contract');
 
-    // Generate code directly
+    this.taskQueue.start('contract-write');
+    this.writeContractSnapshot();
+    this.taskQueue.done('contract-write');
+
+    // Task 2: Generate code
+    this.taskQueue.start('generate');
     const code = await this.generateCode('initial');
+    if (code.files.length > 0) {
+      this.taskQueue.done('generate');
+    } else {
+      this.taskQueue.fail('generate', 'No files generated');
+      return;
+    }
 
-    // Write files
+    // Task 3: Write files
+    this.taskQueue.start('write');
     await this.writeFiles(code.files);
+    this.taskQueue.done('write');
 
-    // Start service
+    // Task 4 & 5: Install and Start
+    this.taskQueue.start('install');
+    this.taskQueue.start('start');
     await this.startService();
+    this.taskQueue.done('install');
+    this.taskQueue.done('start');
+
+    // Task 6: Health check
+    this.taskQueue.start('health');
+    const healthy = await this.checkHealth();
+    if (healthy) {
+      this.taskQueue.done('health');
+    } else {
+      this.taskQueue.fail('health', 'Service not responding');
+    }
 
     // Start monitoring
     this.startMonitoring();
@@ -327,6 +939,7 @@ export class EvolutionManager {
     // Generate initial code if not provided
     let code = initialCode;
     if (!code) {
+      this.writeContractSnapshot();
       code = await this.generateCode('initial');
     }
 
@@ -362,10 +975,6 @@ export class EvolutionManager {
       throw new Error('Contract not set');
     }
 
-    if (this.options.verbose) {
-      console.log(`\n🤖 Generating code (trigger: ${trigger})...`);
-    }
-
     let response: string;
     
     // Use LLM for code generation when available
@@ -374,7 +983,7 @@ export class EvolutionManager {
       const userPrompt = this.buildUserPrompt(trigger, context);
       
       if (this.options.verbose) {
-        console.log(`\n🤖 Generating code (trigger: ${trigger})...`);
+        this.renderer.codeblock('yaml', `# @type: llm_request\n# @description: LLM code generation request\nllm:\n  trigger: "${trigger}"\n  status: calling`);
       }
       
       try {
@@ -385,25 +994,42 @@ export class EvolutionManager {
           maxTokens: 16000
         });
         
+        if (this.options.verbose) {
+          this.renderer.codeblock('yaml', `# @type: llm_response\n# @description: LLM response received\nllm:\n  status: success\n  response_chars: ${response.length}`);
+        }
+        
         // Validate response has actual code
         if (!response.includes('```') || response.length < 500) {
           if (this.options.verbose) {
-            console.log('   ⚠️ LLM response too short, using fallback');
+            this.renderer.codeblock('yaml', `llm:\n  status: invalid_response\n  fallback: true`);
           }
           response = this.generateFallbackCode();
         }
       } catch (error: any) {
+        // Dynamically add task for missing model
+        if (error.message.includes('not found') || error.message.includes('Pull with')) {
+          const modelMatch = error.message.match(/Model '([^']+)'/);
+          const modelName = modelMatch ? modelMatch[1] : 'unknown';
+          this.taskQueue.add(`Pull LLM model: ${modelName}`, 'pull-model');
+          this.taskQueue.fail('pull-model', `Run: ollama pull ${modelName}`);
+        }
+        
+        // Add fallback task
+        this.taskQueue.add('Use fallback code generator', 'fallback');
+        this.taskQueue.start('fallback');
+        
         if (this.options.verbose) {
-          console.log(`   ⚠️ LLM error: ${error.message}, using fallback`);
+          this.renderer.codeblock('yaml', `llm:\n  status: error\n  error: "${error.message.substring(0, 60)}"\n  fallback: true`);
         }
         response = this.generateFallbackCode();
+        this.taskQueue.done('fallback');
       }
     } else {
-      // No LLM available - use fallback
-      if (this.options.verbose) {
-        console.log('   ℹ️ No LLM available, using fallback code generator');
-      }
+      // No LLM available - add task and use fallback
+      this.taskQueue.add('Use fallback code generator', 'fallback');
+      this.taskQueue.start('fallback');
       response = this.generateFallbackCode();
+      this.taskQueue.done('fallback');
     }
 
     const files = this.parseFilesFromResponse(response);
@@ -424,44 +1050,44 @@ export class EvolutionManager {
    * Builds system prompt for LLM
    */
   private buildSystemPrompt(): string {
-    return `You are an expert full-stack TypeScript developer. Generate COMPLETE, WORKING code for Express.js REST APIs.
+    return `You are an expert TypeScript developer. Generate a REST API.
 
-CRITICAL RULES:
-1. Generate COMPLETE, RUNNABLE code - NO placeholders, NO "// TODO", NO "..."
-2. Include ALL imports at the top of each file
-3. Use TypeScript with explicit types for everything
-4. Use in-memory Map storage (no database required)
-5. Include /health endpoint returning JSON { status: 'ok', timestamp, entities }
-6. Include FULL CRUD for ALL entities: GET list, GET by id, POST create, PUT update, DELETE
-7. Use proper HTTP status codes: 200, 201, 204, 400, 404, 500
-8. Include request body validation
-9. Port from environment: process.env.PORT || 3000
+RULES:
+1. Use ONLY these packages: express, cors (NO moment, NO uuid, NO other packages)
+2. Use in-memory Map for storage
+3. Include /health endpoint
+4. Include CRUD: GET /api/v1/{entity}s, POST, PUT, DELETE
 
-REQUIRED OUTPUT FORMAT - use EXACTLY this format with file paths after the language:
+OUTPUT FORMAT (use EXACTLY):
 
 \`\`\`typescript:api/src/server.ts
 import express from 'express';
 import cors from 'cors';
-// ... complete server code with all routes inline
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const PORT = process.env.PORT || 3000;
+const items = new Map<string, any>();
+let idCounter = 1;
+
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+// CRUD routes here...
+
+app.listen(PORT, () => console.log(\`Server on port \${PORT}\`));
 \`\`\`
 
 \`\`\`json:api/package.json
-{
-  "name": "generated-api",
-  "version": "1.0.0",
-  "scripts": { "dev": "ts-node src/server.ts", "start": "node dist/server.js" },
-  "dependencies": { "cors": "^2.8.5", "express": "^4.18.2" },
-  "devDependencies": { "@types/cors": "^2.8.14", "@types/express": "^4.17.20", "@types/node": "^20.9.0", "ts-node": "^10.9.2", "typescript": "^5.3.0" }
-}
+{"name":"api","version":"1.0.0","scripts":{"dev":"ts-node src/server.ts"},"dependencies":{"cors":"^2.8.5","express":"^4.18.2"},"devDependencies":{"@types/cors":"^2.8.14","@types/express":"^4.17.20","@types/node":"^20.9.0","ts-node":"^10.9.2","typescript":"^5.3.0"}}
 \`\`\`
 
 \`\`\`json:api/tsconfig.json
-{
-  "compilerOptions": { "target": "ES2020", "module": "commonjs", "outDir": "./dist", "strict": true, "esModuleInterop": true, "skipLibCheck": true }
-}
+{"compilerOptions":{"target":"ES2020","module":"commonjs","strict":true,"esModuleInterop":true,"skipLibCheck":true}}
 \`\`\`
 
-DO NOT include any packages not listed above. NO socket.io, NO mongoose, NO other dependencies.`;
+IMPORTANT: Copy package.json EXACTLY as shown above. Do NOT add moment, uuid, or any other packages.`;
   }
 
   /**
@@ -531,22 +1157,49 @@ Generate the COMPLETE code now. Do not use placeholders or comments like "// add
    */
   private parseFilesFromResponse(response: string): GeneratedFile[] {
     const files: GeneratedFile[] = [];
-    const fileRegex = /```(?:typescript|javascript|json):(.+?)\n([\s\S]*?)```/g;
+    
+    // Try multiple regex patterns to handle different LLM output formats
+    const patterns = [
+      /```(?:typescript|ts|javascript|js|json):([^\n]+)\n([\s\S]*?)```/g,  // ```ts:path
+      /```([^\n]*?)\n\/\/ ?(?:file|path): ?([^\n]+)\n([\s\S]*?)```/g,       // // file: path
+      /```\n?([^\n]*?)\n\/\*\* ?@file ?([^\n]+) ?\*\/\n([\s\S]*?)```/g,     // /** @file path */
+    ];
 
+    // First pattern: ```typescript:api/src/server.ts
     let match;
-    while ((match = fileRegex.exec(response)) !== null) {
+    const pattern1 = /```(?:typescript|ts|javascript|js|json):([^\n]+)\n([\s\S]*?)```/g;
+    while ((match = pattern1.exec(response)) !== null) {
       const filePath = match[1].trim();
       let content = match[2].trim();
       const target = filePath.startsWith('api/') ? 'api' : 
                     filePath.startsWith('tests/') ? 'tests' : 
                     filePath.startsWith('frontend/') ? 'frontend' : 'api';
 
-      // Strip comments from JSON files
       if (filePath.endsWith('.json')) {
         content = this.stripJsonComments(content);
       }
 
       files.push({ path: filePath, content, target });
+    }
+
+    // Print parsed files summary
+    if (this.options.verbose && files.length > 0) {
+      const yaml = [
+        '# @type: parsed_files',
+        '# @description: Files extracted from LLM response',
+        'parsed:',
+        `  count: ${files.length}`,
+        '  files:',
+        ...files.map(f => `    - path: "${f.path}"\n      chars: ${f.content.length}`)
+      ].join('\n');
+      this.renderer.codeblock('yaml', yaml);
+    }
+
+    // If no files found with first pattern, try to extract from plain code blocks
+    if (files.length === 0) {
+      if (this.options.verbose) {
+        this.renderer.codeblock('yaml', `# @type: parse_error\n# @description: No files parsed\nparsed:\n  count: 0\n  error: "no files parsed"\n  response_length: ${response.length}`);
+      }
     }
 
     return files;
@@ -569,19 +1222,43 @@ Generate the COMPLETE code now. Do not use placeholders or comments like "// add
    * Writes files to disk
    */
   async writeFiles(files: GeneratedFile[]): Promise<void> {
+    const writtenFiles: { path: string; bytes: number; error?: string }[] = [];
+
+    if (files.length === 0) {
+      if (this.options.verbose) {
+        this.renderer.codeblock('yaml', `files:\n  output: "${this.options.outputDir}"\n  count: 0\n  error: "no files to write"`);
+      }
+      return;
+    }
+
     for (const file of files) {
       const fullPath = path.join(this.options.outputDir, file.path);
       const dir = path.dirname(fullPath);
 
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
+      try {
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+        fs.writeFileSync(fullPath, file.content, 'utf-8');
+        writtenFiles.push({ path: file.path, bytes: file.content.length });
+      } catch (error: any) {
+        writtenFiles.push({ path: file.path, bytes: 0, error: error.message });
       }
-
-      fs.writeFileSync(fullPath, file.content, 'utf-8');
-
-      if (this.options.verbose) {
-        console.log(`   📝 ${file.path}`);
-      }
+    }
+    
+    if (this.options.verbose) {
+      const yaml = [
+        '# @type: written_files',
+        '# @description: Files written to disk',
+        'files:',
+        `  output: "${this.options.outputDir}"`,
+        `  count: ${files.length}`,
+        '  written:',
+        ...writtenFiles.map(f => f.error 
+          ? `    - path: "${f.path}"\n      error: "${f.error}"`
+          : `    - path: "${f.path}"\n      bytes: ${f.bytes}`)
+      ].join('\n');
+      this.renderer.codeblock('yaml', yaml);
     }
   }
 
@@ -1064,16 +1741,19 @@ Generate the COMPLETE code now. Do not use placeholders or comments like "// add
     const lines: string[] = [
       '# Evolution Log',
       '',
-      `> Generated by Reclapp Evolution Manager v2.3.1`,
+      `> Generated by Reclapp Evolution Manager v2.4.1`,
       '',
       '## Summary',
       '',
-      `| Property | Value |`,
-      `|----------|-------|`,
-      `| Total Cycles | ${this.evolutionHistory.length} |`,
-      `| Last Update | ${new Date().toISOString()} |`,
-      `| Service Port | ${this.options.port} |`,
-      `| Output Dir | ${this.options.outputDir} |`,
+      '```yaml',
+      '# @type: evolution_summary',
+      '# @description: Evolution session summary',
+      'summary:',
+      `  total_cycles: ${this.evolutionHistory.length}`,
+      `  last_update: "${new Date().toISOString()}"`,
+      `  service_port: ${this.options.port}`,
+      `  output_dir: "${this.options.outputDir}"`,
+      '```',
       '',
       '---',
       '',
@@ -1084,28 +1764,31 @@ Generate the COMPLETE code now. Do not use placeholders or comments like "// add
     for (const cycle of this.evolutionHistory) {
       lines.push(`### Cycle ${cycle.cycle} - ${cycle.trigger}`);
       lines.push('');
-      lines.push(`- **Timestamp**: ${cycle.timestamp.toISOString()}`);
-      lines.push(`- **Result**: ${cycle.result}`);
-      lines.push(`- **Changes**: ${cycle.changes.length} files`);
-      lines.push('');
+      lines.push('```yaml');
+      lines.push('cycle:');
+      lines.push(`  number: ${cycle.cycle}`);
+      lines.push(`  trigger: "${cycle.trigger}"`);
+      lines.push(`  timestamp: "${cycle.timestamp.toISOString()}"`);
+      lines.push(`  result: ${cycle.result}`);
+      lines.push(`  files_changed: ${cycle.changes.length}`);
       
       if (cycle.changes.length > 0) {
-        lines.push('#### Files Changed');
-        lines.push('');
+        lines.push('  changes:');
         for (const change of cycle.changes) {
-          lines.push(`- \`${change.path}\` (${change.action}): ${change.reason}`);
+          lines.push(`    - path: "${change.path}"`);
+          lines.push(`      action: ${change.action}`);
+          lines.push(`      reason: "${change.reason}"`);
         }
-        lines.push('');
       }
 
       if (cycle.logs.length > 0) {
-        lines.push('#### Logs');
-        lines.push('');
-        lines.push('```');
-        lines.push(cycle.logs.slice(0, 10).join('\n'));
-        lines.push('```');
-        lines.push('');
+        lines.push('  logs:');
+        for (const log of cycle.logs.slice(0, 10)) {
+          lines.push(`    - "${log}"`);
+        }
       }
+      lines.push('```');
+      lines.push('');
     }
 
     return lines.join('\n');
@@ -1184,23 +1867,6 @@ let idCounter = 1;
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), entities: ${JSON.stringify(entities.map(e => e.name))} });
-});
-
-app.get('/', (req, res) => {
-  res.type('html').send(
-    '<!doctype html>' +
-      '<html><head><meta charset="utf-8" />' +
-      '<meta name="viewport" content="width=device-width, initial-scale=1" />' +
-      '<title>Reclapp Service</title></head>' +
-      '<body style="font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 24px;">' +
-      '<h1 style="margin: 0 0 12px 0;">Reclapp service is running</h1>' +
-      '<p style="margin: 0 0 16px 0;">This is the generated API server. Useful endpoints:</p>' +
-      '<ul>' +
-      '<li><a href="/health">/health</a></li>' +
-      '<li><code>/api/v1/*</code> (CRUD endpoints)</li>' +
-      '</ul>' +
-      '</body></html>'
-  );
 });
 ${routeBlocks}
 
@@ -1639,22 +2305,29 @@ export default {
     await this.stopService();
     
     if (this.options.verbose) {
-      console.log('\n✅ Evolution Manager shut down');
+      console.log('\n✅ Evolution Manager shut down\n');
+      console.log('## Summary\n');
+      console.log('```yaml');
+      console.log('evolution:');
+      console.log(`  cycles: ${this.evolutionHistory.length}`);
+      console.log(`  output: "${this.options.outputDir}"`);
+      console.log(`  logs: "${path.join(this.options.outputDir, 'logs')}"`);
+      console.log(`  port: ${this.options.port}`);
+      console.log('```\n');
+      console.log('## Next Steps\n');
+      console.log('```bash');
+      console.log(`# Start service`);
+      console.log(`cd ${this.options.outputDir}/api && npm run dev`);
       console.log('');
-      console.log('╭─────────────────────────────────────────────────────────────╮');
-      console.log('│  📋 Summary                                                  │');
-      console.log('├─────────────────────────────────────────────────────────────┤');
-      console.log(`│  Evolution cycles: ${this.evolutionHistory.length.toString().padEnd(39)}│`);
-      console.log(`│  Output directory: ${this.options.outputDir.substring(0, 39).padEnd(39)}│`);
-      console.log(`│  Logs: ${path.join(this.options.outputDir, 'logs').substring(0, 50).padEnd(50)}│`);
-      console.log('╰─────────────────────────────────────────────────────────────╯');
+      console.log(`# Run tests`);
+      console.log(`cd ${this.options.outputDir}/tests && npm test`);
       console.log('');
-      console.log('💡 Next steps:');
-      console.log(`   • Start service:     cd ${this.options.outputDir}/api && npm run dev`);
-      console.log(`   • Run tests:         cd ${this.options.outputDir}/tests && npm test`);
-      console.log(`   • View logs:         cat ${this.options.outputDir}/logs/*.rcl.md`);
-      console.log(`   • Keep running:      ./bin/reclapp evolve -p "..." -k`);
+      console.log(`# View logs`);
+      console.log(`cat ${this.options.outputDir}/logs/*.rcl.md`);
       console.log('');
+      console.log(`# Keep running mode`);
+      console.log(`./bin/reclapp evolve -p "..." -k`);
+      console.log('```\n');
     }
   }
 }
