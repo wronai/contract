@@ -639,6 +639,160 @@ export class EvolutionManager {
     return null;
   }
 
+  private async withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+    let timeoutId: NodeJS.Timeout | undefined;
+    let timedOut = false;
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => {
+        timedOut = true;
+        reject(new Error('timeout'));
+      }, ms);
+    });
+
+    try {
+      const result = await Promise.race([
+        promise.finally(() => {
+          if (timeoutId) clearTimeout(timeoutId);
+        }),
+        timeoutPromise
+      ]);
+      return result as T;
+    } catch (e) {
+      if (timedOut) {
+        promise.catch(() => {});
+      }
+      throw e;
+    }
+  }
+
+  private async withRetries<T>(
+    fn: () => Promise<T>,
+    attempts: number,
+    delayMs: number,
+    shouldRetry?: (e: any) => boolean
+  ): Promise<T> {
+    let lastError: any;
+    const maxAttempts = Math.max(1, Number(attempts || 1));
+    const baseDelay = Math.max(0, Number(delayMs || 0));
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        return await fn();
+      } catch (e: any) {
+        lastError = e;
+        const retryAllowed = shouldRetry ? shouldRetry(e) : true;
+        if (!retryAllowed || attempt === maxAttempts) {
+          throw e;
+        }
+        const sleepMs = baseDelay * Math.pow(2, attempt - 1);
+        if (sleepMs > 0) await this.sleep(sleepMs);
+      }
+    }
+
+    throw lastError;
+  }
+
+  private yamlEscape(value: string): string {
+    return (value ?? '').toString().replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  }
+
+  private getErrorHints(errorMsg: string): { type: string; hints: string[] } {
+    const msg = (errorMsg || '').toString();
+    const lower = msg.toLowerCase();
+
+    if (lower.includes('eaddrinuse') || lower.includes('address already in use')) {
+      return {
+        type: 'port_in_use',
+        hints: [
+          'Run with a different port: ./bin/reclapp evolve --port 3001',
+          'Kill process on the port: lsof -ti:3000 | xargs kill -9'
+        ]
+      };
+    }
+
+    if (lower.includes('model') && (lower.includes('not found') || lower.includes('pull with'))) {
+      return {
+        type: 'llm_model_missing',
+        hints: [
+          'Start Ollama: ollama serve',
+          'Pull model: ollama pull <model>'
+        ]
+      };
+    }
+
+    if (lower.includes('timeout')) {
+      return {
+        type: 'timeout',
+        hints: [
+          'Increase timeout via RECLAPP_LLM_TIMEOUT_MS (e.g. 90000)',
+          'Or rely on fallback output (no LLM)'
+        ]
+      };
+    }
+
+    const missingModuleMatch = msg.match(/Cannot find module '([^']+)'/);
+    if (missingModuleMatch) {
+      const mod = missingModuleMatch[1];
+      return {
+        type: 'missing_dependency',
+        hints: [
+          `Install dependency: cd ${this.options.outputDir}/api && npm i ${mod}`,
+          'If this is a test dependency, install under output/tests instead',
+          'Prefer Node 18+ built-in fetch over node-fetch (remove dependency when possible)'
+        ]
+      };
+    }
+
+    if (lower.includes('npm') || lower.includes('command failed') || lower.includes('enoent')) {
+      return {
+        type: 'command_failed',
+        hints: [
+          'Verify Node.js version (requires 18+): node --version',
+          'Try running the failing command manually in the output folder',
+          'Check logs in output/logs/*.rcl.md'
+        ]
+      };
+    }
+
+    if (lower.includes('health_not_ok') || lower.includes('service not responding')) {
+      return {
+        type: 'health_check_failed',
+        hints: [
+          `curl -v http://localhost:${this.options.port}/health`,
+          `tail -n 200 ${this.options.outputDir}/logs/*.rcl.md`,
+          'Verify the server registers /health and is listening on PORT'
+        ]
+      };
+    }
+
+    return {
+      type: 'unknown',
+      hints: [
+        `Check logs: ${this.options.outputDir}/logs/*.rcl.md`,
+        'Re-run with --verbose for more context'
+      ]
+    };
+  }
+
+  private logErrorHints(scope: string, taskId: string, errorMsg: string): void {
+    if (!this.options.verbose) return;
+
+    const info = this.getErrorHints(errorMsg);
+    const yaml = [
+      '# @type: error_hints',
+      'error:',
+      `  scope: "${this.yamlEscape(scope)}"`,
+      `  task: "${this.yamlEscape(taskId)}"`,
+      `  type: "${this.yamlEscape(info.type)}"`,
+      `  message: "${this.yamlEscape((errorMsg || '').toString().substring(0, 220))}"`,
+      '  hints:',
+      ...info.hints.map(h => `    - "${this.yamlEscape(h)}"`)
+    ].join('\n');
+
+    this.renderer.codeblock('yaml', yaml);
+  }
+
   // ============================================================
   // MULTI-LEVEL ERROR RECOVERY SYSTEM
   // Level 1: Heuristic/Algorithm fixes (pattern-based, instant)
@@ -1292,6 +1446,9 @@ Output files with \`\`\`filepath:path/to/file format.`;
   async evolveIteratively(prompt: string, maxIterations = 5): Promise<void> {
     this.taskQueue.clear();
     
+    // Enable log buffering for markdown export
+    this.renderer.enableLog();
+    
     // Technology-agnostic task queue - LLM decides implementation
     // Phase 1: Setup & Contract
     this.taskQueue.add('Create output folders', 'folders');
@@ -1670,6 +1827,8 @@ Output files with \`\`\`filepath:path/to/file format.`;
             }
           }
 
+          this.logErrorHints('task', task.id, errorMsg);
+
           const recoveryTaskId = `recovery-${task.id}`;
           if (!this.taskQueue.getTasks().some(t => t.id === recoveryTaskId)) {
             this.taskQueue.add(`Auto-recover: ${task.name}`, recoveryTaskId);
@@ -1700,6 +1859,14 @@ Output files with \`\`\`filepath:path/to/file format.`;
 
     // Final state
     this.writeStateSnapshot();
+    
+    // Save evolution log as markdown
+    const logPath = path.join(this.options.outputDir, 'logs', `evolution-${Date.now()}.md`);
+    this.renderer.saveLog(logPath);
+    if (this.options.verbose) {
+      this.renderer.codeblock('yaml', `# @type: log_saved\nlog:\n  path: "${logPath}"\n  format: "markdown"`);
+    }
+    
     this.startMonitoring();
   }
 
@@ -1774,12 +1941,13 @@ Output ONLY the Markdown content, no explanation.`;
 
         this.logLLMRequest('Generate README.md', prompt);
 
-        const response = await this.llmClient.generate({
+        const timeoutMs = Number(process.env.RECLAPP_LLM_TIMEOUT_MS || 45000);
+        const response = await this.withTimeout(this.llmClient.generate({
           system: 'You generate professional README.md files in Markdown. Output only the README content.',
           user: prompt,
           temperature: 0.3,
           maxTokens: 2000
-        });
+        }), timeoutMs);
 
         // Extract markdown from response
         const mdMatch = response.match(/```(?:markdown|md)?\n([\s\S]*?)```/);
@@ -1791,7 +1959,16 @@ Output ONLY the Markdown content, no explanation.`;
         }
         
         this.logLLMResponse(true, readme.length, 'llm');
-      } catch {
+      } catch (e: any) {
+        if (this.options.verbose && e && e.message === 'timeout') {
+          this.renderer.codeblock('yaml', [
+            '# @type: llm_timeout',
+            '# @description: LLM call exceeded timeout and fallback was used',
+            'llm:',
+            '  purpose: "Generate README.md"',
+            `  timeout_ms: ${Number(process.env.RECLAPP_LLM_TIMEOUT_MS || 45000)}`
+          ].join('\n'));
+        }
         readme = this.getFallbackReadme();
         this.logLLMResponse(false, readme.length, 'fallback');
       }
@@ -2016,7 +2193,12 @@ MIT
       testProcess.stdout?.on('data', (data) => {
         const s = data.toString();
         stdoutBuf += s;
-        if (this.options.verbose) process.stdout.write(data);
+        if (this.options.verbose) {
+          // Print to console and capture in log buffer
+          for (const line of s.split('\n')) {
+            if (line.trim()) this.renderer.print(line);
+          }
+        }
       });
       testProcess.stderr?.on('data', (data) => {
         const s = data.toString();
@@ -2390,12 +2572,22 @@ MIT
       }
       
       try {
-        response = await this.llmClient.generate({
-          system: systemPrompt,
-          user: userPrompt,
-          temperature: 0.2,
-          maxTokens: 16000
-        });
+        const llmRetryAttempts = Number(process.env.RECLAPP_LLM_RETRY_ATTEMPTS || 2);
+        const llmRetryDelayMs = Number(process.env.RECLAPP_LLM_RETRY_DELAY_MS || 500);
+        response = await this.withRetries(
+          () => this.llmClient!.generate({
+            system: systemPrompt,
+            user: userPrompt,
+            temperature: 0.2,
+            maxTokens: 16000
+          }),
+          llmRetryAttempts,
+          llmRetryDelayMs,
+          (e: any) => {
+            const msg = e && e.message ? String(e.message) : String(e);
+            return !(msg.includes('not found') || msg.includes('Pull with'));
+          }
+        );
         
         if (this.options.verbose) {
           this.renderer.codeblock('yaml', `# @type: llm_response\n# @description: LLM response received\nllm:\n  status: success\n  response_chars: ${response.length}`);
@@ -2409,6 +2601,7 @@ MIT
           response = this.generateFallbackCode();
         }
       } catch (error: any) {
+        this.logErrorHints('llm', `generateCode:${trigger}`, error.message || String(error));
         // Dynamically add task for missing model
         if (error.message.includes('not found') || error.message.includes('Pull with')) {
           const modelMatch = error.message.match(/Model '([^']+)'/);
@@ -2693,16 +2886,12 @@ MIT
    */
   private async waitForHealth(maxAttempts = 30): Promise<boolean> {
     for (let i = 0; i < maxAttempts; i++) {
-      try {
-        const response = await fetch(`http://localhost:${this.options.port}/health`);
-        if (response.ok) {
-          if (this.options.verbose) {
-            console.log('   ✅ Service is healthy');
-          }
-          return true;
+      const ok = await this.checkHealth();
+      if (ok) {
+        if (this.options.verbose) {
+          console.log('   ✅ Service is healthy');
         }
-      } catch {
-        // Service not ready yet
+        return true;
       }
       await this.sleep(1000);
     }
@@ -2765,9 +2954,21 @@ MIT
    * Checks service health
    */
   async checkHealth(): Promise<boolean> {
+    const attempts = Number(process.env.RECLAPP_HEALTH_RETRY_ATTEMPTS || 3);
+    const delayMs = Number(process.env.RECLAPP_HEALTH_RETRY_DELAY_MS || 250);
     try {
-      const response = await fetch(`http://localhost:${this.options.port}/health`);
-      return response.ok;
+      await this.withRetries(
+        async () => {
+          const response = await fetch(`http://localhost:${this.options.port}/health`);
+          if (!response.ok) {
+            throw new Error(`health_not_ok:${response.status}`);
+          }
+          return true;
+        },
+        attempts,
+        delayMs
+      );
+      return true;
     } catch {
       return false;
     }
@@ -3111,7 +3312,10 @@ MIT
         if (code === 0) {
           resolve(output);
         } else {
-          reject(new Error(`Command failed with code ${code}: ${output}`));
+          const out = (output || '').toString().trim();
+          const tail = out.length > 2000 ? '…\n' + out.slice(-2000) : out;
+          const cmdStr = [cmd, ...args].join(' ');
+          reject(new Error(`Command failed (code ${code}): ${cmdStr}\nCWD: ${cwd}\n${tail}`.trim()));
         }
       });
     });

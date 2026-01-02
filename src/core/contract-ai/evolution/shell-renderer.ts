@@ -56,9 +56,45 @@ const COLORS = {
 
 export class ShellRenderer {
   private useColors: boolean;
+  private logBuffer: string[] = [];
+  private logEnabled: boolean = false;
 
   constructor(useColors = true) {
     this.useColors = useColors && process.stdout.isTTY !== false;
+  }
+
+  /**
+   * Enable log buffering for markdown export
+   */
+  enableLog(): void {
+    this.logEnabled = true;
+    this.logBuffer = [];
+  }
+
+  /**
+   * Get buffered log as clean markdown (no ANSI codes)
+   */
+  getLog(): string {
+    return this.logBuffer.join('\n');
+  }
+
+  /**
+   * Clear log buffer
+   */
+  clearLog(): void {
+    this.logBuffer = [];
+  }
+
+  /**
+   * Log a line (strips ANSI codes for markdown)
+   */
+  private log(text: string): void {
+    console.log(text);
+    if (this.logEnabled) {
+      // Strip ANSI codes for clean markdown
+      const clean = text.replace(/\x1b\[[0-9;]*m/g, '');
+      this.logBuffer.push(clean);
+    }
   }
 
   // Color helpers
@@ -70,7 +106,7 @@ export class ShellRenderer {
   // Render a heading
   heading(level: number, text: string): void {
     const prefix = '#'.repeat(level);
-    console.log(`\n${this.c('bold', this.c('cyan', `${prefix} ${text}`))}\n`);
+    this.log(`\n${this.c('bold', this.c('cyan', `${prefix} ${text}`))}\n`);
   }
 
   // Render a codeblock with syntax highlighting
@@ -78,16 +114,16 @@ export class ShellRenderer {
     const border = this.c('gray', '```' + lang);
     const borderEnd = this.c('gray', '```');
 
-    console.log('');
-    console.log(border);
+    this.log('');
+    this.log(border);
     
     const lines = content.split('\n');
     for (const line of lines) {
-      console.log(this.highlightLine(lang, line));
+      this.log(this.highlightLine(lang, line));
     }
     
-    console.log(borderEnd);
-    console.log('');
+    this.log(borderEnd);
+    this.log('');
   }
 
   renderMarkdownWithFences(markdownText: string, textLang: string = 'markdown'): void {
@@ -117,7 +153,7 @@ export class ShellRenderer {
           lang = (m[2] || '').trim();
           buf = [];
         } else {
-          console.log(this.highlightLine(textLang, line));
+          this.log(this.highlightLine(textLang, line));
         }
       } else {
         if (trimmed.trim() === fence) {
@@ -321,12 +357,12 @@ export class ShellRenderer {
       warning: 'yellow',
       error: 'red'
     };
-    console.log(`${icon} ${this.c(colors[type], message)}`);
+    this.log(`${icon} ${this.c(colors[type], message)}`);
   }
 
   // Render a key-value line
   kv(key: string, value: string | number | boolean): void {
-    console.log(`  ${this.c('cyan', key)}: ${this.c('white', String(value))}`);
+    this.log(`  ${this.c('cyan', key)}: ${this.c('white', String(value))}`);
   }
 
   // Render progress
@@ -334,12 +370,12 @@ export class ShellRenderer {
     const pct = Math.round((done / total) * 100);
     const bar = '█'.repeat(Math.floor(pct / 5)) + '░'.repeat(20 - Math.floor(pct / 5));
     const labelStr = label ? ` ${label}` : '';
-    console.log(`${this.c('gray', '[')}${this.c('green', bar)}${this.c('gray', ']')} ${this.c('cyan', `${pct}%`)}${labelStr}`);
+    this.log(`${this.c('gray', '[')}${this.c('green', bar)}${this.c('gray', ']')} ${this.c('cyan', `${pct}%`)}${labelStr}`);
   }
 
   // Render a separator
   separator(): void {
-    console.log(this.c('gray', '─'.repeat(60)));
+    this.log(this.c('gray', '─'.repeat(60)));
   }
 
   // Render inline code
@@ -363,7 +399,27 @@ export class ShellRenderer {
     };
     
     const durationStr = duration !== undefined ? this.c('gray', ` (${duration}s)`) : '';
-    console.log(`${icons[status]} ${this.c(colors[status], name)}${durationStr}`);
+    this.log(`${icons[status]} ${this.c(colors[status], name)}${durationStr}`);
+  }
+
+  /**
+   * Save log to file as markdown
+   */
+  saveLog(filePath: string): void {
+    const fs = require('fs');
+    const path = require('path');
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(filePath, this.getLog(), 'utf-8');
+  }
+
+  /**
+   * Print a raw line (with optional color)
+   */
+  print(text: string, color?: keyof typeof COLORS): void {
+    this.log(color ? this.c(color, text) : text);
   }
 }
 
