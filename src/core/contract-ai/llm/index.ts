@@ -1,10 +1,19 @@
 /**
  * LLM Module
  * 
- * Klienty LLM dla Contract AI.
+ * Multi-provider LLM support with:
+ * - Local: Ollama
+ * - Remote: LiteLLM, OpenRouter, Windsurf Free Models
+ * - Context-based generation
  * 
- * @version 2.3.0
+ * @version 3.0.0
  */
 
 export * from './ollama-client';
 export * from './pydantic-validator';
+
+// New multi-provider architecture
+export * from './llm-provider';
+export * from './llm-manager';
+export * from './llm-config';
+export * from './context-generator';

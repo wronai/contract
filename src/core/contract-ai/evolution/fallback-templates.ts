@@ -325,8 +325,8 @@ app.listen(PORT, () => console.log(\`Server on port \${PORT}\`));
       'Customer': { name: 'Test Customer', email: 'test@example.com', phone: '123-456-7890' },
       'Employee': { name: 'Test Employee', email: 'employee@example.com', department: 'IT' },
       'Booking': { guestName: 'Test Guest', guestEmail: 'guest@example.com', checkIn: new Date().toISOString(), checkOut: new Date().toISOString(), status: 'pending' },
-      'Event': { title: 'Test Event', description: 'E2E test', startDate: new Date().toISOString(), location: 'Test Location' },
-      'Contact': { firstName: 'Test', lastName: 'Contact', email: 'contact@example.com', phone: '123-456-7890' },
+      'Event': { title: 'Test Event', description: 'E2E test', startDate: new Date().toISOString(), endDate: new Date().toISOString(), location: 'Test Location' },
+      'Contact': { firstName: 'Test', lastName: 'Contact', email: 'contact@example.com', phone: '123-456-7890', company: 'Test Corp' },
       'Comment': { content: 'Test comment', authorName: 'Test Author' },
       'Category': { name: 'Test Category', description: 'E2E test' }
     };
@@ -351,8 +351,8 @@ app.listen(PORT, () => console.log(\`Server on port \${PORT}\`));
       'Customer': { name: 'Updated Customer', email: 'updated@example.com', phone: '987-654-3210' },
       'Employee': { name: 'Updated Employee', email: 'updated@example.com', department: 'HR' },
       'Booking': { guestName: 'Updated Guest', guestEmail: 'updated@example.com', checkIn: new Date().toISOString(), checkOut: new Date().toISOString(), status: 'confirmed' },
-      'Event': { title: 'Updated Event', description: 'Updated', location: 'Updated Location' },
-      'Contact': { firstName: 'Updated', lastName: 'Contact', email: 'updated@example.com' },
+      'Event': { title: 'Updated Event', description: 'Updated', startDate: new Date().toISOString(), endDate: new Date().toISOString(), location: 'Updated Location' },
+      'Contact': { firstName: 'Updated', lastName: 'Contact', email: 'updated@example.com', phone: '987-654-3210', company: 'Updated Corp' },
       'Comment': { content: 'Updated comment', authorName: 'Updated Author' },
       'Category': { name: 'Updated Category', description: 'Updated' }
     };
