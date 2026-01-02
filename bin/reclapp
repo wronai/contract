@@ -2188,6 +2188,7 @@ async function cmdSetup(args, options) {
 
   let outputDir = '.';
   let install = false;
+  let dryRun = false;
   let interactive = !args.includes('--yes') && !args.includes('-y');
   let skipOptional = args.includes('--skip-optional');
 
@@ -2196,11 +2197,15 @@ async function cmdSetup(args, options) {
       outputDir = args[i + 1]; i++;
     } else if (args[i] === '--install' || args[i] === '-i') {
       install = true;
+    } else if (args[i] === '--dry-run') {
+      dryRun = true;
+      install = true;
     }
   }
 
   // Helper: ask user yes/no
   async function askUser(question) {
+    if (dryRun) return true;
     if (!interactive) return true;
     
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
@@ -2479,10 +2484,14 @@ async function cmdSetup(args, options) {
         try {
           for (const cmd of task.commands) {
             if (cmd.startsWith('#')) continue;
-            execSync(cmd, { stdio: 'inherit', shell: '/bin/bash' });
+            if (dryRun) {
+              runner.log(`DRY RUN: ${cmd}`);
+            } else {
+              execSync(cmd, { stdio: 'inherit', shell: '/bin/bash' });
+            }
           }
-          results.push({ name: task.name, status: 'installed' });
-          runner.log(`✅ ${task.name} installed`);
+          results.push({ name: task.name, status: dryRun ? 'dry_run' : 'installed' });
+          runner.log(`✅ ${task.name} ${dryRun ? 'simulated' : 'installed'}`);
         } catch (e) {
           results.push({ name: task.name, status: 'failed', error: e.message });
           runner.log(`❌ ${task.name} failed`);
@@ -2533,10 +2542,14 @@ async function cmdSetup(args, options) {
         try {
           for (const cmd of task.commands) {
             if (cmd.startsWith('#')) continue;
-            execSync(cmd, { stdio: 'inherit', shell: '/bin/bash' });
+            if (dryRun) {
+              runner.log(`DRY RUN: ${cmd}`);
+            } else {
+              execSync(cmd, { stdio: 'inherit', shell: '/bin/bash' });
+            }
           }
-          results.push({ name: task.name, status: 'installed' });
-          runner.log(`✅ ${task.name} installed`);
+          results.push({ name: task.name, status: dryRun ? 'dry_run' : 'installed' });
+          runner.log(`✅ ${task.name} ${dryRun ? 'simulated' : 'installed'}`);
         } catch (e) {
           results.push({ name: task.name, status: 'failed', error: e.message });
           runner.log(`⚠️ ${task.name} failed`);
@@ -2586,12 +2599,14 @@ async function cmdSetup(args, options) {
       }
 
       for (const task of optionalTasks) {
+        // Skip comment-only commands (manual steps)
         if (task.commands.every(c => c.startsWith('#'))) {
           runner.log(`📝 ${task.name}: ${task.commands[0]}`);
           results.push({ name: task.name, status: 'manual' });
           continue;
         }
 
+        // Ask for each optional dependency
         const installThis = await askUser(`   Install ${task.name}?`);
         if (!installThis) {
           results.push({ name: task.name, status: 'skipped' });
@@ -2602,12 +2617,16 @@ async function cmdSetup(args, options) {
         try {
           for (const cmd of task.commands) {
             if (cmd.startsWith('#')) continue;
-            execSync(cmd, { stdio: 'inherit', shell: '/bin/bash' });
+            if (dryRun) {
+              runner.log(`DRY RUN: ${cmd}`);
+            } else {
+              execSync(cmd, { stdio: 'inherit', shell: '/bin/bash' });
+            }
           }
-          results.push({ name: task.name, status: 'installed' });
-          runner.log(`✅ ${task.name} installed`);
+          results.push({ name: task.name, status: dryRun ? 'dry_run' : 'installed' });
+          runner.log(`✅ ${task.name} ${dryRun ? 'simulated' : 'installed'}`);
         } catch (e) {
-          results.push({ name: task.name, status: 'failed' });
+          results.push({ name: task.name, status: 'failed', error: e.message });
           runner.log(`⚠️ ${task.name} failed`);
         }
       }
