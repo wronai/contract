@@ -1,1 +1,1 @@
-tree -I node_modules -I venv
+tree -I node_modules -I venv -I __pycache__ -I dist -I .venv

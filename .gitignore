@@ -5,6 +5,7 @@ output_p3_*/
 output/
 setup/
 my-app
+refactor-workspace/
 *.egg-info
 test-todo-prompt
 test-lifecycle

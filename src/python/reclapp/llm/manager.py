@@ -56,6 +56,14 @@ class LLMManager:
             for info in self._provider_info.values()
         )
     
+    def is_ready(self) -> bool:
+        """Check if manager is initialized and has available provider"""
+        return self._initialized and self.is_available
+    
+    def get_provider(self) -> Optional[LLMProvider]:
+        """Get the primary available provider"""
+        return self.primary_provider
+    
     @property
     def primary_provider(self) -> Optional[LLMProvider]:
         """Get the primary (first available) provider"""

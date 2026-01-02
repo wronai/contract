@@ -321,7 +321,7 @@ class TestEndToEnd:
                 ]
             },
             "generation": {
-                "techStack": {"backend": {"runtime": "node", "language": "typescript", "framework": "express", "port": parse_result.tech.port or 3000}}
+                "techStack": {"backend": {"runtime": "node", "language": "typescript", "framework": "express", "port": 3000}}
             },
             "validation": {}
         }

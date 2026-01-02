@@ -169,22 +169,29 @@ class EvolutionManager:
         )
     
     async def _generate_contract(self, prompt: str) -> Optional[dict]:
-        """Generate contract from prompt"""
-        # Simplified implementation
-        # In full version, would use ContractGenerator
+        """Generate contract from prompt using LLM or fallback to template"""
+        from ..generator import ContractGenerator, ContractGeneratorOptions
+        
+        if self._llm_client:
+            try:
+                generator = ContractGenerator(ContractGeneratorOptions(
+                    verbose=self.options.verbose, max_attempts=3
+                ))
+                generator.set_llm_client(self._llm_client)
+                result = await generator.generate(prompt)
+                if result.success and result.contract:
+                    return result.contract
+            except Exception:
+                pass
+        
+        # Fallback: Extract from prompt
+        app_name = self._extract_app_name(prompt)
+        entities = self._extract_entities(prompt)
+        
         return {
             "definition": {
-                "app": {"name": "Generated App", "version": "1.0.0"},
-                "entities": [
-                    {
-                        "name": "Item",
-                        "fields": [
-                            {"name": "id", "type": "UUID"},
-                            {"name": "name", "type": "String"},
-                            {"name": "createdAt", "type": "DateTime"},
-                        ]
-                    }
-                ]
+                "app": {"name": app_name, "version": "1.0.0"},
+                "entities": entities
             },
             "generation": {
                 "techStack": {
@@ -199,16 +206,52 @@ class EvolutionManager:
             "validation": {}
         }
     
+    def _extract_app_name(self, prompt: str) -> str:
+        import re
+        match = re.search(r'[Cc]reate\s+(?:a\s+)?(\w+(?:\s+\w+)?)\s+app', prompt)
+        if match:
+            return match.group(1).title() + " App"
+        return prompt.split()[0].title() + " App"
+    
+    def _extract_entities(self, prompt: str) -> list[dict]:
+        import re
+        entities = []
+        patterns = [
+            (r'\b(note|notes)\b', "Note", ["id", "title", "content", "createdAt"]),
+            (r'\b(todo|todos|task|tasks)\b', "Task", ["id", "title", "status", "createdAt"]),
+            (r'\b(contact|contacts)\b', "Contact", ["id", "name", "email", "createdAt"]),
+            (r'\b(user|users)\b', "User", ["id", "name", "email", "createdAt"]),
+            (r'\b(product|products)\b', "Product", ["id", "name", "price", "createdAt"]),
+        ]
+        found = set()
+        for pattern, name, fields in patterns:
+            if re.search(pattern, prompt.lower()) and name not in found:
+                found.add(name)
+                entities.append({"name": name, "fields": [
+                    {"name": f, "type": "UUID" if f == "id" else "DateTime" if "At" in f else "Float" if f == "price" else "String"}
+                    for f in fields
+                ]})
+        if not entities:
+            entities.append({"name": "Item", "fields": [
+                {"name": "id", "type": "UUID"}, {"name": "name", "type": "String"}, {"name": "createdAt", "type": "DateTime"}
+            ]})
+        return entities
+    
     async def _generate_code(self, contract: dict, output_dir: str) -> list[str]:
         """Generate code from contract"""
-        # Simplified implementation
-        # In full version, would use CodeGenerator
-        files = ["package.json", "src/index.ts", "src/models/item.ts", "src/routes/item.ts"]
+        from ..generator import CodeGenerator, CodeGeneratorOptions
         
-        # Create output directory
-        Path(output_dir).mkdir(parents=True, exist_ok=True)
+        generator = CodeGenerator(CodeGeneratorOptions(
+            output_dir=output_dir,
+            dry_run=False,
+            verbose=self.options.verbose
+        ))
         
-        return files
+        result = await generator.generate(contract, output_dir)
+        
+        if result.success:
+            return [f.path for f in result.files]
+        return []
     
     async def _validate_code(self, output_dir: str) -> list[str]:
         """Validate generated code"""
