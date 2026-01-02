@@ -1,0 +1,34 @@
+{
+  "id": "project-config",
+  "name": "Project Configuration",
+  "description": "Project configuration patterns for package management and build tools",
+  "category": "config",
+  "tags": ["config", "package", "build", "dependencies"],
+  "variables": [
+    {
+      "name": "projectName",
+      "description": "Name of the project",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "name": "version",
+      "description": "Project version",
+      "required": false,
+      "type": "string",
+      "default": "1.0.0"
+    },
+    {
+      "name": "entities",
+      "description": "List of entities for determining dependencies",
+      "required": false,
+      "type": "array"
+    }
+  ],
+  "content": "// Project: {{ projectName }}\n// Version: {{ version }}\n\n// Configuration should include:\n// - Package manager config (package.json, requirements.txt, etc.)\n// - Build/compile settings if needed\n// - Development scripts (dev, build, test, start)\n// - Dependencies based on chosen tech stack\n\n// Common patterns:\n// - Minimal dependencies (only what's needed)\n// - Dev dependencies separate from production\n// - Scripts for common workflows",
+  "examples": [
+    "Node.js package.json",
+    "Python requirements.txt + pyproject.toml",
+    "Go go.mod"
+  ]
+}

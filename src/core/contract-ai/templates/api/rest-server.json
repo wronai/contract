@@ -1,0 +1,35 @@
+{
+  "id": "rest-server",
+  "name": "REST API Server",
+  "description": "Generic REST API server template with CRUD endpoints for entities",
+  "category": "api",
+  "tags": ["rest", "crud", "server", "api", "http"],
+  "variables": [
+    {
+      "name": "port",
+      "description": "Server port number",
+      "required": true,
+      "type": "number",
+      "default": "3000"
+    },
+    {
+      "name": "entities",
+      "description": "List of entity names for CRUD operations",
+      "required": true,
+      "type": "array"
+    },
+    {
+      "name": "basePath",
+      "description": "API base path prefix",
+      "required": false,
+      "type": "string",
+      "default": "/api/v1"
+    }
+  ],
+  "content": "// REST API Server\n// Entities: {{ entities }}\n// Port: {{ port }}\n// Base Path: {{ basePath }}\n\n// For each entity, implement:\n// - GET {{ basePath }}/{entity}s - List all\n// - POST {{ basePath }}/{entity}s - Create new\n// - GET {{ basePath }}/{entity}s/:id - Get by ID\n// - PUT {{ basePath }}/{entity}s/:id - Update\n// - DELETE {{ basePath }}/{entity}s/:id - Delete\n// - GET /health - Health check endpoint",
+  "examples": [
+    "Express.js server with TypeScript",
+    "Fastify server with JavaScript",
+    "Koa server with TypeScript"
+  ]
+}

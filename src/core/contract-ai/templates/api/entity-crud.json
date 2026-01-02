@@ -1,0 +1,33 @@
+{
+  "id": "entity-crud",
+  "name": "Entity CRUD Operations",
+  "description": "CRUD operation patterns for a single entity - storage, validation, handlers",
+  "category": "api",
+  "tags": ["crud", "entity", "storage", "validation", "handlers"],
+  "variables": [
+    {
+      "name": "entityName",
+      "description": "Name of the entity (e.g., Todo, User, Product)",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "name": "entityFields",
+      "description": "Fields of the entity with types",
+      "required": true,
+      "type": "object"
+    },
+    {
+      "name": "pluralName",
+      "description": "Plural form of entity name for endpoints",
+      "required": false,
+      "type": "string"
+    }
+  ],
+  "content": "// Entity: {{ entityName }}\n// Fields: {{ entityFields }}\n// Plural: {{ pluralName }}\n\n// Storage pattern:\n// - In-memory Map/Array for simple cases\n// - Database adapter for persistence\n\n// Operations:\n// - create(data) -> entity with generated id\n// - findAll() -> array of entities\n// - findById(id) -> entity or null\n// - update(id, data) -> updated entity or null\n// - delete(id) -> boolean success\n\n// Validation:\n// - Required fields check\n// - Type validation\n// - Business rules",
+  "examples": [
+    "In-memory Map storage",
+    "PostgreSQL with query builder",
+    "MongoDB with Mongoose"
+  ]
+}

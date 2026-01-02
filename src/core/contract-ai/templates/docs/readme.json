@@ -1,0 +1,40 @@
+{
+  "id": "project-readme",
+  "name": "Project README",
+  "description": "README documentation template for generated projects",
+  "category": "docs",
+  "tags": ["readme", "documentation", "markdown", "docs"],
+  "variables": [
+    {
+      "name": "projectName",
+      "description": "Name of the project",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "name": "description",
+      "description": "Project description",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "name": "entities",
+      "description": "List of entities with their fields",
+      "required": true,
+      "type": "array"
+    },
+    {
+      "name": "port",
+      "description": "API server port",
+      "required": false,
+      "type": "number",
+      "default": "3000"
+    }
+  ],
+  "content": "// README for {{ projectName }}\n\n// Sections to include:\n// 1. Title and description\n// 2. Features (based on entities)\n// 3. Quick Start (installation & running)\n// 4. API Documentation (endpoints for each entity)\n// 5. Project Structure\n// 6. Development commands\n// 7. Environment variables\n// 8. License\n\n// API docs should list:\n// - Health endpoint\n// - CRUD endpoints for each entity\n// - Request/response examples",
+  "examples": [
+    "GitHub-style README.md",
+    "GitLab README with badges",
+    "Minimal README"
+  ]
+}

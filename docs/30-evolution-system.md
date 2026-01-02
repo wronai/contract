@@ -2,6 +2,7 @@
 
 > Dynamic code generation, monitoring, and self-healing for Contract AI applications
 
+**Version:** 2.5.0  
 **Related docs:** [Architecture Overview](00-architecture-overview.md) | [Code Generation](31-code-generation.md) | [CLI Reference](cli-reference.md)
 
 ---
@@ -10,10 +11,12 @@
 
 The Evolution System enables continuous improvement of generated applications through:
 
-1. **Dynamic Code Generation** - Generate code from natural language prompts
-2. **Service Monitoring** - Health checks and log analysis
-3. **Auto-Fix Cycles** - Detect and fix issues automatically
-4. **Evolution History** - Track all changes in `.rcl.md` logs
+1. **LLM-Powered Code Generation** - All code generated dynamically by LLM with fallbacks
+2. **Multi-Level State Analysis** - Contract ↔ Code ↔ Service ↔ Logs verification
+3. **CodeRAG Navigation** - Semantic code search and hierarchical indexing
+4. **Git Integration** - Import existing projects, track state via Git
+5. **Auto-Fix & Recovery** - 4-level error recovery system
+6. **Evolution History** - Track all changes in `.rcl.md` logs
 
 ---
 
@@ -287,41 +290,186 @@ Check that npm is in PATH. The evolution manager looks for npm in:
 
 ---
 
-## Task Queue (NEW in 2.4.1)
+## Task Queue (v2.5.0)
 
-The evolution system now shows live task status in YAML format:
+The evolution system shows granular LLM-centric tasks with human-readable narration:
 
 ```yaml
-## Config
-
-evolution:
-  prompt: "Create a todo app"
-  output: "./output"
-  port: 3000
-
-🔄 Parse prompt & create contract
-✅ Parse prompt & create contract (0s)
-🔄 Generate code with LLM
-✅ Generate code with LLM (20s)
-🔄 Write files to disk
-✅ Write files to disk (0s)
-🔄 Install dependencies
-🔄 Start service
-✅ Install dependencies (7s)
-✅ Start service (7s)
-🔄 Health check
-✅ Health check (0s)
+# @type: task_queue
+progress:
+  done: 0
+  total: 16
+tasks:
+  - name: "Create output folders"
+  - name: "Create evolution state file"
+  - name: "Parse prompt into contract"
+  - name: "Save contract.ai.json"
+  - name: "Validate plan against contract"
+  - name: "Ask LLM for API code"
+  - name: "Save API files from LLM"
+  - name: "Validate API output"
+  - name: "Install API dependencies"
+  - name: "Start API service"
+  - name: "Health check API"
+  - name: "Generate E2E tests"
+  - name: "Run E2E tests"
+  - name: "Validate layer2 targets"
+  - name: "Verify contract ↔ code ↔ service"
+  - name: "Reconcile discrepancies"
 ```
 
-### Dynamic Task Adding
+### Human-Readable Narration
 
-When issues are detected (e.g., missing LLM model), tasks are added dynamically:
+Each task includes context:
+
+```
+→ Creating project structure: Setting up output directories for API, tests, contract, and state
+→ Parsing user prompt: Extracting entities and requirements from: "Create a todo app..."
+→ Requesting code from LLM: Sending contract and context to generate API implementation
+→ Multi-level verification: Analyzing Contract ↔ SourceCode ↔ Service ↔ Logs
+```
+
+---
+
+## Multi-Level State Analysis (NEW)
+
+Detects discrepancies between Contract, SourceCode, Service, and Logs:
+
+```
+┌─────────────────────────────────────────┐
+│          CONTRACT (contract.ai.json)    │
+│  entities: [Todo], endpoints: 6         │
+└─────────────────┬───────────────────────┘
+                  │ ↕ verify
+┌─────────────────▼───────────────────────┐
+│          SOURCE CODE (api/src/*)        │
+│  files: 4, detected_endpoints: 6        │
+└─────────────────┬───────────────────────┘
+                  │ ↕ verify
+┌─────────────────▼───────────────────────┐
+│          SERVICE (localhost:3000)       │
+│  running: true, health: true            │
+└─────────────────┬───────────────────────┘
+                  │ ↕ verify
+┌─────────────────▼───────────────────────┐
+│          LOGS (output/logs/*)           │
+│  errors: 0, warnings: 0                 │
+└─────────────────────────────────────────┘
+```
+
+### Discrepancy Detection
 
 ```yaml
-❌ Pull LLM model: qwen2.5-coder:14b
-   └─ Run: ollama pull qwen2.5-coder:14b
-🔄 Use fallback code generator
-✅ Use fallback code generator (0s)
+# @type: discrepancies
+discrepancies:
+  - level: "contract-code"
+    severity: "error"
+    expected: "Entity 'Todo' defined in contract"
+    actual: "Entity not found in source code"
+    suggestion: "Add Todo model and CRUD endpoints"
+```
+
+---
+
+## CodeRAG Navigation (NEW)
+
+Semantic code search and hierarchical indexing:
+
+```typescript
+// Initialize CodeRAG
+await evolutionManager.initCodeRAG();
+
+// Ask questions about code
+const result = await evolutionManager.askCode("Where is auth handled?");
+
+// Find symbol usages
+const usages = evolutionManager.findSymbolUsages("validateTodo");
+
+// Get code structure
+const structure = evolutionManager.getCodeStructure();
+```
+
+### Hierarchical Levels
+
+```
+Level 0: Modules (directories)
+  └── api/src (5 items)
+  └── tests/e2e (3 items)
+
+Level 1: Files
+  └── server.ts
+  └── todo.service.ts
+
+Level 2: Symbols (functions/classes)
+  └── createTodo()
+  └── TodoService
+```
+
+---
+
+## Git Integration (NEW)
+
+Import existing projects and track state via Git:
+
+```typescript
+// Import from existing Git repo
+await evolutionManager.importFromGit('/path/to/project');
+
+// Get Git state
+const gitState = evolutionManager.getGitState();
+```
+
+### Evolution State with Git
+
+```json
+{
+  "mode": "import",
+  "git": {
+    "branch": "main",
+    "lastCommit": { "hash": "abc123", "message": "feat: add API" },
+    "detectedStack": {
+      "language": "typescript",
+      "framework": "express"
+    }
+  }
+}
+```
+
+---
+
+## 4-Level Error Recovery (NEW)
+
+```
+Level 1: Heuristic fixes (instant, pattern-based)
+    ↓ if failed
+Level 2: Registry fixes (reusable LLM-generated fixes)
+    ↓ if failed
+Level 3: Fallback generators (deterministic templates)
+    ↓ if failed
+Level 4: LLM fix request (ask LLM for solution)
+```
+
+---
+
+## LLM-Powered Generation
+
+All code is now generated by LLM with fallback templates:
+
+| Component | LLM Prompt | Fallback |
+|-----------|------------|----------|
+| Server code | Dynamic based on contract | `getFallbackServerCode()` |
+| E2E tests | Based on entity & endpoints | `getFallbackE2ETests()` |
+| Test config | Based on port & layers | `getFallbackTestConfig()` |
+| Fixtures | Based on entity schema | `getFallbackFixtures()` |
+
+### Endpoint Detection
+
+Tests automatically detect actual endpoints from generated code:
+
+```typescript
+// Detects /api/v1/todos from server.ts
+const { basePath } = this.detectApiEndpoints(pluralName);
+// basePath = "/api/v1/todos"
 ```
 
 ---

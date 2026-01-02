@@ -1,0 +1,34 @@
+{
+  "id": "e2e-api-tests",
+  "name": "E2E API Tests",
+  "description": "End-to-end test patterns for REST API CRUD operations",
+  "category": "tests",
+  "tags": ["e2e", "api", "crud", "testing", "integration"],
+  "variables": [
+    {
+      "name": "baseUrl",
+      "description": "Base URL of the API to test",
+      "required": true,
+      "type": "string",
+      "default": "http://localhost:3000"
+    },
+    {
+      "name": "entityName",
+      "description": "Name of the entity being tested",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "name": "apiPath",
+      "description": "API path for the entity endpoints",
+      "required": true,
+      "type": "string"
+    }
+  ],
+  "content": "// E2E Tests for {{ entityName }}\n// Base URL: {{ baseUrl }}\n// API Path: {{ apiPath }}\n\n// Test sequence:\n// 1. Health check - verify API is running\n// 2. CREATE - POST to create entity, capture ID\n// 3. READ LIST - GET all entities, verify created one exists\n// 4. READ ONE - GET by ID, verify data\n// 5. UPDATE - PUT to modify entity\n// 6. DELETE - DELETE entity\n// 7. VERIFY DELETE - GET should return 404\n\n// Test body should include common fields:\n// - name/title (string)\n// - description (string, optional)\n// - Any required fields from entity schema",
+  "examples": [
+    "Native fetch with async/await",
+    "Supertest with Jest",
+    "Playwright API testing"
+  ]
+}

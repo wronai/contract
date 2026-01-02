@@ -1,0 +1,10 @@
+{
+  "id": "generation-hints",
+  "name": "Code Generation Hints",
+  "description": "Hints and guidelines for LLM code generation based on contract",
+  "category": "util",
+  "tags": ["hints", "guidelines", "generation", "best-practices"],
+  "variables": [],
+  "content": "// Code Generation Guidelines\n\n// 1. Technology Selection\n// - Use techStack from contract.ai.json if specified\n// - If not specified, choose based on:\n//   - Simplicity (minimal dependencies)\n//   - Project size (small = lightweight, large = robust)\n//   - Entity complexity\n\n// 2. Code Style\n// - Clean, readable code\n// - Minimal comments (self-documenting)\n// - Consistent naming conventions\n// - Error handling\n\n// 3. API Design\n// - RESTful conventions\n// - Proper HTTP status codes\n// - JSON responses\n// - Health endpoint required\n\n// 4. Storage\n// - In-memory for prototypes\n// - Database for production\n// - Generated IDs (uuid or incremental)\n\n// 5. Testing\n// - E2E tests for CRUD operations\n// - Health check test\n// - Proper assertions",
+  "examples": []
+}

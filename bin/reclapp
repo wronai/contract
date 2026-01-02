@@ -1270,6 +1270,47 @@ async function cmdEvolution(args, options) {
     return `${fence}${lang ? lang : ''}\n${safe}\n${fence}\n`;
   };
 
+  const renderMarkdownWithFences = (renderer, markdownText) => {
+    const lines = (markdownText ?? '').toString().split('\n');
+    let inFence = false;
+    let fence = '```';
+    let lang = 'text';
+    let buf = [];
+
+    const flush = () => {
+      if (!inFence) return;
+      const langNormalized = (lang || 'text').split(':')[0].trim() || 'text';
+      renderer.codeblock(langNormalized, buf.join('\n'));
+      inFence = false;
+      fence = '```';
+      lang = 'text';
+      buf = [];
+    };
+
+    for (const line of lines) {
+      const trimmed = line.trimEnd();
+      const m = trimmed.match(/^(`{3,})(.*)$/);
+      if (!inFence) {
+        if (m) {
+          inFence = true;
+          fence = m[1];
+          lang = (m[2] || '').trim();
+          buf = [];
+        } else {
+          console.log(line);
+        }
+      } else {
+        if (trimmed.trim() === fence) {
+          flush();
+        } else {
+          buf.push(line);
+        }
+      }
+    }
+
+    flush();
+  };
+
   // Parse evolution-specific options
   let prompt = null;
   let contractPath = null;
@@ -1567,7 +1608,7 @@ ${recentLogsBlock}
                   const tail = lines.slice(-tailLines).join('\n');
                   cliRenderer.codeblock('yaml', `# @type: log_view\nlog:\n  file: "${latestLog}"\n  tail_lines: ${tailLines}`);
                   console.log('');
-                  cliRenderer.codeblock('markdown', tail);
+                  renderMarkdownWithFences(cliRenderer, tail);
                   console.log(`\n> Full log: \`${latestLog}\``);
                 }
               } catch (e) {
