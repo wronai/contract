@@ -1279,7 +1279,7 @@ async function cmdEvolution(args, options) {
       console.log('│  [f] Fix - describe issue for LLM to fix (ticket)           │');
       console.log('│  [l] Logs - view service logs                               │');
       console.log('│  [t] Test - run API tests                                   │');
-      console.log('│  [o] Open - open in browser (http://localhost:' + port + ')        │');
+      console.log('│  [o] Open - open in browser (http://localhost:' + port + '/health) │');
       console.log('│  [q] Quit - stop service and exit                           │');
       console.log('╰─────────────────────────────────────────────────────────────╯');
       console.log('');
@@ -1465,10 +1465,20 @@ ${(() => {
               return;
 
             case 'o':
-              console.log(`\n🌐 Opening http://localhost:${port} in browser...`);
+              let openUrl = `http://localhost:${port}/`;
+              try {
+                const res = await fetch(openUrl);
+                if (!res.ok) {
+                  openUrl = `http://localhost:${port}/health`;
+                }
+              } catch (e) {
+                openUrl = `http://localhost:${port}/health`;
+              }
+
+              console.log(`\n🌐 Opening ${openUrl} in browser...`);
               try {
                 const { exec } = require('child_process');
-                exec(`xdg-open http://localhost:${port} 2>/dev/null || open http://localhost:${port} 2>/dev/null`);
+                exec(`xdg-open ${openUrl} 2>/dev/null || open ${openUrl} 2>/dev/null`);
               } catch (e) {}
               return;
 

@@ -368,26 +368,41 @@ export class EvolutionManager {
 
     let response: string;
     
-    // For initial generation, use reliable fallback code
-    // LLM is used only for error fixes where it can analyze the specific issue
-    if (trigger === 'initial') {
-      response = this.generateFallbackCode();
-    } else if (this.llmClient && (trigger === 'error' || trigger === 'log-analysis')) {
+    // Use LLM for code generation when available
+    if (this.llmClient) {
       const systemPrompt = this.buildSystemPrompt();
       const userPrompt = this.buildUserPrompt(trigger, context);
+      
+      if (this.options.verbose) {
+        console.log(`\n🤖 Generating code (trigger: ${trigger})...`);
+      }
       
       try {
         response = await this.llmClient.generate({
           system: systemPrompt,
           user: userPrompt,
-          temperature: 0.3,
-          maxTokens: 8000
+          temperature: 0.2,
+          maxTokens: 16000
         });
-      } catch {
-        // Fallback if LLM fails
+        
+        // Validate response has actual code
+        if (!response.includes('```') || response.length < 500) {
+          if (this.options.verbose) {
+            console.log('   ⚠️ LLM response too short, using fallback');
+          }
+          response = this.generateFallbackCode();
+        }
+      } catch (error: any) {
+        if (this.options.verbose) {
+          console.log(`   ⚠️ LLM error: ${error.message}, using fallback`);
+        }
         response = this.generateFallbackCode();
       }
     } else {
+      // No LLM available - use fallback
+      if (this.options.verbose) {
+        console.log('   ℹ️ No LLM available, using fallback code generator');
+      }
       response = this.generateFallbackCode();
     }
 
@@ -409,30 +424,44 @@ export class EvolutionManager {
    * Builds system prompt for LLM
    */
   private buildSystemPrompt(): string {
-    return `You are an expert backend developer. Generate production-ready TypeScript code for Express.js APIs.
+    return `You are an expert full-stack TypeScript developer. Generate COMPLETE, WORKING code for Express.js REST APIs.
 
-RULES:
-1. Generate complete, working code - no TODOs or placeholders
-2. Use TypeScript with proper types
-3. Include error handling and validation
-4. Use in-memory storage with Map for data
-5. Include health check endpoint at /health
-6. Include CRUD endpoints for all entities
-7. Use proper HTTP status codes
-8. Format output as markdown code blocks with file paths
+CRITICAL RULES:
+1. Generate COMPLETE, RUNNABLE code - NO placeholders, NO "// TODO", NO "..."
+2. Include ALL imports at the top of each file
+3. Use TypeScript with explicit types for everything
+4. Use in-memory Map storage (no database required)
+5. Include /health endpoint returning JSON { status: 'ok', timestamp, entities }
+6. Include FULL CRUD for ALL entities: GET list, GET by id, POST create, PUT update, DELETE
+7. Use proper HTTP status codes: 200, 201, 204, 400, 404, 500
+8. Include request body validation
+9. Port from environment: process.env.PORT || 3000
 
-OUTPUT FORMAT:
+REQUIRED OUTPUT FORMAT - use EXACTLY this format with file paths after the language:
+
 \`\`\`typescript:api/src/server.ts
-// server code
-\`\`\`
-
-\`\`\`typescript:api/src/routes/entity.ts
-// route code
+import express from 'express';
+import cors from 'cors';
+// ... complete server code with all routes inline
 \`\`\`
 
 \`\`\`json:api/package.json
-// dependencies
-\`\`\``;
+{
+  "name": "generated-api",
+  "version": "1.0.0",
+  "scripts": { "dev": "ts-node src/server.ts", "start": "node dist/server.js" },
+  "dependencies": { "cors": "^2.8.5", "express": "^4.18.2" },
+  "devDependencies": { "@types/cors": "^2.8.14", "@types/express": "^4.17.20", "@types/node": "^20.9.0", "ts-node": "^10.9.2", "typescript": "^5.3.0" }
+}
+\`\`\`
+
+\`\`\`json:api/tsconfig.json
+{
+  "compilerOptions": { "target": "ES2020", "module": "commonjs", "outDir": "./dist", "strict": true, "esModuleInterop": true, "skipLibCheck": true }
+}
+\`\`\`
+
+DO NOT include any packages not listed above. NO socket.io, NO mongoose, NO other dependencies.`;
   }
 
   /**
@@ -441,47 +470,57 @@ OUTPUT FORMAT:
   private buildUserPrompt(trigger: EvolutionCycle['trigger'], context?: string): string {
     if (!this.contract) return '';
 
-    const entities = this.contract.definition.entities
-      .map(e => `- ${e.name}: ${e.fields.map(f => f.name).join(', ')}`)
+    const entities = this.contract.definition.entities;
+    const entityDescriptions = entities
+      .map(e => {
+        const fields = e.fields.map(f => `${f.name}: ${f.type || 'string'}`).join(', ');
+        return `- ${e.name} { ${fields} }`;
+      })
       .join('\n');
 
-    let prompt = `Generate a REST API for the following entities:
+    const entityNames = entities.map(e => e.name.toLowerCase() + 's').join(', ');
 
-${entities}
+    let prompt = `Generate a COMPLETE REST API for a TODO application with these entities:
 
-Requirements:
-- Express.js with TypeScript
-- In-memory storage using Map
-- CRUD operations for each entity
-- Health check endpoint at /health
-- Proper error handling
-- Input validation
+${entityDescriptions}
 
-IMPORTANT - Use EXACTLY these package versions in package.json:
-{
-  "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.18.2"
-  },
-  "devDependencies": {
-    "@types/cors": "^2.8.14",
-    "@types/express": "^4.17.20",
-    "@types/node": "^20.9.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.3.0"
-  }
-}
+REQUIRED ENDPOINTS for each entity (e.g., for "Todo" entity):
+- GET /api/v1/todos - list all todos (return array)
+- GET /api/v1/todos/:id - get single todo by id
+- POST /api/v1/todos - create new todo (return created object with id)
+- PUT /api/v1/todos/:id - update todo
+- DELETE /api/v1/todos/:id - delete todo
 
-DO NOT include socket.io or any other packages not listed above.
-DO NOT include comments in package.json - JSON does not support comments.
-`;
+REQUIRED FILES:
+1. api/src/server.ts - Express server with ALL routes, using Map for storage
+2. api/package.json - dependencies (ONLY express, cors, and typescript-related)
+3. api/tsconfig.json - TypeScript config
+
+The server.ts MUST include:
+- import express from 'express';
+- import cors from 'cors';
+- const app = express();
+- app.use(cors());
+- app.use(express.json());
+- const PORT = process.env.PORT || 3000;
+- In-memory storage: const ${entities[0]?.name?.toLowerCase() || 'item'}s = new Map<string, any>();
+- let idCounter = 1;
+- All CRUD routes for: ${entityNames}
+- Health endpoint: app.get('/health', ...)
+- app.listen(PORT, ...)
+
+Generate the COMPLETE code now. Do not use placeholders or comments like "// add more routes here".`;
 
     if (trigger === 'error' && context) {
-      prompt += `\n\nFIX THE FOLLOWING ERROR:\n${context}\n\nGenerate corrected code.`;
+      prompt += `\n\n⚠️ FIX THIS ERROR:\n${context}\n\nGenerate the COMPLETE corrected code.`;
     }
 
     if (trigger === 'log-analysis' && context) {
-      prompt += `\n\nADDRESS THE FOLLOWING LOG ISSUES:\n${context}\n\nGenerate improved code.`;
+      prompt += `\n\n⚠️ FIX THESE ISSUES:\n${context}\n\nGenerate the COMPLETE fixed code.`;
+    }
+
+    if (trigger === 'manual' && context) {
+      prompt += `\n\n📝 USER REQUEST:\n${context}\n\nModify the code to implement this request.`;
     }
 
     return prompt;
@@ -570,6 +609,9 @@ DO NOT include comments in package.json - JSON does not support comments.
     if (this.options.verbose) {
       console.log(`\n🚀 Starting service on port ${this.options.port}...`);
     }
+
+    // Kill any existing process on the port first
+    await this.killProcessOnPort(this.options.port);
 
     const env = this.getNodeEnv();
     env.PORT = String(this.options.port);
@@ -753,6 +795,23 @@ DO NOT include comments in package.json - JSON does not support comments.
   }
 
   /**
+   * Kills any process running on the specified port
+   */
+  private async killProcessOnPort(port: number): Promise<void> {
+    try {
+      const { execSync } = require('child_process');
+      // Try to find and kill process on port (Linux/Mac)
+      execSync(`lsof -ti:${port} | xargs kill -9 2>/dev/null || fuser -k ${port}/tcp 2>/dev/null || true`, {
+        stdio: 'ignore'
+      });
+      // Give it a moment to release the port
+      await this.sleep(500);
+    } catch {
+      // Ignore errors - port might not be in use
+    }
+  }
+
+  /**
    * Checks service health
    */
   async checkHealth(): Promise<boolean> {
@@ -883,12 +942,47 @@ DO NOT include comments in package.json - JSON does not support comments.
       return;
     }
 
+    // Check if issues are TypeScript/compilation errors - use fallback code
+    const isTypeScriptError = issues.some(i => 
+      i.includes('TSError') || 
+      i.includes('Cannot find name') || 
+      i.includes('Unable to compile TypeScript') ||
+      i.includes('error TS')
+    );
+
+    // Check if issues are port-related - just restart without regenerating
+    const isPortError = issues.some(i => 
+      i.includes('EADDRINUSE') || 
+      i.includes('address already in use')
+    );
+
+    if (isPortError) {
+      if (this.options.verbose) {
+        console.log('\n🔄 Port conflict detected, restarting service...');
+      }
+      await this.stopService();
+      await this.startService();
+      return;
+    }
+
     if (this.options.verbose) {
       console.log(`\n🔍 Detected ${issues.length} issues in logs, evolving...`);
     }
 
-    const context = issues.join('\n');
-    const newCode = await this.generateCode('log-analysis', context);
+    let newCode;
+    
+    if (isTypeScriptError) {
+      // Use fallback code for TypeScript errors - LLM generated broken code
+      if (this.options.verbose) {
+        console.log('   ⚠️ TypeScript error detected - using fallback code generator');
+      }
+      const fallbackResponse = this.generateFallbackCode();
+      newCode = { files: this.parseFilesFromResponse(fallbackResponse) };
+    } else {
+      // Try LLM for other issues
+      const context = issues.join('\n');
+      newCode = await this.generateCode('log-analysis', context);
+    }
 
     await this.stopService();
     await this.writeFiles(newCode.files);
@@ -901,7 +995,7 @@ DO NOT include comments in package.json - JSON does not support comments.
       changes: newCode.files.map(f => ({
         path: f.path,
         action: 'update' as const,
-        reason: 'Log analysis improvement'
+        reason: isTypeScriptError ? 'Fallback code (TypeScript fix)' : 'Log analysis improvement'
       })),
       result: 'success',
       logs: issues
@@ -1090,6 +1184,23 @@ let idCounter = 1;
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), entities: ${JSON.stringify(entities.map(e => e.name))} });
+});
+
+app.get('/', (req, res) => {
+  res.type('html').send(
+    '<!doctype html>' +
+      '<html><head><meta charset="utf-8" />' +
+      '<meta name="viewport" content="width=device-width, initial-scale=1" />' +
+      '<title>Reclapp Service</title></head>' +
+      '<body style="font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 24px;">' +
+      '<h1 style="margin: 0 0 12px 0;">Reclapp service is running</h1>' +
+      '<p style="margin: 0 0 16px 0;">This is the generated API server. Useful endpoints:</p>' +
+      '<ul>' +
+      '<li><a href="/health">/health</a></li>' +
+      '<li><code>/api/v1/*</code> (CRUD endpoints)</li>' +
+      '</ul>' +
+      '</body></html>'
+  );
 });
 ${routeBlocks}
 

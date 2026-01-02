@@ -61,7 +61,7 @@ export class OllamaClient implements LLMClient {
   constructor(config?: Partial<OllamaConfig>) {
     this.config = {
       host: process.env.OLLAMA_HOST || config?.host || 'http://localhost:11434',
-      model: process.env.OLLAMA_MODEL || config?.model || 'llama3',
+      model: process.env.OLLAMA_MODEL || config?.model || 'qwen2.5-coder:14b',
       timeout: config?.timeout || 120000,
       retries: config?.retries || 3
     };

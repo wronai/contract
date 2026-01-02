@@ -1,5 +1,5 @@
 test-verify/
-./output/
+output/
 test-todo-prompt
 test-lifecycle
 test-lifecycle-*
