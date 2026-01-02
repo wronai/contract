@@ -624,6 +624,19 @@ export class EvolutionManager {
         const feDir = path.join(this.options.outputDir, 'frontend');
         const hasFrontend = fs.existsSync(feDir) && fs.readdirSync(feDir).length > 0;
         if (!hasFrontend) missingTargets.push('frontend');
+      } else if (t === 'database') {
+        const dbDir = path.join(this.options.outputDir, 'database');
+        const hasDb = fs.existsSync(dbDir) && fs.readdirSync(dbDir).length > 0;
+        if (!hasDb) missingTargets.push('database');
+      } else if (t === 'docker') {
+        const composePath = path.join(this.options.outputDir, 'docker-compose.yml');
+        const dockerDir = path.join(this.options.outputDir, 'docker');
+        const hasCompose = fs.existsSync(composePath);
+        const hasDockerDir = fs.existsSync(dockerDir) && fs.readdirSync(dockerDir).length > 0;
+        if (!hasCompose || !hasDockerDir) missingTargets.push('docker');
+      } else if (t === 'cicd') {
+        const wf = path.join(this.options.outputDir, '.github', 'workflows', 'ci.yml');
+        if (!fs.existsSync(wf)) missingTargets.push('cicd');
       }
     }
 
@@ -1476,16 +1489,25 @@ Output files with \`\`\`filepath:path/to/file format.`;
     this.taskQueue.add('Generate tests', 'generate-tests');
     this.taskQueue.add('Run tests', 'run-tests');
 
-    // Phase 5: Frontend (from contract) - best effort unless priority=must
+    // Phase 5: Database (from contract / tech stack) - best effort unless priority=must
+    this.taskQueue.add('Generate database', 'generate-database');
+
+    // Phase 6: Docker (from contract) - best effort unless priority=must
+    this.taskQueue.add('Generate Docker', 'generate-docker');
+
+    // Phase 7: CI/CD templates (from contract) - best effort unless priority=must
+    this.taskQueue.add('Generate CI/CD templates', 'generate-cicd');
+
+    // Phase 8: Frontend (from contract) - best effort unless priority=must
     this.taskQueue.add('Generate frontend', 'generate-frontend');
     
-    // Phase 6: Documentation
+    // Phase 9: Documentation
     this.taskQueue.add('Generate documentation', 'generate-readme');
     
-    // Phase 7: Additional layers (from contract)
+    // Phase 10: Additional layers (from contract)
     this.taskQueue.add('Validate additional targets', 'layer2');
 
-    // Phase 8: Verification & Reconciliation
+    // Phase 11: Verification & Reconciliation
     this.taskQueue.add('Verify contract ↔ code ↔ service', 'verify-state');
     this.taskQueue.add('Reconcile discrepancies', 'reconcile');
 
@@ -1724,6 +1746,85 @@ Output files with \`\`\`filepath:path/to/file format.`;
                 throw new Error(testResult.error || 'Tests failed');
               }
               break;
+
+            case 'generate-database': {
+              const priority = this.getTargetPriority('database');
+              const dbType = this.contract?.generation?.techStack?.database?.type;
+              const shouldGenerate = Boolean(priority) || (dbType && dbType !== 'in-memory');
+
+              if (!shouldGenerate) {
+                this.taskQueue.skip(task.id);
+                break;
+              }
+
+              this.narrate(
+                'Generating database',
+                `Contract target: database${priority ? ` (priority: ${priority})` : ''}${dbType ? `, type: ${dbType}` : ''}`
+              );
+
+              const ok = await this.generateDatabaseArtifacts();
+              if (ok) {
+                this.taskQueue.done(task.id);
+              } else if (priority === 'must') {
+                throw new Error('Database generation failed (required by contract)');
+              } else {
+                this.taskQueue.skip(task.id);
+                if (this.options.verbose) {
+                  this.renderer.codeblock('yaml', `# @type: database_skip\nreason: "Database generation skipped/failed but target is optional"\npriority: "${priority || 'should'}"`);
+                }
+              }
+              break;
+            }
+
+            case 'generate-cicd': {
+              const priority = this.getTargetPriority('cicd');
+              const shouldGenerate = Boolean(priority);
+
+              if (!shouldGenerate) {
+                this.taskQueue.skip(task.id);
+                break;
+              }
+
+              this.narrate('Generating CI/CD templates', `Contract target: cicd (priority: ${priority})`);
+
+              const ok = await this.generateCicdArtifacts();
+              if (ok) {
+                this.taskQueue.done(task.id);
+              } else if (priority === 'must') {
+                throw new Error('CI/CD templates generation failed (required by contract)');
+              } else {
+                this.taskQueue.skip(task.id);
+                if (this.options.verbose) {
+                  this.renderer.codeblock('yaml', `# @type: cicd_skip\nreason: "CI/CD templates generation skipped/failed but target is optional"\npriority: "${priority || 'should'}"`);
+                }
+              }
+              break;
+            }
+
+            case 'generate-docker': {
+              const priority = this.getTargetPriority('docker');
+              const shouldGenerate = Boolean(priority);
+
+              if (!shouldGenerate) {
+                this.taskQueue.skip(task.id);
+                break;
+              }
+
+              this.narrate('Generating Docker', `Contract target: docker (priority: ${priority})`);
+
+              const ok = await this.generateDockerArtifacts();
+              if (ok) {
+                this.taskQueue.done(task.id);
+              } else if (priority === 'must') {
+                throw new Error('Docker generation failed (required by contract)');
+              } else {
+                this.taskQueue.skip(task.id);
+                if (this.options.verbose) {
+                  this.renderer.codeblock('yaml', `# @type: docker_skip\nreason: "Docker generation skipped/failed but target is optional"\npriority: "${priority || 'should'}"`);
+                }
+              }
+              break;
+            }
 
             case 'generate-frontend': {
               const priority = this.getTargetPriority('frontend');
@@ -2075,6 +2176,363 @@ Output ONLY the Markdown content, no explanation.`;
         `  resources: ${resources.length}`
       ].join('\n'));
     }
+  }
+
+  private async generateDatabaseArtifacts(): Promise<boolean> {
+    if (!this.contract) return false;
+
+    const db = this.contract.generation?.techStack?.database;
+    const dbType = db?.type;
+    if (!dbType || dbType === 'in-memory') return false;
+
+    const entities = this.contract.definition?.entities || [];
+    if (entities.length === 0) return false;
+
+    const dbDir = path.join(this.options.outputDir, 'database');
+    const migDir = path.join(dbDir, 'migrations');
+    fs.mkdirSync(migDir, { recursive: true });
+
+    const mapType = (t: string): string => {
+      const type = (t || '').toString();
+      const lower = type.toLowerCase();
+
+      if (dbType === 'postgresql') {
+        if (lower === 'uuid') return 'UUID';
+        if (lower === 'int' || lower === 'integer') return 'INTEGER';
+        if (lower === 'float' || lower === 'number') return 'DOUBLE PRECISION';
+        if (lower === 'boolean' || lower === 'bool') return 'BOOLEAN';
+        if (lower === 'datetime' || lower === 'date') return 'TIMESTAMPTZ';
+        if (lower === 'json') return 'JSONB';
+        return 'TEXT';
+      }
+
+      if (dbType === 'mysql') {
+        if (lower === 'uuid') return 'CHAR(36)';
+        if (lower === 'int' || lower === 'integer') return 'INT';
+        if (lower === 'float' || lower === 'number') return 'DOUBLE';
+        if (lower === 'boolean' || lower === 'bool') return 'TINYINT(1)';
+        if (lower === 'datetime' || lower === 'date') return 'DATETIME';
+        if (lower === 'json') return 'JSON';
+        return 'VARCHAR(255)';
+      }
+
+      // sqlite / mongodb (document) fallback: keep SQL-friendly minimal mapping
+      if (lower === 'int' || lower === 'integer') return 'INTEGER';
+      if (lower === 'float' || lower === 'number') return 'REAL';
+      if (lower === 'boolean' || lower === 'bool') return 'INTEGER';
+      return 'TEXT';
+    };
+
+    const sqlTables: string[] = [];
+    for (const e of entities) {
+      const table = e.name.toLowerCase() + 's';
+      const cols: string[] = [];
+
+      for (const f of (e.fields || [])) {
+        const ann: any = (f as any).annotations || {};
+        const isPrimary = Boolean(ann.primary) || f.name === 'id';
+        const isRequired = Boolean(ann.required) || isPrimary;
+        const colType = mapType(String((f as any).type || 'String'));
+
+        let line = `  ${f.name} ${colType}`;
+        if (isPrimary) {
+          if (dbType === 'postgresql') {
+            line += ' PRIMARY KEY';
+          } else if (dbType === 'mysql') {
+            line += ' PRIMARY KEY';
+          } else {
+            line += ' PRIMARY KEY';
+          }
+        }
+        if (isRequired && !isPrimary) {
+          line += ' NOT NULL';
+        }
+        cols.push(line);
+      }
+
+      // Ensure timestamps exist
+      if (!cols.some(c => c.includes('createdAt'))) {
+        cols.push(`  createdAt ${mapType('DateTime')}`);
+      }
+      if (!cols.some(c => c.includes('updatedAt'))) {
+        cols.push(`  updatedAt ${mapType('DateTime')}`);
+      }
+
+      sqlTables.push(`CREATE TABLE IF NOT EXISTS ${table} (\n${cols.join(',\n')}\n);`);
+    }
+
+    const migration = [
+      '-- @type: migration',
+      `-- database: ${dbType}`,
+      '-- generated by reclapp evolve',
+      '',
+      ...sqlTables,
+      ''
+    ].join('\n');
+    fs.writeFileSync(path.join(migDir, '001_init.sql'), migration, 'utf-8');
+
+    const envExample = [
+      '# Database connection',
+      `# type: ${dbType}`,
+      '',
+      dbType === 'postgresql'
+        ? 'DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app'
+        : dbType === 'mysql'
+          ? 'DATABASE_URL=mysql://root:root@localhost:3306/app'
+          : dbType === 'sqlite'
+            ? 'DATABASE_URL=file:./database/app.db'
+            : 'DATABASE_URL='
+    ].join('\n');
+    fs.writeFileSync(path.join(dbDir, '.env.example'), envExample, 'utf-8');
+
+    const readme = [
+      '# Database',
+      '',
+      `Type: **${dbType}**`,
+      '',
+      '## Migrations',
+      '',
+      '- `database/migrations/001_init.sql`',
+      '',
+      '## Environment',
+      '',
+      '- Copy `database/.env.example` to `.env` and adjust `DATABASE_URL`',
+      '',
+      '## Notes',
+      '',
+      '- This folder contains generated database artifacts.',
+      '- Application runtime integration depends on the generated API layer.'
+    ].join('\n');
+    fs.writeFileSync(path.join(dbDir, 'README.md'), readme, 'utf-8');
+
+    if (this.options.verbose) {
+      this.renderer.codeblock('yaml', [
+        '# @type: database_generated',
+        'database:',
+        `  type: "${dbType}"`,
+        `  dir: "${dbDir}"`,
+        '  files:',
+        '    - "database/migrations/001_init.sql"',
+        '    - "database/.env.example"',
+        '    - "database/README.md"'
+      ].join('\n'));
+    }
+
+    return true;
+  }
+
+  private async generateCicdArtifacts(): Promise<boolean> {
+    if (!this.contract) return false;
+
+    const outDir = this.options.outputDir;
+    const apiPkg = path.join(outDir, 'api', 'package.json');
+    if (!fs.existsSync(apiPkg)) return false;
+
+    const hasFrontend = fs.existsSync(path.join(outDir, 'frontend', 'package.json'));
+    const wfDir = path.join(outDir, '.github', 'workflows');
+    fs.mkdirSync(wfDir, { recursive: true });
+
+    const lines: string[] = [];
+    lines.push('name: CI');
+    lines.push('');
+    lines.push('on:');
+    lines.push('  push:');
+    lines.push('  pull_request:');
+    lines.push('');
+    lines.push('jobs:');
+    lines.push('  api:');
+    lines.push('    runs-on: ubuntu-latest');
+    lines.push('    defaults:');
+    lines.push('      run:');
+    lines.push('        working-directory: api');
+    lines.push('    steps:');
+    lines.push('      - uses: actions/checkout@v4');
+    lines.push('      - uses: actions/setup-node@v4');
+    lines.push('        with:');
+    lines.push('          node-version: 20');
+    lines.push('          cache: npm');
+    lines.push('          cache-dependency-path: api/package-lock.json');
+    lines.push('      - name: Install');
+    lines.push('        run: npm ci || npm install');
+    lines.push('      - name: Typecheck');
+    lines.push('        run: npm run typecheck || echo "no typecheck"');
+    lines.push('      - name: Tests');
+    lines.push('        run: npm test || echo "no tests"');
+
+    if (hasFrontend) {
+      lines.push('');
+      lines.push('  frontend:');
+      lines.push('    runs-on: ubuntu-latest');
+      lines.push('    defaults:');
+      lines.push('      run:');
+      lines.push('        working-directory: frontend');
+      lines.push('    steps:');
+      lines.push('      - uses: actions/checkout@v4');
+      lines.push('      - uses: actions/setup-node@v4');
+      lines.push('        with:');
+      lines.push('          node-version: 20');
+      lines.push('          cache: npm');
+      lines.push('          cache-dependency-path: frontend/package-lock.json');
+      lines.push('      - name: Install');
+      lines.push('        run: npm ci || npm install');
+      lines.push('      - name: Build');
+      lines.push('        run: npm run build || echo "no build"');
+    }
+
+    const wf = lines.join('\n') + '\n';
+    const wfPath = path.join(wfDir, 'ci.yml');
+    fs.writeFileSync(wfPath, wf, 'utf-8');
+
+    if (this.options.verbose) {
+      this.renderer.codeblock('yaml', [
+        '# @type: cicd_generated',
+        'cicd:',
+        `  path: "${wfPath}"`,
+        '  workflows:',
+        '    - "ci.yml"'
+      ].join('\n'));
+    }
+
+    return true;
+  }
+
+  private async generateDockerArtifacts(): Promise<boolean> {
+    if (!this.contract) return false;
+
+    const outDir = this.options.outputDir;
+    const dockerDir = path.join(outDir, 'docker');
+    fs.mkdirSync(dockerDir, { recursive: true });
+
+    const hasApi = fs.existsSync(path.join(outDir, 'api', 'package.json'));
+    if (!hasApi) return false;
+
+    const hasFrontend = fs.existsSync(path.join(outDir, 'frontend', 'package.json'));
+    const dbType = this.contract.generation?.techStack?.database?.type;
+
+    const dockerfileApi = [
+      'FROM node:20-alpine',
+      '',
+      'WORKDIR /app',
+      '',
+      'COPY api/package.json api/package-lock.json* ./api/',
+      'RUN cd api && npm install',
+      '',
+      'COPY api ./api',
+      '',
+      'WORKDIR /app/api',
+      'ENV HOST=0.0.0.0',
+      'ENV PORT=8080',
+      'EXPOSE 8080',
+      'CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "8080"]'
+    ].join('\n');
+    fs.writeFileSync(path.join(dockerDir, 'Dockerfile.api'), dockerfileApi, 'utf-8');
+
+    if (hasFrontend) {
+      const dockerfileFrontend = [
+        'FROM node:20-alpine',
+        '',
+        'WORKDIR /app',
+        '',
+        'COPY frontend/package.json frontend/package-lock.json* ./frontend/',
+        'RUN cd frontend && npm install',
+        '',
+        'COPY frontend ./frontend',
+        '',
+        'WORKDIR /app/frontend',
+        'ENV HOST=0.0.0.0',
+        'ENV PORT=3000',
+        'EXPOSE 3000',
+        'CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]'
+      ].join('\n');
+      fs.writeFileSync(path.join(dockerDir, 'Dockerfile.frontend'), dockerfileFrontend, 'utf-8');
+    }
+
+    const services: string[] = [];
+    services.push('services:');
+    services.push('  api:');
+    services.push('    build:');
+    services.push('      context: .');
+    services.push('      dockerfile: docker/Dockerfile.api');
+    services.push('    ports:');
+    services.push('      - "8080:8080"');
+    services.push('    environment:');
+    services.push('      - PORT=8080');
+    if (dbType && dbType !== 'in-memory') {
+      services.push('      - DATABASE_URL=${DATABASE_URL}');
+    }
+
+    if (hasFrontend) {
+      services.push('');
+      services.push('  frontend:');
+      services.push('    build:');
+      services.push('      context: .');
+      services.push('      dockerfile: docker/Dockerfile.frontend');
+      services.push('    ports:');
+      services.push('      - "3000:3000"');
+      services.push('    environment:');
+      services.push('      - VITE_API_URL=http://localhost:8080');
+      services.push('    depends_on:');
+      services.push('      - api');
+    }
+
+    if (dbType === 'postgresql') {
+      services.push('');
+      services.push('  db:');
+      services.push('    image: postgres:16-alpine');
+      services.push('    ports:');
+      services.push('      - "5432:5432"');
+      services.push('    environment:');
+      services.push('      - POSTGRES_USER=postgres');
+      services.push('      - POSTGRES_PASSWORD=postgres');
+      services.push('      - POSTGRES_DB=app');
+      services.push('    volumes:');
+      services.push('      - postgres-data:/var/lib/postgresql/data');
+      services.push('');
+      services.push('volumes:');
+      services.push('  postgres-data:');
+    } else if (dbType === 'mysql') {
+      services.push('');
+      services.push('  db:');
+      services.push('    image: mysql:8');
+      services.push('    ports:');
+      services.push('      - "3306:3306"');
+      services.push('    environment:');
+      services.push('      - MYSQL_ROOT_PASSWORD=root');
+      services.push('      - MYSQL_DATABASE=app');
+      services.push('    volumes:');
+      services.push('      - mysql-data:/var/lib/mysql');
+      services.push('');
+      services.push('volumes:');
+      services.push('  mysql-data:');
+    }
+
+    fs.writeFileSync(path.join(outDir, 'docker-compose.yml'), services.join('\n') + '\n', 'utf-8');
+
+    const envExample = [
+      '# Docker compose environment',
+      '',
+      dbType === 'postgresql'
+        ? 'DATABASE_URL=postgresql://postgres:postgres@db:5432/app'
+        : dbType === 'mysql'
+          ? 'DATABASE_URL=mysql://root:root@db:3306/app'
+          : 'DATABASE_URL='
+    ].join('\n');
+    fs.writeFileSync(path.join(outDir, '.env.example'), envExample, 'utf-8');
+
+    if (this.options.verbose) {
+      this.renderer.codeblock('yaml', [
+        '# @type: docker_generated',
+        'docker:',
+        `  dir: "${dockerDir}"`,
+        '  files:',
+        '    - "docker-compose.yml"',
+        '    - "docker/Dockerfile.api"',
+        ...(hasFrontend ? ['    - "docker/Dockerfile.frontend"'] : []),
+        '    - ".env.example"'
+      ].join('\n'));
+    }
+
+    return true;
   }
 
   /**

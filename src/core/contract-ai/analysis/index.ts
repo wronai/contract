@@ -11,3 +11,10 @@ export type {
   DuplicateGroup, 
   AnalysisReport 
 } from './code-analyzer';
+
+export { RefactoringContractGenerator } from './refactoring-contract';
+export type {
+  RefactoringIssue,
+  RefactoringType,
+  RefactoringContract
+} from './refactoring-contract';

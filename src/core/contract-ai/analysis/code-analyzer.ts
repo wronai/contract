@@ -69,7 +69,7 @@ export interface AnalysisReport {
 
 export class CodeAnalyzer {
   private rootDir: string;
-  private extensions = ['.ts', '.tsx', '.js', '.jsx', '.py', '.java', '.go', '.rs'];
+  private extensions = ['.ts', '.tsx', '.js', '.jsx', '.py', '.java', '.go', '.rs', '.cs', '.cpp', '.c', '.h', '.rb', '.php'];
   private ignorePatterns = ['node_modules', 'dist', 'build', '.git', 'coverage', '__pycache__'];
 
   constructor(rootDir: string) {
@@ -189,9 +189,149 @@ export class CodeAnalyzer {
       this.parseTypeScript(content, lines, info);
     } else if (ext === '.py') {
       this.parsePython(content, lines, info);
+    } else if (['.cs', '.java'].includes(ext)) {
+      this.parseCSharpJava(content, lines, info);
+    } else if (['.go'].includes(ext)) {
+      this.parseGo(content, lines, info);
+    } else if (['.cpp', '.c', '.h'].includes(ext)) {
+      this.parseCpp(content, lines, info);
     }
 
     return info;
+  }
+
+  /**
+   * Parse C#/Java file
+   */
+  private parseCSharpJava(content: string, lines: string[], info: FileInfo): void {
+    // Extract imports/using
+    const usingRegex = /(?:using|import)\s+([^;]+);/g;
+    let match;
+    while ((match = usingRegex.exec(content)) !== null) {
+      info.imports.push(match[1].trim());
+    }
+
+    // Extract classes
+    const classRegex = /(?:public|private|internal|protected)?\s*(?:static|abstract|sealed)?\s*class\s+(\w+)/g;
+    while ((match = classRegex.exec(content)) !== null) {
+      info.classes.push(match[1]);
+    }
+
+    // Extract methods
+    const methodRegex = /(?:public|private|protected|internal)?\s*(?:static|virtual|override|async)?\s*(?:\w+(?:<[^>]+>)?)\s+(\w+)\s*\(([^)]*)\)/g;
+    while ((match = methodRegex.exec(content)) !== null) {
+      const name = match[1];
+      if (['if', 'for', 'while', 'switch', 'catch', 'class', 'new'].includes(name)) continue;
+      
+      const params = match[2] ? match[2].split(',').map(p => p.trim().split(' ').pop() || '').filter(p => p) : [];
+      const startLine = content.substring(0, match.index).split('\n').length;
+      const endLine = this.findFunctionEnd(lines, startLine - 1);
+
+      if (!info.functions.some(f => f.name === name && f.startLine === startLine)) {
+        info.functions.push({
+          name,
+          file: info.relativePath,
+          startLine,
+          endLine,
+          lines: endLine - startLine + 1,
+          params,
+          isAsync: match[0].includes('async'),
+          isExported: match[0].includes('public'),
+          complexity: this.calculateComplexity(lines.slice(startLine - 1, endLine).join('\n')),
+          calls: this.extractFunctionCalls(lines.slice(startLine - 1, endLine).join('\n'))
+        });
+      }
+    }
+  }
+
+  /**
+   * Parse Go file
+   */
+  private parseGo(content: string, lines: string[], info: FileInfo): void {
+    // Extract imports
+    const importRegex = /import\s+(?:\(\s*([\s\S]*?)\s*\)|"([^"]+)")/g;
+    let match;
+    while ((match = importRegex.exec(content)) !== null) {
+      const imports = match[1] || match[2];
+      if (imports) {
+        for (const imp of imports.split('\n')) {
+          const cleaned = imp.replace(/["'\s]/g, '').trim();
+          if (cleaned) info.imports.push(cleaned);
+        }
+      }
+    }
+
+    // Extract structs
+    const structRegex = /type\s+(\w+)\s+struct/g;
+    while ((match = structRegex.exec(content)) !== null) {
+      info.classes.push(match[1]);
+    }
+
+    // Extract functions
+    const funcRegex = /func\s+(?:\([^)]+\)\s+)?(\w+)\s*\(([^)]*)\)/g;
+    while ((match = funcRegex.exec(content)) !== null) {
+      const name = match[1];
+      const params = match[2] ? match[2].split(',').map(p => p.trim().split(' ')[0]).filter(p => p) : [];
+      const startLine = content.substring(0, match.index).split('\n').length;
+      const endLine = this.findFunctionEnd(lines, startLine - 1);
+
+      info.functions.push({
+        name,
+        file: info.relativePath,
+        startLine,
+        endLine,
+        lines: endLine - startLine + 1,
+        params,
+        isAsync: false,
+        isExported: name[0] === name[0].toUpperCase(),
+        complexity: this.calculateComplexity(lines.slice(startLine - 1, endLine).join('\n')),
+        calls: this.extractFunctionCalls(lines.slice(startLine - 1, endLine).join('\n'))
+      });
+    }
+  }
+
+  /**
+   * Parse C/C++ file
+   */
+  private parseCpp(content: string, lines: string[], info: FileInfo): void {
+    // Extract includes
+    const includeRegex = /#include\s*[<"]([^>"]+)[>"]/g;
+    let match;
+    while ((match = includeRegex.exec(content)) !== null) {
+      info.imports.push(match[1]);
+    }
+
+    // Extract classes
+    const classRegex = /class\s+(\w+)/g;
+    while ((match = classRegex.exec(content)) !== null) {
+      info.classes.push(match[1]);
+    }
+
+    // Extract functions
+    const funcRegex = /(?:\w+(?:\s*\*)?)\s+(\w+)\s*\(([^)]*)\)\s*(?:const)?\s*{/g;
+    while ((match = funcRegex.exec(content)) !== null) {
+      const name = match[1];
+      if (['if', 'for', 'while', 'switch', 'catch', 'class', 'return'].includes(name)) continue;
+
+      const params = match[2] ? match[2].split(',').map(p => p.trim().split(' ').pop() || '').filter(p => p) : [];
+      const startLine = content.substring(0, match.index).split('\n').length;
+      const endLine = this.findFunctionEnd(lines, startLine - 1);
+
+      if (!info.functions.some(f => f.name === name && f.startLine === startLine)) {
+        info.functions.push({
+          name,
+          file: info.relativePath,
+          startLine,
+          endLine,
+          lines: endLine - startLine + 1,
+          params,
+          isAsync: false,
+          isExported: true,
+          complexity: this.calculateComplexity(lines.slice(startLine - 1, endLine).join('\n')),
+          calls: this.extractFunctionCalls(lines.slice(startLine - 1, endLine).join('\n'))
+        });
+      }
+    }
   }
 
   /**

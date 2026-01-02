@@ -1291,6 +1291,7 @@ async function cmdRefactor(args, options) {
   }
 
   let workDir = target;
+  let repoUrl = target;
 
   // Check if it's a git URL
   if (target.startsWith('http') || target.startsWith('git@') || target.includes('github.com')) {
@@ -1304,44 +1305,73 @@ async function cmdRefactor(args, options) {
     } else {
       execSync(`git clone ${target} ${workDir}`, { stdio: 'inherit' });
     }
+  } else {
+    repoUrl = undefined;
   }
 
   console.log(`\n📊 Analyzing ${workDir}...`);
 
   try {
     const { CodeAnalyzer } = require('../src/core/contract-ai/analysis/code-analyzer');
+    const { RefactoringContractGenerator } = require('../src/core/contract-ai/analysis/refactoring-contract');
+    
     const analyzer = new CodeAnalyzer(workDir);
     const report = await analyzer.analyze();
 
-    // Generate contract from analysis
-    const contract = analyzer.toContract(report);
+    // Generate refactoring contract
+    const contractGen = new RefactoringContractGenerator(report, repoUrl);
+    const refactoringContract = contractGen.generate();
     
-    // Save contract
+    // Save outputs
     const contractDir = path.join(workDir, 'contract');
     if (!fs.existsSync(contractDir)) {
       fs.mkdirSync(contractDir, { recursive: true });
     }
-    const contractPath = path.join(contractDir, 'contract.ai.json');
-    fs.writeFileSync(contractPath, JSON.stringify(contract, null, 2), 'utf-8');
 
-    // Save analysis report
-    const reportPath = path.join(contractDir, 'analysis-report.md');
-    fs.writeFileSync(reportPath, analyzer.toMarkdown(report), 'utf-8');
+    // 1. JSON contract (machine-readable)
+    const jsonPath = path.join(contractDir, 'refactoring_contract.json');
+    fs.writeFileSync(jsonPath, contractGen.toJSON(), 'utf-8');
 
-    console.log('\n✅ Refactoring analysis complete!\n');
-    console.log('Generated files:');
-    console.log(`  - ${contractPath}`);
-    console.log(`  - ${reportPath}`);
+    // 2. Markdown report (human-readable)
+    const mdPath = path.join(contractDir, 'analysis_report.md');
+    fs.writeFileSync(mdPath, contractGen.toMarkdown(), 'utf-8');
+
+    // 3. TODO list (actionable)
+    const todoPath = path.join(contractDir, 'todo_list.md');
+    fs.writeFileSync(todoPath, contractGen.toTodoList(), 'utf-8');
+
+    // 4. Original analysis
+    const analysisPath = path.join(contractDir, 'code_analysis.md');
+    fs.writeFileSync(analysisPath, analyzer.toMarkdown(report), 'utf-8');
+
+    console.log('\n✅ Refactoring contract generated!\n');
+    console.log('Output files:');
+    console.log(`  - ${jsonPath}`);
+    console.log(`  - ${mdPath}`);
+    console.log(`  - ${todoPath}`);
+    console.log(`  - ${analysisPath}`);
+
     console.log('\n## Summary\n');
     console.log(`Files: ${report.summary.totalFiles}`);
-    console.log(`Lines: ${report.summary.totalLines}`);
     console.log(`Functions: ${report.summary.totalFunctions}`);
-    console.log(`Duplicates: ${report.summary.duplicates.length}`);
-    console.log(`Recommendations: ${report.recommendations.length}`);
+    console.log(`Issues: ${refactoringContract.summary.total_issues}`);
+    console.log(`  - Critical: ${refactoringContract.summary.by_severity.critical}`);
+    console.log(`  - High: ${refactoringContract.summary.by_severity.high}`);
+    console.log(`  - Medium: ${refactoringContract.summary.by_severity.medium}`);
+    console.log(`  - Low: ${refactoringContract.summary.by_severity.low}`);
+    console.log(`Total Effort: ${refactoringContract.summary.total_effort_days} days`);
 
-    if (report.recommendations.length > 0) {
+    if (refactoringContract.issues.length > 0) {
+      console.log('\n## Top Issues\n');
+      for (const issue of refactoringContract.issues.slice(0, 5)) {
+        console.log(`- [${issue.severity.toUpperCase()}] ${issue.function} (${issue.file}:${issue.line})`);
+        console.log(`  Action: ${issue.type}, Effort: ${issue.effort}d`);
+      }
+    }
+
+    if (refactoringContract.recommendations.length > 0) {
       console.log('\n## Recommendations\n');
-      for (const rec of report.recommendations.slice(0, 10)) {
+      for (const rec of refactoringContract.recommendations.slice(0, 5)) {
         console.log(`- ${rec}`);
       }
     }
