@@ -83,6 +83,7 @@ Usage:
   reclapp studio                             Interactive examples browser
   reclapp chat                               Interactive LLM contract designer
   reclapp generate-ai <contract|--prompt>    Generate code with Contract AI 2.2
+  reclapp evolve --prompt "..." [-k]         Evolution mode with auto-healing
   reclapp stop                               Stop all running containers
 
 Commands:
@@ -97,6 +98,7 @@ Commands:
   list        List all available contract files (.reclapp.ts, .rcl)
   studio      Interactive examples browser with tests
   generate-ai Generate code using Contract AI 2.2 (LLM-driven)
+  evolve      Evolution mode - dynamic code gen, monitoring, auto-fix
   stop        Stop all running Docker containers
 
 Supported Formats:
@@ -1053,6 +1055,95 @@ Commands:
 }
 
 // ============================================================================
+// EVOLUTION COMMAND
+// ============================================================================
+
+async function cmdEvolution(args, options) {
+  // Parse evolution-specific options
+  let prompt = null;
+  let contractPath = null;
+  let outputDir = options.output || './generated';
+  let port = 3000;
+  let keepRunning = false;
+
+  for (let i = 0; i < args.length; i++) {
+    if ((args[i] === '--prompt' || args[i] === '-p') && args[i + 1]) {
+      prompt = args[i + 1]; i++;
+    } else if ((args[i] === '--output' || args[i] === '-o') && args[i + 1]) {
+      outputDir = args[i + 1]; i++;
+    } else if (args[i] === '--port' && args[i + 1]) {
+      port = parseInt(args[i + 1]); i++;
+    } else if (args[i] === '--keep-running' || args[i] === '-k') {
+      keepRunning = true;
+    } else if (!args[i].startsWith('-')) {
+      contractPath = args[i];
+    }
+  }
+
+  if (!prompt && !contractPath) {
+    console.error('❌ Usage: reclapp evolve --prompt "..." or reclapp evolve <contract.ts>');
+    process.exit(1);
+  }
+
+  console.log('\n🧬 Reclapp Evolution Mode v2.3.1\n');
+
+  try {
+    const contractAI = require('../src/core/contract-ai');
+    
+    // Create evolution manager
+    const evolutionManager = contractAI.createEvolutionManager({
+      outputDir,
+      port,
+      verbose: options.verbose || true,
+      maxEvolutionCycles: 10,
+      autoRestart: true
+    });
+
+    // Setup LLM for evolution
+    const ollamaAvailable = await contractAI.checkOllamaAvailable();
+    if (ollamaAvailable) {
+      const ollamaClient = contractAI.createOllamaClient();
+      if (await ollamaClient.hasModel()) {
+        evolutionManager.setLLMClient(ollamaClient);
+        console.log(`🤖 Using Ollama (${ollamaClient.getConfig().model}) for code generation`);
+      }
+    }
+
+    // Start evolution lifecycle
+    if (prompt) {
+      console.log(`💬 Starting evolution from prompt: "${prompt}"\n`);
+      await evolutionManager.startFromPrompt(prompt);
+    } else {
+      const contract = require(path.resolve(contractPath)).default || require(path.resolve(contractPath));
+      await evolutionManager.start(contract);
+    }
+
+    if (keepRunning) {
+      console.log('\n📡 Evolution mode active. Monitoring for issues...');
+      console.log('   Press Ctrl+C to stop\n');
+
+      // Handle graceful shutdown
+      process.on('SIGINT', async () => {
+        console.log('\n\n🛑 Shutting down evolution manager...');
+        await evolutionManager.shutdown();
+        process.exit(0);
+      });
+
+      // Keep process alive
+      await new Promise(() => {}); // Never resolves
+    } else {
+      console.log('\n✅ Evolution complete');
+      await evolutionManager.shutdown();
+    }
+
+  } catch (error) {
+    console.error(`\n❌ Error: ${error.message}`);
+    if (options.verbose) console.error(error.stack);
+    process.exit(1);
+  }
+}
+
+// ============================================================================
 // MAIN
 // ============================================================================
 
@@ -1128,6 +1219,9 @@ async function main() {
 
     case 'generate-ai': case 'gen-ai': case 'ai-gen':
       await cmdGenerateAI(args.slice(1), options); break;
+
+    case 'evolve': case 'evolution': case 'evo':
+      await cmdEvolution(args.slice(1), options); break;
 
     default:
       if (command.endsWith('.reclapp.ts') || command.endsWith('.ts') || command.endsWith('.rcl') || command.endsWith('.rcl.md')) {

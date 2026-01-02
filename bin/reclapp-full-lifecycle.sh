@@ -232,6 +232,43 @@ fi
 # Step 4: Start service
 log_info "Step 3: Starting service on port $PORT..."
 
+# Function to check if port is in use
+is_port_in_use() {
+  lsof -i ":$1" >/dev/null 2>&1
+}
+
+# Function to find free port
+find_free_port() {
+  local port=$1
+  while is_port_in_use $port; do
+    log_warn "Port $port is in use, trying next..."
+    port=$((port + 1))
+    if [[ $port -gt 65535 ]]; then
+      log_error "No free port found"
+      exit 1
+    fi
+  done
+  echo $port
+}
+
+# Kill any existing process on the port
+kill_port_process() {
+  local port=$1
+  local pid=$(lsof -t -i ":$port" 2>/dev/null)
+  if [[ -n "$pid" ]]; then
+    log_info "Killing existing process on port $port (PID: $pid)..."
+    kill $pid 2>/dev/null
+    sleep 1
+  fi
+}
+
+# Check and get free port
+kill_port_process $PORT
+if is_port_in_use $PORT; then
+  PORT=$(find_free_port $PORT)
+  log_info "Using port $PORT"
+fi
+
 SERVER_FILE="$API_DIR/src/server.ts"
 if [[ ! -f "$SERVER_FILE" ]]; then
   log_warn "No server.ts found, skipping service start"
@@ -402,13 +439,25 @@ if [[ "$KEEP_RUNNING" == "true" && -n "$SERVER_PID" ]]; then
   echo ""
   echo "Press Ctrl+C to stop the service"
   echo ""
+  
+  # Cleanup function
+  cleanup() {
+    echo ""
+    echo "---"
+    log_info "Stopping service (PID: $SERVER_PID)..."
+    kill $SERVER_PID 2>/dev/null
+    wait $SERVER_PID 2>/dev/null
+    log_success "Service stopped"
+    exit 0
+  }
+  
+  # Trap Ctrl+C and other signals
+  trap cleanup INT TERM EXIT
+  
+  # Stream server output
   echo "\`\`\`"
-  
-  # Trap Ctrl+C to cleanup
-  trap "echo ''; echo '\`\`\`'; echo ''; log_info 'Stopping service...'; kill $SERVER_PID 2>/dev/null; exit 0" INT TERM
-  
-  # Wait for server process (this keeps the script running)
-  wait $SERVER_PID 2>/dev/null
+  # Keep script running - wait for the server process
+  tail -f /dev/null --pid=$SERVER_PID 2>/dev/null || wait $SERVER_PID 2>/dev/null
   echo "\`\`\`"
 fi
 

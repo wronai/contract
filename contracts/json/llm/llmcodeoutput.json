@@ -18,7 +18,8 @@
             "api",
             "frontend",
             "shared",
-            "docker"
+            "docker",
+            "tests"
           ],
           "title": "Target",
           "type": "string"

@@ -576,10 +576,32 @@ examples-down-all: example-b2b-down example-iot-down example-agent-down ## Stop 
 # PUBLISHING
 # ============================================================================
 
+publish: publish-pypi ## Publish Python package to PyPI
+	@echo "$(GREEN)✓ Published to PyPI$(NC)"
+
+publish-pypi: ## Publish Python package to PyPI
+	@echo "$(BLUE)📤 Publishing Python package to PyPI...$(NC)"
+	@pip install --upgrade build twine 2>/dev/null || true
+	@rm -rf dist/ build/ *.egg-info 2>/dev/null || true
+	python3 -m build
+	python3 -m twine upload dist/*
+	@echo "$(GREEN)✓ Published to PyPI$(NC)"
+
+publish-pypi-test: ## Publish to TestPyPI (for testing)
+	@echo "$(BLUE)📤 Publishing to TestPyPI...$(NC)"
+	@pip install --upgrade build twine 2>/dev/null || true
+	@rm -rf dist/ build/ *.egg-info 2>/dev/null || true
+	python3 -m build
+	python3 -m twine upload --repository testpypi dist/*
+	@echo "$(GREEN)✓ Published to TestPyPI$(NC)"
+
 publish-check: ## Check if ready to publish
 	@echo "$(BLUE)🔍 Checking publish readiness...$(NC)"
-	@npm pack --dry-run
-	@echo "$(GREEN)✓ Package is ready to publish$(NC)"
+	@pip install --upgrade build 2>/dev/null || true
+	@rm -rf dist/ build/ *.egg-info 2>/dev/null || true
+	python3 -m build
+	@echo "$(GREEN)✓ Package built successfully$(NC)"
+	@ls -la dist/
 
 publish-npm: ## Publish to npm registry
 	@echo "$(BLUE)📤 Publishing to npm...$(NC)"

@@ -15,6 +15,7 @@ import {
 } from '../types';
 import { ApiPromptTemplate, PromptTemplate } from './prompt-templates/api';
 import { FrontendPromptTemplate } from './prompt-templates/frontend';
+import { TestsPromptTemplate } from './prompt-templates/tests';
 
 // ============================================================================
 // TYPES
@@ -78,6 +79,7 @@ export class LLMCodeGenerator {
     // Rejestruj domyślne szablony
     this.promptTemplates.set('api', new ApiPromptTemplate());
     this.promptTemplates.set('frontend', new FrontendPromptTemplate());
+    this.promptTemplates.set('tests', new TestsPromptTemplate());
   }
 
   /**
@@ -189,6 +191,9 @@ export class LLMCodeGenerator {
     if (techStack.backend) {
       targets.push('api');
     }
+
+    // Tests są zawsze generowane
+    targets.push('tests');
 
     // Frontend tylko jeśli zdefiniowany
     if (techStack.frontend && techStack.frontend.framework !== 'none') {
@@ -324,12 +329,113 @@ export class LLMCodeGenerator {
       prompt = '';
     }
     
-    // Wykryj czy to API czy frontend
+    // Wykryj typ generacji
     const isApi = prompt.includes('TASK: API');
+    const isTests = prompt.includes('TASK: Generate comprehensive tests');
     
     // Wyciągnij nazwy encji z promptu (format: ### EntityName)
     const entityMatches = prompt.match(/###\s+(\w+)\n/g) || [];
     const entities = entityMatches.map(m => m.replace(/###\s+/, '').replace('\n', ''));
+    
+    // Tests generation
+    if (isTests) {
+      return `
+\`\`\`typescript:tests/api.test.ts
+import request from 'supertest';
+
+const BASE_URL = process.env.API_URL || 'http://localhost:3000';
+
+describe('API Tests', () => {
+  describe('Health Check', () => {
+    it('should return health status', async () => {
+      const res = await request(BASE_URL).get('/health');
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('status', 'ok');
+    });
+  });
+
+  describe('CRUD Operations', () => {
+    let createdId: string;
+
+    it('should create an item', async () => {
+      const res = await request(BASE_URL)
+        .post('/api/v1/items')
+        .send({ name: 'Test Item' });
+      expect(res.status).toBe(201);
+      expect(res.body).toHaveProperty('id');
+      createdId = res.body.id;
+    });
+
+    it('should get all items', async () => {
+      const res = await request(BASE_URL).get('/api/v1/items');
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+    });
+
+    it('should get item by id', async () => {
+      const res = await request(BASE_URL).get(\`/api/v1/items/\${createdId}\`);
+      expect(res.status).toBe(200);
+      expect(res.body.id).toBe(createdId);
+    });
+
+    it('should update an item', async () => {
+      const res = await request(BASE_URL)
+        .put(\`/api/v1/items/\${createdId}\`)
+        .send({ name: 'Updated Item' });
+      expect(res.status).toBe(200);
+      expect(res.body.name).toBe('Updated Item');
+    });
+
+    it('should delete an item', async () => {
+      const res = await request(BASE_URL).delete(\`/api/v1/items/\${createdId}\`);
+      expect(res.status).toBe(204);
+    });
+
+    it('should return 404 for non-existent item', async () => {
+      const res = await request(BASE_URL).get('/api/v1/items/non-existent');
+      expect(res.status).toBe(404);
+    });
+  });
+});
+\`\`\`
+
+\`\`\`json:tests/package.json
+{
+  "name": "api-tests",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "jest --runInBand",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/supertest": "^2.0.12",
+    "jest": "^29.5.0",
+    "supertest": "^6.3.3",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.3.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": ["**/*.test.ts"]
+  }
+}
+\`\`\`
+
+\`\`\`typescript:tests/setup.ts
+import { beforeAll, afterAll } from '@jest/globals';
+
+beforeAll(async () => {
+  console.log('Starting test suite...');
+});
+
+afterAll(async () => {
+  console.log('Test suite completed.');
+});
+\`\`\`
+`;
+    }
     
     if (isApi) {
       // Generuj route files dla każdej encji
