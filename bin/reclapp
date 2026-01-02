@@ -123,6 +123,7 @@ Options:
   --output, -o <dir>    Output directory (default: ./target)
   --port <port>         API port (default: 8080)
   --verbose, -v         Verbose output
+  --docker, -d          Auto-start Docker containers after generation
   --help, -h            Show this help
 
 Examples:
@@ -271,11 +272,49 @@ async function cmdGenerate(contractPath, options) {
     console.log(`\n✅ Generated ${written} files to ${outputDir}`);
   }
 
-  console.log(`
+  // Auto-start Docker if --docker flag is set
+  if (options.docker) {
+    console.log('\n🐳 Starting Docker containers...');
+    await startDocker(outputDir);
+  } else {
+    console.log(`
 📦 Next steps:
   cd ${path.relative(process.cwd(), outputDir)}/api && npm install && npm run dev
   cd ${path.relative(process.cwd(), outputDir)}/frontend && npm install && npm run dev
+
+🐳 Or use Docker:
+  cd ${path.relative(process.cwd(), outputDir)} && docker compose up -d
+  
+  Or run: reclapp deploy ${contractPath}
 `);
+  }
+}
+
+async function startDocker(outputDir) {
+  const { execSync } = require('child_process');
+  
+  try {
+    // Stop existing containers
+    console.log('   Stopping existing containers...');
+    execSync('docker compose down --remove-orphans 2>/dev/null || true', { cwd: outputDir, stdio: 'pipe' });
+    
+    // Build and start
+    console.log('   Building containers...');
+    execSync('docker compose build', { cwd: outputDir, stdio: 'inherit' });
+    
+    console.log('   Starting containers...');
+    execSync('docker compose up -d', { cwd: outputDir, stdio: 'inherit' });
+    
+    console.log('\n✅ Docker containers started!');
+    console.log('   API:      http://localhost:8080');
+    console.log('   Frontend: http://localhost:3000');
+    console.log('\n   View logs: docker compose logs -f');
+    console.log('   Stop:      docker compose down');
+  } catch (err) {
+    console.error('❌ Docker failed. Make sure Docker is running.');
+    console.log('\n📦 Run manually:');
+    console.log(`   cd ${outputDir} && docker compose up -d`);
+  }
 }
 
 async function cmdDev(contractPath, options) {
@@ -1200,7 +1239,12 @@ async function main() {
   }
 
   const command = args[0];
-  const options = { output: null, verbose: args.includes('--verbose') || args.includes('-v'), inPlace: args.includes('--in-place') };
+  const options = { 
+    output: null, 
+    verbose: args.includes('--verbose') || args.includes('-v'), 
+    inPlace: args.includes('--in-place'),
+    docker: args.includes('--docker') || args.includes('-d')
+  };
 
   for (let i = 0; i < args.length; i++) {
     if ((args[i] === '--output' || args[i] === '-o') && args[i + 1]) {
