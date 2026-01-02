@@ -120,6 +120,15 @@ pytest tests/contracts/ -v
 - Pydantic >= 2.5
 - Ollama z llama3 (opcjonalne, dla generacji)
 
+## Changelog 2.3.2
+
+- ✅ **Evolution Mode** (`reclapp evolve --prompt "..."`) - dynamic code generation with auto-healing
+- ✅ **EvolutionManager** - service monitoring, log analysis, auto-fix cycles
+- ✅ **Evolution logs** (`*.rcl.md`) - track all evolution cycles and changes
+- ✅ **Tests generation** - automatic test file generation with contract AI
+- ✅ Port management and graceful shutdown for `--keep-running` mode
+- ✅ PyPI publishing commands (`make publish`, `make publish-pypi-test`)
+
 ## Changelog 2.3.1
 
 - ✅ Full lifecycle command (`reclapp-full-lifecycle.sh`)
@@ -139,7 +148,7 @@ pytest tests/contracts/ -v
 
 ```bash
 pip install -e .                         # Install
-reclapp --version                        # v2.3.1
+reclapp --version                        # v2.3.2
 reclapp --prompt "Create a notes app"    # Full lifecycle
 reclapp lifecycle --prompt "..."         # Explicit lifecycle
 reclapp generate contract.ts             # Generate from contract
@@ -147,6 +156,30 @@ reclapp prompts                          # Show example prompts
 reclapp validate                         # Validate Pydantic contracts
 reclapp list                             # List contracts
 ```
+
+## Evolution Mode (NEW in 2.3.2)
+
+Evolution mode enables dynamic code generation with automatic service monitoring and self-healing:
+
+```bash
+# Generate and run with evolution (auto-fix)
+./bin/reclapp evolve --prompt "Create a todo app"
+
+# Keep running with continuous monitoring
+./bin/reclapp evolve --prompt "Create a notes app" -k
+
+# Custom port and output
+./bin/reclapp evolve --prompt "..." --port 4000 -o ./output
+```
+
+### Evolution Features
+
+- **Dynamic code generation** - generates code from natural language prompt
+- **Service monitoring** - health checks every 5 seconds
+- **Log analysis** - detects errors and warnings in service logs
+- **Auto-fix cycles** - regenerates code when issues detected
+- **Evolution history** - tracks all changes in `*.rcl.md` logs
+- **Graceful shutdown** - Ctrl+C properly stops service
 
 ## Prompt Files (NEW)
 

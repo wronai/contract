@@ -67,6 +67,18 @@ try {
   parseMarkdownFile = null;
 }
 
+// Import Contract Markdown parser (.contract.md)
+let parseContractMarkdown, validateContractMarkdown, convertToContractAI;
+try {
+  const parser = require('../src/core/contract-ai/parser/markdown-parser');
+  parseContractMarkdown = parser.parseContractMarkdown;
+  validateContractMarkdown = parser.validateContract;
+  const converter = require('../src/core/contract-ai/converter/to-contract-ai');
+  convertToContractAI = converter.convertToContractAI;
+} catch (e) {
+  parseContractMarkdown = null;
+}
+
 const HELP = `
 Reclapp CLI - Generate applications from DSL contracts
 
@@ -105,6 +117,7 @@ Supported Formats:
   .reclapp.ts    TypeScript contract (original format)
   .reclapp.rcl   Mini-DSL contract (~87% less code)
   .rcl.md        Markdown contract (human-readable, AI-friendly)
+  .contract.md   Contract Markdown 3.0 (LLM-optimized, full-stack)
 
 Options:
   --output, -o <dir>    Output directory (default: ./target)
@@ -132,6 +145,37 @@ async function loadContract(contractPath) {
   if (!fs.existsSync(fullPath)) {
     console.error(`❌ Contract file not found: ${fullPath}`);
     process.exit(1);
+  }
+
+  // Handle Contract Markdown (.contract.md) files - new format
+  if (fullPath.endsWith('.contract.md')) {
+    if (!parseContractMarkdown) {
+      console.error('❌ Contract Markdown parser not available');
+      process.exit(1);
+    }
+    try {
+      const content = fs.readFileSync(fullPath, 'utf-8');
+      const parsed = parseContractMarkdown(content);
+      const validation = validateContractMarkdown(parsed);
+      
+      if (!validation.valid) {
+        console.error('❌ Contract validation failed:');
+        validation.errors.forEach(e => console.error(`   - ${e}`));
+        process.exit(1);
+      }
+      
+      if (validation.warnings.length > 0) {
+        console.warn('⚠️  Warnings:');
+        validation.warnings.forEach(w => console.warn(`   - ${w}`));
+      }
+      
+      // Convert to ContractAI format for generation
+      const contractAI = convertToContractAI(parsed);
+      return contractAI;
+    } catch (e) {
+      console.error('❌ Parse error:', e.message);
+      process.exit(1);
+    }
   }
 
   // Handle Markdown (.rcl.md or .md) files
@@ -1224,7 +1268,7 @@ async function main() {
       await cmdEvolution(args.slice(1), options); break;
 
     default:
-      if (command.endsWith('.reclapp.ts') || command.endsWith('.ts') || command.endsWith('.rcl') || command.endsWith('.rcl.md')) {
+      if (command.endsWith('.reclapp.ts') || command.endsWith('.ts') || command.endsWith('.rcl') || command.endsWith('.rcl.md') || command.endsWith('.contract.md')) {
         await cmdGenerate(command, options);
       } else {
         console.error(`❌ Unknown command: ${command}`);

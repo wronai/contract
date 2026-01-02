@@ -1,22 +1,36 @@
-# Documentation
+# Reclapp Documentation
 
-This folder contains the maintained documentation for Reclapp.
+> Complete documentation for the Reclapp Contract AI system
 
-## Core Docs
+## 📚 Documentation Index
 
-- [Studio Guide](./studio-guide.md)
-- [CLI Reference](./cli-reference.md)
-- [Generator Architecture](./generator-architecture.md)
-- [DSL Reference](./dsl-reference.md)
-- [DSL TypeScript Reference](./dsl-typescript-reference.md)
+### Architecture
+- **[Architecture Overview](00-architecture-overview.md)** - System architecture and components
+- **[Contract AI](contract-ai.md)** - AI-driven contract generation
+- **[Generator Architecture](generator-architecture.md)** - Code generation internals
 
-## Proposals
+### Code Generation
+- **[Code Generation](31-code-generation.md)** - Multi-layer code generation (API, Tests, Frontend)
+- **[Evolution System](30-evolution-system.md)** - Dynamic code evolution and monitoring
 
-- [DSL Generation Proposal](./DSL_GENERATION_PROPOSAL.md)
+### Reference
+- **[DSL Reference](dsl-reference.md)** - Mini-DSL syntax guide
+- **[TypeScript DSL](dsl-typescript-reference.md)** - Full TypeScript contracts
+- **[CLI Reference](cli-reference.md)** - Command line interface
+
+### Guides
+- **[Testing Guide](21-testing-guide.md)** - Validation and testing
+- **[Studio Guide](studio-guide.md)** - Interactive examples browser
+- **[Contract Lifecycle](contract-lifecycle-workflow.md)** - Full workflow
+
+### Project Status
+- **[Project Status](22-project-status.md)** - Version changelog
+- **[Completion Summary](20-completion-summary.md)** - Implementation status
+
+### Proposals
+- [DSL Generation Proposal](DSL_GENERATION_PROPOSAL.md)
 
 ## Repo-level Docs
-
-These live in the repository root because they are used by tooling and CI and should be easily discoverable.
 
 - [FILE_MANIFEST.md](../FILE_MANIFEST.md)
 - [AGENTS.md](../AGENTS.md)

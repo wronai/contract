@@ -8,7 +8,7 @@
  */
 
 import { ContractAI, GeneratedCode, GeneratedFile } from '../types';
-import { LLMClient } from '../generator/contract-generator';
+import { LLMClient, ContractGenerator } from '../generator/contract-generator';
 import { spawn, ChildProcess } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -147,47 +147,46 @@ export class EvolutionManager {
   }
 
   /**
-   * Creates a minimal contract from prompt
+   * Creates a minimal contract from prompt with proper entity extraction
    */
   private createMinimalContract(prompt: string): ContractAI {
-    // Extract entity names from prompt
-    const words = prompt.toLowerCase().split(/\s+/);
-    const entityKeywords = ['app', 'application', 'system', 'service', 'api'];
-    let mainEntity = 'Item';
+    // Extract entity names from prompt using multiple patterns
+    const entities = this.extractEntitiesFromPrompt(prompt);
     
-    for (let i = 0; i < words.length; i++) {
-      if (entityKeywords.includes(words[i]) && i > 0) {
-        mainEntity = words[i - 1].charAt(0).toUpperCase() + words[i - 1].slice(1);
-        break;
-      }
-    }
+    // Get app name from prompt
+    const appNameMatch = prompt.match(/(?:create|build|make)\s+(?:a|an)?\s*(\w+(?:\s+\w+)?)\s+(?:app|application|system|service|api)/i);
+    const appName = appNameMatch ? this.capitalize(appNameMatch[1]) + ' App' : 'Generated App';
 
     return {
       definition: {
         app: {
-          name: `${mainEntity} App`,
+          name: appName,
           version: '1.0.0',
           description: prompt
         },
-        entities: [{
-          name: mainEntity,
-          fields: [
-            { name: 'id', type: 'UUID', annotations: { primary: true } },
-            { name: 'name', type: 'String', annotations: { required: true } },
-            { name: 'createdAt', type: 'DateTime', annotations: {} },
-            { name: 'updatedAt', type: 'DateTime', annotations: {} }
-          ],
-          relations: []
-        }],
+        entities: entities,
         events: [],
-        api: { resources: [] }
+        api: { 
+          prefix: '/api/v1',
+          resources: entities.map(e => ({
+            name: e.name.toLowerCase() + 's',
+            entity: e.name,
+            operations: ['list', 'get', 'create', 'update', 'delete']
+          }))
+        }
       },
       generation: {
-        instructions: [{ target: 'api', priority: 'must', content: prompt }],
+        instructions: [
+          { target: 'api', priority: 'must', content: `Generate REST API for: ${prompt}` },
+          { target: 'tests', priority: 'must', content: 'Generate comprehensive API tests' },
+          { target: 'frontend', priority: 'should', content: 'Generate React frontend with Tailwind CSS' }
+        ],
         patterns: [],
         constraints: [],
         techStack: {
-          backend: { framework: 'express', language: 'typescript', runtime: 'node' }
+          backend: { framework: 'express', language: 'typescript', runtime: 'node' },
+          frontend: { framework: 'react', language: 'typescript', styling: 'tailwind' },
+          database: { type: 'memory', name: 'in-memory' }
         }
       },
       validation: {
@@ -196,6 +195,120 @@ export class EvolutionManager {
         acceptance: { criteria: [], qualityGates: [] }
       }
     } as ContractAI;
+  }
+
+  /**
+   * Extracts entities from prompt using NLP patterns
+   */
+  private extractEntitiesFromPrompt(prompt: string): Array<{name: string; fields: any[]; relations: any[]}> {
+    const entities: Array<{name: string; fields: any[]; relations: any[]}> = [];
+    const lowerPrompt = prompt.toLowerCase();
+    const foundEntities = new Set<string>();
+    
+    // Known domain entities (priority)
+    const domainEntities: Record<string, string[]> = {
+      'contact': ['contact', 'contacts', 'person', 'people'],
+      'company': ['company', 'companies', 'organization', 'business'],
+      'deal': ['deal', 'deals', 'opportunity', 'opportunities'],
+      'task': ['task', 'tasks'],
+      'todo': ['todo', 'todos'],
+      'note': ['note', 'notes'],
+      'category': ['category', 'categories'],
+      'user': ['user', 'users', 'account', 'accounts'],
+      'product': ['product', 'products', 'item', 'items'],
+      'order': ['order', 'orders'],
+      'customer': ['customer', 'customers', 'client', 'clients'],
+      'project': ['project', 'projects'],
+      'invoice': ['invoice', 'invoices', 'bill', 'bills'],
+      'employee': ['employee', 'employees', 'staff', 'worker'],
+      'booking': ['booking', 'bookings', 'reservation', 'reservations'],
+      'event': ['event', 'events'],
+      'ticket': ['ticket', 'tickets', 'issue', 'issues'],
+      'post': ['post', 'posts', 'article', 'articles'],
+      'comment': ['comment', 'comments'],
+      'tag': ['tag', 'tags', 'label', 'labels'],
+      'inventory': ['inventory', 'stock'],
+      'room': ['room', 'rooms'],
+      'service': ['service', 'services']
+    };
+
+    // Check for domain entities first
+    for (const [entity, keywords] of Object.entries(domainEntities)) {
+      for (const keyword of keywords) {
+        if (lowerPrompt.includes(keyword)) {
+          foundEntities.add(this.capitalize(entity));
+          break;
+        }
+      }
+    }
+
+    // If no domain entities found, try pattern extraction
+    if (foundEntities.size === 0) {
+      const entityPatterns = [
+        /managing\s+(\w+)/gi,
+        /(\w+)\s+with\s+\w+,/gi,
+        /(?:create|build)\s+(?:a|an)?\s*(\w+)\s+(?:app|system|api)/gi
+      ];
+
+      for (const pattern of entityPatterns) {
+        let match;
+        while ((match = pattern.exec(lowerPrompt)) !== null) {
+          if (match[1]) {
+            const entity = this.singularize(match[1]);
+            if (this.isValidEntityName(entity)) {
+              foundEntities.add(this.capitalize(entity));
+            }
+          }
+        }
+      }
+    }
+
+    // Default if no entities found
+    if (foundEntities.size === 0) {
+      foundEntities.add('Item');
+    }
+
+    // Create entity definitions
+    for (const entityName of foundEntities) {
+      entities.push({
+        name: entityName,
+        fields: [
+          { name: 'id', type: 'UUID', annotations: { primary: true } },
+          { name: 'name', type: 'String', annotations: { required: true } },
+          { name: 'description', type: 'String', annotations: {} },
+          { name: 'createdAt', type: 'DateTime', annotations: {} },
+          { name: 'updatedAt', type: 'DateTime', annotations: {} }
+        ],
+        relations: []
+      });
+    }
+
+    return entities;
+  }
+
+  /**
+   * Capitalizes first letter
+   */
+  private capitalize(str: string): string {
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  }
+
+  /**
+   * Simple singularize
+   */
+  private singularize(str: string): string {
+    if (str.endsWith('ies')) return str.slice(0, -3) + 'y';
+    if (str.endsWith('es')) return str.slice(0, -2);
+    if (str.endsWith('s') && !str.endsWith('ss')) return str.slice(0, -1);
+    return str;
+  }
+
+  /**
+   * Checks if name is a valid entity name
+   */
+  private isValidEntityName(name: string): boolean {
+    const invalidNames = ['a', 'an', 'the', 'and', 'or', 'with', 'for', 'to', 'app', 'application', 'system', 'service', 'api', 'create', 'build', 'make'];
+    return name.length > 1 && !invalidNames.includes(name.toLowerCase());
   }
 
   /**
@@ -248,24 +361,32 @@ export class EvolutionManager {
       throw new Error('Contract not set');
     }
 
-    const systemPrompt = this.buildSystemPrompt();
-    const userPrompt = this.buildUserPrompt(trigger, context);
-
     if (this.options.verbose) {
       console.log(`\n🤖 Generating code (trigger: ${trigger})...`);
     }
 
     let response: string;
     
-    if (this.llmClient) {
-      response = await this.llmClient.generate({
-        system: systemPrompt,
-        user: userPrompt,
-        temperature: 0.3,
-        maxTokens: 8000
-      });
+    // For initial generation, use reliable fallback code
+    // LLM is used only for error fixes where it can analyze the specific issue
+    if (trigger === 'initial') {
+      response = this.generateFallbackCode();
+    } else if (this.llmClient && (trigger === 'error' || trigger === 'log-analysis')) {
+      const systemPrompt = this.buildSystemPrompt();
+      const userPrompt = this.buildUserPrompt(trigger, context);
+      
+      try {
+        response = await this.llmClient.generate({
+          system: systemPrompt,
+          user: userPrompt,
+          temperature: 0.3,
+          maxTokens: 8000
+        });
+      } catch {
+        // Fallback if LLM fails
+        response = this.generateFallbackCode();
+      }
     } else {
-      // Fallback to template-based generation
       response = this.generateFallbackCode();
     }
 
@@ -845,10 +966,53 @@ DO NOT include comments in package.json - JSON does not support comments.
     if (!this.contract) return '';
 
     const entities = this.contract.definition.entities;
-    const entity = entities[0];
-    const entityName = entity?.name || 'Item';
+    const mainEntity = entities[0];
+    const entityName = mainEntity?.name || 'Item';
     const lowerName = entityName.toLowerCase();
     const pluralName = lowerName + 's';
+
+    // Generate storage and routes for all entities
+    const storageDecls = entities.map(e => {
+      const plural = e.name.toLowerCase() + 's';
+      return `const ${plural}: Map<string, any> = new Map();`;
+    }).join('\n');
+
+    const routeBlocks = entities.map(e => {
+      const name = e.name;
+      const lower = name.toLowerCase();
+      const plural = lower + 's';
+      return `
+// === ${name} Routes ===
+app.get('/api/v1/${plural}', (req, res) => {
+  res.json(Array.from(${plural}.values()));
+});
+
+app.get('/api/v1/${plural}/:id', (req, res) => {
+  const item = ${plural}.get(req.params.id);
+  if (!item) return res.status(404).json({ error: '${name} not found' });
+  res.json(item);
+});
+
+app.post('/api/v1/${plural}', (req, res) => {
+  const id = String(idCounter++);
+  const item = { id, ...req.body, createdAt: new Date().toISOString() };
+  ${plural}.set(id, item);
+  res.status(201).json(item);
+});
+
+app.put('/api/v1/${plural}/:id', (req, res) => {
+  if (!${plural}.has(req.params.id)) return res.status(404).json({ error: '${name} not found' });
+  const item = { ...${plural}.get(req.params.id), ...req.body, updatedAt: new Date().toISOString() };
+  ${plural}.set(req.params.id, item);
+  res.json(item);
+});
+
+app.delete('/api/v1/${plural}/:id', (req, res) => {
+  if (!${plural}.has(req.params.id)) return res.status(404).json({ error: '${name} not found' });
+  ${plural}.delete(req.params.id);
+  res.status(204).send();
+});`;
+    }).join('\n');
 
     return `
 \`\`\`typescript:api/src/server.ts
@@ -861,49 +1025,15 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// In-memory storage
-const ${pluralName}: Map<string, any> = new Map();
+// In-memory storage for all entities
+${storageDecls}
 let idCounter = 1;
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), entities: ${JSON.stringify(entities.map(e => e.name))} });
 });
-
-// GET all
-app.get('/api/v1/${pluralName}', (req, res) => {
-  res.json(Array.from(${pluralName}.values()));
-});
-
-// GET by ID
-app.get('/api/v1/${pluralName}/:id', (req, res) => {
-  const item = ${pluralName}.get(req.params.id);
-  if (!item) return res.status(404).json({ error: 'Not found' });
-  res.json(item);
-});
-
-// POST create
-app.post('/api/v1/${pluralName}', (req, res) => {
-  const id = String(idCounter++);
-  const item = { id, ...req.body, createdAt: new Date().toISOString() };
-  ${pluralName}.set(id, item);
-  res.status(201).json(item);
-});
-
-// PUT update
-app.put('/api/v1/${pluralName}/:id', (req, res) => {
-  if (!${pluralName}.has(req.params.id)) return res.status(404).json({ error: 'Not found' });
-  const item = { ...${pluralName}.get(req.params.id), ...req.body, updatedAt: new Date().toISOString() };
-  ${pluralName}.set(req.params.id, item);
-  res.json(item);
-});
-
-// DELETE
-app.delete('/api/v1/${pluralName}/:id', (req, res) => {
-  if (!${pluralName}.has(req.params.id)) return res.status(404).json({ error: 'Not found' });
-  ${pluralName}.delete(req.params.id);
-  res.status(204).send();
-});
+${routeBlocks}
 
 app.listen(PORT, () => {
   console.log(\`Server running on http://localhost:\${PORT}\`);
@@ -946,6 +1076,290 @@ app.listen(PORT, () => {
   },
   "include": ["src/**/*"]
 }
+\`\`\`
+
+\`\`\`typescript:tests/api.test.ts
+import request from 'supertest';
+
+const BASE_URL = process.env.API_URL || 'http://localhost:3000';
+
+describe('API Tests for ${entityName}', () => {
+  describe('Health Check', () => {
+    it('should return health status', async () => {
+      const res = await request(BASE_URL).get('/health');
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('status', 'ok');
+    });
+  });
+
+  describe('CRUD Operations', () => {
+    let createdId: string;
+
+    it('should create a ${lowerName}', async () => {
+      const res = await request(BASE_URL)
+        .post('/api/v1/${pluralName}')
+        .send({ name: 'Test ${entityName}' });
+      expect(res.status).toBe(201);
+      expect(res.body).toHaveProperty('id');
+      createdId = res.body.id;
+    });
+
+    it('should get all ${pluralName}', async () => {
+      const res = await request(BASE_URL).get('/api/v1/${pluralName}');
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+    });
+
+    it('should get ${lowerName} by id', async () => {
+      const res = await request(BASE_URL).get(\`/api/v1/${pluralName}/\${createdId}\`);
+      expect(res.status).toBe(200);
+      expect(res.body.id).toBe(createdId);
+    });
+
+    it('should update a ${lowerName}', async () => {
+      const res = await request(BASE_URL)
+        .put(\`/api/v1/${pluralName}/\${createdId}\`)
+        .send({ name: 'Updated ${entityName}' });
+      expect(res.status).toBe(200);
+      expect(res.body.name).toBe('Updated ${entityName}');
+    });
+
+    it('should delete a ${lowerName}', async () => {
+      const res = await request(BASE_URL).delete(\`/api/v1/${pluralName}/\${createdId}\`);
+      expect(res.status).toBe(204);
+    });
+
+    it('should return 404 for non-existent ${lowerName}', async () => {
+      const res = await request(BASE_URL).get('/api/v1/${pluralName}/non-existent');
+      expect(res.status).toBe(404);
+    });
+  });
+});
+\`\`\`
+
+\`\`\`json:tests/package.json
+{
+  "name": "api-tests",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "jest --runInBand"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/supertest": "^2.0.12",
+    "jest": "^29.5.0",
+    "supertest": "^6.3.3",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.3.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node"
+  }
+}
+\`\`\`
+
+\`\`\`typescript:tests/setup.ts
+beforeAll(async () => {
+  console.log('Starting API test suite...');
+});
+
+afterAll(async () => {
+  console.log('API test suite completed.');
+});
+\`\`\`
+
+\`\`\`typescript:frontend/src/main.tsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+\`\`\`
+
+\`\`\`typescript:frontend/src/App.tsx
+import React, { useState, useEffect } from 'react';
+
+interface ${entityName} {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+}
+
+const API_URL = 'http://localhost:3000/api/v1/${pluralName}';
+
+function App() {
+  const [items, setItems] = useState<${entityName}[]>([]);
+  const [name, setName] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+  const fetchItems = async () => {
+    try {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      setItems(data);
+    } catch (err) {
+      console.error('Failed to fetch items:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      const newItem = await res.json();
+      setItems([...items, newItem]);
+      setName('');
+    } catch (err) {
+      console.error('Failed to add item:', err);
+    }
+  };
+
+  const deleteItem = async (id: string) => {
+    try {
+      await fetch(\`\${API_URL}/\${id}\`, { method: 'DELETE' });
+      setItems(items.filter(item => item.id !== id));
+    } catch (err) {
+      console.error('Failed to delete item:', err);
+    }
+  };
+
+  if (loading) return <div className="p-8 text-center">Loading...</div>;
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-8">
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">${entityName} Manager</h1>
+        
+        <form onSubmit={addItem} className="mb-8 flex gap-4">
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter ${lowerName} name..."
+            className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="submit"
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            Add
+          </button>
+        </form>
+
+        <ul className="space-y-4">
+          {items.map(item => (
+            <li key={item.id} className="bg-white p-4 rounded-lg shadow flex justify-between items-center">
+              <span className="text-gray-800">{item.name}</span>
+              <button
+                onClick={() => deleteItem(item.id)}
+                className="text-red-600 hover:text-red-800"
+              >
+                Delete
+              </button>
+            </li>
+          ))}
+        </ul>
+
+        {items.length === 0 && (
+          <p className="text-center text-gray-500">No ${pluralName} yet. Add one above!</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default App;
+\`\`\`
+
+\`\`\`css:frontend/src/index.css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+\`\`\`
+
+\`\`\`json:frontend/package.json
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.2.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0"
+  }
+}
+\`\`\`
+
+\`\`\`typescript:frontend/vite.config.ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    port: 5173,
+    proxy: {
+      '/api': 'http://localhost:3000'
+    }
+  }
+});
+\`\`\`
+
+\`\`\`javascript:frontend/tailwind.config.js
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  theme: { extend: {} },
+  plugins: []
+};
+\`\`\`
+
+\`\`\`html:frontend/index.html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${entityName} App</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
 \`\`\`
 `;
   }

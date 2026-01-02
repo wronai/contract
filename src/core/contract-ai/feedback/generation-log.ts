@@ -20,6 +20,26 @@ export interface GenerationLogEntry {
   generatedCode: GeneratedCode;
   pipelineResult: PipelineResult;
   prompt?: string;
+  contractFile?: string;
+  outputDir?: string;
+  cliArgs?: {
+    maxIterations?: number;
+    dryRun?: boolean;
+    verbose?: boolean;
+  };
+  events?: Array<{
+    at: string;
+    step: string;
+    details?: string;
+  }>;
+  iterationHistory?: Array<{
+    iteration: number;
+    passed: boolean;
+    errorCount: number;
+    warningCount: number;
+    filesChanged: string[];
+    timeMs: number;
+  }>;
   model?: string;
 }
 
@@ -105,8 +125,11 @@ export class GenerationLogWriter {
     // Build markdown content
     let md = this.buildHeader(appName, version);
     md += this.buildMetadata(entry, dateStr, timeStr, entities.length);
+    md += this.buildRunSection(entry);
     md += this.buildGenerationSection(generatedCode);
     md += this.buildValidationSection(pipelineResult);
+    md += this.buildIterationSection(entry);
+    md += this.buildNextStepsSection(entry);
     md += this.buildContractSection(contract);
     md += this.buildActionsSection(entry, now);
     md += this.buildFooter();
@@ -155,6 +178,80 @@ export class GenerationLogWriter {
 `;
   }
 
+  private buildRunSection(entry: GenerationLogEntry): string {
+    let md = `## 🧭 Run
+
+`;
+
+    if (entry.contractFile) {
+      md += `- **Contract file:** \`${entry.contractFile}\`\n`;
+    }
+    if (entry.prompt) {
+      md += `- **Prompt:** ${entry.prompt}\n`;
+    }
+    if (entry.outputDir) {
+      md += `- **Output dir:** \`${entry.outputDir}\`\n`;
+    }
+    if (entry.cliArgs) {
+      if (typeof entry.cliArgs.maxIterations === 'number') {
+        md += `- **Max iterations:** ${entry.cliArgs.maxIterations}\n`;
+      }
+      if (typeof entry.cliArgs.dryRun === 'boolean') {
+        md += `- **Dry run:** ${entry.cliArgs.dryRun}\n`;
+      }
+      if (typeof entry.cliArgs.verbose === 'boolean') {
+        md += `- **Verbose:** ${entry.cliArgs.verbose}\n`;
+      }
+    }
+
+    if (entry.events && entry.events.length > 0) {
+      md += `\n### Timeline\n\n`;
+      for (const e of entry.events) {
+        md += `- **${e.at}** ${e.step}${e.details ? ` — ${e.details}` : ''}\n`;
+      }
+      md += `\n`;
+    }
+
+    md += `---\n\n`;
+    return md;
+  }
+
+  private buildIterationSection(entry: GenerationLogEntry): string {
+    if (!entry.iterationHistory || entry.iterationHistory.length === 0) {
+      return '';
+    }
+
+    let md = `## 🔄 Iterations\n\n`;
+    for (const h of entry.iterationHistory) {
+      const files = h.filesChanged.length > 0 ? h.filesChanged.map((p) => `\`${p}\``).join(', ') : 'none';
+      md += `- **#${h.iteration}**: ${h.passed ? 'passed' : 'failed'} | errors: ${h.errorCount} | warnings: ${h.warningCount} | time: ${h.timeMs}ms | files: ${files}\n`;
+    }
+
+    md += `\n---\n\n`;
+    return md;
+  }
+
+  private buildNextStepsSection(entry: GenerationLogEntry): string {
+    let md = `## 🧩 What happened next\n\n`;
+
+    if (entry.pipelineResult.passed) {
+      md += `- **Validation:** passed\n`;
+      if (entry.outputDir) {
+        md += `- **Next:** inspect generated code in \`${entry.outputDir}\` and run tests / start the app\n`;
+      } else {
+        md += `- **Next:** inspect generated code and run tests / start the app\n`;
+      }
+    } else {
+      const failedStages = entry.pipelineResult.stages.filter((s) => !s.passed);
+      md += `- **Validation:** failed\n`;
+      md += `- **Failed stages:** ${failedStages.map((s) => `\`${s.stage}\``).join(', ')}\n`;
+      md += `- **Next:** fix issues listed above (see Validation Details), then rerun generation/validation\n`;
+    }
+
+    md += `\n---\n\n`;
+    return md;
+  }
+
   private buildGenerationSection(generatedCode: GeneratedCode): string {
     let md = `## 📦 ${this.L.generatedFiles}
 
@@ -177,34 +274,60 @@ ${file.content.substring(0, 500)}${file.content.length > 500 ? '\n// ... (trunca
     return md;
   }
 
+  private buildStageIssues(stage: StageResult): string {
+    let md = '';
+
+    if (stage.errors.length > 0) {
+      md += `**Errors:**\n\n`;
+      for (const error of stage.errors) {
+        const loc = `${error.file ? error.file : 'unknown file'}${error.line ? `:${error.line}` : ''}`;
+        const code = error.code ? ` [${error.code}]` : '';
+        md += `- ${loc}${code}: ${error.message}\n`;
+      }
+      md += `\n`;
+    }
+
+    if (stage.warnings.length > 0) {
+      md += `**Warnings:**\n\n`;
+      for (const warning of stage.warnings) {
+        const loc = `${warning.file ? warning.file : 'unknown file'}${warning.line ? `:${warning.line}` : ''}`;
+        md += `- ${loc}: ${warning.message}\n`;
+      }
+      md += `\n`;
+    }
+
+    return md;
+  }
+
+  private escapeTableCell(value: string): string {
+    return value.replace(/\|/g, '\\|').replace(/\n/g, '<br/>');
+  }
+
   private buildValidationSection(pipelineResult: PipelineResult): string {
     let md = `## ✅ ${this.L.validationPipeline}
 
-| Stage | Status | Time |
-|-------|--------|------|
+| Stage | Status | Time | Errors | Warnings |
+|-------|--------|------|--------|----------|
 `;
 
     for (const stage of pipelineResult.stages) {
       const status = stage.passed ? '✅ PASSED' : '❌ FAILED';
-      md += `| ${stage.stage} | ${status} | ${stage.timeMs}ms |\n`;
+      md += `| ${stage.stage} | ${status} | ${stage.timeMs}ms | ${stage.errors.length} | ${stage.warnings.length} |\n`;
     }
 
     md += `
 `;
 
-    // Add errors if any
-    const failedStages = pipelineResult.stages.filter(s => !s.passed);
-    if (failedStages.length > 0) {
-      md += `### Errors
-
-`;
-      for (const stage of failedStages) {
-        for (const error of stage.errors) {
-          md += `- **${stage.stage}**: ${error.message}\n`;
-        }
+    const stagesWithIssues = pipelineResult.stages.filter(
+      (s) => s.errors.length > 0 || s.warnings.length > 0
+    );
+    if (stagesWithIssues.length > 0) {
+      md += `### Details\n\n`;
+      for (const stage of stagesWithIssues) {
+        md += `#### ${stage.stage}\n\n`;
+        md += this.buildStageIssues(stage);
       }
-      md += `
-`;
+      md += `\n`;
     }
 
     md += `---
