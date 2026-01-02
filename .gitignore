@@ -4,6 +4,7 @@ output_*/
 output_p3_*/
 output/
 setup/
+my-app
 test-todo-prompt
 test-lifecycle
 test-lifecycle-*

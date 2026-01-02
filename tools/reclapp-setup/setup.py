@@ -484,10 +484,17 @@ async def cmd_setup(config: SetupConfig):
             "optional": len([t for t in all_tasks if t.priority == Priority.OPTIONAL])
         }
         
+        # Show install hint if not in install mode
+        if not config.install and len(all_tasks) > 0:
+            runner.log(
+                f"💡 Install steps are disabled by default. Run: reclapp setup --install\n"
+                f"   required: {counts['required']}, recommended: {counts['recommended']}, optional: {counts['optional']}"
+            )
+        
         return TaskResult(
             success=True,
             message="Setup tasks generated",
-            data={"total": len(all_tasks), "counts": counts}
+            data={"total": len(all_tasks), "install_mode": config.install, "counts": counts}
         )
         
     runner.add_task(
@@ -659,7 +666,17 @@ async def cmd_setup(config: SetupConfig):
     if ready and available_llms:
         print("\n## Next Steps\n")
         print("```bash")
+        print("# Create your first app")
         print("reclapp evolve -p 'Create a todo app' -o ./my-app")
+        print("```\n")
+    elif len(all_tasks) > 0:
+        print("\n## Fix Issues\n")
+        print("```bash")
+        print("# Install missing dependencies")
+        print("reclapp setup --install")
+        print("")
+        print("# Or follow the guide")
+        print("cat setup/SETUP.md")
         print("```\n")
 
 # ============================================================================

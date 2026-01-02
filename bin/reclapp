@@ -775,7 +775,10 @@ function generateTypeScriptContract(ir) {
 }
 
 async function cmdList() {
-  console.log('\n📋 Available contracts:\n');
+  const { ShellRenderer } = require('../src/core/contract-ai/evolution/shell-renderer');
+  const renderer = new ShellRenderer();
+  
+  renderer.heading(2, '📋 Available Contracts');
   
   const findContracts = (dir, prefix = '') => {
     if (!fs.existsSync(dir)) return [];
@@ -793,31 +796,36 @@ async function cmdList() {
   };
 
   const contracts = findContracts(process.cwd());
-  if (contracts.length === 0) console.log('  No contracts found (.reclapp.ts, .reclapp.rcl, or .rcl.md)');
-  else {
+  if (contracts.length === 0) {
+    renderer.codeblock('log', '⚠️ No contracts found (.reclapp.ts, .reclapp.rcl, or .rcl.md)');
+  } else {
     const tsContracts = contracts.filter(c => c.endsWith('.ts'));
     const rclContracts = contracts.filter(c => c.endsWith('.rcl') && !c.endsWith('.rcl.md'));
     const mdContracts = contracts.filter(c => c.endsWith('.rcl.md'));
-    if (tsContracts.length) {
-      console.log('  TypeScript (.reclapp.ts):');
-      tsContracts.forEach(c => console.log(`    ${c}`));
-    }
-    if (rclContracts.length) {
-      console.log('  Mini-DSL (.reclapp.rcl):');
-      rclContracts.forEach(c => console.log(`    ${c}`));
-    }
-    if (mdContracts.length) {
-      console.log('  Markdown (.rcl.md):');
-      mdContracts.forEach(c => console.log(`    ${c}`));
-    }
+    
+    const data = {
+      total: contracts.length,
+      formats: {}
+    };
+    
+    if (tsContracts.length) data.formats['TypeScript (.reclapp.ts)'] = tsContracts;
+    if (rclContracts.length) data.formats['Mini-DSL (.reclapp.rcl)'] = rclContracts;
+    if (mdContracts.length) data.formats['Markdown (.rcl.md)'] = mdContracts;
+    
+    renderer.codeblock('yaml', `# @type: contracts\n# @description: Available contract files\ntotal: ${contracts.length}\nformats:\n${
+      Object.entries(data.formats).map(([fmt, files]) => 
+        `  "${fmt}":\n${files.map(f => `    - "${f}"`).join('\n')}`
+      ).join('\n')
+    }`);
   }
-  console.log('');
 }
 
 async function cmdStop() {
   const { execSync } = require('child_process');
+  const { ShellRenderer } = require('../src/core/contract-ai/evolution/shell-renderer');
+  const renderer = new ShellRenderer();
   
-  console.log('\n🛑 Stopping all Reclapp containers...\n');
+  renderer.heading(2, '🛑 Stopping Reclapp Containers');
   
   try {
     // Stop containers on common ports
@@ -828,9 +836,9 @@ async function cmdStop() {
     // Stop target containers by name
     execSync('docker ps -q --filter "name=target" | xargs -r docker stop 2>/dev/null || true', { stdio: 'pipe' });
     
-    console.log('✅ All containers stopped.\n');
+    renderer.codeblock('log', '✅ All containers stopped.');
   } catch (e) {
-    console.log('✅ No running containers found.\n');
+    renderer.codeblock('log', '✅ No running containers found.');
   }
 }
 
