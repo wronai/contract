@@ -8,7 +8,7 @@ import { ContractMarkdown, MarkdownEntityDefinition } from '../types/contract-ma
 import { ContractAI } from '../types';
 
 export function convertToContractAI(contract: ContractMarkdown): ContractAI & { app: any; entities: any[] } {
-  const contractAI: ContractAI = {
+  const contractAI = {
     definition: {
       app: {
         name: contract.frontmatter.contract.name,
@@ -18,7 +18,8 @@ export function convertToContractAI(contract: ContractMarkdown): ContractAI & { 
       entities: contract.entities.map(convertEntity),
       events: [],
       api: {
-        baseUrl: contract.api.baseUrl,
+        version: 'v1',
+        prefix: contract.api.baseUrl || '/api/v1',
         resources: extractResources(contract)
       }
     },
@@ -26,42 +27,52 @@ export function convertToContractAI(contract: ContractMarkdown): ContractAI & { 
       instructions: extractInstructions(contract),
       techStack: {
         backend: {
-          framework: contract.tech.backend.framework,
+          framework: contract.tech.backend.framework as 'express' | 'fastify' | 'koa' | 'hono' | 'none',
           language: contract.tech.backend.language as 'typescript' | 'javascript',
-          runtime: 'node'
+          runtime: 'node' as const
         },
         frontend: contract.tech.frontend ? {
-          framework: contract.tech.frontend.framework,
-          language: 'typescript',
-          styling: contract.tech.frontend.styling
+          framework: contract.tech.frontend.framework as 'react' | 'vue' | 'svelte' | 'none',
+          bundler: contract.tech.frontend.bundler as 'vite' | 'webpack' | 'esbuild',
+          styling: contract.tech.frontend.styling as 'tailwind' | 'css' | 'scss' | 'styled-components'
         } : undefined,
         database: {
-          type: contract.tech.database.type as 'memory' | 'json' | 'sqlite' | 'postgres',
+          type: mapDatabaseType(contract.tech.database.type),
           name: contract.tech.database.path || 'db'
         }
       },
-      patterns: []
+      patterns: [],
+      constraints: []
     },
     validation: {
       assertions: contract.rules.assertions.map(a => ({
-        name: a.name,
+        id: `assert-${a.name}`,
+        description: a.message,
+        check: a.rule,
+        errorMessage: a.message,
+        severity: 'error' as const,
         entity: a.entity,
-        field: a.field,
-        rule: a.rule,
-        message: a.message
+        field: a.field
       })),
       tests: contract.tests.api.map(t => ({
-        name: t.name,
-        type: 'api' as const,
-        endpoint: t.path,
-        method: t.method,
-        expectedStatus: t.expect.status
+        target: 'api' as const,
+        scenarios: [{
+          name: t.name,
+          steps: [`${t.method} ${t.path} -> ${t.expect.status}`]
+        }]
       })),
-      acceptance: contract.tests.acceptance.flatMap(a => 
-        a.scenarios.map(s => s.name)
-      )
+      acceptance: {
+        testsPass: true,
+        minCoverage: 80,
+        maxLintErrors: 0,
+        maxResponseTime: 1000,
+        criteria: contract.tests.acceptance.flatMap(a => 
+          a.scenarios.map(s => s.name)
+        ),
+        qualityGates: []
+      }
     }
-  };
+  } as unknown as ContractAI;
 
   // Add flattened properties for compatibility with existing generators
   return {
@@ -103,7 +114,20 @@ function mapFieldType(type: string): string {
   return typeMap[type] || 'String';
 }
 
-function extractResources(contract: ContractMarkdown): ContractAI['definition']['api']['resources'] {
+function mapDatabaseType(type: string): 'sqlite' | 'postgresql' | 'mysql' | 'mongodb' | 'in-memory' {
+  const typeMap: Record<string, 'sqlite' | 'postgresql' | 'mysql' | 'mongodb' | 'in-memory'> = {
+    'sqlite': 'sqlite',
+    'postgres': 'postgresql',
+    'postgresql': 'postgresql',
+    'mysql': 'mysql',
+    'mongodb': 'mongodb',
+    'memory': 'in-memory',
+    'json': 'in-memory'
+  };
+  return typeMap[type] || 'in-memory';
+}
+
+function extractResources(contract: ContractMarkdown): any[] {
   // Group endpoints by resource (first path segment after /api/v1/)
   const resourceMap = new Map<string, any[]>();
   
@@ -135,32 +159,32 @@ function extractResources(contract: ContractMarkdown): ContractAI['definition'][
   }));
 }
 
-function extractInstructions(contract: ContractMarkdown): ContractAI['generation']['instructions'] {
-  const instructions: ContractAI['generation']['instructions'] = [];
+function extractInstructions(contract: ContractMarkdown): any[] {
+  const instructions: any[] = [];
   
   // Add instructions based on contract features
   if (contract.frontmatter.runtime?.cors) {
     instructions.push({
-      type: 'middleware',
-      target: 'api',
-      content: 'Enable CORS for all routes'
+      target: 'api' as const,
+      priority: 'should' as const,
+      description: 'Enable CORS for all routes'
     });
   }
   
   if (contract.frontmatter.runtime?.logging) {
     instructions.push({
-      type: 'middleware',
-      target: 'api',
-      content: 'Add request logging with morgan'
+      target: 'api' as const,
+      priority: 'should' as const,
+      description: 'Add request logging with morgan'
     });
   }
   
   // Add entity-specific instructions
   for (const entity of contract.entities) {
     instructions.push({
-      type: 'entity',
-      target: entity.name,
-      content: `Generate CRUD operations for ${entity.name}`
+      target: 'api' as const,
+      priority: 'must' as const,
+      description: `Generate CRUD operations for ${entity.name}`
     });
   }
   

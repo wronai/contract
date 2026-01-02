@@ -167,6 +167,7 @@ export class EvolutionManager {
         entities: entities,
         events: [],
         api: { 
+          version: 'v1',
           prefix: '/api/v1',
           resources: entities.map(e => ({
             name: e.name.toLowerCase() + 's',
@@ -194,7 +195,7 @@ export class EvolutionManager {
         tests: [],
         acceptance: { criteria: [], qualityGates: [] }
       }
-    } as ContractAI;
+    } as unknown as ContractAI;
   }
 
   /**
@@ -596,9 +597,18 @@ DO NOT include comments in package.json - JSON does not support comments.
       }
     });
 
-    this.serviceProcess.on('exit', (code) => {
+    this.serviceProcess.on('exit', (code, signal) => {
       if (this.options.verbose) {
-        console.log(`   Service exited with code ${code}`);
+        if (signal) {
+          console.log(`   Service stopped (signal: ${signal}) - graceful shutdown`);
+        } else if (code === 0) {
+          console.log(`   Service exited normally (code: 0)`);
+        } else if (code === null) {
+          console.log(`   Service stopped (graceful shutdown)`);
+        } else {
+          console.log(`   ⚠️ Service exited with code ${code}`);
+          console.log(`   💡 Check logs: ${path.join(this.options.outputDir, 'logs')}/*.rcl.md`);
+        }
       }
     });
 
@@ -812,6 +822,54 @@ DO NOT include comments in package.json - JSON does not support comments.
     }
 
     return issues;
+  }
+
+  /**
+   * Evolve with user feedback (ticket/issue)
+   * Allows user to describe a problem and have LLM fix it
+   */
+  async evolveWithFeedback(issueDescription: string): Promise<void> {
+    if (this.options.verbose) {
+      console.log(`\n🎫 Processing fix ticket: "${issueDescription}"`);
+    }
+
+    if (this.evolutionHistory.length >= this.options.maxEvolutionCycles) {
+      if (this.options.verbose) {
+        console.log('   ⚠️ Max evolution cycles reached');
+      }
+      return;
+    }
+
+    // Generate fix based on issue description
+    const newCode = await this.generateCode('manual', issueDescription);
+
+    if (newCode.files.length === 0) {
+      if (this.options.verbose) {
+        console.log('   ⚠️ No code changes generated');
+      }
+      return;
+    }
+
+    await this.stopService();
+    await this.writeFiles(newCode.files);
+    await this.startService();
+
+    this.logEvolutionCycle({
+      cycle: this.evolutionHistory.length,
+      timestamp: new Date(),
+      trigger: 'manual',
+      changes: newCode.files.map(f => ({
+        path: f.path,
+        action: 'update' as const,
+        reason: `Fix ticket: ${issueDescription.substring(0, 50)}`
+      })),
+      result: 'success',
+      logs: [`User ticket: ${issueDescription}`]
+    });
+
+    if (this.options.verbose) {
+      console.log(`   ✅ Applied ${newCode.files.length} file changes`);
+    }
   }
 
   /**
@@ -1471,6 +1529,21 @@ export default {
     
     if (this.options.verbose) {
       console.log('\n✅ Evolution Manager shut down');
+      console.log('');
+      console.log('╭─────────────────────────────────────────────────────────────╮');
+      console.log('│  📋 Summary                                                  │');
+      console.log('├─────────────────────────────────────────────────────────────┤');
+      console.log(`│  Evolution cycles: ${this.evolutionHistory.length.toString().padEnd(39)}│`);
+      console.log(`│  Output directory: ${this.options.outputDir.substring(0, 39).padEnd(39)}│`);
+      console.log(`│  Logs: ${path.join(this.options.outputDir, 'logs').substring(0, 50).padEnd(50)}│`);
+      console.log('╰─────────────────────────────────────────────────────────────╯');
+      console.log('');
+      console.log('💡 Next steps:');
+      console.log(`   • Start service:     cd ${this.options.outputDir}/api && npm run dev`);
+      console.log(`   • Run tests:         cd ${this.options.outputDir}/tests && npm test`);
+      console.log(`   • View logs:         cat ${this.options.outputDir}/logs/*.rcl.md`);
+      console.log(`   • Keep running:      ./bin/reclapp evolve -p "..." -k`);
+      console.log('');
     }
   }
 }

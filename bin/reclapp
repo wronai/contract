@@ -88,6 +88,7 @@ Usage:
   reclapp test <contract>                    Generate, run, and test API
   reclapp dev <contract>                     Generate and start dev servers
   reclapp deploy <contract>                  Generate and deploy with Docker
+  reclapp parse <contract>                   Parse contract and print JSON
   reclapp validate <contract>                Validate contract
   reclapp convert <input> -o <output>        Convert between formats
   reclapp normalize <input> [-o <output>]    Normalize Mini-DSL (.reclapp.rcl)
@@ -104,6 +105,7 @@ Commands:
   test        Generate, run servers, and execute API tests
   dev         Generate and start development servers (API + Frontend)
   deploy      Generate and deploy with Docker Compose
+  parse       Parse contract and print JSON
   validate    Validate contract without generating
   convert     Convert between .reclapp.ts, .rcl (Mini-DSL) formats
   normalize   Normalize Mini-DSL source (fix common LLM mistakes)
@@ -529,6 +531,57 @@ async function cmdValidate(contractPath) {
   console.log(`   Entities: ${contract.entities?.length || 0}`);
   console.log(`   Events: ${contract.events?.length || 0}`);
   console.log(`   Dashboards: ${contract.dashboards?.length || 0}`);
+}
+
+async function cmdParse(contractPath) {
+  const fullPath = path.resolve(contractPath);
+
+  if (!fs.existsSync(fullPath)) {
+    console.error(`❌ Contract file not found: ${fullPath}`);
+    process.exit(1);
+  }
+
+  if (fullPath.endsWith('.contract.md')) {
+    if (!parseContractMarkdown) {
+      console.error('❌ Contract Markdown parser not available');
+      process.exit(1);
+    }
+
+    const content = fs.readFileSync(fullPath, 'utf-8');
+    const parsed = parseContractMarkdown(content);
+    const validation = validateContractMarkdown(parsed);
+    const contractAI = convertToContractAI ? convertToContractAI(parsed) : null;
+
+    console.log(
+      JSON.stringify(
+        {
+          path: fullPath,
+          validation,
+          parsed: {
+            frontmatter: parsed.frontmatter,
+            app: parsed.app,
+            entities: parsed.entities,
+            api: parsed.api,
+            rules: parsed.rules,
+            tech: parsed.tech,
+            tests: parsed.tests
+          },
+          contractAI
+        },
+        null,
+        2
+      )
+    );
+
+    if (!validation.valid) {
+      process.exit(1);
+    }
+
+    return;
+  }
+
+  const contract = await loadContract(contractPath);
+  console.log(JSON.stringify({ path: fullPath, contract }, null, 2));
 }
 
 async function cmdConvert(inputPath, options = {}) {
@@ -1215,12 +1268,269 @@ async function cmdEvolution(args, options) {
       // Keep process alive
       await new Promise(() => {}); // Never resolves
     } else {
+      // Interactive mode - ask user what to do next
       console.log('\n✅ Evolution complete');
-      await evolutionManager.shutdown();
+      console.log('');
+      console.log('╭─────────────────────────────────────────────────────────────╮');
+      console.log('│  💡 What would you like to do next?                         │');
+      console.log('├─────────────────────────────────────────────────────────────┤');
+      console.log('│  [k] Keep running - monitor service for issues              │');
+      console.log('│  [r] Restart - regenerate and restart service               │');
+      console.log('│  [f] Fix - describe issue for LLM to fix (ticket)           │');
+      console.log('│  [l] Logs - view service logs                               │');
+      console.log('│  [t] Test - run API tests                                   │');
+      console.log('│  [o] Open - open in browser (http://localhost:' + port + ')        │');
+      console.log('│  [q] Quit - stop service and exit                           │');
+      console.log('╰─────────────────────────────────────────────────────────────╯');
+      console.log('');
+      console.log('💡 Tip: Use --keep-running (-k) to skip this menu next time');
+      console.log('   Example: ./bin/reclapp evolve -p "..." -o ./output -k');
+      console.log('');
+
+      // Enable raw mode for single keypress detection
+      if (process.stdin.isTTY) {
+        process.stdin.setRawMode(true);
+        process.stdin.resume();
+        process.stdin.setEncoding('utf8');
+
+        const handleKeypress = async (key) => {
+          // Ctrl+C
+          if (key === '\u0003') {
+            console.log('\n🛑 Shutting down...');
+            await evolutionManager.shutdown();
+            process.exit(0);
+          }
+
+          switch (key.toLowerCase()) {
+            case 'k':
+              console.log('\n📡 Switching to keep-running mode...');
+              console.log('   Monitoring service for issues. Press Ctrl+C to stop.\n');
+              // Don't shutdown, keep monitoring
+              return;
+
+            case 'r':
+              console.log('\n🔄 Restarting evolution...');
+              await evolutionManager.shutdown();
+              await evolutionManager.startFromPrompt(prompt);
+              console.log('\n✅ Restart complete');
+              process.stdin.removeListener('data', handleKeypress);
+              process.stdin.setRawMode(false);
+              await cmdEvolution(args, options); // Recursive call
+              return;
+
+            case 'f':
+              // Switch to line mode for ticket input
+              process.stdin.setRawMode(false);
+              console.log('\n🎫 Create Fix Ticket for LLM');
+              console.log('─────────────────────────────────────────────────────────────');
+              console.log('Describe the issue you want the LLM to fix.');
+              console.log('Examples:');
+              console.log('  • "Add pagination to the /api/v1/tasks endpoint"');
+              console.log('  • "Fix the 500 error when creating a task without title"');
+              console.log('  • "Add validation for email field in User entity"');
+              console.log('─────────────────────────────────────────────────────────────');
+              console.log('');
+              
+              const ticketRl = readline.createInterface({ 
+                input: process.stdin, 
+                output: process.stdout 
+              });
+              
+              ticketRl.question('🎫 Issue description: ', async (issueDescription) => {
+                ticketRl.close();
+                
+                if (!issueDescription.trim()) {
+                  console.log('\n⚠️ No issue description provided. Returning to menu.\n');
+                  process.stdin.setRawMode(true);
+                  return;
+                }
+                
+                console.log('\n📝 Creating ticket...');
+                console.log(`   Issue: "${issueDescription}"`);
+                
+                // Save ticket to file
+                const ticketDir = path.join(outputDir, 'tickets');
+                if (!fs.existsSync(ticketDir)) {
+                  fs.mkdirSync(ticketDir, { recursive: true });
+                }
+                
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const ticketPath = path.join(ticketDir, `ticket_${timestamp}.md`);
+                
+                const ticketContent = `# Fix Ticket
+
+## Issue
+${issueDescription}
+
+## Context
+- **Created**: ${new Date().toISOString()}
+- **Service Port**: ${port}
+- **Output Dir**: ${outputDir}
+- **Original Prompt**: ${prompt}
+
+## Status
+- [ ] Pending LLM analysis
+- [ ] Code changes generated
+- [ ] Tests passing
+- [ ] Deployed
+
+## LLM Instructions
+Please analyze this issue and generate the necessary code changes to fix it.
+Consider:
+1. What files need to be modified?
+2. What is the root cause?
+3. How can we add tests to prevent regression?
+
+## Recent Logs
+\`\`\`
+${(() => {
+  try {
+    const logsDir = path.join(outputDir, 'logs');
+    const logFiles = fs.readdirSync(logsDir).filter(f => f.endsWith('.rcl.md'));
+    if (logFiles.length > 0) {
+      const latestLog = path.join(logsDir, logFiles[logFiles.length - 1]);
+      return fs.readFileSync(latestLog, 'utf8').substring(0, 2000);
+    }
+  } catch (e) {}
+  return 'No logs available';
+})()}
+\`\`\`
+`;
+                
+                fs.writeFileSync(ticketPath, ticketContent);
+                console.log(`   ✅ Ticket saved: ${ticketPath}`);
+                
+                // Try to fix with LLM if available
+                console.log('\n🤖 Attempting to fix with LLM...');
+                
+                try {
+                  const contractAI = require('../src/core/contract-ai');
+                  const ollamaAvailable = await contractAI.checkOllamaAvailable();
+                  
+                  if (ollamaAvailable) {
+                    console.log('   Analyzing issue and generating fix...');
+                    
+                    // Trigger evolution with the issue as context
+                    await evolutionManager.evolveWithFeedback(issueDescription);
+                    
+                    console.log('\n✅ LLM fix applied!');
+                    console.log('   Restarting service to apply changes...\n');
+                    
+                    // Update ticket status
+                    const updatedTicket = ticketContent
+                      .replace('- [ ] Pending LLM analysis', '- [x] Pending LLM analysis')
+                      .replace('- [ ] Code changes generated', '- [x] Code changes generated');
+                    fs.writeFileSync(ticketPath, updatedTicket);
+                    
+                  } else {
+                    console.log('   ⚠️ Ollama not available. Ticket saved for manual review.');
+                    console.log('   💡 Start Ollama: ollama serve && ollama pull llama3');
+                  }
+                } catch (e) {
+                  console.log(`   ⚠️ Auto-fix failed: ${e.message}`);
+                  console.log('   Ticket saved for manual review.');
+                }
+                
+                console.log('\n📋 Ticket location: ' + ticketPath);
+                console.log('💡 You can also manually edit the ticket and re-run evolution.\n');
+                
+                // Return to raw mode for menu
+                process.stdin.setRawMode(true);
+              });
+              return;
+
+            case 'l':
+              console.log('\n📋 Recent service logs:\n');
+              try {
+                const logsDir = path.join(outputDir, 'logs');
+                const logFiles = fs.readdirSync(logsDir).filter(f => f.endsWith('.rcl.md'));
+                if (logFiles.length > 0) {
+                  const latestLog = path.join(logsDir, logFiles[logFiles.length - 1]);
+                  console.log(fs.readFileSync(latestLog, 'utf8'));
+                }
+              } catch (e) {
+                console.log('   No logs available yet.');
+              }
+              return;
+
+            case 't':
+              console.log('\n🧪 Running API tests...\n');
+              try {
+                const { execSync } = require('child_process');
+                execSync(`curl -s http://localhost:${port}/health | jq .`, { stdio: 'inherit' });
+                console.log('\n✅ Health check passed');
+              } catch (e) {
+                console.log('❌ Tests failed:', e.message);
+              }
+              return;
+
+            case 'o':
+              console.log(`\n🌐 Opening http://localhost:${port} in browser...`);
+              try {
+                const { exec } = require('child_process');
+                exec(`xdg-open http://localhost:${port} 2>/dev/null || open http://localhost:${port} 2>/dev/null`);
+              } catch (e) {}
+              return;
+
+            case 'q':
+              console.log('\n🛑 Shutting down service...');
+              await evolutionManager.shutdown();
+              console.log('👋 Goodbye!\n');
+              process.exit(0);
+
+            default:
+              // Ignore other keys, show hint
+              process.stdout.write('\r💡 Press: [k]eep [r]estart [f]ix [l]ogs [t]est [o]pen [q]uit ');
+          }
+        };
+
+        process.stdin.on('data', handleKeypress);
+        
+        // Keep process alive for interactive mode
+        await new Promise(() => {});
+      } else {
+        // Non-TTY mode (piped input) - just shutdown
+        console.log('💡 Tip: Run with --keep-running (-k) to keep the service alive');
+        console.log('   Service exited (non-interactive mode)\n');
+        await evolutionManager.shutdown();
+      }
     }
 
   } catch (error) {
     console.error(`\n❌ Error: ${error.message}`);
+    console.error('');
+    console.error('╭─────────────────────────────────────────────────────────────╮');
+    console.error('│  💡 Troubleshooting Tips                                    │');
+    console.error('├─────────────────────────────────────────────────────────────┤');
+    
+    // Context-specific error hints
+    if (error.message.includes('EADDRINUSE') || error.message.includes('port')) {
+      console.error('│  Port already in use. Try:                                  │');
+      console.error('│    --port 3001  (use different port)                        │');
+      console.error('│    pkill -f "node.*server"  (kill existing process)         │');
+    } else if (error.message.includes('npm') || error.message.includes('install')) {
+      console.error('│  Dependency installation failed. Try:                       │');
+      console.error('│    cd <output-dir>/api && npm install                       │');
+      console.error('│    Check your npm/node version (requires Node 18+)          │');
+    } else if (error.message.includes('ENOENT') || error.message.includes('not found')) {
+      console.error('│  File or directory not found. Try:                          │');
+      console.error('│    Check the output directory exists                        │');
+      console.error('│    Verify contract file path is correct                     │');
+    } else if (error.message.includes('Ollama') || error.message.includes('LLM')) {
+      console.error('│  LLM connection failed. Try:                                │');
+      console.error('│    ollama serve  (start Ollama server)                      │');
+      console.error('│    ollama pull llama3  (download model)                     │');
+    } else {
+      console.error('│  General troubleshooting:                                   │');
+      console.error('│    --verbose  (get more details)                            │');
+      console.error('│    Check logs in <output>/logs/*.rcl.md                     │');
+    }
+    
+    console.error('╰─────────────────────────────────────────────────────────────╯');
+    console.error('');
+    console.error('📚 Documentation: ./docs/30-evolution-system.md');
+    console.error('🐛 Report issues: https://github.com/wronai/contract/issues\n');
+    
     if (options.verbose) console.error(error.stack);
     process.exit(1);
   }
@@ -1274,6 +1584,10 @@ async function main() {
     case 'deploy':
       if (!contractPath) { console.error('❌ Missing contract path'); process.exit(1); }
       await cmdDeploy(contractPath, options); break;
+
+    case 'parse': case 'p':
+      if (!contractPath) { console.error('❌ Missing contract path'); process.exit(1); }
+      await cmdParse(contractPath); break;
 
     case 'validate': case 'v':
       if (!contractPath) { console.error('❌ Missing contract path'); process.exit(1); }

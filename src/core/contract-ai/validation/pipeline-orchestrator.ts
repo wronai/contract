@@ -152,7 +152,7 @@ export class ValidationPipelineOrchestrator {
       }
 
       // Fail-fast dla stage'ów krytycznych
-      if (!stageResult.passed && this.shouldContinue(stage.name, stageResult) === false) {
+      if (!stageResult.passed && this.shouldContinue(stage, stageResult) === false) {
         if (this.options.verbose) {
           console.log(`\n   ⛔ Pipeline stopped at ${stage.name} (critical stage failed)`);
         }
@@ -224,13 +224,18 @@ export class ValidationPipelineOrchestrator {
   /**
    * Określa czy kontynuować po błędzie
    */
-  private shouldContinue(stage: ValidationStage, result: StageResult): boolean {
+  private shouldContinue(stageOrName: ValidationStage | string, result: StageResult): boolean {
     if (!this.options.failFast) {
       return true;
     }
 
+    const stage =
+      typeof stageOrName === 'string'
+        ? this.stages.find(s => s.name === stageOrName)
+        : stageOrName;
+
     // Stage'y krytyczne zatrzymują pipeline
-    if (stage.critical && !result.passed) {
+    if (stage?.critical && !result.passed) {
       return false;
     }
 

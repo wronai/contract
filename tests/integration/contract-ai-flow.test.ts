@@ -69,9 +69,9 @@ describe('Contract AI Integration Flow', () => {
       const pipeline = createDefaultValidationPipeline();
       const result = await pipeline.validate(contract, generatedCode);
       
-      expect(result.stages.length).toBe(7);
+      expect(result.stages.length).toBe(8);
       expect(result.stages.map(s => s.stage)).toEqual([
-        'syntax', 'assertions', 'static-analysis', 'tests', 'quality', 'security', 'runtime'
+        'syntax', 'schema', 'assertions', 'static-analysis', 'tests', 'quality', 'security', 'runtime'
       ]);
     });
 
@@ -167,13 +167,14 @@ describe('Validation Stage Tests', () => {
 
   describe('Stage Registration', () => {
     it('should have 7 stages registered', () => {
-      expect(stages.length).toBe(7);
+      expect(stages.length).toBe(8);
     });
 
     it('should have stages in correct order', () => {
       const stageNames = stages.map(s => s.name);
       expect(stageNames).toEqual([
         'syntax',
+        'schema',
         'assertions', 
         'static-analysis',
         'tests',
