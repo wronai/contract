@@ -7,15 +7,19 @@ Code generation from contracts using Python modules.
 """
 
 import asyncio
+import sys
 from pathlib import Path
 from typing import Optional
 
 from rich.console import Console
 from rich.panel import Panel
 
-from .parser import parse_contract_markdown
-from .generator import CodeGenerator, CodeGeneratorOptions
-from .validation import create_default_pipeline
+# Add src/python to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent / "src" / "python"))
+
+from reclapp.parser import parse_contract_markdown
+from reclapp.generator import CodeGenerator, CodeGeneratorOptions
+from reclapp.validation import create_default_pipeline
 
 console = Console()
 
