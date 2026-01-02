@@ -1,0 +1,45 @@
+{
+  "$schema": "partial-contract",
+  "stage": "frontend",
+  "description": "Partial contract for React frontend generation stage",
+  "focus": ["frontend", "ui", "react"],
+  "requirements": {
+    "framework": "react",
+    "bundler": "vite",
+    "language": "typescript",
+    "styling": "tailwindcss",
+    "features": [
+      "fetch data from API",
+      "display list of items",
+      "create new items via form",
+      "delete items",
+      "loading state handling",
+      "error handling"
+    ],
+    "structure": {
+      "files": [
+        "frontend/src/main.tsx",
+        "frontend/src/App.tsx",
+        "frontend/src/index.css",
+        "frontend/index.html",
+        "frontend/package.json",
+        "frontend/vite.config.ts",
+        "frontend/tailwind.config.js",
+        "frontend/tsconfig.json"
+      ]
+    }
+  },
+  "apiIntegration": {
+    "baseUrl": "http://localhost:{{PORT}}",
+    "endpoints": {
+      "list": "GET /api/v1/{{plural}}",
+      "create": "POST /api/v1/{{plural}}",
+      "update": "PUT /api/v1/{{plural}}/:id",
+      "delete": "DELETE /api/v1/{{plural}}/:id"
+    }
+  },
+  "outputFormat": {
+    "type": "markdown-codeblocks",
+    "pattern": "```typescript:path/to/file"
+  }
+}

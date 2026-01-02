@@ -77,7 +77,8 @@ export class ShellRenderer {
   codeblock(lang: string, content: string): void {
     const border = this.c('gray', '```' + lang);
     const borderEnd = this.c('gray', '```');
-    
+
+    console.log('');
     console.log(border);
     
     const lines = content.split('\n');
@@ -86,6 +87,48 @@ export class ShellRenderer {
     }
     
     console.log(borderEnd);
+    console.log('');
+  }
+
+  renderMarkdownWithFences(markdownText: string, textLang: string = 'markdown'): void {
+    const lines = (markdownText ?? '').toString().split('\n');
+    let inFence = false;
+    let fence = '```';
+    let lang = 'text';
+    let buf: string[] = [];
+
+    const flush = () => {
+      if (!inFence) return;
+      const langNormalized = (lang || 'text').split(':')[0].trim() || 'text';
+      this.codeblock(langNormalized, buf.join('\n'));
+      inFence = false;
+      fence = '```';
+      lang = 'text';
+      buf = [];
+    };
+
+    for (const line of lines) {
+      const trimmed = line.trimEnd();
+      const m = trimmed.match(/^(`{3,})(.*)$/);
+      if (!inFence) {
+        if (m) {
+          inFence = true;
+          fence = m[1];
+          lang = (m[2] || '').trim();
+          buf = [];
+        } else {
+          console.log(this.highlightLine(textLang, line));
+        }
+      } else {
+        if (trimmed.trim() === fence) {
+          flush();
+        } else {
+          buf.push(line);
+        }
+      }
+    }
+
+    flush();
   }
 
   // Highlight a single line based on language
@@ -108,13 +151,33 @@ export class ShellRenderer {
       case 'text':
       case 'txt':
       case 'log':
-        return this.c('white', line);
+        return this.highlightLog(line);
       case 'markdown':
       case 'md':
         return this.highlightMarkdown(line);
       default:
         return this.c('white', line);
     }
+  }
+
+  private highlightLog(line: string): string {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('## ')) {
+      return this.c('cyan', line);
+    }
+    if (trimmed.startsWith('→ ')) {
+      return this.c('gray', line);
+    }
+    if (line.includes('✅')) {
+      return this.c('green', line);
+    }
+    if (line.includes('❌') || line.includes('Error') || line.includes('ERR_') || line.includes('Exception')) {
+      return this.c('red', line);
+    }
+    if (line.includes('⚠️') || line.toLowerCase().includes('warning')) {
+      return this.c('yellow', line);
+    }
+    return this.c('white', line);
   }
 
   // JavaScript/TypeScript syntax highlighting

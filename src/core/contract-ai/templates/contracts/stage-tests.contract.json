@@ -1,0 +1,37 @@
+{
+  "$schema": "partial-contract",
+  "stage": "tests",
+  "description": "Partial contract for E2E tests generation stage",
+  "focus": ["testing", "e2e", "api-validation"],
+  "requirements": {
+    "runner": "native-fetch",
+    "language": "typescript",
+    "features": [
+      "health endpoint test",
+      "CRUD operations tests (POST, GET, PUT, DELETE)",
+      "test result tracking with pass/fail",
+      "YAML summary output",
+      "exit code 1 on failure"
+    ],
+    "forbidden": {
+      "frameworks": ["playwright", "jest", "mocha", "supertest", "chai"],
+      "imports": ["@playwright/test", "jest", "mocha", "describe", "it", "expect"]
+    },
+    "structure": {
+      "files": [
+        "tests/e2e/api.e2e.ts",
+        "tests/test.config.ts",
+        "tests/fixtures/*.json"
+      ],
+      "pattern": {
+        "interface": "TestResult",
+        "helper": "e2e(layer, name, fn)",
+        "main": "runE2ETests()"
+      }
+    }
+  },
+  "outputFormat": {
+    "type": "standalone-typescript",
+    "executable": "npx tsx tests/e2e/api.e2e.ts"
+  }
+}

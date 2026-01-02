@@ -1,0 +1,36 @@
+{
+  "$schema": "partial-contract",
+  "stage": "docs",
+  "description": "Partial contract for documentation generation stage",
+  "focus": ["documentation", "readme", "api-docs"],
+  "requirements": {
+    "format": "markdown",
+    "sections": [
+      "Project title and description",
+      "Features list",
+      "Quick Start (installation & running)",
+      "API Documentation (endpoints table)",
+      "Project Structure",
+      "Development commands",
+      "Environment Variables",
+      "License (MIT)"
+    ],
+    "structure": {
+      "files": [
+        "README.md"
+      ]
+    }
+  },
+  "context": {
+    "includeFrom": ["contract.definition", "contract.generation.techStack"],
+    "deriveFrom": {
+      "entities": "contract.definition.entities",
+      "endpoints": "derived from entities (CRUD)",
+      "techStack": "contract.generation.techStack"
+    }
+  },
+  "outputFormat": {
+    "type": "markdown",
+    "raw": true
+  }
+}

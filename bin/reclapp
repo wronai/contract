@@ -1429,17 +1429,21 @@ async function cmdEvolution(args, options) {
 
       // Enable raw mode for single keypress detection
       if (process.stdin.isTTY) {
-        // Clear any buffered input
-        process.stdin.setRawMode(true);
-        process.stdin.resume();
-        process.stdin.setEncoding('utf8');
-        
-        // Small delay to clear buffer
-        await new Promise(r => setTimeout(r, 100));
-        
-        // Show prompt
-        process.stdout.write('> Press key: ');
+        if (!keepRunning && process.stdin.isTTY) {
+          process.stdin.setRawMode(true);
+          process.stdin.resume();
 
+          let menuInputActive = false;
+          const disableMenuInput = () => {
+            if (!menuInputActive) return;
+            process.stdin.removeListener('data', handleKeypress);
+            menuInputActive = false;
+          };
+          const enableMenuInput = () => {
+            if (menuInputActive) return;
+            process.stdin.on('data', handleKeypress);
+            menuInputActive = true;
+          };
         const handleKeypress = async (key) => {
           // Ctrl+C
           if (key === '\u0003') {
@@ -1466,7 +1470,8 @@ async function cmdEvolution(args, options) {
               return;
 
             case 'f':
-              // Switch to line mode for ticket input
+              // Switch to line mode for ticket input (disable menu shortcuts)
+              disableMenuInput();
               process.stdin.setRawMode(false);
               console.log('\n🎫 Create Fix Ticket for LLM');
               console.log('─────────────────────────────────────────────────────────────');
@@ -1480,15 +1485,31 @@ async function cmdEvolution(args, options) {
               
               const ticketRl = readline.createInterface({ 
                 input: process.stdin, 
-                output: process.stdout 
+                output: process.stdout,
+                terminal: true
+              });
+
+              let canceled = false;
+              ticketRl.on('SIGINT', () => {
+                canceled = true;
+                console.log('\n⚠️ Ticket input canceled. Returning to menu.\n');
+                ticketRl.close();
               });
               
               ticketRl.question('🎫 Issue description: ', async (issueDescription) => {
                 ticketRl.close();
+
+                if (canceled) {
+                  process.stdin.setRawMode(true);
+                  enableMenuInput();
+                  process.stdout.write('> Press key: ');
+                  return;
+                }
                 
                 if (!issueDescription.trim()) {
                   console.log('\n⚠️ No issue description provided. Returning to menu.\n');
                   process.stdin.setRawMode(true);
+                  enableMenuInput();
                   process.stdout.write('> Press key: ');
                   return;
                 }
@@ -1586,6 +1607,7 @@ ${recentLogsBlock}
                 
                 // Return to raw mode for menu
                 process.stdin.setRawMode(true);
+                enableMenuInput();
                 process.stdout.write('> Press key: ');
               });
               return;
@@ -1668,7 +1690,7 @@ ${recentLogsBlock}
           }
         };
 
-        process.stdin.on('data', handleKeypress);
+        enableMenuInput();
         
         // Keep process alive for interactive mode
         await new Promise(() => {});

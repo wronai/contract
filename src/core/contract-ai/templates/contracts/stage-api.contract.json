@@ -1,0 +1,32 @@
+{
+  "$schema": "partial-contract",
+  "stage": "api",
+  "description": "Partial contract for API generation stage",
+  "focus": ["backend", "endpoints", "entities"],
+  "requirements": {
+    "framework": "express",
+    "language": "typescript",
+    "features": [
+      "health endpoint at /health",
+      "CRUD operations for each entity",
+      "in-memory storage using Map",
+      "proper error handling with status codes",
+      "JSON responses"
+    ],
+    "packages": {
+      "allowed": ["express", "cors"],
+      "forbidden": ["moment", "uuid", "lodash"]
+    },
+    "structure": {
+      "files": [
+        "api/src/server.ts",
+        "api/package.json",
+        "api/tsconfig.json"
+      ]
+    }
+  },
+  "outputFormat": {
+    "type": "markdown-codeblocks",
+    "pattern": "```typescript:path/to/file"
+  }
+}
