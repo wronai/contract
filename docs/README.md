@@ -13,7 +13,8 @@
 - **[Code Generation](31-code-generation.md)** - Multi-layer code generation (API, Tests, Frontend)
 - **[Evolution System](30-evolution-system.md)** - Dynamic code evolution and monitoring
 
-### Reference
+### Contract Formats
+- **[Contract Markdown 3.0](32-contract-markdown.md)** - LLM-optimized `.contract.md` format (NEW)
 - **[DSL Reference](dsl-reference.md)** - Mini-DSL syntax guide
 - **[TypeScript DSL](dsl-typescript-reference.md)** - Full TypeScript contracts
 - **[CLI Reference](cli-reference.md)** - Command line interface

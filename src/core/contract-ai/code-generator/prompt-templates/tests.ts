@@ -12,6 +12,7 @@ import { ContractAI } from '../../types';
 
 export interface PromptTemplate {
   buildPrompt(contract: ContractAI): string;
+  getRequiredFiles(contract: ContractAI): string[];
   getSystemPrompt(): string;
 }
 
@@ -62,6 +63,18 @@ Generate files in this exact format:
 // test dependencies
 \`\`\`
 `;
+  }
+
+  /**
+   * Returns list of required files for tests generation
+   */
+  getRequiredFiles(contract: ContractAI): string[] {
+    void contract;
+    return [
+      'tests/api.test.ts',
+      'tests/setup.ts',
+      'tests/package.json'
+    ];
   }
 
   /**

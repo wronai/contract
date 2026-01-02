@@ -6,4 +6,4 @@
 
 export * from './api';
 export * from './frontend';
-export * from './tests';
+export { TestsPromptTemplate, createTestsPromptTemplate } from './tests';

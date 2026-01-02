@@ -120,6 +120,17 @@ pytest tests/contracts/ -v
 - Pydantic >= 2.5
 - Ollama z llama3 (opcjonalne, dla generacji)
 
+## Changelog 2.4.0
+
+- ✅ **Contract Markdown 3.0** (`.contract.md`) - new LLM-optimized contract format
+- ✅ **Markdown Parser** - full YAML frontmatter + Markdown section parsing
+- ✅ **ContractAI Converter** - converts `.contract.md` to ContractAI format
+- ✅ **CLI Integration** - `reclapp examples/todo.contract.md` works
+- ✅ **Entity Extraction** - parses entity tables with fields, types, requirements
+- ✅ **API Extraction** - parses endpoint tables with methods and paths
+- ✅ **Test Definitions** - parses Gherkin acceptance tests and API test YAML
+- ✅ **Example Contract** - `examples/contract-ai/todo.contract.md`
+
 ## Changelog 2.3.2
 
 - ✅ **Evolution Mode** (`reclapp evolve --prompt "..."`) - dynamic code generation with auto-healing
