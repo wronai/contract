@@ -17,16 +17,23 @@ export interface StageContract {
   outputFormat: Record<string, any>;
 }
 
-const contractsDir = __dirname;
-
 export function loadStageContract(stage: string): StageContract | null {
-  const filePath = path.join(contractsDir, `stage-${stage}.contract.json`);
-  try {
-    if (fs.existsSync(filePath)) {
-      return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  const candidates = [
+    __dirname,
+    path.join(process.cwd(), 'src', 'core', 'contract-ai', 'templates', 'contracts'),
+    path.join(process.cwd(), 'dist', 'src', 'core', 'contract-ai', 'templates', 'contracts'),
+    path.join(process.cwd(), 'dist', 'core', 'contract-ai', 'templates', 'contracts')
+  ];
+
+  for (const dir of candidates) {
+    const filePath = path.join(dir, `stage-${stage}.contract.json`);
+    try {
+      if (fs.existsSync(filePath)) {
+        return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+      }
+    } catch {
+      // Ignore errors
     }
-  } catch {
-    // Ignore errors
   }
   return null;
 }

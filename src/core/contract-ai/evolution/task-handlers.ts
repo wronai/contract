@@ -251,6 +251,74 @@ export async function handleMultiLevelAnalysis(
 }
 
 // ============================================================================
+// INSTALL & START HANDLERS
+// ============================================================================
+
+export async function handleInstallAndStart(
+  ctx: TaskContext,
+  startService: () => Promise<void>
+): Promise<TaskResult> {
+  await startService();
+  return { success: true };
+}
+
+// ============================================================================
+// TEST HANDLERS
+// ============================================================================
+
+export async function handleRunTests(
+  ctx: TaskContext,
+  runTests: () => Promise<{ passed: boolean; error?: string }>
+): Promise<TaskResult> {
+  const result = await runTests();
+  
+  if (result.passed) {
+    return { success: true };
+  }
+  
+  return { success: false, error: result.error || 'Tests failed' };
+}
+
+// ============================================================================
+// FRONTEND HANDLER
+// ============================================================================
+
+export async function handleGenerateFrontend(
+  ctx: TaskContext,
+  orchestrate: () => Promise<boolean>,
+  generateFallback: () => Record<string, string>
+): Promise<TaskResult> {
+  let ok = false;
+  
+  try {
+    ok = await orchestrate();
+  } catch {
+    ok = false;
+  }
+  
+  // Fallback if LLM didn't generate frontend
+  if (!ok) {
+    try {
+      const frontendFiles = generateFallback();
+      const fs = require('fs');
+      const path = require('path');
+      
+      for (const [filePath, content] of Object.entries(frontendFiles)) {
+        const fullPath = path.join(ctx.outputDir, filePath);
+        const dir = path.dirname(fullPath);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(fullPath, content, 'utf-8');
+      }
+      ok = true;
+    } catch {
+      ok = false;
+    }
+  }
+  
+  return { success: ok, error: ok ? undefined : 'Frontend generation failed' };
+}
+
+// ============================================================================
 // HANDLER REGISTRY
 // ============================================================================
 

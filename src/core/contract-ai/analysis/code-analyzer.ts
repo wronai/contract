@@ -224,10 +224,23 @@ export class CodeAnalyzer {
       /(\w+)\s*\(([^)]*)\)\s*(?::\s*[^{]+)?\s*{/g
     ];
 
+    // Keywords that are NOT functions
+    const notFunctions = new Set([
+      'if', 'else', 'for', 'while', 'switch', 'case', 'catch', 'try', 'finally',
+      'return', 'throw', 'new', 'typeof', 'instanceof', 'delete', 'void',
+      'import', 'export', 'from', 'as', 'default', 'class', 'extends', 'implements',
+      'interface', 'type', 'enum', 'namespace', 'module', 'declare', 'abstract',
+      'public', 'private', 'protected', 'static', 'readonly', 'override'
+    ]);
+
     for (const pattern of functionPatterns) {
       pattern.lastIndex = 0;
       while ((match = pattern.exec(content)) !== null) {
         const name = match[1];
+        
+        // Skip keywords and control flow statements
+        if (notFunctions.has(name)) continue;
+        
         const params = match[2] ? match[2].split(',').map(p => p.trim()).filter(p => p) : [];
         const startLine = content.substring(0, match.index).split('\n').length;
         const endLine = this.findFunctionEnd(lines, startLine - 1);

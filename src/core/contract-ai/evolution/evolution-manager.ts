@@ -24,6 +24,7 @@ import { PromptBuilder } from './llm-prompts';
 import { FallbackTemplates } from './fallback-templates';
 import { getStageRequirements } from '../templates/contracts';
 import { handleFolders, handleValidateApi, TaskContext } from './task-handlers';
+import { LLMOrchestrator } from './llm-orchestrator';
 
 // Re-export types for backward compatibility
 export { GitState } from './git-analyzer';
@@ -1996,6 +1997,82 @@ Output ONLY the Markdown content, no explanation.`;
         `  path: "${readmePath}"`,
         `  bytes: ${readme.length}`,
         `  source: "${this.llmClient ? 'llm' : 'fallback'}"`
+      ].join('\n'));
+    }
+
+    await this.generateApiDocs();
+  }
+
+  private async generateApiDocs(): Promise<void> {
+    if (!this.contract) return;
+    const api = this.contract.definition?.api;
+    if (!api) return;
+
+    const baseUrl = `http://localhost:${this.options.port}`;
+    const prefix = api.prefix || '/api';
+    const resources = api.resources || [];
+
+    const opToEndpoint = (resourceName: string, op: string): { method: string; path: string } | null => {
+      const base = `${prefix}/${resourceName}`.replace(/\/+/g, '/');
+      switch (op) {
+        case 'list':
+          return { method: 'GET', path: base };
+        case 'get':
+          return { method: 'GET', path: `${base}/:id` };
+        case 'create':
+          return { method: 'POST', path: base };
+        case 'update':
+          return { method: 'PUT', path: `${base}/:id` };
+        case 'delete':
+          return { method: 'DELETE', path: `${base}/:id` };
+        default:
+          return null;
+      }
+    };
+
+    const lines: string[] = [];
+    lines.push('# API Documentation');
+    lines.push('');
+    lines.push(`Base URL: \`${baseUrl}\``);
+    lines.push('');
+    lines.push('## Health');
+    lines.push('');
+    lines.push('```');
+    lines.push('GET /health');
+    lines.push('```');
+    lines.push('');
+    lines.push('## Endpoints');
+    lines.push('');
+    lines.push('| Method | Path | Resource | Operation |');
+    lines.push('|--------|------|----------|-----------|');
+
+    for (const r of resources) {
+      const ops = r.operations || [];
+      for (const op of ops) {
+        const ep = opToEndpoint(r.name, op);
+        if (!ep) continue;
+        lines.push(`| ${ep.method} | \`${ep.path}\` | ${r.name} | ${op} |`);
+      }
+      const custom = r.customEndpoints || [];
+      for (const c of custom) {
+        const base = `${prefix}/${r.name}`.replace(/\/+/g, '/');
+        const rel = (c.path || '').startsWith('/') ? c.path : `/${c.path || ''}`;
+        const full = `${base}${rel}`.replace(/\/+/g, '/');
+        lines.push(`| ${c.method} | \`${full}\` | ${r.name} | custom |`);
+      }
+    }
+
+    const apiDocs = lines.join('\n');
+    const apiPath = path.join(this.options.outputDir, 'API.md');
+    fs.writeFileSync(apiPath, apiDocs, 'utf-8');
+
+    if (this.options.verbose) {
+      this.renderer.codeblock('yaml', [
+        '# @type: api_docs_generated',
+        'api_docs:',
+        `  path: "${apiPath}"`,
+        `  bytes: ${apiDocs.length}`,
+        `  resources: ${resources.length}`
       ].join('\n'));
     }
   }
