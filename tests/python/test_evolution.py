@@ -237,7 +237,7 @@ class TestEvolutionOptions:
     def test_default_options(self):
         options = EvolutionOptions()
         assert options.output_dir == "./generated"
-        assert options.max_iterations == 10
+        assert options.max_iterations == 5  # Changed from 10 to 5 for faster iterations
         assert options.auto_fix is True
         assert options.verbose is True
         

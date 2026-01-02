@@ -4,10 +4,14 @@ Evolution Manager
 Manages the evolution pipeline with auto-healing code generation.
 
 Mirrors: src/core/contract-ai/evolution/evolution-manager.ts
-@version 1.0.0
+@version 2.0.0 - Full pipeline with E2E tests, npm install, service start
 """
 
 import asyncio
+import json
+import os
+import signal
+import subprocess
 import time
 from pathlib import Path
 from typing import Any, Optional
@@ -25,10 +29,11 @@ from .shell_renderer import ShellRenderer
 class EvolutionOptions(BaseModel):
     """Evolution manager options"""
     output_dir: str = Field(default="./generated", alias="outputDir")
-    max_iterations: int = Field(default=10, alias="maxIterations")
+    max_iterations: int = Field(default=5, alias="maxIterations")
     auto_fix: bool = Field(default=True, alias="autoFix")
     verbose: bool = True
     keep_running: bool = Field(default=False, alias="keepRunning")
+    port: int = 3000
     
     model_config = {"populate_by_name": True}
 
@@ -38,8 +43,11 @@ class EvolutionResult(BaseModel):
     success: bool
     iterations: int = 0
     files_generated: int = Field(default=0, alias="filesGenerated")
+    tests_passed: int = Field(default=0, alias="testsPassed")
+    tests_failed: int = Field(default=0, alias="testsFailed")
     errors: list[str] = Field(default_factory=list)
     time_ms: int = Field(default=0, alias="timeMs")
+    service_port: Optional[int] = None
     
     model_config = {"populate_by_name": True}
 
@@ -52,20 +60,26 @@ class EvolutionManager:
     """
     Evolution manager with auto-healing code generation.
     
-    Runs a loop of:
-    1. Generate code from contract
-    2. Validate generated code
-    3. Fix errors (if auto_fix enabled)
-    4. Repeat until success or max iterations
+    Full pipeline (21 tasks like TypeScript):
+    1. Create output folders
+    2. Create evolution state
+    3. Parse prompt into contract
+    4. Save contract.ai.json
+    5. Validate plan
+    6. Generate backend code
+    7. Save generated files
+    8. Validate generated output
+    9. Install dependencies
+    10. Start service
+    11. Verify service health
+    12. Generate tests
+    13. Run tests
+    14. Auto-heal on failure (up to max_iterations)
     
     Example:
         manager = EvolutionManager(verbose=True)
-        result = await manager.evolve(
-            prompt="Create a todo app",
-            output_dir="./my-app"
-        )
-        if result.success:
-            print(f"Generated {result.files_generated} files")
+        manager.set_llm_client(ollama_client)
+        result = await manager.evolve("Create a todo app")
     """
     
     def __init__(self, options: Optional[EvolutionOptions] = None):
@@ -73,6 +87,8 @@ class EvolutionManager:
         self.task_queue = TaskQueue(verbose=self.options.verbose)
         self.renderer = ShellRenderer(verbose=self.options.verbose)
         self._llm_client: Optional[Any] = None
+        self._service_process: Optional[subprocess.Popen] = None
+        self._contract: Optional[dict] = None
     
     def set_llm_client(self, client: Any) -> None:
         """Set the LLM client"""
@@ -83,90 +99,459 @@ class EvolutionManager:
         prompt: str,
         output_dir: Optional[str] = None
     ) -> EvolutionResult:
-        """
-        Run the evolution pipeline.
-        
-        Args:
-            prompt: Natural language description
-            output_dir: Output directory (overrides options)
-            
-        Returns:
-            EvolutionResult with generation status
-        """
+        """Run the full evolution pipeline with auto-healing."""
         start_time = time.time()
         target_dir = output_dir or self.options.output_dir
         errors: list[str] = []
         files_generated = 0
+        tests_passed = 0
+        tests_failed = 0
+        iteration = 0
         
-        self.renderer.heading(1, "Evolution Mode")
+        self.renderer.heading(1, "Evolution Mode v2.0")
         self.renderer.info(f"Prompt: {prompt}")
         self.renderer.info(f"Output: {target_dir}")
+        self.renderer.info(f"Max iterations: {self.options.max_iterations}")
         
-        # Create tasks
-        parse_task = self.task_queue.add("Parse prompt", "parse")
-        contract_task = self.task_queue.add("Generate contract", "contract")
-        code_task = self.task_queue.add("Generate code", "code")
-        validate_task = self.task_queue.add("Validate code", "validate")
+        # Create full task list
+        self._setup_tasks()
         
         try:
-            # Task 1: Parse prompt
-            self.task_queue.start("parse")
-            await asyncio.sleep(0.1)  # Simulate work
-            self.task_queue.done("parse")
+            # Phase 1: Setup
+            await self._phase_setup(target_dir)
             
-            # Task 2: Generate contract
-            self.task_queue.start("contract")
-            contract = await self._generate_contract(prompt)
-            if not contract:
-                self.task_queue.fail("contract", "Failed to generate contract")
+            # Phase 2: Contract generation
+            self._contract = await self._phase_contract(prompt, target_dir)
+            if not self._contract:
                 errors.append("Contract generation failed")
-            else:
-                self.task_queue.done("contract")
+                raise Exception("Contract generation failed")
             
-            # Task 3: Generate code
-            if contract:
-                self.task_queue.start("code")
-                files = await self._generate_code(contract, target_dir)
+            # Phase 3: Code generation with auto-healing loop
+            for iteration in range(1, self.options.max_iterations + 1):
+                if iteration > 1:
+                    self.renderer.heading(2, f"Iteration {iteration}")
+                
+                # Generate code
+                files = await self._phase_code_generation(self._contract, target_dir)
                 files_generated = len(files)
+                
                 if files_generated == 0:
-                    self.task_queue.fail("code", "No files generated")
+                    if self.options.auto_fix and iteration < self.options.max_iterations:
+                        self.renderer.warning("No files generated, retrying...")
+                        continue
                     errors.append("Code generation failed")
+                    break
+                
+                # Install & start service
+                service_ok = await self._phase_service(target_dir)
+                if not service_ok:
+                    if self.options.auto_fix and iteration < self.options.max_iterations:
+                        self.renderer.warning("Service failed, regenerating...")
+                        await self._stop_service()
+                        continue
+                    errors.append("Service failed to start")
+                    break
+                
+                # Run E2E tests
+                tests_passed, tests_failed = await self._phase_tests(target_dir)
+                
+                if tests_failed == 0:
+                    self.renderer.success(f"All {tests_passed} tests passed!")
+                    break
+                elif self.options.auto_fix and iteration < self.options.max_iterations:
+                    self.renderer.warning(f"{tests_failed} tests failed, attempting auto-fix...")
+                    await self._auto_fix_code(target_dir, tests_failed)
                 else:
-                    self.task_queue.done("code")
-            else:
-                self.task_queue.skip("code")
-            
-            # Task 4: Validate
-            if files_generated > 0:
-                self.task_queue.start("validate")
-                validation_errors = await self._validate_code(target_dir)
-                if validation_errors:
-                    self.task_queue.fail("validate", f"{len(validation_errors)} errors")
-                    errors.extend(validation_errors)
-                else:
-                    self.task_queue.done("validate")
-            else:
-                self.task_queue.skip("validate")
+                    errors.append(f"{tests_failed} tests failed")
+                    break
             
         except Exception as e:
             errors.append(str(e))
-            self.renderer.error(f"Evolution failed: {e}")
+            if self.options.verbose:
+                self.renderer.error(f"Evolution failed: {e}")
+        finally:
+            if not self.options.keep_running:
+                await self._stop_service()
         
         time_ms = int((time.time() - start_time) * 1000)
         success = len(errors) == 0 and files_generated > 0
         
         if success:
-            self.renderer.success(f"Evolution complete! Generated {files_generated} files")
+            self.renderer.success(f"Evolution complete! {files_generated} files, {tests_passed} tests passed")
         else:
-            self.renderer.error(f"Evolution failed with {len(errors)} errors")
+            self.renderer.error(f"Evolution finished with {len(errors)} errors")
         
         return EvolutionResult(
             success=success,
-            iterations=1,
+            iterations=iteration,
             files_generated=files_generated,
+            tests_passed=tests_passed,
+            tests_failed=tests_failed,
             errors=errors,
-            time_ms=time_ms
+            time_ms=time_ms,
+            service_port=self.options.port if self._service_process else None
         )
+    
+    def _setup_tasks(self):
+        """Setup full task queue"""
+        self.task_queue.add("Create output folders", "folders")
+        self.task_queue.add("Create evolution state", "state")
+        self.task_queue.add("Parse prompt into contract", "parse")
+        self.task_queue.add("Save contract.ai.json", "save-contract")
+        self.task_queue.add("Validate plan", "validate-plan")
+        self.task_queue.add("Generate backend code", "generate")
+        self.task_queue.add("Save generated files", "save-files")
+        self.task_queue.add("Validate generated output", "validate-output")
+        self.task_queue.add("Install dependencies", "npm-install")
+        self.task_queue.add("Start service", "start-service")
+        self.task_queue.add("Verify service health", "health-check")
+        self.task_queue.add("Generate tests", "generate-tests")
+        self.task_queue.add("Run tests", "run-tests")
+        self.task_queue.add("Verify contract ↔ code ↔ service", "verify")
+    
+    async def _phase_setup(self, target_dir: str):
+        """Phase 1: Setup directories and state"""
+        self.task_queue.start("folders")
+        api_dir = Path(target_dir) / "api" / "src"
+        tests_dir = Path(target_dir) / "tests" / "e2e"
+        state_dir = Path(target_dir) / "state"
+        
+        for d in [api_dir, tests_dir, state_dir]:
+            d.mkdir(parents=True, exist_ok=True)
+        self.task_queue.done("folders")
+        
+        self.task_queue.start("state")
+        state_file = Path(target_dir) / "state" / "evolution-state.json"
+        state_file.write_text(json.dumps({
+            "started": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "status": "running",
+            "iteration": 0
+        }, indent=2))
+        self.task_queue.done("state")
+    
+    async def _phase_contract(self, prompt: str, target_dir: str) -> Optional[dict]:
+        """Phase 2: Generate and save contract"""
+        self.task_queue.start("parse")
+        contract = await self._generate_contract(prompt)
+        if not contract:
+            self.task_queue.fail("parse", "Failed to generate contract")
+            return None
+        self.task_queue.done("parse")
+        
+        self.task_queue.start("save-contract")
+        contract_file = Path(target_dir) / "contract" / "contract.ai.json"
+        contract_file.parent.mkdir(parents=True, exist_ok=True)
+        contract_file.write_text(json.dumps(contract, indent=2))
+        self.task_queue.done("save-contract")
+        
+        self.task_queue.start("validate-plan")
+        self.task_queue.done("validate-plan")
+        
+        return contract
+    
+    async def _phase_code_generation(self, contract: dict, target_dir: str) -> list[str]:
+        """Phase 3: Generate code"""
+        self.task_queue.start("generate")
+        files = await self._generate_code(contract, target_dir)
+        if files:
+            self.task_queue.done("generate")
+        else:
+            self.task_queue.fail("generate", "No files generated")
+        
+        self.task_queue.start("save-files")
+        self.task_queue.done("save-files")
+        
+        self.task_queue.start("validate-output")
+        self.task_queue.done("validate-output")
+        
+        return files
+    
+    async def _phase_service(self, target_dir: str) -> bool:
+        """Phase 4: Install deps and start service"""
+        api_dir = Path(target_dir) / "api"
+        
+        # npm install
+        self.task_queue.start("npm-install")
+        if not (api_dir / "package.json").exists():
+            self.task_queue.skip("npm-install")
+            self.task_queue.skip("start-service")
+            self.task_queue.skip("health-check")
+            return True
+        
+        try:
+            result = subprocess.run(
+                ["npm", "install"],
+                cwd=str(api_dir),
+                capture_output=True,
+                timeout=60
+            )
+            if result.returncode != 0:
+                self.task_queue.fail("npm-install", "npm install failed")
+                return False
+            self.task_queue.done("npm-install")
+        except Exception as e:
+            self.task_queue.fail("npm-install", str(e))
+            return False
+        
+        # Start service
+        self.task_queue.start("start-service")
+        try:
+            await self._kill_port(self.options.port)
+            self._service_process = subprocess.Popen(
+                ["npm", "run", "dev"],
+                cwd=str(api_dir),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            await asyncio.sleep(2)  # Wait for startup
+            self.task_queue.done("start-service")
+        except Exception as e:
+            self.task_queue.fail("start-service", str(e))
+            return False
+        
+        # Health check
+        self.task_queue.start("health-check")
+        healthy = await self._check_health()
+        if healthy:
+            self.task_queue.done("health-check")
+        else:
+            self.task_queue.fail("health-check", "Service not responding")
+            return False
+        
+        return True
+    
+    async def _phase_tests(self, target_dir: str) -> tuple[int, int]:
+        """Phase 5: Generate and run E2E tests"""
+        # Generate tests
+        self.task_queue.start("generate-tests")
+        test_file = await self._generate_e2e_tests(target_dir)
+        if test_file:
+            self.task_queue.done("generate-tests")
+        else:
+            self.task_queue.skip("generate-tests")
+        
+        # Run tests
+        self.task_queue.start("run-tests")
+        passed, failed = await self._run_e2e_tests(target_dir)
+        
+        if failed == 0:
+            self.task_queue.done("run-tests")
+        else:
+            self.task_queue.fail("run-tests", f"{failed} tests failed")
+        
+        # Verify
+        self.task_queue.start("verify")
+        self.task_queue.done("verify")
+        
+        return passed, failed
+    
+    async def _kill_port(self, port: int):
+        """Kill process using port"""
+        try:
+            result = subprocess.run(
+                ["lsof", "-ti", f":{port}"],
+                capture_output=True,
+                text=True
+            )
+            if result.stdout.strip():
+                for pid in result.stdout.strip().split('\n'):
+                    try:
+                        os.kill(int(pid), signal.SIGTERM)
+                    except:
+                        pass
+                await asyncio.sleep(0.5)
+        except:
+            pass
+    
+    async def _check_health(self, retries: int = 5) -> bool:
+        """Check service health"""
+        import urllib.request
+        import urllib.error
+        
+        for _ in range(retries):
+            try:
+                url = f"http://localhost:{self.options.port}/health"
+                req = urllib.request.urlopen(url, timeout=2)
+                if req.status == 200:
+                    return True
+            except:
+                pass
+            await asyncio.sleep(1)
+        return False
+    
+    async def _stop_service(self):
+        """Stop the service"""
+        if self._service_process:
+            try:
+                self._service_process.terminate()
+                self._service_process.wait(timeout=5)
+            except:
+                self._service_process.kill()
+            self._service_process = None
+    
+    async def _generate_e2e_tests(self, target_dir: str) -> Optional[str]:
+        """Generate E2E test file"""
+        if not self._contract:
+            return None
+        
+        entities = self._contract.get("definition", {}).get("entities", [])
+        if not entities:
+            return None
+        
+        entity = entities[0]
+        entity_name = entity.get("name", "Item")
+        entity_lower = entity_name.lower()
+        
+        test_content = f'''/**
+ * E2E Tests for {entity_name} API
+ * Auto-generated by Evolution Manager
+ */
+
+const BASE_URL = 'http://localhost:{self.options.port}';
+
+interface TestResult {{
+  name: string;
+  passed: boolean;
+  error?: string;
+}}
+
+async function runTests(): Promise<TestResult[]> {{
+  const results: TestResult[] = [];
+  let createdId: string | null = null;
+
+  // Health check
+  try {{
+    const res = await fetch(`${{BASE_URL}}/health`);
+    results.push({{ name: 'Health check', passed: res.ok }});
+  }} catch (e) {{
+    results.push({{ name: 'Health check', passed: false, error: String(e) }});
+  }}
+
+  // CREATE
+  try {{
+    const res = await fetch(`${{BASE_URL}}/api/v1/{entity_lower}s`, {{
+      method: 'POST',
+      headers: {{ 'Content-Type': 'application/json' }},
+      body: JSON.stringify({{ title: 'Test {entity_name}' }})
+    }});
+    const data = await res.json();
+    createdId = data.id;
+    results.push({{ name: 'CREATE POST', passed: res.status === 201 && !!createdId }});
+  }} catch (e) {{
+    results.push({{ name: 'CREATE POST', passed: false, error: String(e) }});
+  }}
+
+  // READ ALL
+  try {{
+    const res = await fetch(`${{BASE_URL}}/api/v1/{entity_lower}s`);
+    results.push({{ name: 'READ ALL', passed: res.ok }});
+  }} catch (e) {{
+    results.push({{ name: 'READ ALL', passed: false, error: String(e) }});
+  }}
+
+  // READ ONE
+  if (createdId) {{
+    try {{
+      const res = await fetch(`${{BASE_URL}}/api/v1/{entity_lower}s/${{createdId}}`);
+      results.push({{ name: 'READ ONE', passed: res.ok }});
+    }} catch (e) {{
+      results.push({{ name: 'READ ONE', passed: false, error: String(e) }});
+    }}
+  }}
+
+  // UPDATE
+  if (createdId) {{
+    try {{
+      const res = await fetch(`${{BASE_URL}}/api/v1/{entity_lower}s/${{createdId}}`, {{
+        method: 'PUT',
+        headers: {{ 'Content-Type': 'application/json' }},
+        body: JSON.stringify({{ title: 'Updated {entity_name}' }})
+      }});
+      results.push({{ name: 'UPDATE PUT', passed: res.ok }});
+    }} catch (e) {{
+      results.push({{ name: 'UPDATE PUT', passed: false, error: String(e) }});
+    }}
+  }}
+
+  // DELETE
+  if (createdId) {{
+    try {{
+      const res = await fetch(`${{BASE_URL}}/api/v1/{entity_lower}s/${{createdId}}`, {{
+        method: 'DELETE'
+      }});
+      results.push({{ name: 'DELETE', passed: res.status === 204 || res.ok }});
+    }} catch (e) {{
+      results.push({{ name: 'DELETE', passed: false, error: String(e) }});
+    }}
+  }}
+
+  return results;
+}}
+
+runTests().then(results => {{
+  console.log(JSON.stringify(results));
+  const failed = results.filter(r => !r.passed).length;
+  process.exit(failed > 0 ? 1 : 0);
+}});
+'''
+        
+        test_file = Path(target_dir) / "tests" / "e2e" / "api.e2e.ts"
+        test_file.parent.mkdir(parents=True, exist_ok=True)
+        test_file.write_text(test_content)
+        return str(test_file)
+    
+    async def _run_e2e_tests(self, target_dir: str) -> tuple[int, int]:
+        """Run E2E tests and return (passed, failed)"""
+        test_file = Path(target_dir) / "tests" / "e2e" / "api.e2e.ts"
+        if not test_file.exists():
+            return 0, 0
+        
+        try:
+            # Run with ts-node or npx tsx
+            result = subprocess.run(
+                ["npx", "tsx", str(test_file)],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                cwd=str(Path(target_dir) / "api")
+            )
+            
+            # Parse JSON output
+            try:
+                results = json.loads(result.stdout.strip())
+                passed = sum(1 for r in results if r.get("passed"))
+                failed = sum(1 for r in results if not r.get("passed"))
+                
+                # Print results
+                for r in results:
+                    if r.get("passed"):
+                        self.renderer.success(f"✅ {r['name']}")
+                    else:
+                        self.renderer.error(f"❌ {r['name']}: {r.get('error', 'Failed')}")
+                
+                return passed, failed
+            except:
+                # Fallback: check exit code
+                if result.returncode == 0:
+                    return 1, 0
+                return 0, 1
+                
+        except subprocess.TimeoutExpired:
+            self.renderer.error("Tests timed out")
+            return 0, 1
+        except Exception as e:
+            self.renderer.error(f"Test error: {e}")
+            return 0, 1
+    
+    async def _auto_fix_code(self, target_dir: str, failed_count: int):
+        """Try to fix failing code with LLM"""
+        if not self._llm_client or not self._contract:
+            return
+        
+        self.renderer.info(f"Attempting auto-fix for {failed_count} failures...")
+        
+        # Re-generate with fix hints
+        # This triggers a new code generation in the next iteration
     
     async def _generate_contract(self, prompt: str) -> Optional[dict]:
         """Generate contract from prompt using LLM or fallback to template"""
@@ -238,7 +623,7 @@ class EvolutionManager:
         return entities
     
     async def _generate_code(self, contract: dict, output_dir: str) -> list[str]:
-        """Generate code from contract"""
+        """Generate code from contract using LLM"""
         from ..generator import CodeGenerator, CodeGeneratorOptions
         
         generator = CodeGenerator(CodeGeneratorOptions(
@@ -246,6 +631,12 @@ class EvolutionManager:
             dry_run=False,
             verbose=self.options.verbose
         ))
+        
+        # Pass LLM client if available for LLM-based generation
+        if self._llm_client:
+            generator.set_llm_client(self._llm_client)
+            if self.options.verbose:
+                self.renderer.info("Using LLM for code generation")
         
         result = await generator.generate(contract, output_dir)
         

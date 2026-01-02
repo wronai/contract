@@ -123,6 +123,19 @@ class CodeGenerator:
                 print(f"   Framework: {framework} ({language})")
                 print(f"   Entities: {len(entities)}")
             
+            # Try LLM generation first if client is available
+            if self._llm_client:
+                if self.options.verbose:
+                    print(f"   🤖 Using LLM for code generation...")
+                
+                llm_result = await self._generate_with_llm(contract, target_dir)
+                if llm_result.success and llm_result.files:
+                    if self.options.verbose:
+                        print(f"   ✅ LLM generated {len(llm_result.files)} files")
+                    return llm_result
+                elif self.options.verbose:
+                    print(f"   ⚠️ LLM generation failed, using templates")
+            
             # Generate package.json
             package_json = self._generate_package_json(app_name, backend)
             files.append(GeneratedFile(
@@ -407,3 +420,204 @@ const {lower_name}s: Map<string, {name}> = new Map();
     def _estimate_tokens(self, text: str) -> int:
         """Estimate token count"""
         return len(text) // 4
+    
+    async def _generate_with_llm(
+        self,
+        contract: dict[str, Any],
+        output_dir: str
+    ) -> CodeGenerationResult:
+        """Generate code using LLM"""
+        start_time = time.time()
+        files: list[GeneratedFile] = []
+        errors: list[str] = []
+        tokens_used = 0
+        
+        try:
+            # Build the prompt
+            prompt = self._build_llm_prompt(contract)
+            
+            # Call LLM
+            response = await self._llm_client.generate(GenerateOptions(
+                system=self._get_system_prompt(),
+                user=prompt,
+                temperature=self.options.temperature,
+                max_tokens=self.options.max_tokens
+            ))
+            
+            # LLMResponse has content, not success flag
+            if not response.content:
+                return CodeGenerationResult(
+                    success=False,
+                    files=[],
+                    errors=["LLM returned empty response"],
+                    tokens_used=0,
+                    time_ms=int((time.time() - start_time) * 1000)
+                )
+            
+            tokens_used = response.tokens_used
+            
+            # Parse LLM response to extract files
+            files = self._parse_llm_response(response.content)
+            
+            if not files:
+                return CodeGenerationResult(
+                    success=False,
+                    files=[],
+                    errors=["No files parsed from LLM response"],
+                    tokens_used=tokens_used,
+                    time_ms=int((time.time() - start_time) * 1000)
+                )
+            
+            # Write files if not dry run
+            if not self.options.dry_run:
+                self._write_files(files, output_dir)
+            
+            return CodeGenerationResult(
+                success=True,
+                files=files,
+                errors=[],
+                tokens_used=tokens_used,
+                time_ms=int((time.time() - start_time) * 1000)
+            )
+            
+        except Exception as e:
+            return CodeGenerationResult(
+                success=False,
+                files=[],
+                errors=[str(e)],
+                tokens_used=tokens_used,
+                time_ms=int((time.time() - start_time) * 1000)
+            )
+    
+    def _get_system_prompt(self) -> str:
+        """Get system prompt for LLM code generation"""
+        return """You are an expert Node.js/Express developer specializing in TypeScript.
+Your task is to generate production-ready API code based on the Contract AI specification.
+
+## Key Requirements:
+
+1. **TypeScript First**: All code must be properly typed. No "any" types except in error handlers.
+
+2. **Error Handling**: Every route must have try-catch blocks with appropriate HTTP status codes:
+   - 200: Success (GET, PUT)
+   - 201: Created (POST)
+   - 204: No Content (DELETE)
+   - 400: Bad Request (validation errors)
+   - 404: Not Found
+   - 500: Internal Server Error
+
+3. **Validation**: Validate all inputs before processing.
+
+4. **Code Style**:
+   - Use async/await, not callbacks
+   - Use const for variables that don't change
+   - Use meaningful variable names
+   - Add minimal but useful comments
+
+5. **File Structure**:
+   - server.ts: Main entry point with Express setup
+   - Each file should be complete and runnable
+
+## OUTPUT FORMAT
+
+Generate complete TypeScript code files. Each file MUST be in this EXACT format:
+
+```typescript:api/src/server.ts
+// code here
+```
+
+```json:api/package.json
+{...}
+```
+
+```json:api/tsconfig.json
+{...}
+```
+
+IMPORTANT: Use the exact format ```language:path/to/file.ext for each file block."""
+    
+    def _build_llm_prompt(self, contract: dict[str, Any]) -> str:
+        """Build prompt for LLM code generation"""
+        definition = contract.get("definition", {})
+        generation = contract.get("generation", {})
+        app = definition.get("app", {})
+        entities = definition.get("entities", [])
+        tech_stack = generation.get("techStack", {})
+        backend = tech_stack.get("backend", {})
+        
+        entities_str = ""
+        for entity in entities:
+            name = entity.get("name", "Entity")
+            fields = entity.get("fields", [])
+            fields_str = "\n".join([
+                f"  - {f.get('name')}: {f.get('type')}"
+                for f in fields
+            ])
+            entities_str += f"\n### {name}\n{fields_str}\n"
+        
+        return f"""# CODE GENERATION TASK: API
+
+## APPLICATION
+Name: {app.get('name', 'App')}
+Version: {app.get('version', '1.0.0')}
+Description: {app.get('description', 'Generated API')}
+
+## TECH STACK
+Framework: {backend.get('framework', 'express')}
+Language: {backend.get('language', 'typescript')}
+Runtime: {backend.get('runtime', 'node')}
+Port: {backend.get('port', 3000)}
+
+## ENTITIES
+{entities_str}
+
+## REQUIRED FILES
+
+Generate these files:
+- api/src/server.ts - Main Express server with all CRUD routes
+- api/package.json - NPM package file with dependencies
+- api/tsconfig.json - TypeScript configuration
+
+## REQUIREMENTS
+
+1. Create a complete Express.js REST API
+2. Include CRUD endpoints for all entities (GET list, GET by id, POST, PUT, DELETE)
+3. Use in-memory Map for storage
+4. Include /health endpoint
+5. Use cors middleware
+6. Port should be {backend.get('port', 3000)}
+7. API prefix should be /api/v1
+
+Generate ALL files listed above. Each file must be complete and runnable."""
+    
+    def _parse_llm_response(self, content: str) -> list[GeneratedFile]:
+        """Parse LLM response to extract generated files"""
+        files = []
+        
+        # Pattern to match ```language:path or ```language path/to/file
+        patterns = [
+            r'```(\w+):([^\n]+)\n(.*?)```',  # ```ts:path/file.ts
+            r'```(\w+)\s+([^\n]+)\n(.*?)```',  # ```typescript path/file.ts
+        ]
+        
+        for pattern in patterns:
+            matches = re.findall(pattern, content, re.DOTALL)
+            for lang, path, code in matches:
+                path = path.strip()
+                code = code.strip()
+                
+                # Skip if path looks like a comment or invalid
+                if not path or path.startswith('//') or len(path) > 100:
+                    continue
+                
+                # Normalize language
+                lang_map = {"ts": "typescript", "js": "javascript", "tsx": "typescript"}
+                language = lang_map.get(lang.lower(), lang.lower())
+                
+                files.append(GeneratedFile(
+                    path=path,
+                    content=code,
+                    language=language
+                ))
+        
+        return files
