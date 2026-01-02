@@ -5,6 +5,7 @@ output_p3_*/
 output/
 setup/
 my-app
+*.egg-info
 test-todo-prompt
 test-lifecycle
 test-lifecycle-*
