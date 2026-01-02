@@ -57,6 +57,21 @@ class LLMProvider(BaseModel):
     url: Optional[str] = None
     fix: Optional[str] = None
     error: Optional[str] = None
+    
+    def to_dict(self) -> dict:
+        """Convert to dict with clean status string, filter nulls"""
+        d = {"name": self.name, "status": self.status.value}
+        if self.models > 0:
+            d["models"] = self.models
+        if self.code_models > 0:
+            d["codeModels"] = self.code_models  # Match TypeScript naming
+        if self.url:
+            d["url"] = self.url
+        if self.fix:
+            d["fix"] = self.fix
+        if self.error:
+            d["error"] = self.error
+        return d
 
 class Dependency(BaseModel):
     name: str
@@ -97,6 +112,7 @@ class SetupConfig(BaseModel):
     interactive: bool = True
     skip_optional: bool = False
     yes: bool = False
+    dry_run: bool = False
 
 # ============================================================================
 # CLI RUNNER
@@ -107,9 +123,7 @@ class CLITask(BaseModel):
     name: str
     description: str = ""
     category: str = "general"
-    
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = {"arbitrary_types_allowed": True}
 
 class CLIRunner:
     def __init__(self, name: str, version: str, verbose: bool = True):
@@ -409,7 +423,7 @@ async def cmd_setup(config: SetupConfig):
             success=True,
             message="LLM provider check complete",
             data={
-                "llm_providers": [p.model_dump() for p in llm_providers],
+                "llm_providers": [p.to_dict() for p in llm_providers],
                 "available": len(available),
                 "total": len(llm_providers)
             }
@@ -521,25 +535,111 @@ async def cmd_setup(config: SetupConfig):
         skip_fn=lambda: len(all_tasks) == 0
     )
     
-    # Task 5-7: Install tasks (only if --install)
+    # Task 5: Install required (only if --install)
     def install_required():
         required = [t for t in all_tasks if t.priority == Priority.REQUIRED]
         results = []
+        
+        runner.yaml('install_required', 'Required dependencies to install', {
+            "count": len(required),
+            "items": [{"name": t.name, "command": t.commands[0]} for t in required]
+        })
+        
         for task in required:
+            runner.log(f"📦 Installing {task.name}...")
             try:
                 for cmd in task.commands:
                     if cmd.startswith("#"):
                         continue
-                    subprocess.run(cmd, shell=True, check=True)
-                results.append({"name": task.name, "status": "installed"})
+                    if config.dry_run:
+                        runner.log(f"DRY RUN: {cmd}")
+                    else:
+                        subprocess.run(cmd, shell=True, check=True)
+                status = "dry_run" if config.dry_run else "installed"
+                results.append({"name": task.name, "status": status})
+                runner.log(f"✅ {task.name} {'simulated' if config.dry_run else 'installed'}")
             except Exception as e:
                 results.append({"name": task.name, "status": "failed", "error": str(e)})
+                runner.log(f"❌ {task.name} failed")
         return TaskResult(success=True, message="Required installed", data={"results": results})
         
     runner.add_task(
-        CLITask(id="install-required", name="Install required", description="Install required dependencies"),
+        CLITask(id="install-required", name="Install required dependencies", description="Install missing required dependencies"),
         install_required,
         skip_fn=lambda: not config.install or len([t for t in all_tasks if t.priority == Priority.REQUIRED]) == 0
+    )
+    
+    # Task 6: Install recommended (only if --install)
+    def install_recommended():
+        recommended = [t for t in all_tasks if t.priority == Priority.RECOMMENDED]
+        results = []
+        
+        runner.yaml('install_recommended', 'Recommended dependencies to install', {
+            "count": len(recommended),
+            "items": [{"name": t.name, "command": t.commands[0]} for t in recommended]
+        })
+        
+        for task in recommended:
+            runner.log(f"📦 Installing {task.name}...")
+            try:
+                for cmd in task.commands:
+                    if cmd.startswith("#"):
+                        continue
+                    if config.dry_run:
+                        runner.log(f"DRY RUN: {cmd}")
+                    else:
+                        subprocess.run(cmd, shell=True, check=True)
+                status = "dry_run" if config.dry_run else "installed"
+                results.append({"name": task.name, "status": status})
+                runner.log(f"✅ {task.name} {'simulated' if config.dry_run else 'installed'}")
+            except Exception as e:
+                results.append({"name": task.name, "status": "failed", "error": str(e)})
+                runner.log(f"⚠️ {task.name} failed")
+        return TaskResult(success=True, message="Recommended installed", data={"results": results})
+        
+    runner.add_task(
+        CLITask(id="install-recommended", name="Install recommended dependencies", description="Install recommended dependencies"),
+        install_recommended,
+        skip_fn=lambda: not config.install or len([t for t in all_tasks if t.priority == Priority.RECOMMENDED]) == 0
+    )
+    
+    # Task 7: Install optional (only if --install and not --skip-optional)
+    def install_optional():
+        optional = [t for t in all_tasks if t.priority == Priority.OPTIONAL]
+        results = []
+        
+        runner.yaml('install_optional', 'Optional dependencies available', {
+            "count": len(optional),
+            "items": [{"name": t.name, "category": t.category, "command": t.commands[0] if not t.commands[0].startswith("#") else "(manual)"} for t in optional]
+        })
+        
+        for task in optional:
+            if all(c.startswith("#") for c in task.commands):
+                runner.log(f"📝 {task.name}: {task.commands[0]}")
+                results.append({"name": task.name, "status": "manual"})
+                continue
+                
+            runner.log(f"📦 Installing {task.name}...")
+            try:
+                for cmd in task.commands:
+                    if cmd.startswith("#"):
+                        continue
+                    if config.dry_run:
+                        runner.log(f"DRY RUN: {cmd}")
+                    else:
+                        subprocess.run(cmd, shell=True, check=True)
+                status = "dry_run" if config.dry_run else "installed"
+                results.append({"name": task.name, "status": status})
+                runner.log(f"✅ {task.name} {'simulated' if config.dry_run else 'installed'}")
+            except Exception as e:
+                results.append({"name": task.name, "status": "failed", "error": str(e)})
+                runner.log(f"⚠️ {task.name} failed")
+        return TaskResult(success=True, message="Optional processed", data={"results": results})
+        
+    runner.add_task(
+        CLITask(id="install-optional", name="Install optional dependencies", description="Choose which optional dependencies to install"),
+        install_optional,
+        skip_fn=lambda: not config.install or config.skip_optional or len([t for t in all_tasks if t.priority == Priority.OPTIONAL]) == 0
     )
     
     # Run
@@ -569,20 +669,25 @@ async def cmd_setup(config: SetupConfig):
 def main():
     import argparse
     
-    parser = argparse.ArgumentParser(description="Reclapp Setup")
+    parser = argparse.ArgumentParser(description="Reclapp Setup - Environment checker and dependency installer")
     parser.add_argument("-o", "--output", default=".", help="Output directory")
     parser.add_argument("-i", "--install", action="store_true", help="Install dependencies")
     parser.add_argument("-y", "--yes", action="store_true", help="Skip confirmations")
     parser.add_argument("--skip-optional", action="store_true", help="Skip optional deps")
+    parser.add_argument("--dry-run", action="store_true", help="Simulate installations without executing")
     
     args = parser.parse_args()
     
+    # --dry-run implies --install
+    install = args.install or args.dry_run
+    
     config = SetupConfig(
         output_dir=args.output,
-        install=args.install,
-        interactive=not args.yes,
+        install=install,
+        interactive=not args.yes and not args.dry_run,
         skip_optional=args.skip_optional,
-        yes=args.yes
+        yes=args.yes or args.dry_run,
+        dry_run=args.dry_run
     )
     
     asyncio.run(cmd_setup(config))

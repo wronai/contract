@@ -2181,498 +2181,54 @@ async function cmdTasks(args, options) {
 // ============================================================================
 
 async function cmdSetup(args, options) {
-  const contractAI = require('../src/core/contract-ai');
-  const { CLIRunner } = contractAI;
-  const { DependencyChecker } = require('../src/core/contract-ai/setup/dependency-checker');
-  const readline = require('readline');
-
-  let outputDir = '.';
-  let install = false;
-  let dryRun = false;
-  let interactive = !args.includes('--yes') && !args.includes('-y');
-  let skipOptional = args.includes('--skip-optional');
-
+  // Python/Pydantic implementation - faster startup, better validation
+  // Original TypeScript version archived at: archive/typescript-setup/cmdSetup.js
+  const { spawn } = require('child_process');
+  const setupScript = path.join(__dirname, '..', 'tools', 'reclapp-setup', 'setup.py');
+  const venvPython = path.join(__dirname, '..', 'tools', 'reclapp-setup', 'venv', 'bin', 'python');
+  
+  // Build Python args from CLI args
+  const pyArgs = [setupScript];
+  
   for (let i = 0; i < args.length; i++) {
     if ((args[i] === '--output' || args[i] === '-o') && args[i + 1]) {
-      outputDir = args[i + 1]; i++;
+      pyArgs.push('-o', args[i + 1]);
+      i++;
     } else if (args[i] === '--install' || args[i] === '-i') {
-      install = true;
+      pyArgs.push('--install');
     } else if (args[i] === '--dry-run') {
-      dryRun = true;
-      install = true;
+      pyArgs.push('--dry-run');
+    } else if (args[i] === '-y' || args[i] === '--yes') {
+      pyArgs.push('-y');
+    } else if (args[i] === '--skip-optional') {
+      pyArgs.push('--skip-optional');
     }
   }
-
-  // Helper: ask user yes/no
-  async function askUser(question) {
-    if (dryRun) return true;
-    if (!interactive) return true;
-    
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    return new Promise(resolve => {
-      rl.question(`${question} [Y/n] `, answer => {
-        rl.close();
-        const a = answer.trim().toLowerCase();
-        resolve(a === '' || a === 'y' || a === 'yes');
-      });
+  
+  // Check if venv exists, if not use system python
+  const fs = require('fs');
+  const pythonPath = fs.existsSync(venvPython) ? venvPython : 'python3';
+  
+  return new Promise((resolve, reject) => {
+    const proc = spawn(pythonPath, pyArgs, {
+      stdio: 'inherit',
+      cwd: process.cwd()
     });
-  }
-
-  // Create CLI runner with TaskQueue
-  const runner = new CLIRunner({
-    name: 'Reclapp Environment Setup',
-    version: '1.0',
-    verbose: true,
-    showProgress: true,
-    continueOnError: true
+    
+    proc.on('close', (code) => {
+      if (code !== 0) {
+        process.exit(code);
+      }
+      resolve();
+    });
+    
+    proc.on('error', (err) => {
+      console.error('❌ Failed to run Python setup:', err.message);
+      console.error('   Ensure Python 3 and dependencies are installed:');
+      console.error('   cd tools/reclapp-setup && python3 -m venv venv && ./venv/bin/pip install -r requirements.txt');
+      process.exit(1);
+    });
   });
-
-  const checker = new DependencyChecker();
-  let llmProviders = [];
-  let report = null;
-  let allTasks = [];
-
-  // ========================================================================
-  // TASK 1: Check LLM Providers
-  // ========================================================================
-  runner.addTask({
-    id: 'check-llm',
-    name: 'Check LLM providers',
-    description: 'Testing connectivity to Ollama, Windsurf, OpenRouter',
-    category: 'llm',
-    run: async () => {
-      llmProviders = [];
-      // Check Ollama
-      try {
-        const ollamaUrl = process.env.OLLAMA_URL || process.env.OLLAMA_HOST || 'http://localhost:11434';
-        const ollamaRes = await fetch(`${ollamaUrl}/api/tags`, { signal: AbortSignal.timeout(3000) });
-        if (ollamaRes.ok) {
-          const data = await ollamaRes.json();
-          const models = data.models || [];
-          const codeModels = models.filter(m => 
-            m.name.includes('codellama') || m.name.includes('deepseek') || m.name.includes('qwen') || m.name.includes('coder')
-          );
-          llmProviders.push({ name: 'ollama', status: 'available', models: models.length, codeModels: codeModels.length, url: ollamaUrl });
-        } else {
-          llmProviders.push({ name: 'ollama', status: 'error', error: 'API error' });
-        }
-      } catch (e) {
-        llmProviders.push({ name: 'ollama', status: 'unavailable', error: 'Connection failed' });
-      }
-
-      // Check Windsurf
-      const windsurfKey = process.env.WINDSURF_API_KEY;
-      if (windsurfKey) {
-        try {
-          const res = await fetch(`${process.env.WINDSURF_URL || 'https://api.windsurf.ai/v1'}/models`, {
-            headers: { 'Authorization': `Bearer ${windsurfKey}` },
-            signal: AbortSignal.timeout(5000)
-          });
-          llmProviders.push({ name: 'windsurf', status: res.ok ? 'available' : 'error' });
-        } catch (e) {
-          llmProviders.push({ name: 'windsurf', status: 'unavailable' });
-        }
-      } else {
-        llmProviders.push({ name: 'windsurf', status: 'not_configured', fix: 'Set WINDSURF_API_KEY' });
-      }
-
-      // Check OpenRouter
-      const openrouterKey = process.env.OPENROUTER_API_KEY;
-      if (openrouterKey) {
-        try {
-          const res = await fetch('https://openrouter.ai/api/v1/models', {
-            headers: { 'Authorization': `Bearer ${openrouterKey}` },
-            signal: AbortSignal.timeout(5000)
-          });
-          llmProviders.push({ name: 'openrouter', status: res.ok ? 'available' : 'error' });
-        } catch (e) {
-          llmProviders.push({ name: 'openrouter', status: 'unavailable' });
-        }
-      } else {
-        llmProviders.push({ name: 'openrouter', status: 'not_configured', fix: 'Set OPENROUTER_API_KEY' });
-      }
-
-      const available = llmProviders.filter(p => p.status === 'available');
-      return {
-        success: true,
-        message: 'LLM provider check complete',
-        data: { llm_providers: llmProviders, available: available.length, total: llmProviders.length }
-      };
-    }
-  });
-
-  // ========================================================================
-  // TASK 2: Check System Dependencies
-  // ========================================================================
-  runner.addTask({
-    id: 'check-deps',
-    name: 'Check system dependencies',
-    description: 'Node.js, Git, Docker, TypeScript',
-    category: 'system',
-    run: async () => {
-      report = await checker.generateReport();
-
-      runner.yaml('dependencies', 'System dependency status', {
-        os: report.os,
-        arch: report.arch,
-        node: report.nodeVersion,
-        dependencies: report.dependencies.map(d => ({
-          name: d.dependency.displayName,
-          status: d.status,
-          priority: d.dependency.priority,
-          version: d.version || null,
-          install: d.installCommand || null
-        }))
-      });
-      
-      return {
-        success: true,
-        message: 'Dependency check complete',
-        data: {
-          os: report.os,
-          arch: report.arch,
-          node: report.nodeVersion,
-          ready: report.readyForDevelopment,
-          missing_required: report.missingRequired,
-          missing_recommended: report.missingRecommended
-        }
-      };
-    }
-  });
-
-  // ========================================================================
-  // TASK 3: Generate Setup Tasks
-  // ========================================================================
-  runner.addTask({
-    id: 'generate-tasks',
-    name: 'Generate setup tasks',
-    description: 'Create installation task list',
-    category: 'setup',
-    run: async () => {
-      allTasks = [];
-      const ollamaStatus = llmProviders.find(p => p.name === 'ollama');
-      if (!ollamaStatus || ollamaStatus.status !== 'available') {
-        allTasks.push({
-          id: 'install-ollama', name: 'Install Ollama', priority: 'recommended',
-          category: 'llm', status: 'pending', commands: ['curl -fsSL https://ollama.ai/install.sh | sh']
-        });
-      } else if (ollamaStatus.codeModels === 0) {
-        allTasks.push({
-          id: 'pull-model', name: 'Pull Ollama code model', priority: 'recommended',
-          category: 'llm', status: 'pending', commands: ['ollama pull codellama:7b']
-        });
-      }
-
-      const windsurfStatus = llmProviders.find(p => p.name === 'windsurf');
-      if (windsurfStatus?.status === 'not_configured') {
-        allTasks.push({
-          id: 'configure-windsurf', name: 'Configure Windsurf API', priority: 'optional',
-          category: 'llm', status: 'pending', commands: ['# Add WINDSURF_API_KEY to .env']
-        });
-      }
-
-      const openrouterStatus = llmProviders.find(p => p.name === 'openrouter');
-      if (openrouterStatus?.status === 'not_configured') {
-        allTasks.push({
-          id: 'configure-openrouter',
-          name: 'Configure OpenRouter API',
-          priority: 'optional',
-          category: 'llm',
-          status: 'pending',
-          commands: ['# Add OPENROUTER_API_KEY to .env']
-        });
-      }
-
-      // System tasks
-      allTasks.push(...(report?.setupTasks || []));
-
-      const requiredCount = allTasks.filter(t => t.priority === 'required').length;
-      const recommendedCount = allTasks.filter(t => t.priority === 'recommended').length;
-      const optionalCount = allTasks.filter(t => t.priority === 'optional').length;
-
-      if (!install && allTasks.length > 0) {
-        runner.log(
-          `💡 Install steps are disabled by default. Run: reclapp setup --install\n` +
-          `   required: ${requiredCount}, recommended: ${recommendedCount}, optional: ${optionalCount}`
-        );
-      }
-
-      runner.yaml('setup_tasks', 'Setup tasks to complete', {
-        total: allTasks.length,
-        install_mode: install,
-        counts: { required: requiredCount, recommended: recommendedCount, optional: optionalCount },
-        tasks: allTasks.map(t => ({
-          name: t.name,
-          priority: t.priority,
-          category: t.category,
-          status: t.status,
-          command: (t.commands && t.commands[0]) || null
-        }))
-      });
-
-      return {
-        success: true,
-        message: 'Setup tasks generated',
-        data: {
-          total: allTasks.length,
-          install_mode: install,
-          counts: {
-            required: requiredCount,
-            recommended: recommendedCount,
-            optional: optionalCount
-          }
-        }
-      };
-    }
-  });
-
-  // ========================================================================
-  // TASK 4: Save Setup Files
-  // ========================================================================
-  runner.addTask({
-    id: 'save-files',
-    name: 'Save setup files',
-    description: 'Create SETUP.md and setup-tasks.json',
-    category: 'files',
-    skip: () => allTasks.length === 0,
-    run: async () => {
-      const tasksPath = checker.saveSetupTasks(outputDir, allTasks);
-      return {
-        success: true,
-        message: 'Setup files created',
-        data: {
-          files: [
-            { path: path.join(outputDir, 'setup', 'SETUP.md'), type: 'guide' },
-            { path: tasksPath, type: 'tasks' }
-          ]
-        }
-      };
-    }
-  });
-
-  // ========================================================================
-  // TASK 5: Install Required Dependencies (with user confirmation)
-  // ========================================================================
-  runner.addTask({
-    id: 'install-required',
-    name: 'Install required dependencies',
-    description: 'Install missing required dependencies',
-    category: 'install',
-    skip: () => {
-      if (!install) return true;
-      const requiredTasks = allTasks.filter(t => t.priority === 'required');
-      return requiredTasks.length === 0;
-    },
-    run: async () => {
-      const { execSync } = require('child_process');
-      const requiredTasks = allTasks.filter(t => t.priority === 'required');
-      const results = [];
-
-      runner.yaml('install_required', 'Required dependencies to install', {
-        count: requiredTasks.length,
-        items: requiredTasks.map(t => ({ name: t.name, command: t.commands[0] }))
-      });
-
-      const proceed = await askUser(`\n⚠️  Install ${requiredTasks.length} required dependencies?`);
-      if (!proceed) {
-        runner.log('⏭️  Skipped by user');
-        return { success: true, message: 'Skipped by user', data: { skipped: true } };
-      }
-
-      for (const task of requiredTasks) {
-        runner.log(`📦 Installing ${task.name}...`);
-        try {
-          for (const cmd of task.commands) {
-            if (cmd.startsWith('#')) continue;
-            if (dryRun) {
-              runner.log(`DRY RUN: ${cmd}`);
-            } else {
-              execSync(cmd, { stdio: 'inherit', shell: '/bin/bash' });
-            }
-          }
-          results.push({ name: task.name, status: dryRun ? 'dry_run' : 'installed' });
-          runner.log(`✅ ${task.name} ${dryRun ? 'simulated' : 'installed'}`);
-        } catch (e) {
-          results.push({ name: task.name, status: 'failed', error: e.message });
-          runner.log(`❌ ${task.name} failed`);
-        }
-      }
-
-      const failed = results.filter(r => r.status === 'failed');
-      return {
-        success: failed.length === 0,
-        message: `Installed ${results.length - failed.length}/${requiredTasks.length} required`,
-        data: { results },
-        error: failed.length > 0 ? `${failed.length} required installations failed` : undefined
-      };
-    }
-  });
-
-  // ========================================================================
-  // TASK 6: Install Recommended Dependencies (with user confirmation)
-  // ========================================================================
-  runner.addTask({
-    id: 'install-recommended',
-    name: 'Install recommended dependencies',
-    description: 'Install recommended dependencies for better experience',
-    category: 'install',
-    skip: () => {
-      if (!install) return true;
-      const recommendedTasks = allTasks.filter(t => t.priority === 'recommended');
-      return recommendedTasks.length === 0;
-    },
-    run: async () => {
-      const { execSync } = require('child_process');
-      const recommendedTasks = allTasks.filter(t => t.priority === 'recommended');
-      const results = [];
-
-      runner.yaml('install_recommended', 'Recommended dependencies to install', {
-        count: recommendedTasks.length,
-        items: recommendedTasks.map(t => ({ name: t.name, command: t.commands[0] }))
-      });
-
-      const proceed = await askUser(`\n📦 Install ${recommendedTasks.length} recommended dependencies?`);
-      if (!proceed) {
-        runner.log('⏭️  Skipped by user');
-        return { success: true, message: 'Skipped by user', data: { skipped: true } };
-      }
-
-      for (const task of recommendedTasks) {
-        runner.log(`📦 Installing ${task.name}...`);
-        try {
-          for (const cmd of task.commands) {
-            if (cmd.startsWith('#')) continue;
-            if (dryRun) {
-              runner.log(`DRY RUN: ${cmd}`);
-            } else {
-              execSync(cmd, { stdio: 'inherit', shell: '/bin/bash' });
-            }
-          }
-          results.push({ name: task.name, status: dryRun ? 'dry_run' : 'installed' });
-          runner.log(`✅ ${task.name} ${dryRun ? 'simulated' : 'installed'}`);
-        } catch (e) {
-          results.push({ name: task.name, status: 'failed', error: e.message });
-          runner.log(`⚠️ ${task.name} failed`);
-        }
-      }
-
-      return {
-        success: true,
-        message: `Installed ${results.length}/${recommendedTasks.length} recommended`,
-        data: { results }
-      };
-    }
-  });
-
-  // ========================================================================
-  // TASK 7: Install Optional Dependencies (with user choice per item)
-  // ========================================================================
-  runner.addTask({
-    id: 'install-optional',
-    name: 'Install optional dependencies',
-    description: 'Choose which optional dependencies to install',
-    category: 'install',
-    skip: () => {
-      if (!install) return true;
-      if (skipOptional) return true;
-      const optionalTasks = allTasks.filter(t => t.priority === 'optional');
-      return optionalTasks.length === 0;
-    },
-    run: async () => {
-      const { execSync } = require('child_process');
-      const optionalTasks = allTasks.filter(t => t.priority === 'optional');
-      const results = [];
-
-      runner.yaml('install_optional', 'Optional dependencies available', {
-        count: optionalTasks.length,
-        items: optionalTasks.map(t => ({ 
-          name: t.name, 
-          category: t.category,
-          command: t.commands[0]?.startsWith('#') ? '(manual)' : t.commands[0]
-        }))
-      });
-
-      const proceed = await askUser(`\n💡 Install optional dependencies? (will ask for each)`);
-      if (!proceed) {
-        runner.log('⏭️  Skipped optional dependencies');
-        return { success: true, message: 'Skipped by user', data: { skipped: true } };
-      }
-
-      for (const task of optionalTasks) {
-        // Skip comment-only commands (manual steps)
-        if (task.commands.every(c => c.startsWith('#'))) {
-          runner.log(`📝 ${task.name}: ${task.commands[0]}`);
-          results.push({ name: task.name, status: 'manual' });
-          continue;
-        }
-
-        // Ask for each optional dependency
-        const installThis = await askUser(`   Install ${task.name}?`);
-        if (!installThis) {
-          results.push({ name: task.name, status: 'skipped' });
-          continue;
-        }
-
-        runner.log(`📦 Installing ${task.name}...`);
-        try {
-          for (const cmd of task.commands) {
-            if (cmd.startsWith('#')) continue;
-            if (dryRun) {
-              runner.log(`DRY RUN: ${cmd}`);
-            } else {
-              execSync(cmd, { stdio: 'inherit', shell: '/bin/bash' });
-            }
-          }
-          results.push({ name: task.name, status: dryRun ? 'dry_run' : 'installed' });
-          runner.log(`✅ ${task.name} ${dryRun ? 'simulated' : 'installed'}`);
-        } catch (e) {
-          results.push({ name: task.name, status: 'failed', error: e.message });
-          runner.log(`⚠️ ${task.name} failed`);
-        }
-      }
-
-      return {
-        success: true,
-        message: `Processed ${results.length} optional dependencies`,
-        data: { results }
-      };
-    }
-  });
-
-  // Run all tasks
-  const result = await runner.run();
-
-  // Summary and next steps
-  const availableLLMs = llmProviders.filter(p => p.status === 'available').map(p => p.name);
-  const ready = report?.readyForDevelopment && availableLLMs.length > 0;
-
-  runner.yaml('setup_summary', 'Environment status', {
-    ready,
-    llm_available: availableLLMs.length > 0,
-    llm_providers: availableLLMs,
-    pending_tasks: allTasks.length
-  });
-
-  if (ready) {
-    console.log('\n## Next Steps\n');
-    runner.getRenderer().codeblock('bash', [
-      '# Create your first app',
-      'reclapp evolve -p "Create a todo app" -o ./my-app'
-    ].join('\n'));
-  } else if (allTasks.length > 0) {
-    console.log('\n## Fix Issues\n');
-    runner.getRenderer().codeblock('bash', [
-      '# Install missing dependencies',
-      'reclapp setup --install',
-      '',
-      '# Or follow the guide',
-      'cat setup/SETUP.md'
-    ].join('\n'));
-  }
-
-  if (!result.success) {
-    process.exit(1);
-  }
 }
 
 // ============================================================================
