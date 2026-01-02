@@ -73,7 +73,9 @@ export class CLIRunner {
       ...options
     };
     this.renderer = new ShellRenderer(this.options.verbose ?? true);
-    this.taskQueue = new TaskQueue(this.options.verbose ?? true);
+    // TaskQueue prints its own TODO blocks when verbose=true.
+    // CLIRunner is responsible for printing TODO/progress, so keep TaskQueue silent.
+    this.taskQueue = new TaskQueue(false);
   }
 
   /**
@@ -125,7 +127,13 @@ export class CLIRunner {
         return ['null'];
       }
       if (typeof value === 'string') {
-        return [`"${value}"`];
+        const escaped = value
+          .replace(/\\/g, '\\\\')
+          .replace(/\r/g, '\\r')
+          .replace(/\n/g, '\\n')
+          .replace(/\t/g, '\\t')
+          .replace(/"/g, '\\"');
+        return [`"${escaped}"`];
       }
       if (typeof value === 'number' || typeof value === 'boolean') {
         return [String(value)];
