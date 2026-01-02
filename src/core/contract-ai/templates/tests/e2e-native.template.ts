@@ -87,7 +87,11 @@ async function runE2ETests(): Promise<void> {
     const res = await fetch(\`\${BASE_URL}\${API_PATH}/\${createdId}\`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'Updated {{ENTITY}}' })
+      body: JSON.stringify({ 
+        name: 'Updated {{ENTITY}}',
+        title: 'Updated {{ENTITY}}',
+        description: 'Updated by E2E test'
+      })
     });
     if (res.status !== 200 && res.status !== 404) throw new Error(\`Status: \${res.status}\`);
   });

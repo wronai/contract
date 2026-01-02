@@ -194,6 +194,14 @@ Output ONLY the TypeScript code, no explanation.`;
         if (testContent.includes('jest') || testContent.includes('mocha') || testContent.includes('describe(')) {
           throw new Error('Invalid test code - must use native fetch runner, not test frameworks');
         }
+        // Validate: must have createdId variable declared at top level for CRUD tests
+        if (!testContent.includes('let createdId') && !testContent.includes('var createdId')) {
+          throw new Error('Invalid test code - missing createdId variable for CRUD flow');
+        }
+        // Validate: must have runE2ETests function
+        if (!testContent.includes('runE2ETests')) {
+          throw new Error('Invalid test code - missing runE2ETests function');
+        }
       } catch {
         testContent = FallbackTemplates.generateE2ETests(port, entityName, basePath);
       }

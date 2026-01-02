@@ -1413,38 +1413,43 @@ async function cmdEvolution(args, options) {
     } else {
       // Interactive mode - ask user what to do next
       console.log('\n✅ Evolution complete\n');
-      console.log('## Actions\n');
-      console.log('```yaml');
-      console.log('commands:');
-      console.log('  k: "keep running - monitor for issues"');
-      console.log('  r: "restart - regenerate service"');
-      console.log('  f: "fix - create ticket for LLM"');
-      console.log('  l: "logs - view service logs"');
-      console.log('  s: "tasks - show task queue"');
-      console.log('  t: "test - run API health check"');
-      console.log(`  o: "open - browser http://localhost:${port}"`);
-      console.log('  q: "quit - stop and exit"');
-      console.log('```\n');
+
+      cliRenderer.heading(2, 'Actions');
+      cliRenderer.codeblock('yaml', [
+        'commands:',
+        '  k: "keep running - monitor for issues"',
+        '  r: "restart - regenerate service"',
+        '  f: "fix - create ticket for LLM"',
+        '  l: "logs - view service logs"',
+        '  s: "tasks - show task queue"',
+        '  t: "test - run API health check"',
+        `  o: "open - browser http://localhost:${port}"`,
+        '  q: "quit - stop and exit"'
+      ].join('\n'));
+
       console.log('> Tip: Use `--keep-running` (`-k`) to skip this menu\n');
 
       // Enable raw mode for single keypress detection
-      if (process.stdin.isTTY) {
-        if (!keepRunning && process.stdin.isTTY) {
-          process.stdin.setRawMode(true);
-          process.stdin.resume();
+      if (!keepRunning && process.stdin.isTTY) {
+        process.stdin.setRawMode(true);
+        process.stdin.resume();
 
-          let menuInputActive = false;
-          const disableMenuInput = () => {
-            if (!menuInputActive) return;
-            process.stdin.removeListener('data', handleKeypress);
-            menuInputActive = false;
-          };
-          const enableMenuInput = () => {
-            if (menuInputActive) return;
-            process.stdin.on('data', handleKeypress);
-            menuInputActive = true;
-          };
-        const handleKeypress = async (key) => {
+        let menuInputActive = false;
+
+        function disableMenuInput() {
+          if (!menuInputActive) return;
+          process.stdin.removeListener('data', handleKeypress);
+          menuInputActive = false;
+        }
+
+        function enableMenuInput() {
+          if (menuInputActive) return;
+          process.stdin.on('data', handleKeypress);
+          menuInputActive = true;
+        }
+
+        async function handleKeypress(chunk) {
+          const key = chunk.toString();
           // Ctrl+C
           if (key === '\u0003') {
             console.log('\n🛑 Shutting down...');
@@ -1452,7 +1457,9 @@ async function cmdEvolution(args, options) {
             process.exit(0);
           }
 
-          switch (key.toLowerCase()) {
+          const k = key.trim().toLowerCase();
+
+          switch (k) {
             case 'k':
               console.log('\n📡 Switching to keep-running mode...');
               console.log('   Monitoring service for issues. Press Ctrl+C to stop.\n');
@@ -1464,7 +1471,7 @@ async function cmdEvolution(args, options) {
               await evolutionManager.shutdown();
               await evolutionManager.startFromPrompt(prompt);
               console.log('\n✅ Restart complete');
-              process.stdin.removeListener('data', handleKeypress);
+              disableMenuInput();
               process.stdin.setRawMode(false);
               await cmdEvolution(args, options); // Recursive call
               return;
@@ -1488,23 +1495,16 @@ async function cmdEvolution(args, options) {
                 output: process.stdout,
                 terminal: true
               });
-
-              let canceled = false;
               ticketRl.on('SIGINT', () => {
-                canceled = true;
                 console.log('\n⚠️ Ticket input canceled. Returning to menu.\n');
                 ticketRl.close();
+                process.stdin.setRawMode(true);
+                enableMenuInput();
+                process.stdout.write('> Press key: ');
               });
               
               ticketRl.question('🎫 Issue description: ', async (issueDescription) => {
                 ticketRl.close();
-
-                if (canceled) {
-                  process.stdin.setRawMode(true);
-                  enableMenuInput();
-                  process.stdout.write('> Press key: ');
-                  return;
-                }
                 
                 if (!issueDescription.trim()) {
                   console.log('\n⚠️ No issue description provided. Returning to menu.\n');
@@ -1688,10 +1688,10 @@ ${recentLogsBlock}
               // Ignore other keys, show hint
               process.stdout.write('\r> Press key: ');
           }
-        };
+        }
 
         enableMenuInput();
-        
+
         // Keep process alive for interactive mode
         await new Promise(() => {});
       } else {

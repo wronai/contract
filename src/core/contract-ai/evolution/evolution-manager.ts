@@ -627,6 +627,18 @@ export class EvolutionManager {
     return { mustTargets, missingTargets };
   }
 
+  private getTargetPriority(target: string): 'must' | 'should' | 'may' | null {
+    const instructions = (this.contract?.generation?.instructions || []) as any[];
+    const priorities = instructions
+      .filter(i => i && i.target === target)
+      .map(i => i.priority)
+      .filter(Boolean);
+    if (priorities.includes('must')) return 'must';
+    if (priorities.includes('should')) return 'should';
+    if (priorities.includes('may')) return 'may';
+    return null;
+  }
+
   // ============================================================
   // MULTI-LEVEL ERROR RECOVERY SYSTEM
   // Level 1: Heuristic/Algorithm fixes (pattern-based, instant)
@@ -1301,14 +1313,17 @@ Output files with \`\`\`filepath:path/to/file format.`;
     // Phase 4: Testing
     this.taskQueue.add('Generate tests', 'generate-tests');
     this.taskQueue.add('Run tests', 'run-tests');
+
+    // Phase 5: Frontend (from contract) - best effort unless priority=must
+    this.taskQueue.add('Generate frontend', 'generate-frontend');
     
-    // Phase 5: Documentation
+    // Phase 6: Documentation
     this.taskQueue.add('Generate documentation', 'generate-readme');
     
-    // Phase 6: Additional layers (from contract)
+    // Phase 7: Additional layers (from contract)
     this.taskQueue.add('Validate additional targets', 'layer2');
 
-    // Phase 7: Verification & Reconciliation
+    // Phase 8: Verification & Reconciliation
     this.taskQueue.add('Verify contract ↔ code ↔ service', 'verify-state');
     this.taskQueue.add('Reconcile discrepancies', 'reconcile');
 
@@ -1546,6 +1561,54 @@ Output files with \`\`\`filepath:path/to/file format.`;
                 throw new Error(testResult.error || 'Tests failed');
               }
               break;
+
+            case 'generate-frontend': {
+              const priority = this.getTargetPriority('frontend');
+              if (!priority) {
+                this.taskQueue.skip(task.id);
+                break;
+              }
+
+              this.narrate('Generating frontend', `Contract target: frontend (priority: ${priority})`);
+
+              let ok = false;
+              try {
+                ok = await this.orchestrateFrontendLayer();
+              } catch {
+                ok = false;
+              }
+
+              // Fallback template if LLM didn't generate frontend
+              const feDir = path.join(this.options.outputDir, 'frontend');
+              if (!ok) {
+                try {
+                  const entityName = this.contract?.definition?.entities?.[0]?.name || 'Item';
+                  const frontendFiles = FallbackTemplates.generateFrontend(this.options.port, entityName);
+                  for (const [filePath, content] of Object.entries(frontendFiles)) {
+                    const fullPath = path.join(this.options.outputDir, filePath);
+                    const dir = path.dirname(fullPath);
+                    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+                    fs.writeFileSync(fullPath, content, 'utf-8');
+                  }
+                  ok = true;
+                } catch {
+                  ok = false;
+                }
+              }
+
+              const hasFrontend = fs.existsSync(feDir) && fs.readdirSync(feDir).length > 0;
+              if (hasFrontend) {
+                this.taskQueue.done(task.id);
+              } else if (priority === 'must') {
+                throw new Error('Frontend generation failed (required by contract)');
+              } else {
+                this.taskQueue.skip(task.id);
+                if (this.options.verbose) {
+                  this.renderer.codeblock('yaml', `# @type: frontend_skip\nreason: "Frontend generation failed but target is optional"\npriority: "${priority}"`);
+                }
+              }
+              break;
+            }
 
             case 'generate-readme':
               this.narrate('Generating README.md', 'Creating project documentation from contract');
@@ -3119,28 +3182,31 @@ MIT
     
     if (this.options.verbose) {
       console.log('\n✅ Evolution Manager shut down\n');
-      console.log('## Summary\n');
-      console.log('```yaml');
-      console.log('evolution:');
-      console.log(`  cycles: ${this.evolutionHistory.length}`);
-      console.log(`  output: "${this.options.outputDir}"`);
-      console.log(`  logs: "${path.join(this.options.outputDir, 'logs')}"`);
-      console.log(`  port: ${this.options.port}`);
-      console.log('```\n');
-      console.log('## Next Steps\n');
-      console.log('```bash');
-      console.log(`# Start service`);
-      console.log(`cd ${this.options.outputDir}/api && npm run dev`);
-      console.log('');
-      console.log(`# Run tests`);
-      console.log(`cd ${this.options.outputDir}/tests && npm test`);
-      console.log('');
-      console.log(`# View logs`);
-      console.log(`cat ${this.options.outputDir}/logs/*.rcl.md`);
-      console.log('');
-      console.log(`# Keep running mode`);
-      console.log(`./bin/reclapp evolve -p "..." -k`);
-      console.log('```\n');
+
+      this.renderer.heading(2, 'Summary');
+      this.renderer.codeblock('yaml', [
+        '# @type: evolution_shutdown_summary',
+        'evolution:',
+        `  cycles: ${this.evolutionHistory.length}`,
+        `  output: "${this.options.outputDir}"`,
+        `  logs: "${path.join(this.options.outputDir, 'logs')}"`,
+        `  port: ${this.options.port}`
+      ].join('\n'));
+
+      this.renderer.heading(2, 'Next Steps');
+      this.renderer.codeblock('bash', [
+        '# Start service',
+        `cd ${this.options.outputDir}/api && npm run dev`,
+        '',
+        '# Run tests',
+        `cd ${this.options.outputDir}/tests && npm test`,
+        '',
+        '# View logs',
+        `cat ${this.options.outputDir}/logs/*.rcl.md`,
+        '',
+        '# Keep running mode',
+        './bin/reclapp evolve -p "..." -k'
+      ].join('\n'));
     }
   }
 }
