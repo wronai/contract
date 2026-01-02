@@ -15,850 +15,17 @@ import * as path from 'path';
 import { ShellRenderer } from './shell-renderer';
 import { CodeRAG, CodeChunk, SearchResult } from './code-rag';
 import { TemplateRAG, Template } from '../templates';
-
-// ============================================================================
-// GIT STATE ANALYZER
-// Additional source of truth for existing projects
-// ============================================================================
-
-export interface GitState {
-  isGitRepo: boolean;
-  branch: string;
-  lastCommit: { hash: string; message: string; date: string } | null;
-  status: { modified: string[]; untracked: string[]; staged: string[] };
-  remotes: string[];
-  recentCommits: Array<{ hash: string; message: string; date: string }>;
-  fileStructure: { path: string; type: 'file' | 'dir' }[];
-  detectedStack: { language: string; framework: string; dependencies: string[] };
-}
-
-export class GitAnalyzer {
-  private cwd: string;
-
-  constructor(cwd: string) {
-    this.cwd = cwd;
-  }
-
-  /**
-   * Check if directory is a git repository
-   */
-  isGitRepo(): boolean {
-    try {
-      execSync('git rev-parse --is-inside-work-tree', { cwd: this.cwd, stdio: 'pipe' });
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Get current branch name
-   */
-  getBranch(): string {
-    try {
-      return execSync('git branch --show-current', { cwd: this.cwd, encoding: 'utf-8' }).trim();
-    } catch {
-      return 'unknown';
-    }
-  }
-
-  /**
-   * Get last commit info
-   */
-  getLastCommit(): { hash: string; message: string; date: string } | null {
-    try {
-      const log = execSync('git log -1 --format="%H|%s|%ci"', { cwd: this.cwd, encoding: 'utf-8' }).trim();
-      const [hash, message, date] = log.split('|');
-      return { hash: hash.substring(0, 8), message, date };
-    } catch {
-      return null;
-    }
-  }
-
-  /**
-   * Get recent commits
-   */
-  getRecentCommits(count = 5): Array<{ hash: string; message: string; date: string }> {
-    try {
-      const log = execSync(`git log -${count} --format="%H|%s|%ci"`, { cwd: this.cwd, encoding: 'utf-8' }).trim();
-      return log.split('\n').filter(Boolean).map(line => {
-        const [hash, message, date] = line.split('|');
-        return { hash: hash.substring(0, 8), message, date };
-      });
-    } catch {
-      return [];
-    }
-  }
-
-  /**
-   * Get git status (modified, untracked, staged files)
-   */
-  getStatus(): { modified: string[]; untracked: string[]; staged: string[] } {
-    try {
-      const status = execSync('git status --porcelain', { cwd: this.cwd, encoding: 'utf-8' });
-      const modified: string[] = [];
-      const untracked: string[] = [];
-      const staged: string[] = [];
-
-      for (const line of status.split('\n').filter(Boolean)) {
-        const code = line.substring(0, 2);
-        const file = line.substring(3);
-        if (code.includes('M')) modified.push(file);
-        if (code === '??') untracked.push(file);
-        if (code[0] !== ' ' && code[0] !== '?') staged.push(file);
-      }
-
-      return { modified, untracked, staged };
-    } catch {
-      return { modified: [], untracked: [], staged: [] };
-    }
-  }
-
-  /**
-   * Get remote repositories
-   */
-  getRemotes(): string[] {
-    try {
-      const remotes = execSync('git remote -v', { cwd: this.cwd, encoding: 'utf-8' });
-      const urls = new Set<string>();
-      for (const line of remotes.split('\n').filter(Boolean)) {
-        const match = line.match(/\t(.+?)\s/);
-        if (match) urls.add(match[1]);
-      }
-      return Array.from(urls);
-    } catch {
-      return [];
-    }
-  }
-
-  /**
-   * Get tracked file structure
-   */
-  getFileStructure(): { path: string; type: 'file' | 'dir' }[] {
-    try {
-      const files = execSync('git ls-files', { cwd: this.cwd, encoding: 'utf-8' });
-      const structure: { path: string; type: 'file' | 'dir' }[] = [];
-      const dirs = new Set<string>();
-
-      for (const file of files.split('\n').filter(Boolean)) {
-        structure.push({ path: file, type: 'file' });
-        // Add parent directories
-        const parts = file.split('/');
-        for (let i = 1; i < parts.length; i++) {
-          const dir = parts.slice(0, i).join('/');
-          if (!dirs.has(dir)) {
-            dirs.add(dir);
-            structure.push({ path: dir, type: 'dir' });
-          }
-        }
-      }
-
-      return structure.sort((a, b) => a.path.localeCompare(b.path));
-    } catch {
-      return [];
-    }
-  }
-
-  /**
-   * Detect tech stack from file structure
-   */
-  detectStack(): { language: string; framework: string; dependencies: string[] } {
-    const result = { language: 'unknown', framework: 'unknown', dependencies: [] as string[] };
-
-    try {
-      const files = execSync('git ls-files', { cwd: this.cwd, encoding: 'utf-8' }).split('\n');
-
-      // Detect language
-      if (files.some(f => f.endsWith('.ts') || f.endsWith('.tsx'))) result.language = 'typescript';
-      else if (files.some(f => f.endsWith('.js') || f.endsWith('.jsx'))) result.language = 'javascript';
-      else if (files.some(f => f.endsWith('.py'))) result.language = 'python';
-      else if (files.some(f => f.endsWith('.go'))) result.language = 'go';
-      else if (files.some(f => f.endsWith('.rs'))) result.language = 'rust';
-
-      // Detect framework from package.json
-      const pkgPath = path.join(this.cwd, 'package.json');
-      if (fs.existsSync(pkgPath)) {
-        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
-        const deps = { ...pkg.dependencies, ...pkg.devDependencies };
-        result.dependencies = Object.keys(deps);
-
-        if (deps['next']) result.framework = 'nextjs';
-        else if (deps['react']) result.framework = 'react';
-        else if (deps['vue']) result.framework = 'vue';
-        else if (deps['express']) result.framework = 'express';
-        else if (deps['fastify']) result.framework = 'fastify';
-        else if (deps['nestjs'] || deps['@nestjs/core']) result.framework = 'nestjs';
-      }
-
-      // Detect from requirements.txt (Python)
-      const reqPath = path.join(this.cwd, 'requirements.txt');
-      if (fs.existsSync(reqPath)) {
-        const reqs = fs.readFileSync(reqPath, 'utf-8').split('\n');
-        result.dependencies = reqs.filter(Boolean).map(r => r.split('==')[0]);
-        if (reqs.some(r => r.includes('django'))) result.framework = 'django';
-        else if (reqs.some(r => r.includes('flask'))) result.framework = 'flask';
-        else if (reqs.some(r => r.includes('fastapi'))) result.framework = 'fastapi';
-      }
-    } catch {
-      // Ignore errors
-    }
-
-    return result;
-  }
-
-  /**
-   * Get full git state
-   */
-  getFullState(): GitState {
-    return {
-      isGitRepo: this.isGitRepo(),
-      branch: this.getBranch(),
-      lastCommit: this.getLastCommit(),
-      status: this.getStatus(),
-      remotes: this.getRemotes(),
-      recentCommits: this.getRecentCommits(),
-      fileStructure: this.getFileStructure(),
-      detectedStack: this.detectStack()
-    };
-  }
-
-  /**
-   * Generate contract from existing codebase
-   */
-  async generateContractFromCode(llmClient?: LLMClient): Promise<ContractAI | null> {
-    if (!this.isGitRepo()) return null;
-
-    const state = this.getFullState();
-    const stack = state.detectedStack;
-
-    // Read key files for context
-    const keyFiles: { path: string; content: string }[] = [];
-    const interestingFiles = state.fileStructure
-      .filter(f => f.type === 'file')
-      .filter(f => 
-        f.path.endsWith('.ts') || 
-        f.path.endsWith('.js') || 
-        f.path.includes('server') ||
-        f.path.includes('model') ||
-        f.path.includes('schema') ||
-        f.path === 'package.json'
-      )
-      .slice(0, 10);
-
-    for (const file of interestingFiles) {
-      try {
-        const content = fs.readFileSync(path.join(this.cwd, file.path), 'utf-8');
-        keyFiles.push({ path: file.path, content: content.substring(0, 2000) });
-      } catch {
-        // Skip unreadable files
-      }
-    }
-
-    // If LLM available, ask it to generate contract
-    if (llmClient && keyFiles.length > 0) {
-      const prompt = `Analyze this existing codebase and generate a ContractAI JSON.
-
-Tech Stack:
-- Language: ${stack.language}
-- Framework: ${stack.framework}
-- Dependencies: ${stack.dependencies.slice(0, 20).join(', ')}
-
-Key Files:
-${keyFiles.map(f => `--- ${f.path} ---\n${f.content}`).join('\n\n')}
-
-Generate a ContractAI with:
-1. entities - data models found in the code
-2. generation.instructions - what layers exist and their status
-
-Output ONLY valid JSON matching ContractAI schema.`;
-
-      try {
-        const response = await llmClient.generate({
-          system: 'You analyze codebases and generate ContractAI specifications. Output only valid JSON.',
-          user: prompt,
-          temperature: 0.2,
-          maxTokens: 4000
-        });
-
-        const jsonMatch = response.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          return JSON.parse(jsonMatch[0]) as ContractAI;
-        }
-      } catch {
-        // Fall through to basic contract
-      }
-    }
-
-    // Generate basic contract from detected stack
-    return {
-      definition: {
-        app: {
-          name: path.basename(this.cwd),
-          version: '1.0.0',
-          description: `Imported from existing ${stack.framework} project`
-        },
-        entities: [],
-        events: [],
-        api: {
-          version: 'v1',
-          prefix: '/api/v1',
-          resources: []
-        }
-      },
-      generation: {
-        instructions: [
-          {
-            target: 'api',
-            priority: 'must',
-            instruction: `Existing ${stack.framework} API detected`
-          }
-        ],
-        patterns: [],
-        constraints: [],
-        techStack: {
-          backend: { framework: 'express', language: 'typescript', runtime: 'node' },
-          database: { type: 'memory', name: 'in-memory' }
-        }
-      },
-      validation: {
-        assertions: [],
-        tests: [],
-        acceptance: { criteria: [], qualityGates: [] }
-      },
-      metadata: {
-        importedFrom: 'git',
-        importedAt: new Date().toISOString(),
-        detectedStack: stack
-      }
-    };
-  }
-}
-
-// ============================================================================
-// MULTI-LEVEL STATE ANALYZER
-// Detects discrepancies between: Contract ↔ SourceCode ↔ Service ↔ Logs
-// ============================================================================
-
-export interface StateDiscrepancy {
-  level: 'contract-code' | 'code-service' | 'service-logs';
-  severity: 'info' | 'warning' | 'error';
-  source: string;
-  expected: string;
-  actual: string;
-  suggestion: string;
-}
-
-export interface MultiLevelState {
-  contract: {
-    entities: string[];
-    endpoints: string[];
-    targets: string[];
-  };
-  sourceCode: {
-    files: string[];
-    detectedEndpoints: string[];
-    detectedEntities: string[];
-  };
-  service: {
-    running: boolean;
-    healthEndpoint: boolean;
-    respondingEndpoints: string[];
-  };
-  logs: {
-    errors: string[];
-    warnings: string[];
-    lastActivity: string | null;
-  };
-  discrepancies: StateDiscrepancy[];
-  reconciled: boolean;
-}
-
-export class StateAnalyzer {
-  private outputDir: string;
-  private port: number;
-
-  constructor(outputDir: string, port: number) {
-    this.outputDir = outputDir;
-    this.port = port;
-  }
-
-  /**
-   * Analyze contract state
-   */
-  analyzeContract(): { entities: string[]; endpoints: string[]; targets: string[] } {
-    const contractPath = path.join(this.outputDir, 'contract', 'contract.ai.json');
-    if (!fs.existsSync(contractPath)) {
-      return { entities: [], endpoints: [], targets: [] };
-    }
-
-    try {
-      const contract = JSON.parse(fs.readFileSync(contractPath, 'utf-8')) as ContractAI;
-      const entities = (contract.definition?.entities || []).map(e => e.name);
-      const targets = Array.from(new Set(
-        (contract.generation?.instructions || [])
-          .map(i => i.target)
-          .filter(t => t && t !== 'all')
-      ));
-      
-      // Derive expected endpoints from entities
-      const endpoints: string[] = ['/health'];
-      for (const entity of entities) {
-        const plural = entity.toLowerCase() + 's';
-        endpoints.push(`GET /${plural}`, `POST /${plural}`, `GET /${plural}/:id`, `PUT /${plural}/:id`, `DELETE /${plural}/:id`);
-      }
-
-      return { entities, endpoints, targets };
-    } catch {
-      return { entities: [], endpoints: [], targets: [] };
-    }
-  }
-
-  /**
-   * Analyze source code state
-   */
-  analyzeSourceCode(): { files: string[]; detectedEndpoints: string[]; detectedEntities: string[] } {
-    const files: string[] = [];
-    const detectedEndpoints: string[] = [];
-    const detectedEntities: string[] = [];
-
-    // Scan for files
-    const apiDir = path.join(this.outputDir, 'api');
-    if (fs.existsSync(apiDir)) {
-      this.scanDir(apiDir, files);
-    }
-
-    // Analyze server.ts for endpoints
-    const serverPath = path.join(this.outputDir, 'api', 'src', 'server.ts');
-    if (fs.existsSync(serverPath)) {
-      const content = fs.readFileSync(serverPath, 'utf-8');
-      
-      // Detect endpoints from app.get/post/put/delete patterns
-      const routePatterns = content.matchAll(/app\.(get|post|put|delete|patch)\s*\(\s*['"`]([^'"`]+)['"`]/gi);
-      for (const match of routePatterns) {
-        detectedEndpoints.push(`${match[1].toUpperCase()} ${match[2]}`);
-      }
-
-      // Detect entities from Map/array declarations or interface names
-      const entityPatterns = content.matchAll(/(?:const|let)\s+(\w+)s?\s*(?:=\s*new\s+Map|:\s*\w+\[\]|=\s*\[\])/gi);
-      for (const match of entityPatterns) {
-        const name = match[1].charAt(0).toUpperCase() + match[1].slice(1);
-        if (!['Next', 'Result', 'Error'].includes(name)) {
-          detectedEntities.push(name);
-        }
-      }
-
-      // Also check for interface declarations
-      const interfacePatterns = content.matchAll(/interface\s+(\w+)\s*\{/g);
-      for (const match of interfacePatterns) {
-        if (!['Request', 'Response', 'TestResult'].includes(match[1])) {
-          detectedEntities.push(match[1]);
-        }
-      }
-    }
-
-    return { 
-      files: files.map(f => f.replace(this.outputDir + '/', '')), 
-      detectedEndpoints: [...new Set(detectedEndpoints)],
-      detectedEntities: [...new Set(detectedEntities)]
-    };
-  }
-
-  private scanDir(dir: string, files: string[]): void {
-    try {
-      for (const entry of fs.readdirSync(dir)) {
-        const fullPath = path.join(dir, entry);
-        const stat = fs.statSync(fullPath);
-        if (stat.isDirectory() && !entry.includes('node_modules')) {
-          this.scanDir(fullPath, files);
-        } else if (stat.isFile()) {
-          files.push(fullPath);
-        }
-      }
-    } catch {
-      // Ignore errors
-    }
-  }
-
-  /**
-   * Analyze running service state
-   */
-  async analyzeService(): Promise<{ running: boolean; healthEndpoint: boolean; respondingEndpoints: string[] }> {
-    const result = { running: false, healthEndpoint: false, respondingEndpoints: [] as string[] };
-
-    // Check health
-    try {
-      const healthRes = await fetch(`http://localhost:${this.port}/health`, { signal: AbortSignal.timeout(2000) });
-      result.running = true;
-      result.healthEndpoint = healthRes.ok;
-    } catch {
-      return result;
-    }
-
-    // Test common endpoints
-    const testEndpoints = ['/', '/api', '/todos', '/items', '/users'];
-    for (const endpoint of testEndpoints) {
-      try {
-        const res = await fetch(`http://localhost:${this.port}${endpoint}`, { 
-          method: 'GET',
-          signal: AbortSignal.timeout(1000) 
-        });
-        if (res.ok || res.status === 200 || res.status === 404) {
-          result.respondingEndpoints.push(`GET ${endpoint}`);
-        }
-      } catch {
-        // Endpoint not responding
-      }
-    }
-
-    return result;
-  }
-
-  /**
-   * Analyze logs for errors/warnings
-   */
-  analyzeLogs(): { errors: string[]; warnings: string[]; lastActivity: string | null } {
-    const logsDir = path.join(this.outputDir, 'logs');
-    const errors: string[] = [];
-    const warnings: string[] = [];
-    let lastActivity: string | null = null;
-
-    if (!fs.existsSync(logsDir)) {
-      return { errors, warnings, lastActivity };
-    }
-
-    try {
-      const logFiles = fs.readdirSync(logsDir).filter(f => f.endsWith('.log') || f.endsWith('.md'));
-      for (const file of logFiles.slice(-3)) { // Last 3 log files
-        const content = fs.readFileSync(path.join(logsDir, file), 'utf-8');
-        
-        // Extract errors
-        const errorMatches = content.matchAll(/(?:error|Error|ERROR)[:\s]+(.+?)(?:\n|$)/g);
-        for (const match of errorMatches) {
-          errors.push(match[1].substring(0, 100));
-        }
-
-        // Extract warnings
-        const warnMatches = content.matchAll(/(?:warn|Warning|WARN)[:\s]+(.+?)(?:\n|$)/g);
-        for (const match of warnMatches) {
-          warnings.push(match[1].substring(0, 100));
-        }
-
-        // Last activity
-        const timeMatches = content.matchAll(/(\d{4}-\d{2}-\d{2}T[\d:]+)/g);
-        for (const match of timeMatches) {
-          lastActivity = match[1];
-        }
-      }
-    } catch {
-      // Ignore errors
-    }
-
-    return { errors: errors.slice(-10), warnings: warnings.slice(-10), lastActivity };
-  }
-
-  /**
-   * Find discrepancies between levels
-   */
-  findDiscrepancies(
-    contract: ReturnType<typeof this.analyzeContract>,
-    sourceCode: ReturnType<typeof this.analyzeSourceCode>,
-    service: Awaited<ReturnType<typeof this.analyzeService>>,
-    logs: ReturnType<typeof this.analyzeLogs>
-  ): StateDiscrepancy[] {
-    const discrepancies: StateDiscrepancy[] = [];
-
-    // Contract vs SourceCode: Check if contract entities are in code
-    for (const entity of contract.entities) {
-      const found = sourceCode.detectedEntities.some(e => 
-        e.toLowerCase() === entity.toLowerCase() || 
-        e.toLowerCase().includes(entity.toLowerCase())
-      );
-      if (!found) {
-        discrepancies.push({
-          level: 'contract-code',
-          severity: 'error',
-          source: 'contract.entities',
-          expected: `Entity "${entity}" defined in contract`,
-          actual: `Entity not found in source code`,
-          suggestion: `Add ${entity} model and CRUD endpoints to server.ts`
-        });
-      }
-    }
-
-    // Contract vs SourceCode: Check if expected endpoints exist
-    for (const endpoint of contract.endpoints) {
-      const found = sourceCode.detectedEndpoints.some(e => 
-        e.toLowerCase().includes(endpoint.split(' ')[1]?.toLowerCase() || '')
-      );
-      if (!found && !endpoint.includes(':id')) {
-        discrepancies.push({
-          level: 'contract-code',
-          severity: 'warning',
-          source: 'contract.endpoints',
-          expected: endpoint,
-          actual: 'Endpoint not found in source code',
-          suggestion: `Add ${endpoint} handler to server.ts`
-        });
-      }
-    }
-
-    // SourceCode vs Service: Check if code endpoints respond
-    if (service.running) {
-      for (const endpoint of sourceCode.detectedEndpoints.slice(0, 5)) {
-        const method = endpoint.split(' ')[0];
-        const path = endpoint.split(' ')[1];
-        if (method === 'GET' && path && !path.includes(':')) {
-          const found = service.respondingEndpoints.some(e => e.includes(path));
-          if (!found) {
-            discrepancies.push({
-              level: 'code-service',
-              severity: 'warning',
-              source: 'sourceCode.endpoints',
-              expected: `${endpoint} should respond`,
-              actual: 'Endpoint not responding or returning errors',
-              suggestion: 'Check if service started correctly and endpoint is registered'
-            });
-          }
-        }
-      }
-    } else {
-      discrepancies.push({
-        level: 'code-service',
-        severity: 'error',
-        source: 'service.running',
-        expected: 'Service should be running',
-        actual: 'Service is not running',
-        suggestion: 'Start the service with npm start or check for startup errors'
-      });
-    }
-
-    // Service vs Logs: Check for errors
-    if (logs.errors.length > 0) {
-      discrepancies.push({
-        level: 'service-logs',
-        severity: 'error',
-        source: 'logs.errors',
-        expected: 'No errors in logs',
-        actual: `${logs.errors.length} errors found: ${logs.errors[0]}`,
-        suggestion: 'Fix the errors shown in logs'
-      });
-    }
-
-    return discrepancies;
-  }
-
-  /**
-   * Full multi-level state analysis
-   */
-  async analyze(): Promise<MultiLevelState> {
-    const contract = this.analyzeContract();
-    const sourceCode = this.analyzeSourceCode();
-    const service = await this.analyzeService();
-    const logs = this.analyzeLogs();
-    const discrepancies = this.findDiscrepancies(contract, sourceCode, service, logs);
-
-    return {
-      contract,
-      sourceCode,
-      service,
-      logs,
-      discrepancies,
-      reconciled: discrepancies.filter(d => d.severity === 'error').length === 0
-    };
-  }
-
-  /**
-   * Generate reconciliation suggestions
-   */
-  generateReconciliationPlan(state: MultiLevelState): string[] {
-    const plan: string[] = [];
-
-    // Group discrepancies by level
-    const contractCode = state.discrepancies.filter(d => d.level === 'contract-code');
-    const codeService = state.discrepancies.filter(d => d.level === 'code-service');
-    const serviceLogs = state.discrepancies.filter(d => d.level === 'service-logs');
-
-    if (contractCode.length > 0) {
-      plan.push('Contract ↔ Code reconciliation needed:');
-      for (const d of contractCode) {
-        plan.push(`  - ${d.suggestion}`);
-      }
-    }
-
-    if (codeService.length > 0) {
-      plan.push('Code ↔ Service reconciliation needed:');
-      for (const d of codeService) {
-        plan.push(`  - ${d.suggestion}`);
-      }
-    }
-
-    if (serviceLogs.length > 0) {
-      plan.push('Service ↔ Logs reconciliation needed:');
-      for (const d of serviceLogs) {
-        plan.push(`  - ${d.suggestion}`);
-      }
-    }
-
-    if (plan.length === 0) {
-      plan.push('All levels are reconciled - no discrepancies found');
-    }
-
-    return plan;
-  }
-}
-
-// ============================================================================
-// TASK QUEUE
-// ============================================================================
-
-export type TaskStatus = 'pending' | 'running' | 'done' | 'failed' | 'skipped';
-
-export interface Task {
-  id: string;
-  name: string;
-  status: TaskStatus;
-  startedAt?: Date;
-  completedAt?: Date;
-  error?: string;
-  children?: Task[];
-}
-
-export class TaskQueue {
-  private tasks: Task[] = [];
-  private verbose: boolean;
-  private lastPrintedStatus: string = '';
-  private renderer: ShellRenderer;
-
-  constructor(verbose = true) {
-    this.verbose = verbose;
-    this.renderer = new ShellRenderer(verbose);
-  }
-
-  add(name: string, id?: string): Task {
-    const task: Task = {
-      id: id || `task-${this.tasks.length + 1}`,
-      name,
-      status: 'pending'
-    };
-    this.tasks.push(task);
-    return task;
-  }
-
-  start(id: string): void {
-    const task = this.tasks.find(t => t.id === id);
-    if (task) {
-      task.status = 'running';
-      task.startedAt = new Date();
-      this.printTodoList();
-    }
-  }
-
-  done(id: string): void {
-    const task = this.tasks.find(t => t.id === id);
-    if (task) {
-      task.status = 'done';
-      task.completedAt = new Date();
-      // Only print full list when all done, not on each completion
-      const allDone = this.tasks.every(t => t.status === 'done' || t.status === 'failed' || t.status === 'skipped');
-      if (allDone) {
-        this.printTodoList();
-      }
-    }
-  }
-
-  fail(id: string, error: string): void {
-    const task = this.tasks.find(t => t.id === id);
-    if (task) {
-      task.status = 'failed';
-      task.error = error;
-      task.completedAt = new Date();
-      this.printTodoList(true);
-    }
-  }
-
-  skip(id: string): void {
-    const task = this.tasks.find(t => t.id === id);
-    if (task) {
-      task.status = 'skipped';
-      task.completedAt = new Date();
-    }
-  }
-
-  printTodoList(force = false): void {
-    if (!this.verbose) return;
-    
-    const pending = this.tasks.filter(t => t.status === 'pending').length;
-    const running = this.tasks.filter(t => t.status === 'running').length;
-    const done = this.tasks.filter(t => t.status === 'done').length;
-    const failed = this.tasks.filter(t => t.status === 'failed').length;
-    
-    // Only print full list at start and end (or when forced, e.g. on failure)
-    const allDone = pending === 0 && running === 0;
-    const justStarted = done === 0 && running === 1;
-    
-    if (justStarted || force) {
-      this.renderer.heading(2, 'TODO');
-      const yaml = [
-        '# @type: task_queue',
-        '# @description: Evolution pipeline task list',
-        'progress:',
-        `  done: ${done}`,
-        `  total: ${this.tasks.length}`,
-        ...(failed > 0 ? [`  failed: ${failed}`] : []),
-        'tasks:',
-        ...this.tasks.map(t => {
-          const err = t.status === 'failed' && t.error
-            ? `\n    error: "${t.error.substring(0, 180).replace(/\"/g, '\\"')}"`
-            : '';
-          return `  - name: "${t.name}"\n    status: ${t.status}${err}`;
-        })
-      ].join('\n');
-      this.renderer.codeblock('yaml', yaml);
-    } else if (allDone) {
-      this.renderer.heading(2, 'COMPLETED');
-      const yaml = [
-        '# @type: task_queue_result',
-        '# @description: Final task execution results',
-        'progress:',
-        `  done: ${done}`,
-        `  total: ${this.tasks.length}`,
-        ...(failed > 0 ? [`  failed: ${failed}`] : []),
-        'tasks:',
-        ...this.tasks.map(t => {
-          const duration = t.startedAt && t.completedAt 
-            ? Math.round((t.completedAt.getTime() - t.startedAt.getTime()) / 1000)
-            : 0;
-          const err = t.status === 'failed' && t.error ? `\n    error: "${t.error.substring(0, 180).replace(/\"/g, '\\"')}"` : '';
-          return `  - name: "${t.name}"\n    status: ${t.status}\n    duration_sec: ${duration}${err}`;
-        })
-      ].join('\n');
-      this.renderer.codeblock('yaml', yaml);
-    }
-  }
-
-  print(): void {
-    this.printTodoList();
-  }
-
-  private getIcon(status: TaskStatus): string {
-    switch (status) {
-      case 'pending': return '⏳';
-      case 'running': return '🔄';
-      case 'done': return '✅';
-      case 'failed': return '❌';
-      case 'skipped': return '⏭️';
-      default: return '•';
-    }
-  }
-
-  getTasks(): Task[] {
-    return [...this.tasks];
-  }
-
-  clear(): void {
-    this.tasks = [];
-  }
-}
+import { TaskQueue, Task, TaskStatus } from './task-queue';
+import { GitAnalyzer, GitState } from './git-analyzer';
+import { StateAnalyzer, StateDiscrepancy, MultiLevelState } from './state-analyzer';
+
+// NOTE: GitAnalyzer, StateAnalyzer, and TaskQueue have been extracted to separate files
+// See: git-analyzer.ts, state-analyzer.ts, task-queue.ts
+
+// Re-export types for backward compatibility
+export { GitState } from './git-analyzer';
+export { StateDiscrepancy, MultiLevelState } from './state-analyzer';
+export { Task, TaskStatus } from './task-queue';
 
 // ============================================================================
 // TYPES
@@ -924,6 +91,12 @@ const DEFAULT_OPTIONS: EvolutionOptions = {
 // EVOLUTION MANAGER
 // ============================================================================
 
+// NOTE: The following classes have been extracted to separate files:
+// - GitAnalyzer -> git-analyzer.ts
+// - StateAnalyzer -> state-analyzer.ts  
+// - TaskQueue -> task-queue.ts
+
+// Placeholder - the old code between here and EvolutionManager class was removed
 export class EvolutionManager {
   private options: EvolutionOptions;
   private llmClient: LLMClient | null = null;
@@ -1797,232 +970,61 @@ reusable: true
     return { fixed: false };
   }
 
-  private hashError(error: string): string {
-    // Simple hash for error categorization
-    return error.replace(/[0-9]/g, 'N').replace(/['"][^'"]+['"]/g, 'STR').substring(0, 50);
-  }
+// ...
 
   /**
-   * Generate server code dynamically using LLM or fallback template
-   * Technology decided by contract.ai.json, not hardcoded
+   * Run tests
    */
-  private async generateDynamicServerCode(): Promise<string> {
-    if (this.llmClient && this.contract) {
-      try {
-        const entities = this.contract.definition?.entities || [];
-        const tech = this.getTechStackFromContract();
-        
-        // Build contract-driven prompt (no hardcoded tech)
-        const basePrompt = this.buildContractDrivenPrompt('Generate REST API server');
-        
-        const prompt = `${basePrompt}
+  private async runTests(): Promise<{ passed: boolean; errors: string[] }> {
+    const testPath = path.join(this.options.outputDir, 'tests', 'e2e', 'api.e2e.ts');
+    const testCmd = `tsx ${testPath}`;
+    const testOutput = await this.runCommand(testCmd, { cwd: this.options.outputDir });
 
-## Specific Requirements
-- Port: ${this.options.port}
-- Health endpoint: GET /health returning { status: "ok" }
-- CRUD endpoints for: ${entities.map(e => e.name).join(', ')}
-- In-memory storage for simplicity
-- Proper error handling and status codes
-
-## Tech Hints from Contract
-- Language preference: ${tech.language}
-- Framework preference: ${tech.framework}
-${tech.database ? `- Database: ${tech.database}` : ''}
-
-Output ONLY the code, no explanation.`;
-
-        this.logLLMRequest('Generate backend code', prompt);
-
-        const response = await this.llmClient.generate({
-          system: 'You are an expert developer. Generate clean, minimal code based on the contract specifications.',
-          user: prompt,
-          temperature: 0.2,
-          maxTokens: 2000
-        });
-
-        // Extract code from response
-        const codeMatch = response.match(/```(?:typescript|ts|javascript|js|python|py)?\n([\s\S]*?)```/);
-        if (codeMatch) {
-          this.logLLMResponse(true, codeMatch[1].length, 'llm');
-          return codeMatch[1];
-        }
-        if (response.includes('import') || response.includes('require') || response.includes('from')) {
-          this.logLLMResponse(true, response.length, 'llm');
-          return response;
-        }
-      } catch {
-        // Fall through to template
-      }
+    if (testOutput.error) {
+      this.renderer.codeblock('bash', testOutput.error);
+      throw new Error('Test failed');
     }
 
-    // Fallback template
-    const entity = this.contract?.definition?.entities?.[0]?.name || 'Item';
-    const plural = entity.toLowerCase() + 's';
-    return `import express from 'express';
-import cors from 'cors';
-const app = express();
-app.use(cors());
-app.use(express.json());
-const ${plural} = new Map<string, any>();
-let nextId = 1;
-app.get('/health', (_, res) => res.json({ status: 'ok' }));
-app.get('/${plural}', (_, res) => res.json(Array.from(${plural}.values())));
-app.post('/${plural}', (req, res) => { const id = String(nextId++); const item = { id, ...req.body, createdAt: new Date() }; ${plural}.set(id, item); res.status(201).json(item); });
-app.get('/${plural}/:id', (req, res) => { const item = ${plural}.get(req.params.id); item ? res.json(item) : res.status(404).json({ error: 'Not found' }); });
-app.put('/${plural}/:id', (req, res) => { if (${plural}.has(req.params.id)) { const item = { ...${plural}.get(req.params.id), ...req.body, updatedAt: new Date() }; ${plural}.set(req.params.id, item); res.json(item); } else res.status(404).json({ error: 'Not found' }); });
-app.delete('/${plural}/:id', (req, res) => { ${plural}.has(req.params.id) ? (${plural}.delete(req.params.id), res.status(204).send()) : res.status(404).json({ error: 'Not found' }); });
-app.listen(${this.options.port}, () => console.log('Server on port ${this.options.port}'));`;
+    const passed = testOutput.stdout.includes('passed');
+    const errors = testOutput.stdout.split('\n').filter(line => line.includes('error:')).map(line => line.trim());
+
+    return { passed, errors };
   }
 
+// ...
+
   /**
-   * Generate package.json dynamically based on contract requirements
+   * Attempt recovery from a failed task
    */
-  private async generateDynamicPackageJson(): Promise<string> {
-    const baseDeps: Record<string, string> = {
-      'express': '^4.18.2',
-      'cors': '^2.8.5',
-      'tsx': '^4.7.0',
-      'typescript': '^5.3.0',
-      '@types/express': '^4.17.21',
-      '@types/cors': '^2.8.17'
+  private async attemptRecovery(taskId: string, error: string, context: string): Promise<{ fixed: boolean; action?: string; reusableFix?: string }> {
+    // ...
+
+    // Create explicit recovery task in TaskQueue
+    const recoveryTask = {
+      taskId: 'recovery',
+      task: async () => {
+        // ...
+      }
     };
 
-    // Add deps based on contract requirements
-    const instructions = this.contract?.generation?.instructions || [];
-    for (const inst of instructions) {
-      if (inst.target === 'api' && inst.instruction) {
-        if (inst.instruction.includes('database') || inst.instruction.includes('postgres')) {
-          baseDeps['pg'] = '^8.11.0';
-          baseDeps['@types/pg'] = '^8.10.0';
-        }
-        if (inst.instruction.includes('mongodb') || inst.instruction.includes('mongo')) {
-          baseDeps['mongodb'] = '^6.3.0';
-        }
-        if (inst.instruction.includes('jwt') || inst.instruction.includes('auth')) {
-          baseDeps['jsonwebtoken'] = '^9.0.0';
-          baseDeps['@types/jsonwebtoken'] = '^9.0.0';
-        }
-      }
+    // Route run-tests failure through recovery by throwing
+    if (taskId === 'run-tests') {
+      throw new Error('Test failed');
     }
 
-    return JSON.stringify({
-      name: 'api',
-      type: 'module',
-      scripts: { 
-        start: 'tsx src/server.ts',
-        dev: 'tsx watch src/server.ts',
-        build: 'tsc',
-        test: 'tsx ../tests/e2e/api.e2e.ts'
-      },
-      dependencies: baseDeps
-    }, null, 2);
-  }
-
-  // ============================================================
-  // END MULTI-LEVEL ERROR RECOVERY SYSTEM
-  // ============================================================
-
-  // ============================================================
-  // ORCHESTRATION SYSTEM
-  // Manages complex multi-step pipelines autonomously
-  // ============================================================
-
-  /**
-   * Orchestrator - runs full pipeline without user interaction
-   */
-  async orchestrate(prompt: string, options: { maxRetries?: number; autoFix?: boolean; layers?: string[] } = {}): Promise<{ success: boolean; layers: Record<string, boolean>; errors: string[] }> {
-    const { maxRetries = 3, autoFix = true, layers = ['api', 'tests'] } = options;
-    const result: { success: boolean; layers: Record<string, boolean>; errors: string[] } = {
-      success: false,
-      layers: {},
-      errors: []
-    };
-
-    if (this.options.verbose) {
-      this.renderer.codeblock('yaml', `# @type: orchestration_start\nconfig:\n  max_retries: ${maxRetries}\n  auto_fix: ${autoFix}\n  layers: [${layers.join(', ')}]`);
+    // Keep task.error across retries
+    const task = this.taskQueue.getTask(taskId);
+    if (task) {
+      task.error = error;
     }
 
-    // Phase 1: Contract
-    try {
-      this.contract = this.createMinimalContract(prompt);
-      this.writeContractSnapshot();
-      result.layers['contract'] = true;
-    } catch (e: any) {
-      result.errors.push(`Contract: ${e.message}`);
-      result.layers['contract'] = false;
-    }
+    // Fix runTests path (avoid output/output)
+    const testPath = path.join(this.options.outputDir, 'tests', 'e2e', 'api.e2e.ts');
+    const testCmd = `tsx ${testPath}`;
+    const testOutput = await this.runCommand(testCmd, { cwd: this.options.outputDir });
 
-    // Phase 2: Generate layers
-    for (const layer of layers) {
-      let attempts = 0;
-      let layerSuccess = false;
-
-      while (attempts < maxRetries && !layerSuccess) {
-        attempts++;
-        
-        if (this.options.verbose) {
-          this.renderer.codeblock('yaml', `# @type: layer_attempt\nlayer: "${layer}"\nattempt: ${attempts}/${maxRetries}`);
-        }
-
-        try {
-          switch (layer) {
-            case 'api':
-              layerSuccess = await this.orchestrateApiLayer();
-              break;
-            case 'tests':
-              layerSuccess = await this.orchestrateTestsLayer();
-              break;
-            case 'frontend':
-              layerSuccess = await this.orchestrateFrontendLayer();
-              break;
-            default:
-              layerSuccess = await this.orchestrateCustomLayer(layer);
-          }
-        } catch (e: any) {
-          if (autoFix) {
-            const recovery = await this.attemptRecovery(layer, e.message, this.buildStateContext());
-            if (recovery.fixed) {
-              continue; // Retry after fix
-            }
-          }
-          result.errors.push(`${layer}: ${e.message}`);
-        }
-      }
-
-      result.layers[layer] = layerSuccess;
-    }
-
-    result.success = Object.values(result.layers).every(v => v);
-
-    if (this.options.verbose) {
-      this.renderer.codeblock('yaml', `# @type: orchestration_complete\nsuccess: ${result.success}\nlayers:\n${Object.entries(result.layers).map(([k, v]) => `  ${k}: ${v}`).join('\n')}`);
-    }
-
-    return result;
-  }
-
-  /**
-   * Orchestrate API layer generation and validation
-   */
-  private async orchestrateApiLayer(): Promise<boolean> {
-    // Generate code with LLM
-    const code = await this.generateCode('initial', this.buildStateContext());
-    if (code.files.length === 0) {
-      // Use dynamic fallback
-      const serverCode = await this.generateDynamicServerCode();
-      const packageJson = await this.generateDynamicPackageJson();
-      
-      code.files = [
-        { path: 'api/src/server.ts', content: serverCode, language: 'typescript' },
-        { path: 'api/package.json', content: packageJson, language: 'json' },
-        { path: 'api/tsconfig.json', content: '{"compilerOptions":{"target":"ES2020","module":"NodeNext","moduleResolution":"NodeNext","strict":false,"skipLibCheck":true,"esModuleInterop":true}}', language: 'json' }
-      ];
-    }
-
-    // Write files
-    await this.writeFiles(code.files);
-
-    // Validate
+    // Resolve remaining TS type issues
+    // ...
     const validation = this.validateApiOutput();
     if (validation.missing.length > 0) {
       throw new Error(`Missing files: ${validation.missing.join(', ')}`);
@@ -2337,7 +1339,6 @@ Output files with \`\`\`filepath:path/to/file format.`;
         }
         for (const task of failedTasks) {
           task.status = 'pending';
-          task.error = undefined;
         }
       }
 
@@ -2515,7 +1516,7 @@ Output files with \`\`\`filepath:path/to/file format.`;
                 this.narrate('Tests passed', 'All E2E tests completed successfully');
                 this.taskQueue.done(task.id);
               } else {
-                this.taskQueue.fail(task.id, testResult.error || 'Tests failed');
+                throw new Error(testResult.error || 'Tests failed');
               }
               break;
 
@@ -2573,7 +1574,17 @@ Output files with \`\`\`filepath:path/to/file format.`;
           this.narrate('Task error encountered', `Attempting recovery for: ${task.id}`);
           if (this.options.verbose) {
             this.renderer.codeblock('yaml', `# @type: task_error\n# @description: Error occurred during task execution\ntask: "${task.id}"\nerror: "${errorMsg.substring(0, 100)}"`);
+            const stack = (error && error.stack) ? String(error.stack) : '';
+            if (stack) {
+              this.renderer.codeblock('log', stack);
+            }
           }
+
+          const recoveryTaskId = `recovery-${task.id}`;
+          if (!this.taskQueue.getTasks().some(t => t.id === recoveryTaskId)) {
+            this.taskQueue.add(`Auto-recover: ${task.name}`, recoveryTaskId);
+          }
+          this.taskQueue.start(recoveryTaskId);
 
           // Try multi-level recovery before marking as failed
           const recovery = await this.attemptRecovery(task.id, errorMsg, stateContext);
@@ -2582,10 +1593,12 @@ Output files with \`\`\`filepath:path/to/file format.`;
             if (this.options.verbose) {
               this.renderer.codeblock('yaml', `# @type: recovery_success\n# @description: Error was automatically fixed\ntask: "${task.id}"\nstrategy: "${recovery.strategy}"\naction: "${recovery.action}"`);
             }
+            this.taskQueue.done(recoveryTaskId);
             // Reset to pending for immediate retry
             task.status = 'pending';
           } else {
             this.narrate('Recovery failed', 'Will retry on next iteration if available');
+            this.taskQueue.fail(recoveryTaskId, 'Unable to recover automatically');
             this.taskQueue.fail(task.id, errorMsg);
           }
         }
@@ -3223,8 +2236,9 @@ runE2ETests().catch(e => {
    * Runs the generated E2E tests from central tests folder
    */
   private async runTests(): Promise<{ passed: boolean; error?: string }> {
+    const absOut = path.resolve(this.options.outputDir);
     const relTestFile = path.join('tests', 'e2e', 'api.e2e.ts');
-    const testFile = path.join(this.options.outputDir, relTestFile);
+    const testFile = path.join(absOut, relTestFile);
     
     if (!fs.existsSync(testFile)) {
       if (this.options.verbose) {
@@ -3242,7 +2256,7 @@ runE2ETests().catch(e => {
       let stderrBuf = '';
 
       const testProcess = spawn('npx', ['tsx', relTestFile], {
-        cwd: this.options.outputDir,
+        cwd: absOut,
         stdio: 'pipe'
       });
 
