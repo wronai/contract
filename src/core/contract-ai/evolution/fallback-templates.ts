@@ -350,7 +350,7 @@ app.listen(PORT, () => console.log(\`Server on port \${PORT}\`));
       'Invoice': { invoiceNumber: 'INV-001', amount: 150.00, status: 'sent', dueDate: new Date().toISOString() },
       'Customer': { name: 'Updated Customer', email: 'updated@example.com', phone: '987-654-3210' },
       'Employee': { name: 'Updated Employee', email: 'updated@example.com', department: 'HR' },
-      'Booking': { guestName: 'Updated Guest', status: 'confirmed' },
+      'Booking': { guestName: 'Updated Guest', guestEmail: 'updated@example.com', checkIn: new Date().toISOString(), checkOut: new Date().toISOString(), status: 'confirmed' },
       'Event': { title: 'Updated Event', description: 'Updated', location: 'Updated Location' },
       'Contact': { firstName: 'Updated', lastName: 'Contact', email: 'updated@example.com' },
       'Comment': { content: 'Updated comment', authorName: 'Updated Author' },
