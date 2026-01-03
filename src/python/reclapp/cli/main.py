@@ -206,6 +206,10 @@ async def cmd_evolve(args: argparse.Namespace) -> int:
                 print(f"  - {error}")
         print("```")
         
+        # Show interactive menu if keep_running or service is running
+        if args.keep_running and result.service_port:
+            await show_interactive_menu(args.output, result.service_port)
+        
         return 0 if result.success else 1
         
     except Exception as e:
@@ -213,6 +217,99 @@ async def cmd_evolve(args: argparse.Namespace) -> int:
         return 1
     finally:
         await llm_manager.close()
+
+
+async def show_interactive_menu(output_dir: str, port: int):
+    """Show interactive menu like TypeScript - mirrors bin/reclapp actions"""
+    import sys
+    import select
+    
+    print("\n## Actions\n")
+    print("```yaml")
+    print("commands:")
+    print('  k: "keep running - monitor for issues"')
+    print('  r: "restart - regenerate service"')
+    print('  f: "fix - create ticket for LLM"')
+    print('  c: "contract - show contract/contract.ai.json"')
+    print('  e: "state - show state/evolution-state.json"')
+    print('  l: "logs - view service logs"')
+    print('  S: "tasks - show task queue"')
+    print('  t: "test - run API health check"')
+    print(f'  o: "open - browser http://localhost:{port}"')
+    print('  q: "quit - stop and exit"')
+    print("```")
+    print("\n> Tip: Use `--keep-running` (`-k`) to enter this menu\n")
+    
+    try:
+        while True:
+            print("> ", end="", flush=True)
+            
+            # Non-blocking input with timeout
+            if sys.stdin in select.select([sys.stdin], [], [], 60)[0]:
+                cmd = sys.stdin.readline().strip().lower()
+            else:
+                continue
+            
+            if cmd == 'q':
+                print("👋 Stopping service and exiting...")
+                break
+            elif cmd == 'c':
+                await show_file(f"{output_dir}/contract/contract.ai.json")
+            elif cmd == 'e':
+                await show_file(f"{output_dir}/state/evolution-state.json")
+            elif cmd == 't':
+                await check_health(port)
+            elif cmd == 'o':
+                import webbrowser
+                webbrowser.open(f"http://localhost:{port}")
+                print(f"🌐 Opened http://localhost:{port}")
+            elif cmd == 'l':
+                await show_logs(output_dir)
+            elif cmd == 'k':
+                print("👀 Monitoring... Press 'q' to quit")
+            else:
+                print("Unknown command. Use: k, r, f, c, e, l, S, t, o, q")
+    except KeyboardInterrupt:
+        print("\n👋 Interrupted, exiting...")
+
+
+async def show_file(path: str):
+    """Display file contents"""
+    from pathlib import Path
+    p = Path(path)
+    if p.exists():
+        print(f"\n--- {path} ---")
+        print(p.read_text()[:2000])
+        print("---\n")
+    else:
+        print(f"❌ File not found: {path}")
+
+
+async def check_health(port: int):
+    """Check service health"""
+    import urllib.request
+    try:
+        url = f"http://localhost:{port}/health"
+        req = urllib.request.urlopen(url, timeout=5)
+        print(f"✅ Health check OK: {req.status}")
+    except Exception as e:
+        print(f"❌ Health check failed: {e}")
+
+
+async def show_logs(output_dir: str):
+    """Show latest log file"""
+    from pathlib import Path
+    logs_dir = Path(output_dir) / "logs"
+    if logs_dir.exists():
+        logs = sorted(logs_dir.glob("*.md"), reverse=True)
+        if logs:
+            print(f"\n--- {logs[0]} ---")
+            print(logs[0].read_text()[:2000])
+            print("---\n")
+        else:
+            print("No log files found")
+    else:
+        print("Logs directory not found")
 
 
 async def cmd_generate(args: argparse.Namespace) -> int:

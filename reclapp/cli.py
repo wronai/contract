@@ -369,5 +369,212 @@ def evolve(prompt: str, output: str, keep_running: bool, verbose: bool, engine: 
             sys.exit(1)
 
 
+# ============================================================================
+# LLM MANAGEMENT COMMANDS
+# ============================================================================
+
+@main.group()
+def llm():
+    """LLM provider management commands."""
+    pass
+
+
+@llm.command("status")
+def llm_status():
+    """Show LLM providers status and configuration."""
+    import sys
+    sys.path.insert(0, str(PROJECT_ROOT / 'pycontracts' / 'llm'))
+    
+    try:
+        from config import LLMConfig
+        from clients import list_available_providers, RECOMMENDED_MODELS
+        
+        config = LLMConfig()
+        
+        console.print(Panel.fit(
+            "[bold blue]LLM Provider Status[/]",
+            title="🤖 LLM Configuration"
+        ))
+        
+        # Show default provider
+        console.print(f"\n[bold]Default Provider:[/] {config.get_default_provider()}")
+        
+        # Show provider status
+        console.print("\n[bold]Providers:[/]")
+        available = list_available_providers()
+        priorities = {
+            'ollama': 10, 'groq': 20, 'together': 30,
+            'openrouter': 40, 'openai': 50, 'anthropic': 60, 'litellm': 70
+        }
+        
+        for provider in sorted(priorities.keys(), key=lambda p: priorities[p]):
+            is_available = available.get(provider, False)
+            status = "[green]✓ Available[/]" if is_available else "[dim]✗ Not configured[/]"
+            model = config.get_model(provider)
+            priority = priorities.get(provider, 100)
+            console.print(f"  [{priority:2d}] {provider:12s} {status}  Model: {model}")
+        
+        console.print("\n[dim]Priority: lower number = tried first[/]")
+        
+    except ImportError as e:
+        console.print(f"[red]Error:[/] {e}")
+        console.print("[dim]Try: pip install httpx pyyaml[/]")
+
+
+@llm.command("models")
+@click.option("--provider", "-p", type=click.Choice([
+    "openrouter", "openai", "anthropic", "groq", "together", "ollama"
+]), help="Filter by provider")
+def llm_models(provider: str):
+    """List recommended models for each provider."""
+    import sys
+    sys.path.insert(0, str(PROJECT_ROOT / 'pycontracts' / 'llm'))
+    
+    try:
+        from clients import RECOMMENDED_MODELS, OllamaClient
+        
+        console.print(Panel.fit(
+            "[bold blue]Recommended Models[/]",
+            title="📦 LLM Models"
+        ))
+        
+        providers_to_show = [provider] if provider else RECOMMENDED_MODELS.keys()
+        
+        for prov in providers_to_show:
+            if prov not in RECOMMENDED_MODELS:
+                continue
+            console.print(f"\n[bold]{prov.upper()}:[/]")
+            for model, desc in RECOMMENDED_MODELS[prov]:
+                console.print(f"  [cyan]{model}[/]")
+                console.print(f"    [dim]{desc}[/]")
+        
+        # Show local Ollama models if available
+        if provider == "ollama" or provider is None:
+            client = OllamaClient()
+            if client.is_available():
+                models = client.list_models()
+                if models:
+                    console.print(f"\n[bold]LOCAL OLLAMA MODELS ({len(models)}):[/]")
+                    for m in models[:15]:
+                        console.print(f"  [green]✓[/] {m}")
+                    if len(models) > 15:
+                        console.print(f"  [dim]... and {len(models) - 15} more[/]")
+                        
+    except ImportError as e:
+        console.print(f"[red]Error:[/] {e}")
+
+
+@llm.command("set-provider")
+@click.argument("provider", type=click.Choice([
+    "openrouter", "openai", "anthropic", "groq", "together", "ollama", "litellm"
+]))
+def llm_set_provider(provider: str):
+    """Set default LLM provider."""
+    env_file = PROJECT_ROOT / ".env"
+    
+    if env_file.exists():
+        content = env_file.read_text()
+        
+        # Update or add LLM_PROVIDER
+        import re
+        if re.search(r'^LLM_PROVIDER=', content, re.MULTILINE):
+            content = re.sub(r'^LLM_PROVIDER=.*$', f'LLM_PROVIDER={provider}', content, flags=re.MULTILINE)
+        else:
+            content += f"\nLLM_PROVIDER={provider}\n"
+        
+        env_file.write_text(content)
+        console.print(f"[green]✓[/] Default provider set to: [bold]{provider}[/]")
+        console.print(f"[dim]Updated: {env_file}[/]")
+    else:
+        console.print(f"[yellow]Warning:[/] .env file not found")
+        console.print(f"Set manually: export LLM_PROVIDER={provider}")
+
+
+@llm.command("set-model")
+@click.argument("provider", type=click.Choice([
+    "openrouter", "openai", "anthropic", "groq", "together", "ollama"
+]))
+@click.argument("model")
+def llm_set_model(provider: str, model: str):
+    """Set model for a specific provider."""
+    env_file = PROJECT_ROOT / ".env"
+    var_name = f"{provider.upper()}_MODEL"
+    
+    if env_file.exists():
+        content = env_file.read_text()
+        
+        import re
+        if re.search(rf'^{var_name}=', content, re.MULTILINE):
+            content = re.sub(rf'^{var_name}=.*$', f'{var_name}={model}', content, flags=re.MULTILINE)
+        elif re.search(rf'^#\s*{var_name}=', content, re.MULTILINE):
+            content = re.sub(rf'^#\s*{var_name}=.*$', f'{var_name}={model}', content, flags=re.MULTILINE)
+        else:
+            content += f"\n{var_name}={model}\n"
+        
+        env_file.write_text(content)
+        console.print(f"[green]✓[/] {provider} model set to: [bold]{model}[/]")
+        console.print(f"[dim]Updated: {env_file}[/]")
+    else:
+        console.print(f"[yellow]Warning:[/] .env file not found")
+        console.print(f"Set manually: export {var_name}={model}")
+
+
+@llm.command("test")
+@click.option("--provider", "-p", help="Provider to test (default: auto-detect)")
+@click.option("--model", "-m", help="Model to test")
+def llm_test(provider: str, model: str):
+    """Test LLM generation with a simple prompt."""
+    import sys
+    sys.path.insert(0, str(PROJECT_ROOT / 'pycontracts' / 'llm'))
+    
+    try:
+        from clients import get_client
+        
+        console.print("[blue]Testing LLM generation...[/]")
+        
+        kwargs = {}
+        if model:
+            kwargs['model'] = model
+        
+        client = get_client(provider, **kwargs) if provider else get_client(**kwargs)
+        
+        console.print(f"[dim]Provider: {client.provider_name}[/]")
+        console.print(f"[dim]Model: {getattr(client, 'model', 'unknown')}[/]")
+        
+        if not client.is_available():
+            console.print(f"[red]Error:[/] Provider not available")
+            return
+        
+        import time
+        start = time.time()
+        response = client.generate("Say 'Hello from Reclapp!' and nothing else.", max_tokens=20)
+        elapsed = time.time() - start
+        
+        console.print(f"\n[green]✓ Response:[/] {response.strip()}")
+        console.print(f"[dim]Time: {elapsed:.2f}s[/]")
+        
+    except Exception as e:
+        console.print(f"[red]Error:[/] {e}")
+
+
+@llm.command("config")
+def llm_config():
+    """Show full LLM configuration as JSON."""
+    import sys
+    import json
+    sys.path.insert(0, str(PROJECT_ROOT / 'pycontracts' / 'llm'))
+    
+    try:
+        from config import LLMConfig
+        
+        config = LLMConfig()
+        data = config.to_dict()
+        
+        console.print(json.dumps(data, indent=2))
+        
+    except ImportError as e:
+        console.print(f"[red]Error:[/] {e}")
+
+
 if __name__ == "__main__":
     main()
