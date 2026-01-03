@@ -16,6 +16,7 @@ from typing import Any, Literal, Optional
 from pydantic import BaseModel, Field
 
 from ..llm import LLMProvider, GenerateOptions
+from .base import BaseGenerator
 
 
 # ============================================================================
@@ -55,7 +56,7 @@ class CodeGenerationResult(BaseModel):
 # CODE GENERATOR
 # ============================================================================
 
-class CodeGenerator:
+class CodeGenerator(BaseGenerator[CodeGeneratorOptions, CodeGenerationResult]):
     """
     Code generator using LLM.
     
@@ -71,12 +72,8 @@ class CodeGenerator:
     """
     
     def __init__(self, options: Optional[CodeGeneratorOptions] = None):
-        self.options = options or CodeGeneratorOptions()
-        self._llm_client: Optional[LLMProvider] = None
-    
-    def set_llm_client(self, client: LLMProvider) -> None:
-        """Set the LLM client for generation"""
-        self._llm_client = client
+        opts = options or CodeGeneratorOptions()
+        super().__init__(opts, verbose=opts.verbose)
     
     async def generate(
         self,
@@ -124,7 +121,7 @@ class CodeGenerator:
                 print(f"   Entities: {len(entities)}")
             
             # Try LLM generation first if client is available
-            if self._llm_client:
+            if self.llm_client:
                 if self.options.verbose:
                     print(f"   🤖 Using LLM for code generation...")
                 
@@ -437,7 +434,7 @@ const {lower_name}s: Map<string, {name}> = new Map();
             prompt = self._build_llm_prompt(contract)
             
             # Call LLM
-            response = await self._llm_client.generate(GenerateOptions(
+            response = await self.require_llm_client().generate(GenerateOptions(
                 system=self._get_system_prompt(),
                 user=prompt,
                 temperature=self.options.temperature,
@@ -494,47 +491,74 @@ const {lower_name}s: Map<string, {name}> = new Map();
         return """You are an expert Node.js/Express developer specializing in TypeScript.
 Your task is to generate production-ready API code based on the Contract AI specification.
 
-## Key Requirements:
+## CRITICAL: Generate COMPLETE CRUD Endpoints
 
-1. **TypeScript First**: All code must be properly typed. No "any" types except in error handlers.
+For EACH entity, you MUST generate ALL 5 CRUD endpoints:
+- GET /api/v1/{entity}s - List all items
+- GET /api/v1/{entity}s/:id - Get single item by ID
+- POST /api/v1/{entity}s - Create new item (return 201 + created object with id)
+- PUT /api/v1/{entity}s/:id - Update item
+- DELETE /api/v1/{entity}s/:id - Delete item (return 204)
 
-2. **Error Handling**: Every route must have try-catch blocks with appropriate HTTP status codes:
-   - 200: Success (GET, PUT)
-   - 201: Created (POST)
-   - 204: No Content (DELETE)
-   - 400: Bad Request (validation errors)
-   - 404: Not Found
-   - 500: Internal Server Error
+## Entity Fields - REQUIRED
 
-3. **Validation**: Validate all inputs before processing.
+Each entity MUST have these fields at minimum:
+- id: string (UUID, auto-generated)
+- title: string (required in request body)
+- description?: string (optional)
+- status: string (default: 'pending')
+- createdAt: string (ISO date, auto-generated)
+- updatedAt: string (ISO date, auto-updated)
 
-4. **Code Style**:
-   - Use async/await, not callbacks
-   - Use const for variables that don't change
-   - Use meaningful variable names
-   - Add minimal but useful comments
+## HTTP Status Codes
 
-5. **File Structure**:
-   - server.ts: Main entry point with Express setup
-   - Each file should be complete and runnable
+- 200: Success (GET, PUT)
+- 201: Created (POST) - MUST return the created object with id
+- 204: No Content (DELETE)
+- 400: Bad Request (missing required fields)
+- 404: Not Found (entity doesn't exist)
+
+## Validation
+
+POST/PUT routes MUST validate that 'title' field exists:
+```typescript
+if (!req.body.title) {
+  return res.status(400).json({ error: 'Title is required' });
+}
+```
+
+## Storage
+
+Use in-memory Map with UUID for IDs:
+```typescript
+import { v4 as uuidv4 } from 'uuid';
+const items = new Map<string, Entity>();
+```
 
 ## OUTPUT FORMAT
 
 Generate complete TypeScript code files. Each file MUST be in this EXACT format:
 
 ```typescript:api/src/server.ts
-// code here
+// COMPLETE server with ALL CRUD endpoints
 ```
 
 ```json:api/package.json
-{...}
+{
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "uuid": "^9.0.0"
+  }
+}
 ```
 
 ```json:api/tsconfig.json
 {...}
 ```
 
-IMPORTANT: Use the exact format ```language:path/to/file.ext for each file block."""
+IMPORTANT: Use the exact format ```language:path/to/file.ext for each file block.
+CRITICAL: Generate COMPLETE, WORKING CRUD endpoints - not placeholders!"""
     
     def _build_llm_prompt(self, contract: dict[str, Any]) -> str:
         """Build prompt for LLM code generation"""
@@ -555,69 +579,155 @@ IMPORTANT: Use the exact format ```language:path/to/file.ext for each file block
             ])
             entities_str += f"\n### {name}\n{fields_str}\n"
         
-        return f"""# CODE GENERATION TASK: API
+        port = backend.get('port', 3000)
+        
+        # Build example CRUD for first entity
+        first_entity = entities[0] if entities else {"name": "Item"}
+        entity_name = first_entity.get("name", "Item")
+        entity_lower = entity_name.lower()
+        
+        return f"""# CODE GENERATION TASK: Complete REST API
 
 ## APPLICATION
 Name: {app.get('name', 'App')}
 Version: {app.get('version', '1.0.0')}
-Description: {app.get('description', 'Generated API')}
 
 ## TECH STACK
-Framework: {backend.get('framework', 'express')}
-Language: {backend.get('language', 'typescript')}
-Runtime: {backend.get('runtime', 'node')}
-Port: {backend.get('port', 3000)}
+Framework: Express.js with TypeScript
+Port: {port}
 
 ## ENTITIES
 {entities_str}
 
+## REQUIRED: Complete server.ts with ALL CRUD routes
+
+Generate a COMPLETE api/src/server.ts that includes:
+
+```typescript
+import express from 'express';
+import cors from 'cors';
+import {{ v4 as uuidv4 }} from 'uuid';
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// Storage
+interface {entity_name} {{
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}}
+const {entity_lower}s = new Map<string, {entity_name}>();
+
+// Health check
+app.get('/health', (req, res) => res.json({{ status: 'ok' }}));
+
+// LIST ALL
+app.get('/api/v1/{entity_lower}s', (req, res) => {{
+  res.json(Array.from({entity_lower}s.values()));
+}});
+
+// GET BY ID
+app.get('/api/v1/{entity_lower}s/:id', (req, res) => {{
+  const item = {entity_lower}s.get(req.params.id);
+  if (!item) return res.status(404).json({{ error: 'Not found' }});
+  res.json(item);
+}});
+
+// CREATE
+app.post('/api/v1/{entity_lower}s', (req, res) => {{
+  if (!req.body.title) return res.status(400).json({{ error: 'Title required' }});
+  const item: {entity_name} = {{
+    id: uuidv4(),
+    title: req.body.title,
+    description: req.body.description || '',
+    status: req.body.status || 'pending',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }};
+  {entity_lower}s.set(item.id, item);
+  res.status(201).json(item);
+}});
+
+// UPDATE
+app.put('/api/v1/{entity_lower}s/:id', (req, res) => {{
+  const item = {entity_lower}s.get(req.params.id);
+  if (!item) return res.status(404).json({{ error: 'Not found' }});
+  if (!req.body.title) return res.status(400).json({{ error: 'Title required' }});
+  item.title = req.body.title;
+  item.description = req.body.description || item.description;
+  item.status = req.body.status || item.status;
+  item.updatedAt = new Date().toISOString();
+  res.json(item);
+}});
+
+// DELETE
+app.delete('/api/v1/{entity_lower}s/:id', (req, res) => {{
+  if (!{entity_lower}s.has(req.params.id)) return res.status(404).json({{ error: 'Not found' }});
+  {entity_lower}s.delete(req.params.id);
+  res.status(204).send();
+}});
+
+app.listen({port}, () => console.log('Server on port {port}'));
+```
+
 ## REQUIRED FILES
 
-Generate these files:
-- api/src/server.ts - Main Express server with all CRUD routes
-- api/package.json - NPM package file with dependencies
-- api/tsconfig.json - TypeScript configuration
+Generate EXACTLY these 3 files with the format ```language:path
 
-## REQUIREMENTS
+1. api/src/server.ts - Use the template above, complete ALL CRUD endpoints
+2. api/package.json - Include express, cors, uuid, typescript, ts-node, @types/*
+3. api/tsconfig.json - Standard Node.js TypeScript config
 
-1. Create a complete Express.js REST API
-2. Include CRUD endpoints for all entities (GET list, GET by id, POST, PUT, DELETE)
-3. Use in-memory Map for storage
-4. Include /health endpoint
-5. Use cors middleware
-6. Port should be {backend.get('port', 3000)}
-7. API prefix should be /api/v1
-
-Generate ALL files listed above. Each file must be complete and runnable."""
+CRITICAL: The server.ts MUST have working CRUD endpoints, not placeholders!"""
     
     def _parse_llm_response(self, content: str) -> list[GeneratedFile]:
         """Parse LLM response to extract generated files"""
         files = []
+        seen_paths = set()
         
-        # Pattern to match ```language:path or ```language path/to/file
-        patterns = [
-            r'```(\w+):([^\n]+)\n(.*?)```',  # ```ts:path/file.ts
-            r'```(\w+)\s+([^\n]+)\n(.*?)```',  # ```typescript path/file.ts
-        ]
+        # Pattern 1: ```language:path format (preferred)
+        pattern1 = r'```(\w+):([^\n]+)\n(.*?)```'
+        for match in re.finditer(pattern1, content, re.DOTALL):
+            lang, path, code = match.groups()
+            path = path.strip()
+            if path and path not in seen_paths and '/' in path:
+                seen_paths.add(path)
+                files.append(GeneratedFile(path=path, content=code.strip(), language=lang.lower()))
         
-        for pattern in patterns:
-            matches = re.findall(pattern, content, re.DOTALL)
-            for lang, path, code in matches:
-                path = path.strip()
+        # Pattern 2: ```language with path mentioned before code block
+        # Look for "saved as `path`" or "file: path" patterns
+        pattern2 = r'(?:`([^`]+\.[a-z]+)`|file:\s*([^\n]+))\s*[:\n]\s*```(\w+)\n(.*?)```'
+        for match in re.finditer(pattern2, content, re.DOTALL | re.IGNORECASE):
+            path1, path2, lang, code = match.groups()
+            path = (path1 or path2 or "").strip()
+            if path and path not in seen_paths and '/' in path:
+                seen_paths.add(path)
+                files.append(GeneratedFile(path=path, content=code.strip(), language=lang.lower()))
+        
+        # Pattern 3: Simple ```language blocks - infer path from content
+        if not files:
+            pattern3 = r'```(typescript|javascript|json)\n(.*?)```'
+            for i, match in enumerate(re.finditer(pattern3, content, re.DOTALL)):
+                lang, code = match.groups()
                 code = code.strip()
                 
-                # Skip if path looks like a comment or invalid
-                if not path or path.startswith('//') or len(path) > 100:
-                    continue
+                # Infer path based on content
+                if 'express' in code.lower() and 'app.listen' in code:
+                    path = 'api/src/server.ts'
+                elif '"name"' in code and '"dependencies"' in code:
+                    path = 'api/package.json'
+                elif '"compilerOptions"' in code:
+                    path = 'api/tsconfig.json'
+                else:
+                    path = f'api/src/file{i}.ts'
                 
-                # Normalize language
-                lang_map = {"ts": "typescript", "js": "javascript", "tsx": "typescript"}
-                language = lang_map.get(lang.lower(), lang.lower())
-                
-                files.append(GeneratedFile(
-                    path=path,
-                    content=code,
-                    language=language
-                ))
+                if path not in seen_paths:
+                    seen_paths.add(path)
+                    files.append(GeneratedFile(path=path, content=code, language=lang.lower()))
         
         return files

@@ -7,6 +7,7 @@ Mirrors: src/core/contract-ai/generator/
 @version 2.2.0
 """
 
+from .base import BaseGenerator
 from .contract_generator import (
     ContractGenerator,
     ContractGeneratorOptions,
@@ -24,6 +25,7 @@ from .prompt_builder import (
 )
 
 __all__ = [
+    "BaseGenerator",
     "ContractGenerator",
     "ContractGeneratorOptions",
     "ContractGenerationResult",

@@ -15,6 +15,7 @@ from typing import Any, Literal, Optional
 from pydantic import BaseModel, Field
 
 from ..llm import LLMProvider, GenerateOptions
+from .base import BaseGenerator
 
 
 # ============================================================================
@@ -58,7 +59,7 @@ FeedbackLevel = Literal["general", "detailed", "explicit"]
 # CONTRACT GENERATOR
 # ============================================================================
 
-class ContractGenerator:
+class ContractGenerator(BaseGenerator[ContractGeneratorOptions, ContractGenerationResult]):
     """
     Contract AI generator with self-correction loop.
     
@@ -75,12 +76,8 @@ class ContractGenerator:
     """
     
     def __init__(self, options: Optional[ContractGeneratorOptions] = None):
-        self.options = options or ContractGeneratorOptions()
-        self._llm_client: Optional[LLMProvider] = None
-    
-    def set_llm_client(self, client: LLMProvider) -> None:
-        """Set the LLM client for generation"""
-        self._llm_client = client
+        opts = options or ContractGeneratorOptions()
+        super().__init__(opts, verbose=opts.verbose)
     
     async def generate(self, user_prompt: str) -> ContractGenerationResult:
         """
@@ -251,10 +248,7 @@ Fix these errors and return the corrected ContractAI JSON."""
     
     async def _call_llm(self, options: GenerateOptions) -> str:
         """Call LLM and get response"""
-        if not self._llm_client:
-            raise RuntimeError("LLM client not set. Call set_llm_client() first.")
-        
-        response = await self._llm_client.generate(options)
+        response = await self.require_llm_client().generate(options)
         return response.content
     
     def _parse_contract_from_response(self, response: str) -> Optional[dict]:

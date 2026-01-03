@@ -10,6 +10,7 @@ Mirrors: src/core/contract-ai/evolution/
 from .task_queue import TaskQueue, Task, TaskStatus
 from .shell_renderer import ShellRenderer
 from .evolution_manager import EvolutionManager, EvolutionOptions, EvolutionResult
+from .generators import EvolutionGenerators
 
 __all__ = [
     "TaskQueue",
@@ -19,4 +20,5 @@ __all__ = [
     "EvolutionManager",
     "EvolutionOptions",
     "EvolutionResult",
+    "EvolutionGenerators",
 ]
