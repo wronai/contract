@@ -260,8 +260,9 @@ export class LiteLLMProvider extends BaseLLMProvider {
 
   async isAvailable(): Promise<boolean> {
     try {
+      // Try /v1/models endpoint (LM Studio compatible)
       const response = await this.fetchWithTimeout(
-        `${this.config.baseUrl}/health`,
+        `${this.config.baseUrl}/v1/models`,
         { method: 'GET' },
         5000
       );
@@ -283,8 +284,11 @@ export class LiteLLMProvider extends BaseLLMProvider {
       headers['Authorization'] = `Bearer ${mergedConfig.apiKey}`;
     }
 
+    // LM Studio uses /v1/chat/completions endpoint
+    const chatEndpoint = `${mergedConfig.baseUrl}/v1/chat/completions`;
+
     const response = await this.fetchWithTimeout(
-      `${mergedConfig.baseUrl}/chat/completions`,
+      chatEndpoint,
       {
         method: 'POST',
         headers,

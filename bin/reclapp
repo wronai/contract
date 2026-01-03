@@ -1517,51 +1517,28 @@ async function cmdEvolution(args, options) {
   console.log('\n## Reclapp Evolution v2.4.1\n');
 
   try {
+    // Use DI services for setup (separated concerns)
+    // Import directly from CLI modules (ts-node handles TypeScript compilation)
+    const { createEvolutionSetupService } = require('../src/core/contract-ai/cli/evolution-setup');
+    const { createLLMSetupService } = require('../src/core/contract-ai/cli/llm-setup');
     const contractAI = require('../src/core/contract-ai');
     
-    // Create evolution manager
-    const evolutionManager = contractAI.createEvolutionManager({
+    const setupService = createEvolutionSetupService();
+    const setupResult = await setupService.setup({
       outputDir,
       port,
-      verbose: options.verbose || true,
+      verbose: options.verbose ?? true,
       maxEvolutionCycles: 10,
       autoRestart: true
     });
-
-    // Setup LLM for evolution
-    const ollamaAvailable = await contractAI.checkOllamaAvailable();
-    let llmStatus = { available: false, model: null, source: null };
     
-    if (ollamaAvailable) {
-      const selectedModel = process.env.CODE_MODEL || process.env.OLLAMA_MODEL;
-      const selectedFrom = process.env.CODE_MODEL ? 'CODE_MODEL' : 'OLLAMA_MODEL';
-      const ollamaClient = contractAI.createOllamaClient({ model: selectedModel });
-      const configuredModel = ollamaClient.getConfig().model;
-      const hasModel = await ollamaClient.hasModel();
-      
-      llmStatus = { available: hasModel, model: configuredModel, source: selectedFrom };
-      
-      if (hasModel) {
-        evolutionManager.setLLMClient(ollamaClient);
-      }
-    }
+    const evolutionManager = setupResult.manager;
+    const llmStatus = setupResult.llmStatus;
     
     // Print setup info in YAML with colors
     const { ShellRenderer } = contractAI;
     const cliRenderer = new ShellRenderer(true);
-    
-    const setupYaml = [
-      '# @type: evolution_setup',
-      '# @description: Initial configuration for evolution pipeline',
-      'setup:',
-      `  prompt: "${prompt ? prompt.substring(0, 60) : contractPath}"`,
-      `  output: "${outputDir}"`,
-      `  port: ${port}`,
-      '  llm:',
-      `    available: ${llmStatus.available}`,
-      `    model: "${llmStatus.model || 'none'}"`,
-      ...((!llmStatus.available && llmStatus.model) ? [`    fix: "ollama pull ${llmStatus.model}"`] : [])
-    ].join('\n');
+    const setupYaml = setupService.formatSetupYAML(prompt, contractPath, outputDir, port, llmStatus);
     cliRenderer.codeblock('yaml', setupYaml);
     console.log('');
 
