@@ -105,14 +105,14 @@ describe('Contract AI CLI E2E', () => {
   });
 
   describe('Validation Pipeline', () => {
-    it('should run all 7 validation stages', () => {
+    it('should run all 8 validation stages', () => {
       const contractPath = path.join(EXAMPLES_DIR, 'crm-contract.ts');
       const outputDir = path.join(TEST_OUTPUT_DIR, 'crm-validation');
       
       const result = runCLI(`generate-ai "${contractPath}" -o "${outputDir}"`, 120000);
       
-      // Should mention 7 stages
-      expect(result.stdout).toMatch(/7 stages/);
+      // Should mention 8 stages (now includes schema stage)
+      expect(result.stdout).toMatch(/8 stages/);
       
       // Should run all stage types
       expect(result.stdout).toMatch(/syntax/);

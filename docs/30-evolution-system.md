@@ -501,6 +501,47 @@ npm test
 
 ---
 
+## Generated Files (v2.5.1)
+
+Both TypeScript and Python implementations now generate identical file structures:
+
+| File | Description |
+|------|-------------|
+| `Dockerfile` | Root production Dockerfile |
+| `docker-compose.yml` | Docker Compose with API service |
+| `.github/workflows/ci.yml` | GitHub Actions CI workflow |
+| `api/src/server.ts` | Express API server |
+| `api/package.json` | API dependencies |
+| `api/tsconfig.json` | TypeScript config |
+| `api/prisma/schema.prisma` | Prisma database schema |
+| `api/.env` | Environment variables |
+| `frontend/src/App.tsx` | React frontend |
+| `frontend/package.json` | Frontend dependencies |
+| `tests/e2e/api.e2e.ts` | E2E API tests |
+| `tests/fixtures/*.json` | Test fixtures |
+| `tests/test.config.ts` | Test configuration |
+| `state/evolution-state.json` | Evolution state |
+| `state/multi-level-state.json` | Multi-level analysis snapshot |
+| `contract/contract.ai.json` | Generated contract |
+| `logs/evolution-*.md` | Evolution logs |
+| `README.md` | Project documentation |
+| `API.md` | API documentation |
+
+### Python CLI
+
+```bash
+# Install Python CLI
+pip install -e src/python
+
+# Run evolution
+python -m reclapp.cli evolve -p "Create a todo app" -o ./output
+
+# With interactive menu
+python -m reclapp.cli evolve -p "Create a todo app" -o ./output --keep-running
+```
+
+---
+
 ## Related Documentation
 
 - [Architecture Overview](00-architecture-overview.md)

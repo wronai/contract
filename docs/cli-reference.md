@@ -6,6 +6,10 @@ Command-line interface for generating applications from:
 - `.reclapp.rcl` (Mini-DSL)
 - `.rcl.md` (Markdown with conversation)
 
+For LLM configuration (providers, models, priorities, routing), see:
+
+- **[LLM Configuration](23-llm-configuration.md)**
+
 ## Installation
 
 ```bash
@@ -18,6 +22,27 @@ Command-line interface for generating applications from:
 ```
 
 ## Commands
+
+### `reclapp llm`
+
+Manage LLM configuration and routing.
+
+```bash
+reclapp llm status
+reclapp llm set-provider <provider>
+reclapp llm set-model <provider> <model>
+reclapp llm priority set-provider <provider> <priority>
+reclapp llm priority set-model <model_name> <priority>
+reclapp llm model add --model-name ... --litellm-model ...
+reclapp llm model remove <model_name>
+reclapp llm fallbacks list
+reclapp llm fallbacks add <model_name>
+reclapp llm fallbacks remove <model_name>
+```
+
+Details and examples are documented in:
+
+- **[LLM Configuration](23-llm-configuration.md)**
 
 ### `reclapp run`
 

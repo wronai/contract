@@ -38,6 +38,29 @@ from .llm import (
     GeneratedFile,
     ValidationResult,
     FeedbackItem,
+    # LLM Configuration
+    LLMConfig,
+    ProviderConfig,
+    load_env,
+    get_config,
+    # LLM Clients
+    BaseLLMClient,
+    OpenRouterClient,
+    OpenAIClient,
+    AnthropicClient,
+    GroqClient,
+    TogetherClient,
+    OllamaClient,
+    LiteLLMClient,
+    GenerationResult,
+    get_client,
+    list_available_providers,
+    # Provider Manager
+    ProviderManager,
+    LoadBalanceStrategy,
+    get_manager,
+    generate,
+    chat,
 )
 
 __version__ = "2.3.0"
@@ -60,9 +83,32 @@ __all__ = [
     "User",
     "Task",
     "Project",
-    # LLM
+    # LLM Output Contracts
     "LLMCodeOutput",
     "GeneratedFile",
     "ValidationResult",
     "FeedbackItem",
+    # LLM Configuration
+    "LLMConfig",
+    "ProviderConfig",
+    "load_env",
+    "get_config",
+    # LLM Clients
+    "BaseLLMClient",
+    "OpenRouterClient",
+    "OpenAIClient",
+    "AnthropicClient",
+    "GroqClient",
+    "TogetherClient",
+    "OllamaClient",
+    "LiteLLMClient",
+    "GenerationResult",
+    "get_client",
+    "list_available_providers",
+    # Provider Manager
+    "ProviderManager",
+    "LoadBalanceStrategy",
+    "get_manager",
+    "generate",
+    "chat",
 ]

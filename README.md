@@ -290,6 +290,7 @@ reclapp --prompt "Create a todo app with tasks"
 |----------|-------------|
 | [Project Status](docs/22-project-status.md) | Current 2.3.1 status |
 | [Testing Guide](docs/21-testing-guide.md) | Testing procedures |
+| [LLM Configuration](docs/23-llm-configuration.md) | Multi-provider LLM setup and routing |
 | [AGENTS.md](AGENTS.md) | Agent specification |
 
 ## 🤝 Contributing

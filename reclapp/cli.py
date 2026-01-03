@@ -13,10 +13,17 @@ import subprocess
 import shutil
 from pathlib import Path
 from typing import Optional
+import builtins
 
 import click
 from rich.console import Console
 from rich.panel import Panel
+
+try:
+    import yaml
+    YAML_AVAILABLE = True
+except ImportError:
+    YAML_AVAILABLE = False
 
 console = Console()
 
@@ -387,7 +394,7 @@ def llm_status():
     
     try:
         from config import LLMConfig
-        from clients import list_available_providers, RECOMMENDED_MODELS
+        from clients import list_available_providers
         
         config = LLMConfig()
         
@@ -402,6 +409,7 @@ def llm_status():
         # Show provider status
         console.print("\n[bold]Providers:[/]")
         available = list_available_providers()
+        configured = config.list_configured_providers()
         priorities = {
             'ollama': 10, 'groq': 20, 'together': 30,
             'openrouter': 40, 'openai': 50, 'anthropic': 60, 'litellm': 70
@@ -409,7 +417,15 @@ def llm_status():
         
         for provider in sorted(priorities.keys(), key=lambda p: priorities[p]):
             is_available = available.get(provider, False)
-            status = "[green]✓ Available[/]" if is_available else "[dim]✗ Not configured[/]"
+            is_configured = configured.get(provider, False)
+
+            if not is_configured:
+                status = "[dim]✗ Not configured[/]"
+            elif is_available:
+                status = "[green]✓ Available[/]"
+            else:
+                status = "[yellow]⚠ Configured but unreachable[/]"
+
             model = config.get_model(provider)
             priority = priorities.get(provider, 100)
             console.print(f"  [{priority:2d}] {provider:12s} {status}  Model: {model}")
@@ -471,23 +487,21 @@ def llm_models(provider: str):
 def llm_set_provider(provider: str):
     """Set default LLM provider."""
     env_file = PROJECT_ROOT / ".env"
-    
-    if env_file.exists():
-        content = env_file.read_text()
-        
-        # Update or add LLM_PROVIDER
-        import re
-        if re.search(r'^LLM_PROVIDER=', content, re.MULTILINE):
-            content = re.sub(r'^LLM_PROVIDER=.*$', f'LLM_PROVIDER={provider}', content, flags=re.MULTILINE)
-        else:
-            content += f"\nLLM_PROVIDER={provider}\n"
-        
-        env_file.write_text(content)
-        console.print(f"[green]✓[/] Default provider set to: [bold]{provider}[/]")
-        console.print(f"[dim]Updated: {env_file}[/]")
+
+    content = env_file.read_text() if env_file.exists() else ""
+
+    # Update or add LLM_PROVIDER
+    import re
+    if re.search(r'^LLM_PROVIDER=', content, re.MULTILINE):
+        content = re.sub(r'^LLM_PROVIDER=.*$', f'LLM_PROVIDER={provider}', content, flags=re.MULTILINE)
     else:
-        console.print(f"[yellow]Warning:[/] .env file not found")
-        console.print(f"Set manually: export LLM_PROVIDER={provider}")
+        if content and not content.endswith("\n"):
+            content += "\n"
+        content += f"LLM_PROVIDER={provider}\n"
+
+    env_file.write_text(content)
+    console.print(f"[green]✓[/] Default provider set to: [bold]{provider}[/]")
+    console.print(f"[dim]Updated: {env_file}[/]")
 
 
 @llm.command("set-model")
@@ -499,24 +513,22 @@ def llm_set_model(provider: str, model: str):
     """Set model for a specific provider."""
     env_file = PROJECT_ROOT / ".env"
     var_name = f"{provider.upper()}_MODEL"
-    
-    if env_file.exists():
-        content = env_file.read_text()
-        
-        import re
-        if re.search(rf'^{var_name}=', content, re.MULTILINE):
-            content = re.sub(rf'^{var_name}=.*$', f'{var_name}={model}', content, flags=re.MULTILINE)
-        elif re.search(rf'^#\s*{var_name}=', content, re.MULTILINE):
-            content = re.sub(rf'^#\s*{var_name}=.*$', f'{var_name}={model}', content, flags=re.MULTILINE)
-        else:
-            content += f"\n{var_name}={model}\n"
-        
-        env_file.write_text(content)
-        console.print(f"[green]✓[/] {provider} model set to: [bold]{model}[/]")
-        console.print(f"[dim]Updated: {env_file}[/]")
+
+    content = env_file.read_text() if env_file.exists() else ""
+
+    import re
+    if re.search(rf'^{var_name}=', content, re.MULTILINE):
+        content = re.sub(rf'^{var_name}=.*$', f'{var_name}={model}', content, flags=re.MULTILINE)
+    elif re.search(rf'^#\s*{var_name}=', content, re.MULTILINE):
+        content = re.sub(rf'^#\s*{var_name}=.*$', f'{var_name}={model}', content, flags=re.MULTILINE)
     else:
-        console.print(f"[yellow]Warning:[/] .env file not found")
-        console.print(f"Set manually: export {var_name}={model}")
+        if content and not content.endswith("\n"):
+            content += "\n"
+        content += f"{var_name}={model}\n"
+
+    env_file.write_text(content)
+    console.print(f"[green]✓[/] {provider} model set to: [bold]{model}[/]")
+    console.print(f"[dim]Updated: {env_file}[/]")
 
 
 @llm.command("test")
@@ -573,6 +585,334 @@ def llm_config():
         console.print(json.dumps(data, indent=2))
         
     except ImportError as e:
+        console.print(f"[red]Error:[/] {e}")
+
+
+def _get_litellm_config_path() -> Path:
+    return PROJECT_ROOT / "litellm_config.yaml"
+
+
+def _load_litellm_yaml() -> dict:
+    if not YAML_AVAILABLE:
+        raise RuntimeError("pyyaml is required for this command")
+
+    path = _get_litellm_config_path()
+    if not path.exists():
+        raise FileNotFoundError(f"litellm_config.yaml not found at {path}")
+
+    with path.open("r") as f:
+        data = yaml.safe_load(f) or {}
+    if "model_list" not in data or data.get("model_list") is None:
+        data["model_list"] = []
+    if "router_settings" not in data or data.get("router_settings") is None:
+        data["router_settings"] = {}
+    return data
+
+
+def _save_litellm_yaml(data: dict) -> None:
+    if not YAML_AVAILABLE:
+        raise RuntimeError("pyyaml is required for this command")
+
+    path = _get_litellm_config_path()
+    with path.open("w") as f:
+        yaml.safe_dump(data, f, sort_keys=False)
+
+
+def _infer_provider_from_litellm_model(litellm_model: str) -> str:
+    if not litellm_model:
+        return ""
+    # Examples: ollama/qwen2.5-coder:14b, groq/llama-3.1-70b-versatile, openrouter/...
+    if "/" not in litellm_model:
+        return "openai"  # plain OpenAI model strings in config
+    return litellm_model.split("/", 1)[0]
+
+
+@llm.group("priority")
+def llm_priority():
+    """Manage LLM routing priorities in litellm_config.yaml."""
+    pass
+
+
+@llm_priority.command("set-provider")
+@click.argument("provider", type=click.Choice([
+    "ollama", "groq", "openrouter", "together_ai", "openai", "anthropic"
+]))
+@click.argument("priority", type=int)
+@click.option("--preserve-order", is_flag=True, help="Keep relative order by spacing priorities")
+@click.option("--step", type=int, default=5, show_default=True, help="Priority step when preserve-order is used")
+def llm_priority_set_provider(provider: str, priority: int, preserve_order: bool, step: int):
+    """Set priority for all models belonging to a provider in litellm_config.yaml.
+
+    Provider is inferred from litellm_params.model prefix, e.g. ollama/<...>, groq/<...>.
+    Lower priority value = tried earlier.
+    """
+    try:
+        data = _load_litellm_yaml()
+        model_list = data.get("model_list", [])
+
+        matched = []
+        for entry in model_list:
+            litellm_model = (entry.get("litellm_params", {}) or {}).get("model", "")
+            entry_provider = _infer_provider_from_litellm_model(litellm_model)
+            if entry_provider == provider:
+                matched.append(entry)
+
+        if not matched:
+            console.print(f"[yellow]Warning:[/] No models found for provider: {provider}")
+            return
+
+        if preserve_order:
+            # Keep existing order but re-space
+            # Sort by current priority then apply new spacing
+            matched_sorted = sorted(matched, key=lambda e: int(e.get("priority", 100)))
+            for idx, entry in enumerate(matched_sorted):
+                entry["priority"] = int(priority) + idx * int(step)
+        else:
+            for entry in matched:
+                entry["priority"] = int(priority)
+
+        _save_litellm_yaml(data)
+        console.print(
+            f"[green]✓[/] Set provider priority: [bold]{provider}[/] -> {priority} "
+            f"({len(matched)} model(s))"
+        )
+        console.print(f"[dim]Updated: {_get_litellm_config_path()}[/]")
+    except Exception as e:
+        console.print(f"[red]Error:[/] {e}")
+
+
+@llm_priority.command("set-model")
+@click.argument("model_name")
+@click.argument("priority", type=int)
+def llm_priority_set_model(model_name: str, priority: int):
+    """Set priority for a specific model_name in litellm_config.yaml."""
+    try:
+        data = _load_litellm_yaml()
+        model_list = data.get("model_list", [])
+
+        for entry in model_list:
+            if entry.get("model_name") == model_name:
+                entry["priority"] = int(priority)
+                _save_litellm_yaml(data)
+                console.print(f"[green]✓[/] Set model priority: [bold]{model_name}[/] -> {priority}")
+                console.print(f"[dim]Updated: {_get_litellm_config_path()}[/]")
+                return
+
+        console.print(f"[yellow]Warning:[/] model_name not found: {model_name}")
+    except Exception as e:
+        console.print(f"[red]Error:[/] {e}")
+
+
+@llm.group("model")
+def llm_model():
+    """Manage model_list entries in litellm_config.yaml."""
+    pass
+
+
+@llm_model.command("list")
+@click.option("--provider", "-p", type=click.Choice([
+    "ollama", "groq", "openrouter", "together_ai", "openai", "anthropic"
+]), help="Filter by provider")
+def llm_model_list(provider: str):
+    """List model_list entries (model_name -> litellm model, provider, priority, rate_limit)."""
+    try:
+        data = _load_litellm_yaml()
+        model_list = data.get("model_list", [])
+        if not model_list:
+            console.print("[yellow]Warning:[/] model_list is empty")
+            return
+
+        console.print("[bold]Models (litellm_config.yaml):[/]")
+        for entry in sorted(model_list, key=lambda e: int(e.get("priority", 100))):
+            model_name = entry.get("model_name", "")
+            litellm_model = (entry.get("litellm_params", {}) or {}).get("model", "")
+            entry_provider = _infer_provider_from_litellm_model(litellm_model)
+            if provider and entry_provider != provider:
+                continue
+            priority = int(entry.get("priority", 100))
+            rate_limit = int(entry.get("rate_limit", 60))
+            console.print(f"  [{priority:3d}] {model_name} -> {litellm_model}  [dim]({entry_provider}, rl={rate_limit}/min)[/]")
+    except Exception as e:
+        console.print(f"[red]Error:[/] {e}")
+
+
+@llm_model.command("add")
+@click.option("--model-name", required=True, help="Unique model_name key (e.g. code-analyzer)")
+@click.option("--litellm-model", required=True, help="LiteLLM model string (e.g. ollama/qwen2.5-coder:14b)")
+@click.option("--api-base", help="Optional api_base (e.g. http://localhost:11434)")
+@click.option("--api-key", help="Optional api_key (usually from env)")
+@click.option("--priority", type=int, default=50, show_default=True)
+@click.option("--rate-limit", type=int, default=60, show_default=True)
+def llm_model_add(model_name: str, litellm_model: str, api_base: str, api_key: str, priority: int, rate_limit: int):
+    """Add a new model entry to litellm_config.yaml."""
+    try:
+        data = _load_litellm_yaml()
+        model_list = data.get("model_list", [])
+
+        if any(e.get("model_name") == model_name for e in model_list):
+            console.print(f"[red]Error:[/] model_name already exists: {model_name}")
+            return
+
+        litellm_params = {"model": litellm_model}
+        if api_base:
+            litellm_params["api_base"] = api_base
+        if api_key:
+            litellm_params["api_key"] = api_key
+
+        entry = {
+            "model_name": model_name,
+            "litellm_params": litellm_params,
+            "priority": int(priority),
+            "rate_limit": int(rate_limit),
+        }
+        model_list.append(entry)
+        data["model_list"] = model_list
+
+        _save_litellm_yaml(data)
+        console.print(f"[green]✓[/] Added model: [bold]{model_name}[/] -> {litellm_model}")
+        console.print(f"[dim]Updated: {_get_litellm_config_path()}[/]")
+    except Exception as e:
+        console.print(f"[red]Error:[/] {e}")
+
+
+@llm_model.command("remove")
+@click.argument("model_name")
+def llm_model_remove(model_name: str):
+    """Remove a model entry from litellm_config.yaml (and from fallbacks if present)."""
+    try:
+        data = _load_litellm_yaml()
+        model_list = data.get("model_list", [])
+
+        new_list = [e for e in model_list if e.get("model_name") != model_name]
+        if len(new_list) == len(model_list):
+            console.print(f"[yellow]Warning:[/] model_name not found: {model_name}")
+            return
+
+        data["model_list"] = new_list
+
+        router_settings = data.get("router_settings", {}) or {}
+        fallbacks = router_settings.get("fallbacks")
+        if isinstance(fallbacks, builtins.list):
+            router_settings["fallbacks"] = [f for f in fallbacks if f != model_name]
+            data["router_settings"] = router_settings
+
+        _save_litellm_yaml(data)
+        console.print(f"[green]✓[/] Removed model: [bold]{model_name}[/]")
+        console.print(f"[dim]Updated: {_get_litellm_config_path()}[/]")
+    except Exception as e:
+        console.print(f"[red]Error:[/] {e}")
+
+
+@llm_model.command("remove-provider")
+@click.argument("provider", type=click.Choice([
+    "ollama", "groq", "openrouter", "together_ai", "openai", "anthropic"
+]))
+def llm_model_remove_provider(provider: str):
+    """Remove all model_list entries belonging to a provider (and remove from fallbacks)."""
+    try:
+        data = _load_litellm_yaml()
+        model_list = data.get("model_list", [])
+
+        to_remove_names = []
+        kept = []
+        for entry in model_list:
+            litellm_model = (entry.get("litellm_params", {}) or {}).get("model", "")
+            entry_provider = _infer_provider_from_litellm_model(litellm_model)
+            if entry_provider == provider:
+                to_remove_names.append(entry.get("model_name"))
+            else:
+                kept.append(entry)
+
+        to_remove_names = [n for n in to_remove_names if n]
+        if not to_remove_names:
+            console.print(f"[yellow]Warning:[/] No models found for provider: {provider}")
+            return
+
+        data["model_list"] = kept
+
+        router_settings = data.get("router_settings", {}) or {}
+        fallbacks = router_settings.get("fallbacks")
+        if isinstance(fallbacks, builtins.list):
+            router_settings["fallbacks"] = [f for f in fallbacks if f not in to_remove_names]
+            data["router_settings"] = router_settings
+
+        _save_litellm_yaml(data)
+        console.print(f"[green]✓[/] Removed provider models: [bold]{provider}[/] ({len(to_remove_names)} entries)")
+        console.print(f"[dim]Updated: {_get_litellm_config_path()}[/]")
+        console.print("[dim]Removed model_name values:[/]")
+        for n in to_remove_names:
+            console.print(f"  - {n}")
+    except Exception as e:
+        console.print(f"[red]Error:[/] {e}")
+
+
+@llm.group("fallbacks")
+def llm_fallbacks():
+    """Manage router_settings.fallbacks in litellm_config.yaml."""
+    pass
+
+
+@llm_fallbacks.command("list")
+def llm_fallbacks_list():
+    """List current fallback model_names."""
+    try:
+        data = _load_litellm_yaml()
+        router_settings = data.get("router_settings", {}) or {}
+        fallbacks = router_settings.get("fallbacks") or []
+        console.print("[bold]Fallbacks:[/]")
+        for f in fallbacks:
+            console.print(f"  - {f}")
+    except Exception as e:
+        console.print(f"[red]Error:[/] {e}")
+
+
+@llm_fallbacks.command("add")
+@click.argument("model_name")
+def llm_fallbacks_add(model_name: str):
+    """Append model_name to router_settings.fallbacks."""
+    try:
+        data = _load_litellm_yaml()
+        router_settings = data.get("router_settings", {}) or {}
+        fallbacks = router_settings.get("fallbacks")
+        if not isinstance(fallbacks, builtins.list):
+            fallbacks = []
+
+        if model_name in fallbacks:
+            console.print(f"[yellow]Warning:[/] Already in fallbacks: {model_name}")
+            return
+
+        fallbacks.append(model_name)
+        router_settings["fallbacks"] = fallbacks
+        data["router_settings"] = router_settings
+        _save_litellm_yaml(data)
+        console.print(f"[green]✓[/] Added fallback: [bold]{model_name}[/]")
+        console.print(f"[dim]Updated: {_get_litellm_config_path()}[/]")
+    except Exception as e:
+        console.print(f"[red]Error:[/] {e}")
+
+
+@llm_fallbacks.command("remove")
+@click.argument("model_name")
+def llm_fallbacks_remove(model_name: str):
+    """Remove model_name from router_settings.fallbacks."""
+    try:
+        data = _load_litellm_yaml()
+        router_settings = data.get("router_settings", {}) or {}
+        fallbacks = router_settings.get("fallbacks")
+        if not isinstance(fallbacks, builtins.list) or not fallbacks:
+            console.print("[yellow]Warning:[/] No fallbacks configured")
+            return
+
+        if model_name not in fallbacks:
+            console.print(f"[yellow]Warning:[/] Not in fallbacks: {model_name}")
+            return
+
+        router_settings["fallbacks"] = [f for f in fallbacks if f != model_name]
+        data["router_settings"] = router_settings
+        _save_litellm_yaml(data)
+        console.print(f"[green]✓[/] Removed fallback: [bold]{model_name}[/]")
+        console.print(f"[dim]Updated: {_get_litellm_config_path()}[/]")
+    except Exception as e:
         console.print(f"[red]Error:[/] {e}")
 
 

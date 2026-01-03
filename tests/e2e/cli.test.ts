@@ -44,13 +44,13 @@ describe('Reclapp CLI', () => {
   describe('list', () => {
     it('should list contracts', () => {
       const output = run('list');
-      expect(output).toContain('Available contracts');
+      expect(output).toContain('Available Contracts');
       expect(output).toContain('.reclapp.ts');
     });
 
     it('should work with ls alias', () => {
       const output = run('ls');
-      expect(output).toContain('Available contracts');
+      expect(output).toContain('Available Contracts');
     });
   });
 
