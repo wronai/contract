@@ -25,11 +25,11 @@ excerpt: "Przewodnik po uruchomieniu MVP Reclapp z Docker Compose - event sourci
 ```bash
 # Z archiwum
 tar -xzf reclapp-mvp.tar.gz
-cd reclapp
+cd contract
 
 # Lub z repozytorium
 git clone https://github.com/your-org/reclapp.git
-cd reclapp
+cd contract
 ```
 
 ### 2. Uruchom Docker Compose

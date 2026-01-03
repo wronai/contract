@@ -45,9 +45,9 @@ reclapp = "reclapp.cli:main"
 reclapp-lifecycle = "reclapp.cli:lifecycle"
 
 [project.urls]
-Homepage = "https://github.com/wronai/reclapp"
-Documentation = "https://github.com/wronai/reclapp/docs"
-Repository = "https://github.com/wronai/reclapp"
+Homepage = "https://github.com/wronai/contract"
+Documentation = "https://github.com/wronai/contract/docs"
+Repository = "https://github.com/wronai/contract"
 
 [tool.setuptools.packages.find]
 where = ["."]

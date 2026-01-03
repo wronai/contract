@@ -11,6 +11,13 @@ from .task_queue import TaskQueue, Task, TaskStatus
 from .shell_renderer import ShellRenderer
 from .evolution_manager import EvolutionManager, EvolutionOptions, EvolutionResult
 from .generators import EvolutionGenerators
+from .state_analyzer import (
+    StateAnalyzer,
+    MultiLevelState,
+    StateDiscrepancy,
+    StateLevel,
+    DiscrepancyType,
+)
 
 __all__ = [
     "TaskQueue",
@@ -21,4 +28,9 @@ __all__ = [
     "EvolutionOptions",
     "EvolutionResult",
     "EvolutionGenerators",
+    "StateAnalyzer",
+    "MultiLevelState",
+    "StateDiscrepancy",
+    "StateLevel",
+    "DiscrepancyType",
 ]

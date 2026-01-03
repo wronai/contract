@@ -3,6 +3,8 @@ output_p3_verify2/
 output_*/
 output_p3_*/
 output/
+output*/
+src-reproduction/
 setup/
 my-app
 refactor-workspace/

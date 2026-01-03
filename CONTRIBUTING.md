@@ -35,12 +35,12 @@ This project adheres to a Code of Conduct. By participating, you are expected to
 2. **Clone your fork**
    ```bash
    git clone https://github.com/YOUR_USERNAME/reclapp.git
-   cd reclapp
+   cd contract
    ```
 
 3. **Add upstream remote**
    ```bash
-   git remote add upstream https://github.com/softreck/reclapp.git
+   git remote add upstream https://github.com/wronai/contract.git
    ```
 
 4. **Install dependencies**

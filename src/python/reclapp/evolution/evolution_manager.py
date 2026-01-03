@@ -410,14 +410,38 @@ class EvolutionManager:
         self.task_queue.done("generate-docs")
     
     async def _phase_verification(self, target_dir: str):
-        """Phase 10: Final verification"""
+        """Phase 10: Final verification with multi-level state analysis"""
+        from .state_analyzer import StateAnalyzer
+        
         self.task_queue.start("validate-targets")
+        # Validate generated targets exist
+        api_dir = Path(target_dir) / "api"
+        frontend_dir = Path(target_dir) / "frontend"
+        targets_valid = api_dir.exists() or frontend_dir.exists()
         self.task_queue.done("validate-targets")
         
         self.task_queue.start("verify")
+        # Run multi-level state analysis
+        analyzer = StateAnalyzer(target_dir, verbose=self.options.verbose)
+        state = await analyzer.analyze(self._contract)
+        
+        # Write state snapshot
+        analyzer.write_state_snapshot(state)
+        
+        if self.options.verbose:
+            self.renderer.info(f"State analysis: {len(state.discrepancies)} discrepancies found")
+            for d in state.discrepancies:
+                if d.severity == "error":
+                    self.renderer.error(f"  {d.level.value}: {d.message}")
+                else:
+                    self.renderer.warning(f"  {d.level.value}: {d.message}")
+        
         self.task_queue.done("verify")
         
         self.task_queue.start("reconcile")
+        # Reconcile discrepancies (log for now, auto-fix in future)
+        if state.is_consistent():
+            self.renderer.success("Contract ↔ Code ↔ Service state is consistent")
         self.task_queue.done("reconcile")
     
     async def _generate_database(self, target_dir: str):

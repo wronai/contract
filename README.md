@@ -1,7 +1,7 @@
 ![reclapp.png](reclapp.png)
 # Reclapp 2.3.1 - AI-Native Declarative Platform
 
-[![Version](https://img.shields.io/badge/version-2.3.1-blue.svg)](https://github.com/wronai/reclapp)
+[![Version](https://img.shields.io/badge/version-2.3.1-blue.svg)](https://github.com/wronai/contract)
 [![License](https://img.shields.io/badge/license-Apache-green.svg)](LICENSE) 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
@@ -30,8 +30,8 @@
 
 ```bash
 # Clone repository
-git clone https://github.com/softreck/reclapp.git
-cd reclapp
+git clone https://github.com/wronai/contract.git
+cd contract
 
 # Install Node.js dependencies
 npm install
@@ -306,7 +306,7 @@ Apache 2 License - see [LICENSE](LICENSE) for details.
 
 ## 🔗 Links
 
-- [GitHub](https://github.com/wronai/reclapp)
+- [GitHub](https://github.com/wronai/contract)
 - [Documentation](docs/)
 - [Examples](examples/)
 - [Apps](apps/)
