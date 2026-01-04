@@ -21,11 +21,13 @@
 
 ## 📊 Implementation Summary
 
+> Uwaga: W nowszych wersjach pipeline walidacji ma **8 stages** (dodany etap **Schema**).
+
 ### Phase Completion Matrix
 
 | Faza | Komponent | Status | Files |
 |------|-----------|--------|-------|
-| A | Validation Pipeline | ✅ Complete | 7 stages |
+| A | Validation Pipeline | ✅ Complete | 7 stages (history) |
 | B | Feedback Loop | ✅ Complete | 3 modules |
 | C | Ollama LLM Integration | ✅ Complete | 2 clients |
 | D | SDK TypeScript Generator | ✅ Complete | 3 files |
@@ -33,7 +35,7 @@
 | E2 | JSON Schema → TypeScript | ✅ Complete | Auto-gen |
 | E3 | PydanticValidator.ts | ✅ Complete | Runtime |
 | E4 | Python Contract Tests | ✅ Complete | 2 test files |
-| E5 | Full E2E Lifecycle | ✅ Complete | 7/7 stages |
+| E5 | Full E2E Lifecycle | ✅ Complete | 7/7 stages (history) |
 | F | CI/CD GitHub Actions | ✅ Complete | 1 workflow |
 
 ## 🏗️ Final Architecture

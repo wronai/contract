@@ -121,6 +121,17 @@ Monitors and evolves running applications:
 
 ---
 
+## Dependency Injection (DI)
+
+This codebase uses a lightweight approach (no DI container).
+
+- **LLM client wiring**: `EvolutionManager` exposes `setLLMClient(...)` (setter injection) and the CLI (`bin/reclapp`) configures the LLM and injects it into the manager.
+- **Internal services**: core helpers (e.g. `TaskQueue`, `ShellRenderer`, analyzers) are created inside constructors.
+
+If you are looking for `EvolutionSetupService` / `createEvolutionSetupService` or `evolution-setup.ts`, those are not present in the current repository.
+
+---
+
 ### 4. Validation Pipeline
 
 **Files:** `src/core/contract-ai/validation/`

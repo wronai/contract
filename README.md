@@ -1,7 +1,7 @@
 ![reclapp.png](reclapp.png)
-# Reclapp 2.3.1 - AI-Native Declarative Platform
+# Reclapp 2.2.0 - AI-Native Declarative Platform
 
-[![Version](https://img.shields.io/badge/version-2.3.1-blue.svg)](https://github.com/wronai/contract)
+[![Version](https://img.shields.io/badge/version-2.2.0-blue.svg)](https://github.com/wronai/contract)
 [![License](https://img.shields.io/badge/license-Apache-green.svg)](LICENSE) 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
@@ -13,7 +13,7 @@
 
 - **Python CLI** - `pip install -e .` → `reclapp` command
 - **Full Lifecycle** - Single command: prompt → contract → code → service → tests
-- **Contract AI 2.3** - 3-layer specification (Definition, Generation, Validation)
+- **Contract AI 2.2** - 3-layer specification (Definition, Generation, Validation)
 - **8-Stage Validation** - Syntax, Schema, Assertions, Static Analysis, Tests, Quality, Security, Runtime
 - **Pydantic Contracts** - Python-first contract definitions
 - **Auto-fix** - Automatic package.json and tsconfig.json fixes
@@ -33,6 +33,9 @@
 git clone https://github.com/wronai/contract.git
 cd contract
 
+# If npm is not available in your shell (e.g. non-interactive/CI), load NVM first:
+source ~/.nvm/nvm.sh
+
 # Install Node.js dependencies
 npm install
 
@@ -45,7 +48,7 @@ source venv/bin/activate
 pip install -e .
 ```
 
-### Python CLI (NEW in 2.3.1)
+### Python CLI
 
 ```bash
 # After pip install -e .
@@ -230,7 +233,7 @@ reclapp --prompt "$(cat examples/prompts/03-contacts-crm.txt)" -o ./my-crm
 | Notes | `examples/pydantic-contracts/contracts.py` |
 | Todo | `examples/full-lifecycle/02-todo-app.ts` |
 
-## ✅ Reclapp 2.3.1 - Full Lifecycle Working
+## ✅ Reclapp - Full Lifecycle Working
 
 ### 📊 Status
 
@@ -259,7 +262,7 @@ reclapp --prompt "Create a todo app with tasks"
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    RECLAPP 2.3.1                             │
+│                    RECLAPP 2.2.0                             │
 ├─────────────────────────────────────────────────────────────┤
 │  INPUT                                                       │
 │  ├── Prompt ("Create a CRM system")                         │
@@ -288,7 +291,7 @@ reclapp --prompt "Create a todo app with tasks"
 
 | Document | Description |
 |----------|-------------|
-| [Project Status](docs/22-project-status.md) | Current 2.3.1 status |
+| [Project Status](docs/22-project-status.md) | Current status |
 | [Testing Guide](docs/21-testing-guide.md) | Testing procedures |
 | [LLM Configuration](docs/23-llm-configuration.md) | Multi-provider LLM setup and routing |
 | [AGENTS.md](AGENTS.md) | Agent specification |

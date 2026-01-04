@@ -1,18 +1,19 @@
-# Reclapp 2.5 - Status Projektu
+
+# Reclapp - Status Projektu
 
 **Data:** 2 Stycznia 2026  
-**Wersja:** 2.5.0  
+**Wersja:** 2.2.0  
 **Status:** ✅ PRODUCTION READY
 
 ## Podsumowanie
 
-Reclapp 2.5 to kompletna platforma do generowania aplikacji B2B z kontraktów AI. System obsługuje pełny cykl życia od promptu/kontraktu do działającej usługi z **LLM-powered code generation**, **multi-level state verification**, i **CodeRAG navigation**.
+Reclapp to kompletna platforma do generowania aplikacji B2B z kontraktów AI. System obsługuje pełny cykl życia od promptu/kontraktu do działającej usługi z **LLM-powered code generation**, **multi-level state verification**, i **CodeRAG navigation**.
 
 ## Architektura
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     RECLAPP 2.5.0                            │
+│                     RECLAPP 2.2.0                            │
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
 │  CLI                                                         │
@@ -58,7 +59,7 @@ Reclapp 2.5 to kompletna platforma do generowania aplikacji B2B z kontraktów AI
 ### 3. CLI
 - **Lokalizacja:** `bin/reclapp`
 - **Status:** ✅ Kompletny
-- **Komendy:** generate-ai, full-lifecycle
+- **Komendy:** generate-ai, generate, evolve, validate, list, stop
 
 ### 4. Examples
 - **TypeScript:** `examples/contract-ai/` (5 przykładów)
@@ -141,8 +142,8 @@ pytest tests/contracts/ -v
 | File | Description |
 |------|-------------|
 | `code-rag.ts` | CodeRAG system (SemanticChunker, CodeIndexer, HierarchicalRetriever) |
-| `StateAnalyzer` | Multi-level state analysis (in evolution-manager.ts) |
-| `GitAnalyzer` | Git state tracking (in evolution-manager.ts) |
+| `state-analyzer.ts` | Multi-level state analysis |
+| `git-analyzer.ts` | Git state tracking |
 
 ### LLM-Powered Methods
 
@@ -302,15 +303,15 @@ npm test
 tasks:
   total: 4
   pending: 0
-  running: 2
-  done: 2
+  running: 0
+  done: 4
   failed: 0
 
 queue:
   - ✅ "echo Step 1": done # 0s
   - ✅ "npm install": done # 3s
-  - 🔄 "npm run build": running
-  - ⏳ "npm test": pending
+  - ✅ "npm run build": done
+  - ✅ "npm test": done
 ```
 
 ---

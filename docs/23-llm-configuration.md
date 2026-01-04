@@ -35,6 +35,14 @@ You can either edit `.env` manually or use the CLI (recommended).
 reclapp llm set-provider ollama
 ```
 
+You can also enable automatic fallback selection:
+
+```bash
+reclapp llm set-provider auto
+```
+
+When `LLM_PROVIDER=auto`, `reclapp` will try providers in priority order and pick the first one that is available.
+
 #### Set model for a provider
 
 ```bash
@@ -59,6 +67,11 @@ Status meanings:
 - `⚠ Configured but unreachable`
   configuration exists, but the backend cannot be reached (e.g. Ollama not running)
 
+Priority shown by `reclapp llm status`:
+
+- If `litellm_config.yaml` contains `model_list` entries with `priority`, the CLI uses the minimum `priority` per provider.
+- Otherwise it falls back to provider-level priority.
+
 ### 4) (Optional) Test generation
 
 ```bash
@@ -66,6 +79,18 @@ reclapp llm test -p ollama
 ```
 
 ## `.env` Variables
+
+### Where to store API keys (secrets)
+
+Do **not** store API keys in `litellm_config.yaml`.
+
+Recommended options:
+
+- Use `.env` in the repo (local development).
+- Use environment variables in your shell/CI (production).
+- Use a secret manager (GitHub Actions secrets, Vault, AWS/GCP/Azure secrets) and inject env vars at runtime.
+
+In this project, `.env` is the recommended place for keys, while `litellm_config.yaml` is for routing.
 
 ### Global
 
@@ -112,6 +137,17 @@ reclapp llm test -p ollama
 - `LITELLM_API_KEY`
 - `LITELLM_MODEL`
 
+### Managing API keys via CLI
+
+You can set/unset provider API keys via `reclapp` (this edits `.env`):
+
+```bash
+reclapp llm key set openrouter <OPENROUTER_API_KEY>
+reclapp llm key unset openrouter
+```
+
+Supported providers: `openrouter`, `openai`, `anthropic`, `groq`, `together`, `litellm`.
+
 ## `litellm_config.yaml` (Priorities, Limits, Fallbacks)
 
 The file `litellm_config.yaml` controls advanced routing:
@@ -133,6 +169,33 @@ Each entry looks like:
   priority: 10
   rate_limit: 120
 ```
+
+Recommendation: always use fully-qualified provider/model strings in `litellm_params.model`, e.g.:
+
+- `ollama/qwen2.5-coder:14b`
+- `openrouter/nvidia/nemotron-3-nano-30b-a3b:free`
+
+### Changing priority order (real task execution)
+
+To make OpenRouter tried first and Ollama second:
+
+```bash
+reclapp llm priority set-provider openrouter 10
+reclapp llm priority set-provider ollama 20
+```
+
+Then set:
+
+```bash
+reclapp llm set-provider auto
+```
+
+This combination ensures that during tasks, `reclapp` will fall back in the desired order.
+
+- `openrouter/nvidia/nemotron-3-nano-30b-a3b:free`
+- `groq/llama-3.1-8b-instant`
+- `openai/gpt-4-turbo`
+- `anthropic/claude-3-sonnet-20240229`
 
 ### Fallbacks
 
@@ -200,9 +263,11 @@ reclapp llm model remove my-local-fast
 Use this to discover the correct `model_name` values:
 
 ```bash
-reclapp llm model list
-reclapp llm model list -p groq
+reclapp llm config list
+reclapp llm config list -p groq
 ```
+
+`reclapp llm model list` is kept as a legacy alias for `reclapp llm config list`.
 
 ### Remove all models for a provider
 

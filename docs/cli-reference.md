@@ -29,8 +29,11 @@ Manage LLM configuration and routing.
 
 ```bash
 reclapp llm status
+reclapp llm config list
 reclapp llm set-provider <provider>
 reclapp llm set-model <provider> <model>
+reclapp llm key set <provider> <api_key>
+reclapp llm key unset <provider>
 reclapp llm priority set-provider <provider> <priority>
 reclapp llm priority set-model <model_name> <priority>
 reclapp llm model add --model-name ... --litellm-model ...
@@ -39,6 +42,10 @@ reclapp llm fallbacks list
 reclapp llm fallbacks add <model_name>
 reclapp llm fallbacks remove <model_name>
 ```
+
+`reclapp llm set-provider auto` enables automatic fallback selection: providers are tried in priority order.
+
+`reclapp llm model list` is kept as a legacy alias for `reclapp llm config list`.
 
 Details and examples are documented in:
 

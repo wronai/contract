@@ -410,10 +410,35 @@ def llm_status():
         console.print("\n[bold]Providers:[/]")
         available = list_available_providers()
         configured = config.list_configured_providers()
-        priorities = {
-            'ollama': 10, 'groq': 20, 'together': 30,
-            'openrouter': 40, 'openai': 50, 'anthropic': 60, 'litellm': 70
-        }
+
+        def _infer_provider_from_model_string(model_string: str) -> str:
+            if not model_string:
+                return ""
+            if "/" not in model_string:
+                return "openai"
+            return model_string.split("/", 1)[0]
+
+        # Priority shown here reflects effective routing preference:
+        # - if litellm_config.yaml contains per-model priorities, we use the minimum priority per provider
+        # - otherwise we fall back to provider config priority
+        priorities = {}
+        for provider_name in configured.keys():
+            provider_cfg = config.get_provider_config(provider_name)
+            if provider_cfg is not None:
+                priorities[provider_name] = int(getattr(provider_cfg, "priority", 100))
+            else:
+                priorities[provider_name] = 100
+
+        try:
+            for m in config.get_litellm_models():
+                provider_name = _infer_provider_from_model_string(getattr(m, "litellm_model", ""))
+                if not provider_name:
+                    continue
+                model_priority = int(getattr(m, "priority", 100))
+                current = priorities.get(provider_name, 100)
+                priorities[provider_name] = min(current, model_priority)
+        except Exception:
+            pass
         
         for provider in sorted(priorities.keys(), key=lambda p: priorities[p]):
             is_available = available.get(provider, False)
@@ -482,7 +507,7 @@ def llm_models(provider: str):
 
 @llm.command("set-provider")
 @click.argument("provider", type=click.Choice([
-    "openrouter", "openai", "anthropic", "groq", "together", "ollama", "litellm"
+    "openrouter", "openai", "anthropic", "groq", "together", "ollama", "litellm", "auto"
 ]))
 def llm_set_provider(provider: str):
     """Set default LLM provider."""
@@ -531,6 +556,75 @@ def llm_set_model(provider: str, model: str):
     console.print(f"[dim]Updated: {env_file}[/]")
 
 
+@llm.group("key")
+def llm_key():
+    """Manage API keys for providers (stored in .env, not in YAML)."""
+    pass
+
+
+@llm_key.command("set")
+@click.argument("provider", type=click.Choice([
+    "openrouter", "openai", "anthropic", "groq", "together", "litellm"
+]))
+@click.argument("api_key")
+def llm_key_set(provider: str, api_key: str):
+    """Set provider API key in .env."""
+    env_file = PROJECT_ROOT / ".env"
+    env_var_map = {
+        "openrouter": "OPENROUTER_API_KEY",
+        "openai": "OPENAI_API_KEY",
+        "anthropic": "ANTHROPIC_API_KEY",
+        "groq": "GROQ_API_KEY",
+        "together": "TOGETHER_API_KEY",
+        "litellm": "LITELLM_API_KEY",
+    }
+    var_name = env_var_map[provider]
+
+    content = env_file.read_text() if env_file.exists() else ""
+
+    import re
+    if re.search(rf'^{var_name}=', content, re.MULTILINE):
+        content = re.sub(rf'^{var_name}=.*$', f'{var_name}={api_key}', content, flags=re.MULTILINE)
+    elif re.search(rf'^#\s*{var_name}=', content, re.MULTILINE):
+        content = re.sub(rf'^#\s*{var_name}=.*$', f'{var_name}={api_key}', content, flags=re.MULTILINE)
+    else:
+        if content and not content.endswith("\n"):
+            content += "\n"
+        content += f"{var_name}={api_key}\n"
+
+    env_file.write_text(content)
+    console.print(f"[green]✓[/] API key set for: [bold]{provider}[/]")
+    console.print(f"[dim]Updated: {env_file}[/]")
+
+
+@llm_key.command("unset")
+@click.argument("provider", type=click.Choice([
+    "openrouter", "openai", "anthropic", "groq", "together", "litellm"
+]))
+def llm_key_unset(provider: str):
+    """Remove provider API key from .env (line is deleted)."""
+    env_file = PROJECT_ROOT / ".env"
+    if not env_file.exists():
+        console.print(f"[yellow]Warning:[/] .env file not found")
+        return
+
+    env_var_map = {
+        "openrouter": "OPENROUTER_API_KEY",
+        "openai": "OPENAI_API_KEY",
+        "anthropic": "ANTHROPIC_API_KEY",
+        "groq": "GROQ_API_KEY",
+        "together": "TOGETHER_API_KEY",
+        "litellm": "LITELLM_API_KEY",
+    }
+    var_name = env_var_map[provider]
+
+    lines = env_file.read_text().splitlines(True)
+    new_lines = [ln for ln in lines if not ln.startswith(f"{var_name}=")]
+    env_file.write_text("".join(new_lines))
+    console.print(f"[green]✓[/] API key removed for: [bold]{provider}[/]")
+    console.print(f"[dim]Updated: {env_file}[/]")
+
+
 @llm.command("test")
 @click.option("--provider", "-p", help="Provider to test (default: auto-detect)")
 @click.option("--model", "-m", help="Model to test")
@@ -569,22 +663,56 @@ def llm_test(provider: str, model: str):
         console.print(f"[red]Error:[/] {e}")
 
 
-@llm.command("config")
-def llm_config():
-    """Show full LLM configuration as JSON."""
+@llm.group("config", invoke_without_command=True)
+@click.pass_context
+def llm_config(ctx: click.Context):
+    """Show and manage LLM configuration."""
+    if ctx.invoked_subcommand is not None:
+        return
+
     import sys
     import json
     sys.path.insert(0, str(PROJECT_ROOT / 'pycontracts' / 'llm'))
-    
+
     try:
         from config import LLMConfig
-        
+
         config = LLMConfig()
         data = config.to_dict()
-        
+
         console.print(json.dumps(data, indent=2))
-        
+
     except ImportError as e:
+        console.print(f"[red]Error:[/] {e}")
+
+
+@llm_config.command("list")
+@click.option("--provider", "-p", type=click.Choice([
+    "ollama", "groq", "openrouter", "together_ai", "openai", "anthropic"
+]), help="Filter by provider")
+def llm_config_list(provider: str):
+    """List model routing entries from litellm_config.yaml."""
+    try:
+        data = _load_litellm_yaml()
+        model_list = data.get("model_list", [])
+        if not model_list:
+            console.print("[yellow]Warning:[/] model_list is empty")
+            return
+
+        console.print("[bold]Models (litellm_config.yaml):[/]")
+        for entry in sorted(model_list, key=lambda e: int(e.get("priority", 100))):
+            model_name = entry.get("model_name", "")
+            litellm_model = (entry.get("litellm_params", {}) or {}).get("model", "")
+            entry_provider = _infer_provider_from_litellm_model(litellm_model)
+            if provider and entry_provider != provider:
+                continue
+            priority = int(entry.get("priority", 100))
+            rate_limit = int(entry.get("rate_limit", 60))
+            console.print(
+                f"  [{priority:3d}] {model_name} -> {litellm_model}  "
+                f"[dim]({entry_provider}, rl={rate_limit}/min)[/]"
+            )
+    except Exception as e:
         console.print(f"[red]Error:[/] {e}")
 
 
@@ -714,26 +842,8 @@ def llm_model():
     "ollama", "groq", "openrouter", "together_ai", "openai", "anthropic"
 ]), help="Filter by provider")
 def llm_model_list(provider: str):
-    """List model_list entries (model_name -> litellm model, provider, priority, rate_limit)."""
-    try:
-        data = _load_litellm_yaml()
-        model_list = data.get("model_list", [])
-        if not model_list:
-            console.print("[yellow]Warning:[/] model_list is empty")
-            return
-
-        console.print("[bold]Models (litellm_config.yaml):[/]")
-        for entry in sorted(model_list, key=lambda e: int(e.get("priority", 100))):
-            model_name = entry.get("model_name", "")
-            litellm_model = (entry.get("litellm_params", {}) or {}).get("model", "")
-            entry_provider = _infer_provider_from_litellm_model(litellm_model)
-            if provider and entry_provider != provider:
-                continue
-            priority = int(entry.get("priority", 100))
-            rate_limit = int(entry.get("rate_limit", 60))
-            console.print(f"  [{priority:3d}] {model_name} -> {litellm_model}  [dim]({entry_provider}, rl={rate_limit}/min)[/]")
-    except Exception as e:
-        console.print(f"[red]Error:[/] {e}")
+    """Alias for `reclapp llm config list` (kept for backward compatibility)."""
+    return llm_config_list(provider)
 
 
 @llm_model.command("add")

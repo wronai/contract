@@ -30,7 +30,7 @@ Contract AI 2.2 to system generowania kodu oparty na LLM, który wykorzystuje 3-
 
 - 🎯 **Precyzyjne specyfikacje** - LLM wie dokładnie co i jak generować
 - 🔄 **Self-correction loop** - automatyczne naprawianie błędów
-- ✅ **7-stage validation** - kompleksowa walidacja wygenerowanego kodu
+- ✅ **8-stage validation** - kompleksowa walidacja wygenerowanego kodu
 - 📊 **Quality gates** - metryki jakości kodu
 
 ---
@@ -63,15 +63,16 @@ Contract AI 2.2 to system generowania kodu oparty na LLM, który wykorzystuje 3-
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Pipeline walidacji (7 stages)
+### Pipeline walidacji (8 stages)
 
 1. **Syntax** - sprawdzenie składni TypeScript
-2. **Assertions** - weryfikacja asercji z kontraktu
-3. **Static Analysis** - analiza statyczna (ESLint-like)
-4. **Tests** - generowanie i uruchamianie testów
-5. **Quality** - metryki jakości (coverage, complexity)
-6. **Security** - skanowanie bezpieczeństwa
-7. **Runtime** - testy w środowisku Docker
+2. **Schema** - weryfikacja zgodności ContractAI z JSON Schema
+3. **Assertions** - weryfikacja asercji z kontraktu
+4. **Static Analysis** - analiza statyczna (ESLint-like)
+5. **Tests** - generowanie i uruchamianie testów
+6. **Quality** - metryki jakości (coverage, complexity)
+7. **Security** - skanowanie bezpieczeństwa
+8. **Runtime** - testy w środowisku Docker
 
 ---
 

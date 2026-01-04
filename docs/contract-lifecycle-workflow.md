@@ -19,15 +19,16 @@ This document describes the complete lifecycle of a contract-driven application,
                      ┌─────────────────────────────────────────────────┤
                      │                                                 ▼
               ┌──────┴───────┐                              ┌──────────────────┐
-              │   FEEDBACK   │◀─────────────────────────────│  7 STAGES        │
+              │   FEEDBACK   │◀─────────────────────────────│  8 STAGES        │
               │     LOOP     │      (if validation fails)   │                  │
               └──────┬───────┘                              │  1. Syntax       │
-                     │                                      │  2. Assertions   │
-                     ▼                                      │  3. Static       │
-              ┌──────────────┐                              │  4. Tests        │
-              │    CODE      │                              │  5. Quality      │
-              │  CORRECTOR   │────────────────────────────▶ │  6. Security     │
-              └──────────────┘                              │  7. Runtime      │
+                     │                                      │  2. Schema       │
+                     ▼                                      │  3. Assertions   │
+              ┌──────────────┐                              │  4. Static       │
+              │    CODE      │                              │  5. Tests        │
+              │  CORRECTOR   │────────────────────────────▶ │  6. Quality      │
+              └──────────────┘                              │  7. Security     │
+                                                            │  8. Runtime      │
                                                             └────────┬─────────┘
                                                                      │
                      ┌───────────────────────────────────────────────┘
@@ -82,18 +83,19 @@ ContractAI ──▶ LLMCodeGenerator ──▶ GeneratedCode
 - `src/core/contract-ai/code-generator/llm-generator.ts`
 - `src/core/contract-ai/llm/ollama-client.ts`
 
-### 3. Validation Pipeline (7 Stages)
+### 3. Validation Pipeline (8 Stages)
 
 ```
 GeneratedCode ──▶ ValidationPipeline ──▶ PipelineResult
                         │
                         ├── Stage 1: Syntax Validator
-                        ├── Stage 2: Assertion Validator  
-                        ├── Stage 3: Static Analyzer
-                        ├── Stage 4: Test Runner (Jest)
-                        ├── Stage 5: Quality Checker
-                        ├── Stage 6: Security Scanner
-                        └── Stage 7: Runtime Validator (Docker)
+                        ├── Stage 2: Schema Validator
+                        ├── Stage 3: Assertion Validator  
+                        ├── Stage 4: Static Analyzer
+                        ├── Stage 5: Test Runner (Jest)
+                        ├── Stage 6: Quality Checker
+                        ├── Stage 7: Security Scanner
+                        └── Stage 8: Runtime Validator (Docker)
 ```
 
 **Files:**

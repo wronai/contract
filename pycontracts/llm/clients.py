@@ -568,8 +568,25 @@ def get_client(provider: str = None, model: str = None, **kwargs) -> BaseLLMClie
     Returns:
         Configured LLM client
     """
-    provider = provider or os.environ.get('LLM_PROVIDER', 
+    provider = provider or os.environ.get('LLM_PROVIDER',
         os.environ.get('CODE2LOGIC_DEFAULT_PROVIDER', 'openrouter'))
+
+    # Explicit auto mode: try providers in configured priority order
+    if provider in ("auto", "AUTO"):
+        try:
+            from config import LLMConfig
+
+            cfg = LLMConfig()
+            for p_cfg in cfg.get_configured_providers():
+                p = p_cfg.name
+                if p not in PROVIDER_CLIENTS:
+                    continue
+                client_class = PROVIDER_CLIENTS[p]
+                client = client_class(model=model, **kwargs) if model else client_class(**kwargs)
+                if client.is_available():
+                    return client
+        except Exception:
+            pass
     
     if provider in PROVIDER_CLIENTS:
         client_class = PROVIDER_CLIENTS[provider]
@@ -577,10 +594,22 @@ def get_client(provider: str = None, model: str = None, **kwargs) -> BaseLLMClie
             return client_class(model=model, **kwargs)
         return client_class(**kwargs)
     
-    # Auto-detect: try providers in order of priority
-    priority_order = ['ollama', 'groq', 'openrouter', 'openai', 'anthropic', 'together']
+    # Auto-detect: try providers in configured priority order
+    priority_order = []
+    try:
+        from config import LLMConfig
+
+        cfg = LLMConfig()
+        priority_order = [p.name for p in cfg.get_configured_providers()]
+    except Exception:
+        priority_order = []
+
+    if not priority_order:
+        priority_order = ['ollama', 'groq', 'openrouter', 'openai', 'anthropic', 'together']
     
     for p in priority_order:
+        if p not in PROVIDER_CLIENTS:
+            continue
         client_class = PROVIDER_CLIENTS[p]
         client = client_class(model=model, **kwargs) if model else client_class(**kwargs)
         if client.is_available():

@@ -1,7 +1,7 @@
-# Reclapp 2.3: Praktyczny Przewodnik Testowania
+# Reclapp: Praktyczny Przewodnik Testowania
 
 **Data:** 1 Stycznia 2026  
-**Wersja:** 2.3.0  
+**Wersja:** 2.2.0  
 **Kategoria:** Testing Guide  
 **Status:** ✅ VERIFIED
 
@@ -39,15 +39,16 @@
 │     │  - frontend/src/hooks/*.ts                                   │    │
 │     └──────────────────────────────────────────────────────────────┘    │
 │                              ↓                                           │
-│  4. VALIDATION (7 STAGES)                                               │
+│  4. VALIDATION (8 STAGES)                                               │
 │     ┌──────────────────────────────────────────────────────────────┐    │
 │     │  Stage 1: Syntax      → TypeScript kompiluje się?            │    │
-│     │  Stage 2: Assertions  → Czy spełnia kontraktowe assercje?    │    │
-│     │  Stage 3: Static      → ESLint rules OK?                     │    │
-│     │  Stage 4: Tests       → Wygenerowane testy przechodzą?       │    │
-│     │  Stage 5: Quality     → Coverage, complexity OK?             │    │
-│     │  Stage 6: Security    → Brak SQL injection, secrets?         │    │
-│     │  Stage 7: Runtime     → Docker + health check + CRUD?        │    │
+│     │  Stage 2: Schema      → ContractAI schema / typy OK?         │    │
+│     │  Stage 3: Assertions  → Czy spełnia kontraktowe assercje?     │    │
+│     │  Stage 4: Static      → ESLint-like rules OK?                 │    │
+│     │  Stage 5: Tests       → Wygenerowane testy przechodzą?        │    │
+│     │  Stage 6: Quality     → Coverage, complexity OK?              │    │
+│     │  Stage 7: Security    → Brak SQL injection, secrets?          │    │
+│     │  Stage 8: Runtime     → Docker + health check + CRUD?         │    │
 │     └──────────────────────────────────────────────────────────────┘    │
 │                              ↓                                           │
 │  5. OUTPUT                                                               │
@@ -66,6 +67,10 @@
 
 ```bash
 cd ~/github/wronai/contract
+
+# Jeśli widzisz "npm: command not found" (np. w CI lub w testach uruchamianych z powłoki),
+# doładuj NVM przed użyciem npm:
+source ~/.nvm/nvm.sh
 
 # Sprawdź Node.js
 node --version  # >= 18.0.0
