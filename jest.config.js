@@ -5,6 +5,19 @@ const tsJestTransform = ['ts-jest', {
 
 module.exports = {
   testEnvironment: 'node',
+  // Ignore generated output directories to avoid haste module collisions
+  modulePathIgnorePatterns: [
+    '<rootDir>/output/',
+    '<rootDir>/output2/',
+    '<rootDir>/output3/',
+    '<rootDir>/output4/',
+    '<rootDir>/output_py/',
+    '<rootDir>/output_py2/',
+    '<rootDir>/output_final/',
+    '<rootDir>/generated/',
+    '<rootDir>/.test-output/',
+    '<rootDir>/.test-output-e2e/'
+  ],
   moduleNameMapper: {
     '^@dsl/(.*)$': '<rootDir>/dsl/$1',
     '^@core/(.*)$': '<rootDir>/core/$1',
