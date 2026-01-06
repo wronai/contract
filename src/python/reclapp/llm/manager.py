@@ -7,10 +7,12 @@ Mirrors: src/core/contract-ai/llm/llm-manager.ts
 """
 
 import os
+from pathlib import Path
 from typing import Optional
 
 from .provider import LLMProvider, LLMResponse, GenerateOptions, LLMProviderStatus, LLMModelInfo
 from .ollama import OllamaClient, OllamaConfig
+from .openrouter import OpenRouterClient
 
 
 class ProviderInfo:
@@ -80,20 +82,62 @@ class LLMManager:
         """Initialize all configured providers"""
         if self._initialized:
             return
+
+        self._load_env_file()
         
         # Initialize Ollama
         await self._init_ollama()
         
         # Initialize OpenRouter if configured
         await self._init_openrouter()
-        
-        # Set primary provider (first available)
-        for name, info in self._provider_info.items():
-            if info.status == LLMProviderStatus.AVAILABLE:
-                self._primary_provider = name
-                break
+
+        preferred = os.getenv("LLM_PROVIDER", "auto").strip().lower() or "auto"
+
+        if preferred not in ("", "auto"):
+            info = self._provider_info.get(preferred)
+            if info is not None and info.status == LLMProviderStatus.AVAILABLE:
+                self._primary_provider = preferred
+
+        if not self._primary_provider:
+            if preferred == "auto":
+                info = self._provider_info.get("openrouter")
+                if info is not None and info.status == LLMProviderStatus.AVAILABLE:
+                    self._primary_provider = "openrouter"
+
+        if not self._primary_provider:
+            for name, info in self._provider_info.items():
+                if info.status == LLMProviderStatus.AVAILABLE:
+                    self._primary_provider = name
+                    break
         
         self._initialized = True
+
+    def _load_env_file(self) -> None:
+        candidates = [
+            Path.cwd() / ".env",
+            Path(__file__).resolve().parents[4] / ".env",
+            Path.home() / ".reclapp" / ".env",
+        ]
+
+        for path in candidates:
+            try:
+                if not path.exists():
+                    continue
+
+                for line in path.read_text().splitlines():
+                    line = line.strip()
+                    if not line or line.startswith("#") or "=" not in line:
+                        continue
+
+                    key, value = line.split("=", 1)
+                    key = key.strip()
+                    value = value.strip().strip('"').strip("'")
+                    if key and value and not os.environ.get(key):
+                        os.environ[key] = value
+
+                return
+            except Exception:
+                continue
     
     async def _init_ollama(self) -> None:
         """Initialize Ollama provider"""
@@ -118,21 +162,28 @@ class LLMManager:
     async def _init_openrouter(self) -> None:
         """Initialize OpenRouter provider if API key is set"""
         api_key = os.getenv("OPENROUTER_API_KEY")
-        
+
+        info = ProviderInfo("openrouter", LLMProviderStatus.NOT_CONFIGURED)
+
         if not api_key:
-            self._provider_info["openrouter"] = ProviderInfo(
-                "openrouter", 
-                LLMProviderStatus.NOT_CONFIGURED
-            )
-            self._provider_info["openrouter"].error = "Set OPENROUTER_API_KEY"
+            info.error = "Set OPENROUTER_API_KEY"
+            self._provider_info["openrouter"] = info
             return
-        
-        # OpenRouter implementation would go here
-        # For now, mark as not configured
-        self._provider_info["openrouter"] = ProviderInfo(
-            "openrouter",
-            LLMProviderStatus.NOT_CONFIGURED
-        )
+
+        try:
+            client = OpenRouterClient()
+            if await client.is_available():
+                info.status = LLMProviderStatus.AVAILABLE
+                info.provider = client
+                self._providers["openrouter"] = client
+            else:
+                info.status = LLMProviderStatus.UNAVAILABLE
+                info.error = "OpenRouter API key not configured"
+        except Exception as e:
+            info.status = LLMProviderStatus.ERROR
+            info.error = str(e)
+
+        self._provider_info["openrouter"] = info
     
     def add_provider(self, name: str, provider: LLMProvider) -> None:
         """Add a custom provider"""
