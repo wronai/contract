@@ -7,3 +7,5 @@
  */
 
 export * from './cli-runner';
+export * from './llm-setup';
+export * from './evolution-setup';

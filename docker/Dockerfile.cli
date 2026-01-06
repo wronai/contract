@@ -1,0 +1,36 @@
+# =============================================================================
+# Reclapp CLI Dockerfile
+# Container for running reclapp evolve with pre-configured LiteLLM
+# =============================================================================
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies
+RUN apk add --no-cache python3 make g++ curl
+
+# Copy package files
+COPY package*.json ./
+COPY tsconfig.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source files
+COPY . .
+
+# Build TypeScript (if needed)
+RUN npm run build || true
+
+# Set default environment variables for LiteLLM
+ENV LLM_PROVIDER=litellm
+ENV LITELLM_URL=http://host.docker.internal:8123
+ENV LITELLM_MODEL=model:1
+
+# Create output directory
+RUN mkdir -p /app/output
+
+# Default command (can be overridden)
+CMD ["node", "bin/reclapp", "--help"]
+

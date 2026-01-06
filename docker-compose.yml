@@ -25,6 +25,12 @@ services:
       - AI_CONFIDENCE_THRESHOLD=${AI_CONFIDENCE_THRESHOLD:-0.7}
       - AI_SANDBOX_MODE=${AI_SANDBOX_MODE:-true}
       - CAUSAL_DECAY_RATE=${CAUSAL_DECAY_RATE:-0.01}
+      # LM Studio Configuration (port 8123)
+      - LLM_PROVIDER=${LLM_PROVIDER:-litellm}
+      - LITELLM_URL=${LITELLM_URL:-http://host.docker.internal:8123}
+      - LITELLM_MODEL=${LITELLM_MODEL:-model:1}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./examples:/app/examples:ro
     depends_on:
@@ -161,6 +167,37 @@ services:
     restart: unless-stopped
     profiles:
       - monitoring
+
+  # ==========================================================================
+  # CLI TOOLS
+  # ==========================================================================
+
+  # Reclapp CLI - Pre-configured with LiteLLM for LM Studio
+  reclapp-cli:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.cli
+    environment:
+      - LLM_PROVIDER=${LLM_PROVIDER:-litellm}
+      - LITELLM_URL=${LITELLM_URL:-http://host.docker.internal:8123}
+      - LITELLM_MODEL=${LITELLM_MODEL:-model:1}
+      - NODE_ENV=${NODE_ENV:-development}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      # Mount output directory to persist generated apps
+      - ./output:/app/output
+      # Mount examples for reference
+      - ./examples:/app/examples:ro
+      # Optional: mount current directory for development
+      - .:/app:ro
+    working_dir: /app
+    # Don't start by default - use: docker compose run reclapp-cli evolve ...
+    profiles:
+      - cli
+    # Keep container running for interactive use
+    stdin_open: true
+    tty: true
 
   # ==========================================================================
   # DEVELOPMENT TOOLS (Optional)
