@@ -334,8 +334,10 @@ def setup(output: str, install: bool, yes: bool, dry_run: bool, skip_optional: b
 @click.option("--output", "-o", default="./target", help="Output directory")
 @click.option("--keep-running", "-k", is_flag=True, help="Keep service running after generation")
 @click.option("--verbose", "-v", is_flag=True, help="Verbose output")
+@click.option("--no-menu", is_flag=True, help="Do not enter interactive menu after evolve finishes (Node engine)")
+@click.option("--log-file", type=str, default=None, help="Write markdown logs to file (Node engine)")
 @click.option("--engine", type=click.Choice(["python", "node"]), default="python", help="Execution engine")
-def evolve(prompt: str, output: str, keep_running: bool, verbose: bool, engine: str):
+def evolve(prompt: str, output: str, keep_running: bool, verbose: bool, no_menu: bool, log_file: Optional[str], engine: str):
     """Evolution mode - dynamic code generation with auto-healing"""
     
     if engine == "python":
@@ -367,6 +369,10 @@ def evolve(prompt: str, output: str, keep_running: bool, verbose: bool, engine: 
                 cmd.append("-k")
             if verbose:
                 cmd.append("-v")
+            if no_menu:
+                cmd.append("--no-menu")
+            if log_file:
+                cmd.extend(["--log-file", log_file])
             
             env = setup_node_env()
             result = subprocess.run(cmd, env=env, cwd=str(PROJECT_ROOT))

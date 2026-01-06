@@ -4,6 +4,10 @@ output_*/
 output_p3_*/
 output/
 output*/
+my-app/
+my-crm/
+express/
+LegacyApp/
 src-reproduction/
 setup/
 my-app
