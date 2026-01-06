@@ -64,6 +64,17 @@ async def run_evolve(
         # Initialize LLM client
         llm_manager = LLMManager(verbose=verbose)
         await llm_manager.initialize()
+
+        provider = None
+        if llm_manager.is_ready():
+            provider = llm_manager.get_provider()
+            if provider:
+                click.md(
+                    f"""```log
+🤖 LLM selected: {provider.name}
+→ Model: {provider.model}
+```\n"""
+                )
         
         if not llm_manager.is_ready():
             click.md("```log\n⚠️ No LLM available. Using template-based generation.\n```\n")
@@ -78,10 +89,8 @@ async def run_evolve(
         ))
         
         # Set LLM client if available
-        if llm_manager.is_ready():
-            provider = llm_manager.get_provider()
-            if provider:
-                evolution.set_llm_client(provider)
+        if provider:
+            evolution.set_llm_client(provider)
         
         # Run evolution
         result = await evolution.evolve(prompt, output)

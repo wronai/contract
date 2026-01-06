@@ -501,36 +501,36 @@ def llm_models(provider: str):
     
     try:
         from clients import RECOMMENDED_MODELS, OllamaClient
-        
-        console.print(Panel.fit(
-            "[bold blue]Recommended Models[/]",
-            title="📦 LLM Models"
-        ))
-        
+
+        click.md("## 📦 LLM Models\n")
+
+        lines = []
         providers_to_show = [provider] if provider else RECOMMENDED_MODELS.keys()
-        
+
         for prov in providers_to_show:
             if prov not in RECOMMENDED_MODELS:
                 continue
-            console.print(f"\n[bold]{prov.upper()}:[/]")
+            lines.append(prov.upper())
             for model, desc in RECOMMENDED_MODELS[prov]:
-                console.print(f"  [cyan]{model}[/]")
-                console.print(f"    [dim]{desc}[/]")
-        
-        # Show local Ollama models if available
+                lines.append(f"- {model} :: {desc}")
+            lines.append("")
+
         if provider == "ollama" or provider is None:
             client = OllamaClient()
             if client.is_available():
                 models = client.list_models()
                 if models:
-                    console.print(f"\n[bold]LOCAL OLLAMA MODELS ({len(models)}):[/]")
+                    lines.append(f"LOCAL OLLAMA MODELS ({len(models)}):")
                     for m in models[:15]:
-                        console.print(f"  [green]✓[/] {m}")
+                        lines.append(f"- {m}")
                     if len(models) > 15:
-                        console.print(f"  [dim]... and {len(models) - 15} more[/]")
+                        lines.append(f"... and {len(models) - 15} more")
+                    lines.append("")
+
+        click.md("```log\n" + "\n".join(lines).rstrip() + "\n```\n")
                         
     except ImportError as e:
-        console.print(f"[red]Error:[/] {e}")
+        click.md(f"## ❌ Error\n\n```log\n{e}\n```\n")
 
 
 @llm.command("set-provider")
@@ -553,8 +553,7 @@ def llm_set_provider(provider: str):
         content += f"LLM_PROVIDER={provider}\n"
 
     env_file.write_text(content)
-    console.print(f"[green]✓[/] Default provider set to: [bold]{provider}[/]")
-    console.print(f"[dim]Updated: {env_file}[/]")
+    click.md(f"```log\n✅ Default provider set to: {provider}\nUpdated: {env_file}\n```\n")
 
 
 @llm.command("set-model")
@@ -580,8 +579,7 @@ def llm_set_model(provider: str, model: str):
         content += f"{var_name}={model}\n"
 
     env_file.write_text(content)
-    console.print(f"[green]✓[/] {provider} model set to: [bold]{model}[/]")
-    console.print(f"[dim]Updated: {env_file}[/]")
+    click.md(f"```log\n✅ {provider} model set to: {model}\nUpdated: {env_file}\n```\n")
 
 
 @llm.group("key")
@@ -621,8 +619,7 @@ def llm_key_set(provider: str, api_key: str):
         content += f"{var_name}={api_key}\n"
 
     env_file.write_text(content)
-    console.print(f"[green]✓[/] API key set for: [bold]{provider}[/]")
-    console.print(f"[dim]Updated: {env_file}[/]")
+    click.md(f"```log\n✅ API key set for: {provider}\nUpdated: {env_file}\n```\n")
 
 
 @llm_key.command("unset")
@@ -633,7 +630,7 @@ def llm_key_unset(provider: str):
     """Remove provider API key from .env (line is deleted)."""
     env_file = PROJECT_ROOT / ".env"
     if not env_file.exists():
-        console.print(f"[yellow]Warning:[/] .env file not found")
+        click.md("```log\n⚠️ .env file not found\n```\n")
         return
 
     env_var_map = {
@@ -649,8 +646,7 @@ def llm_key_unset(provider: str):
     lines = env_file.read_text().splitlines(True)
     new_lines = [ln for ln in lines if not ln.startswith(f"{var_name}=")]
     env_file.write_text("".join(new_lines))
-    console.print(f"[green]✓[/] API key removed for: [bold]{provider}[/]")
-    console.print(f"[dim]Updated: {env_file}[/]")
+    click.md(f"```log\n✅ API key removed for: {provider}\nUpdated: {env_file}\n```\n")
 
 
 @llm.command("test")
@@ -662,33 +658,45 @@ def llm_test(provider: str, model: str):
     sys.path.insert(0, str(PROJECT_ROOT / 'pycontracts' / 'llm'))
     
     try:
+        from config import LLMConfig
         from clients import get_client
-        
-        console.print("[blue]Testing LLM generation...[/]")
+
+        LLMConfig()
+
+        click.md("## 🧪 LLM Test\n")
+        click.md("```log\nTesting LLM generation...\n```\n")
         
         kwargs = {}
         if model:
             kwargs['model'] = model
         
         client = get_client(provider, **kwargs) if provider else get_client(**kwargs)
-        
-        console.print(f"[dim]Provider: {client.provider_name}[/]")
-        console.print(f"[dim]Model: {getattr(client, 'model', 'unknown')}[/]")
+
+        click.md(
+            "```log\n"
+            + f"Provider: {client.provider_name}\n"
+            + f"Model: {getattr(client, 'model', 'unknown')}\n"
+            + "```\n"
+        )
         
         if not client.is_available():
-            console.print(f"[red]Error:[/] Provider not available")
+            click.md("```log\n❌ Provider not available\n```\n")
             return
         
         import time
         start = time.time()
         response = client.generate("Say 'Hello from Reclapp!' and nothing else.", max_tokens=20)
         elapsed = time.time() - start
-        
-        console.print(f"\n[green]✓ Response:[/] {response.strip()}")
-        console.print(f"[dim]Time: {elapsed:.2f}s[/]")
+
+        click.md(
+            "```log\n"
+            + f"✅ Response: {response.strip()}\n"
+            + f"Time: {elapsed:.2f}s\n"
+            + "```\n"
+        )
         
     except Exception as e:
-        console.print(f"[red]Error:[/] {e}")
+        click.md(f"## ❌ Error\n\n```log\n{e}\n```\n")
 
 
 @llm.group("config", invoke_without_command=True)
@@ -708,10 +716,10 @@ def llm_config(ctx: click.Context):
         config = LLMConfig()
         data = config.to_dict()
 
-        console.print(json.dumps(data, indent=2))
+        click.md("```json\n" + json.dumps(data, indent=2) + "\n```\n")
 
     except ImportError as e:
-        console.print(f"[red]Error:[/] {e}")
+        click.md(f"## ❌ Error\n\n```log\n{e}\n```\n")
 
 
 @llm_config.command("list")
@@ -724,10 +732,10 @@ def llm_config_list(provider: str):
         data = _load_litellm_yaml()
         model_list = data.get("model_list", [])
         if not model_list:
-            console.print("[yellow]Warning:[/] model_list is empty")
+            click.md("```log\n⚠️ model_list is empty\n```\n")
             return
 
-        console.print("[bold]Models (litellm_config.yaml):[/]")
+        lines = ["Models (litellm_config.yaml):"]
         for entry in sorted(model_list, key=lambda e: int(e.get("priority", 100))):
             model_name = entry.get("model_name", "")
             litellm_model = (entry.get("litellm_params", {}) or {}).get("model", "")
@@ -736,12 +744,14 @@ def llm_config_list(provider: str):
                 continue
             priority = int(entry.get("priority", 100))
             rate_limit = int(entry.get("rate_limit", 60))
-            console.print(
-                f"  [{priority:3d}] {model_name} -> {litellm_model}  "
-                f"[dim]({entry_provider}, rl={rate_limit}/min)[/]"
+
+            lines.append(
+                f"  [{priority:3d}] {model_name} -> {litellm_model} ({entry_provider}, rl={rate_limit}/min)"
             )
+
+        click.md("```log\n" + "\n".join(lines) + "\n```\n")
     except Exception as e:
-        console.print(f"[red]Error:[/] {e}")
+        click.md(f"## ❌ Error\n\n```log\n{e}\n```\n")
 
 
 def _get_litellm_config_path() -> Path:
@@ -814,7 +824,7 @@ def llm_priority_set_provider(provider: str, priority: int, preserve_order: bool
                 matched.append(entry)
 
         if not matched:
-            console.print(f"[yellow]Warning:[/] No models found for provider: {provider}")
+            click.md(f"```log\n⚠️ No models found for provider: {provider}\n```\n")
             return
 
         if preserve_order:
@@ -828,13 +838,14 @@ def llm_priority_set_provider(provider: str, priority: int, preserve_order: bool
                 entry["priority"] = int(priority)
 
         _save_litellm_yaml(data)
-        console.print(
-            f"[green]✓[/] Set provider priority: [bold]{provider}[/] -> {priority} "
-            f"({len(matched)} model(s))"
+        click.md(
+            "```log\n"
+            + f"✅ Set provider priority: {provider} -> {priority} ({len(matched)} model(s))\n"
+            + f"Updated: {_get_litellm_config_path()}\n"
+            + "```\n"
         )
-        console.print(f"[dim]Updated: {_get_litellm_config_path()}[/]")
     except Exception as e:
-        console.print(f"[red]Error:[/] {e}")
+        click.md(f"## ❌ Error\n\n```log\n{e}\n```\n")
 
 
 @llm_priority.command("set-model")
@@ -850,13 +861,17 @@ def llm_priority_set_model(model_name: str, priority: int):
             if entry.get("model_name") == model_name:
                 entry["priority"] = int(priority)
                 _save_litellm_yaml(data)
-                console.print(f"[green]✓[/] Set model priority: [bold]{model_name}[/] -> {priority}")
-                console.print(f"[dim]Updated: {_get_litellm_config_path()}[/]")
+                click.md(
+                    "```log\n"
+                    + f"✅ Set model priority: {model_name} -> {priority}\n"
+                    + f"Updated: {_get_litellm_config_path()}\n"
+                    + "```\n"
+                )
                 return
 
-        console.print(f"[yellow]Warning:[/] model_name not found: {model_name}")
+        click.md(f"```log\n⚠️ model_name not found: {model_name}\n```\n")
     except Exception as e:
-        console.print(f"[red]Error:[/] {e}")
+        click.md(f"## ❌ Error\n\n```log\n{e}\n```\n")
 
 
 @llm.group("model")
@@ -888,7 +903,7 @@ def llm_model_add(model_name: str, litellm_model: str, api_base: str, api_key: s
         model_list = data.get("model_list", [])
 
         if any(e.get("model_name") == model_name for e in model_list):
-            console.print(f"[red]Error:[/] model_name already exists: {model_name}")
+            click.md(f"```log\n❌ model_name already exists: {model_name}\n```\n")
             return
 
         litellm_params = {"model": litellm_model}
@@ -907,10 +922,14 @@ def llm_model_add(model_name: str, litellm_model: str, api_base: str, api_key: s
         data["model_list"] = model_list
 
         _save_litellm_yaml(data)
-        console.print(f"[green]✓[/] Added model: [bold]{model_name}[/] -> {litellm_model}")
-        console.print(f"[dim]Updated: {_get_litellm_config_path()}[/]")
+        click.md(
+            "```log\n"
+            + f"✅ Added model: {model_name} -> {litellm_model}\n"
+            + f"Updated: {_get_litellm_config_path()}\n"
+            + "```\n"
+        )
     except Exception as e:
-        console.print(f"[red]Error:[/] {e}")
+        click.md(f"## ❌ Error\n\n```log\n{e}\n```\n")
 
 
 @llm_model.command("remove")
@@ -923,7 +942,7 @@ def llm_model_remove(model_name: str):
 
         new_list = [e for e in model_list if e.get("model_name") != model_name]
         if len(new_list) == len(model_list):
-            console.print(f"[yellow]Warning:[/] model_name not found: {model_name}")
+            click.md(f"```log\n⚠️ model_name not found: {model_name}\n```\n")
             return
 
         data["model_list"] = new_list
@@ -935,10 +954,14 @@ def llm_model_remove(model_name: str):
             data["router_settings"] = router_settings
 
         _save_litellm_yaml(data)
-        console.print(f"[green]✓[/] Removed model: [bold]{model_name}[/]")
-        console.print(f"[dim]Updated: {_get_litellm_config_path()}[/]")
+        click.md(
+            "```log\n"
+            + f"✅ Removed model: {model_name}\n"
+            + f"Updated: {_get_litellm_config_path()}\n"
+            + "```\n"
+        )
     except Exception as e:
-        console.print(f"[red]Error:[/] {e}")
+        click.md(f"## ❌ Error\n\n```log\n{e}\n```\n")
 
 
 @llm_model.command("remove-provider")
@@ -963,7 +986,7 @@ def llm_model_remove_provider(provider: str):
 
         to_remove_names = [n for n in to_remove_names if n]
         if not to_remove_names:
-            console.print(f"[yellow]Warning:[/] No models found for provider: {provider}")
+            click.md(f"```log\n⚠️ No models found for provider: {provider}\n```\n")
             return
 
         data["model_list"] = kept
@@ -975,13 +998,16 @@ def llm_model_remove_provider(provider: str):
             data["router_settings"] = router_settings
 
         _save_litellm_yaml(data)
-        console.print(f"[green]✓[/] Removed provider models: [bold]{provider}[/] ({len(to_remove_names)} entries)")
-        console.print(f"[dim]Updated: {_get_litellm_config_path()}[/]")
-        console.print("[dim]Removed model_name values:[/]")
-        for n in to_remove_names:
-            console.print(f"  - {n}")
+        click.md(
+            "```log\n"
+            + f"✅ Removed provider models: {provider} ({len(to_remove_names)} entries)\n"
+            + f"Updated: {_get_litellm_config_path()}\n"
+            + "Removed model_name values:\n"
+            + "\n".join(f"- {n}" for n in to_remove_names)
+            + "\n```\n"
+        )
     except Exception as e:
-        console.print(f"[red]Error:[/] {e}")
+        click.md(f"## ❌ Error\n\n```log\n{e}\n```\n")
 
 
 @llm.group("fallbacks")
@@ -997,11 +1023,14 @@ def llm_fallbacks_list():
         data = _load_litellm_yaml()
         router_settings = data.get("router_settings", {}) or {}
         fallbacks = router_settings.get("fallbacks") or []
-        console.print("[bold]Fallbacks:[/]")
+        click.md("## Fallbacks\n")
+        if not fallbacks:
+            click.md("```log\n(no fallbacks configured)\n```\n")
+            return
         for f in fallbacks:
-            console.print(f"  - {f}")
+            click.echo(f"- {f}")
     except Exception as e:
-        console.print(f"[red]Error:[/] {e}")
+        click.md(f"## ❌ Error\n\n```log\n{e}\n```\n")
 
 
 @llm_fallbacks.command("add")
@@ -1016,17 +1045,21 @@ def llm_fallbacks_add(model_name: str):
             fallbacks = []
 
         if model_name in fallbacks:
-            console.print(f"[yellow]Warning:[/] Already in fallbacks: {model_name}")
+            click.md(f"```log\n⚠️ Already in fallbacks: {model_name}\n```\n")
             return
 
         fallbacks.append(model_name)
         router_settings["fallbacks"] = fallbacks
         data["router_settings"] = router_settings
         _save_litellm_yaml(data)
-        console.print(f"[green]✓[/] Added fallback: [bold]{model_name}[/]")
-        console.print(f"[dim]Updated: {_get_litellm_config_path()}[/]")
+        click.md(
+            "```log\n"
+            + f"✅ Added fallback: {model_name}\n"
+            + f"Updated: {_get_litellm_config_path()}\n"
+            + "```\n"
+        )
     except Exception as e:
-        console.print(f"[red]Error:[/] {e}")
+        click.md(f"## ❌ Error\n\n```log\n{e}\n```\n")
 
 
 @llm_fallbacks.command("remove")
@@ -1038,20 +1071,24 @@ def llm_fallbacks_remove(model_name: str):
         router_settings = data.get("router_settings", {}) or {}
         fallbacks = router_settings.get("fallbacks")
         if not isinstance(fallbacks, builtins.list) or not fallbacks:
-            console.print("[yellow]Warning:[/] No fallbacks configured")
+            click.md("```log\n⚠️ No fallbacks configured\n```\n")
             return
 
         if model_name not in fallbacks:
-            console.print(f"[yellow]Warning:[/] Not in fallbacks: {model_name}")
+            click.md(f"```log\n⚠️ Not in fallbacks: {model_name}\n```\n")
             return
 
         router_settings["fallbacks"] = [f for f in fallbacks if f != model_name]
         data["router_settings"] = router_settings
         _save_litellm_yaml(data)
-        console.print(f"[green]✓[/] Removed fallback: [bold]{model_name}[/]")
-        console.print(f"[dim]Updated: {_get_litellm_config_path()}[/]")
+        click.md(
+            "```log\n"
+            + f"✅ Removed fallback: {model_name}\n"
+            + f"Updated: {_get_litellm_config_path()}\n"
+            + "```\n"
+        )
     except Exception as e:
-        console.print(f"[red]Error:[/] {e}")
+        click.md(f"## ❌ Error\n\n```log\n{e}\n```\n")
 
 
 if __name__ == "__main__":
