@@ -8,6 +8,7 @@ Usage:
 """
 
 import os
+import re
 import sys
 import subprocess
 import shutil
@@ -15,9 +16,13 @@ from pathlib import Path
 from typing import Optional
 import builtins
 
-import clickmd as click
-from rich.console import Console
-from rich.panel import Panel
+try:
+    import clickmd as click
+except ModuleNotFoundError:
+    _project_root = Path(__file__).parent.parent.resolve()
+    if str(_project_root) not in sys.path:
+        sys.path.insert(0, str(_project_root))
+    import clickmd as click
 
 try:
     import yaml
@@ -25,7 +30,31 @@ try:
 except ImportError:
     YAML_AVAILABLE = False
 
-console = Console()
+
+_RICH_TAG_RE = re.compile(r"\[(?:/)?[^\]]+\]")
+
+
+def _strip_rich_markup(text: str) -> str:
+    return _RICH_TAG_RE.sub("", text)
+
+
+class _Console:
+    def print(self, message: object = "") -> None:
+        if message is None:
+            click.echo("")
+            return
+        click.echo(_strip_rich_markup(str(message)))
+
+
+class Panel:
+    @staticmethod
+    def fit(message: object, title: Optional[str] = None):
+        if title:
+            return f"{title}\n{message}"
+        return str(message)
+
+
+console = _Console()
 
 # Find the project root directory
 PROJECT_ROOT = Path(__file__).parent.parent.resolve()
@@ -144,7 +173,7 @@ def lifecycle(prompt: str, output: str, port: int, verbose: bool, keep_running: 
         )
         sys.exit(exit_code)
     except ImportError as e:
-        console.print(f"[red]Error:[/] Python lifecycle engine not available: {e}")
+        click.md(f"## ❌ Error\n\n```log\nPython lifecycle engine not available: {e}\n```\n")
         sys.exit(1)
 
 
@@ -169,18 +198,18 @@ def generate(contract_path: str, output: str, verbose: bool, engine: str):
             )
             sys.exit(exit_code)
         except ImportError as e:
-            console.print(f"[yellow]Warning:[/] Python engine not available: {e}")
+            click.md(f"```log\n⚠️ Python engine not available: {e}\n```\n")
             sys.exit(1)
     elif engine == "python" and not is_markdown:
-        console.print("[red]Error:[/] TypeScript contracts require Node.js engine")
+        click.md("```log\n❌ Error: TypeScript contracts require Node.js engine\n```\n")
         sys.exit(1)
     
     if engine == "node":
-        console.print(f"[blue]📄 Generating from:[/] {contract_path}")
+        click.md(f"```log\n📄 Generating from: {contract_path}\n```\n")
         
         node = find_node()
         if not node:
-            console.print("[red]Error:[/] Node.js not found")
+            click.md("```log\n❌ Error: Node.js not found\n```\n")
             sys.exit(1)
         
         if NODE_CLI.exists():
@@ -192,7 +221,7 @@ def generate(contract_path: str, output: str, verbose: bool, engine: str):
             result = subprocess.run(cmd, env=env, cwd=str(PROJECT_ROOT))
             sys.exit(result.returncode)
         else:
-            console.print("[red]Error:[/] Node CLI not found")
+            click.md("```log\n❌ Error: Node CLI not found\n```\n")
             sys.exit(1)
 
 
@@ -200,20 +229,20 @@ def generate(contract_path: str, output: str, verbose: bool, engine: str):
 def list():
     """List available contracts"""
 
-    console.print("[bold]Available Contracts:[/]\n")
+    click.md("## Available Contracts\n")
 
     examples_dir = PROJECT_ROOT / "examples"
     if examples_dir.exists():
         for pattern in ["**/*.reclapp.ts", "**/contract*.ts"]:
             for f in examples_dir.glob(pattern):
                 rel_path = f.relative_to(PROJECT_ROOT)
-                console.print(f"  📄 {rel_path}")
+                click.echo(f"- 📄 {rel_path}")
 
 
 @main.command()
 def validate():
     """Validate Pydantic contracts"""
-    console.print("[blue]Validating Pydantic contracts...[/]\n")
+    click.md("```log\n🔎 Validating Pydantic contracts...\n```\n")
     
     try:
         from examples.pydantic_contracts.contracts import (
@@ -233,11 +262,11 @@ def validate():
             contract = contract_cls.create()
             entities = [e.name for e in contract.definition.entities]
             port = contract.generation.techStack.backend.port
-            console.print(f"  [green]✓[/] {name}: {entities} (port {port})")
+            click.echo(f"- ✓ {name}: {entities} (port {port})")
         
-        console.print("\n[green]All contracts valid![/]")
+        click.md("```log\n✅ All contracts valid!\n```\n")
     except ImportError as e:
-        console.print(f"[red]Error:[/] {e}")
+        click.md(f"```log\n❌ Error: {e}\n```\n")
         sys.exit(1)
 
 
@@ -250,18 +279,18 @@ def prompts(level: str):
         from examples.pydantic_contracts.prompts import get_test_prompts
         
         prompts_list = get_test_prompts(level)
-        console.print(f"[bold]Test Prompts ({level}):[/]\n")
+        click.md(f"## Test Prompts ({level})\n")
         
         for i, prompt in enumerate(prompts_list, 1):
-            console.print(f"  {i}. {prompt}")
+            click.echo(f"{i}. {prompt}")
         
-        console.print(f"\n[dim]Usage: reclapp --prompt \"{prompts_list[0]}\"[/]")
+        click.md(f"```log\nUsage: reclapp --prompt \"{prompts_list[0]}\"\n```\n")
     except ImportError:
         # Fallback prompts
-        console.print("[bold]Example Prompts:[/]\n")
-        console.print("  1. Create a notes app")
-        console.print("  2. Create a todo list with tasks")
-        console.print("  3. Create a CRM system with contacts and deals")
+        click.md("## Example Prompts\n")
+        click.echo("1. Create a notes app")
+        click.echo("2. Create a todo list with tasks")
+        click.echo("3. Create a CRM system with contacts and deals")
 
 
 @main.command()
@@ -296,7 +325,7 @@ def setup(output: str, install: bool, yes: bool, dry_run: bool, skip_optional: b
         result = subprocess.run(cmd, cwd=str(PROJECT_ROOT))
         sys.exit(result.returncode)
     else:
-        console.print("[red]Error:[/] Setup module not found")
+        click.md("```log\n❌ Error: Setup module not found\n```\n")
         sys.exit(1)
 
 
@@ -323,14 +352,14 @@ def evolve(prompt: str, output: str, keep_running: bool, verbose: bool, no_menu:
             )
             sys.exit(exit_code)
         except ImportError as e:
-            console.print(f"[red]Error:[/] Python engine not available: {e}")
+            click.md(f"```log\n❌ Error: Python engine not available: {e}\n```\n")
             sys.exit(1)
     
     if engine == "node":
         # Use Node.js implementation
         node = find_node()
         if not node:
-            console.print("[red]Error:[/] Node.js not found. Run: reclapp setup")
+            click.md("```log\n❌ Error: Node.js not found. Run: reclapp setup\n```\n")
             sys.exit(1)
         
         if NODE_CLI.exists():
@@ -348,7 +377,7 @@ def evolve(prompt: str, output: str, keep_running: bool, verbose: bool, no_menu:
             result = subprocess.run(cmd, env=env, cwd=str(PROJECT_ROOT))
             sys.exit(result.returncode)
         else:
-            console.print("[red]Error:[/] Node CLI not found")
+            click.md("```log\n❌ Error: Node CLI not found\n```\n")
             sys.exit(1)
 
 
@@ -373,17 +402,10 @@ def llm_status():
         from clients import list_available_providers
         
         config = LLMConfig()
-        
-        console.print(Panel.fit(
-            "[bold blue]LLM Provider Status[/]",
-            title="🤖 LLM Configuration"
-        ))
-        
-        # Show default provider
-        console.print(f"\n[bold]Default Provider:[/] {config.get_default_provider()}")
-        
-        # Show provider status
-        console.print("\n[bold]Providers:[/]")
+
+        default_provider = config.get_default_provider()
+
+        click.md("## 🤖 LLM Configuration\n\n## LLM Provider Status\n")
         available = list_available_providers()
         configured = config.list_configured_providers()
 
@@ -415,27 +437,57 @@ def llm_status():
                 priorities[provider_name] = min(current, model_priority)
         except Exception:
             pass
+
+        python_engine_provider = None
+        try:
+            import asyncio
+
+            from reclapp.llm import LLMManager
+
+            async def _probe_python_engine_llm():
+                mgr = LLMManager(verbose=False)
+                await mgr.initialize()
+                p = mgr.get_provider()
+                await mgr.close()
+                return p
+
+            python_engine_provider = asyncio.run(_probe_python_engine_llm())
+        except Exception:
+            python_engine_provider = None
+
+        lines = []
+        lines.append(f"Default Provider: {default_provider}")
+        if python_engine_provider is None:
+            lines.append("Python Engine Default: (none)")
+        else:
+            lines.append(
+                f"Python Engine Default: {python_engine_provider.name}  Model: {python_engine_provider.model}"
+            )
+        lines.append("")
+        lines.append("Providers:")
         
         for provider in sorted(priorities.keys(), key=lambda p: priorities[p]):
             is_available = available.get(provider, False)
             is_configured = configured.get(provider, False)
 
             if not is_configured:
-                status = "[dim]✗ Not configured[/]"
+                status = "✗ Not configured"
             elif is_available:
-                status = "[green]✓ Available[/]"
+                status = "✓ Available"
             else:
-                status = "[yellow]⚠ Configured but unreachable[/]"
+                status = "⚠ Configured but unreachable"
 
             model = config.get_model(provider)
             priority = priorities.get(provider, 100)
-            console.print(f"  [{priority:2d}] {provider:12s} {status}  Model: {model}")
-        
-        console.print("\n[dim]Priority: lower number = tried first[/]")
+            lines.append(f"  [{priority:2d}] {provider:12s} {status:26s} Model: {model}")
+
+        lines.append("")
+        lines.append("Priority: lower number = tried first")
+
+        click.md("```log\n" + "\n".join(lines) + "\n```\n")
         
     except ImportError as e:
-        console.print(f"[red]Error:[/] {e}")
-        console.print("[dim]Try: pip install httpx pyyaml[/]")
+        click.md(f"## ❌ Error\n\n```log\n{e}\nTry: pip install httpx pyyaml\n```\n")
 
 
 @llm.command("models")

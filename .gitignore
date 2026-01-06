@@ -10,6 +10,8 @@ express/
 LegacyApp/
 src-reproduction/
 setup/
+generated*/
+generated2/
 my-app
 refactor-workspace/
 *.egg-info

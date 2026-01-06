@@ -59,7 +59,7 @@ Repository = "https://github.com/wronai/contract"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["reclapp*", "pycontracts*"]
+include = ["reclapp*", "pycontracts*", "clickmd*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.json", "*.md"]
@@ -76,3 +76,4 @@ ignore = ["E501"]
 [tool.pytest.ini_options]
 pythonpath = ["src/python", "."]
 asyncio_mode = "auto"
+addopts = "-p no:aiohttp"

@@ -11,7 +11,13 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-import clickmd as click
+try:
+    import clickmd as click
+except ModuleNotFoundError:
+    _project_root = Path(__file__).parent.parent.resolve()
+    if str(_project_root) not in sys.path:
+        sys.path.insert(0, str(_project_root))
+    import clickmd as click
 
 # Add src/python to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src" / "python"))

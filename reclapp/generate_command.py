@@ -11,8 +11,13 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from rich.console import Console
-from rich.panel import Panel
+try:
+    import clickmd as click
+except ModuleNotFoundError:
+    _project_root = Path(__file__).parent.parent.resolve()
+    if str(_project_root) not in sys.path:
+        sys.path.insert(0, str(_project_root))
+    import clickmd as click
 
 # Add src/python to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src" / "python"))
@@ -20,8 +25,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src" / "python"))
 from reclapp.parser import parse_contract_markdown
 from reclapp.generator import CodeGenerator, CodeGeneratorOptions
 from reclapp.validation import create_default_pipeline
-
-console = Console()
 
 
 async def run_generate(
@@ -43,24 +46,28 @@ async def run_generate(
         Exit code (0 for success)
     """
     if verbose:
-        console.print(Panel.fit(
-            "[bold blue]RECLAPP CODE GENERATOR[/]\n"
-            f"[dim]Contract:[/] {contract_path}\n"
-            f"[dim]Output:[/] {output}\n"
-            f"[dim]Engine:[/] Python Native",
-            title="🔧 Generate"
-        ))
+        click.md(
+            f"""## 🔧 Generate
+
+```log
+🔧 RECLAPP CODE GENERATOR
+→ Contract: {contract_path}
+→ Output: {output}
+→ Engine: Python Native
+```
+"""
+        )
     
     contract_file = Path(contract_path)
     
     if not contract_file.exists():
-        console.print(f"[red]❌ Contract file not found:[/] {contract_path}")
+        click.md(f"```log\n❌ Contract file not found: {contract_path}\n```\n")
         return 1
     
     try:
         # Parse contract
         if verbose:
-            console.print(f"\n[cyan]📄 Parsing contract...[/]")
+            click.md("```log\n📄 Parsing contract...\n```\n")
         
         content = contract_file.read_text()
         
@@ -68,30 +75,32 @@ async def run_generate(
         if contract_file.suffix == ".md":
             parse_result = parse_contract_markdown(content)
             if parse_result.errors:
-                console.print("[red]❌ Contract parsing errors:[/]")
-                for error in parse_result.errors:
-                    console.print(f"   - {error}")
+                errors = "\n".join(f"❌ {e}" for e in parse_result.errors)
+                click.md(f"## ❌ Contract parsing errors\n\n```log\n{errors}\n```\n")
                 return 1
             contract = parse_result.contract
         else:
             # For .ts files, create a minimal contract structure
-            console.print("[yellow]⚠️ TypeScript contracts require Node.js engine[/]")
-            console.print("[dim]Use: reclapp generate --engine node[/]")
+            click.md("```log\n⚠️ TypeScript contracts require Node.js engine\nUse: reclapp generate --engine node\n```\n")
             return 1
         
         if not contract:
-            console.print("[red]❌ Failed to parse contract[/]")
+            click.md("```log\n❌ Failed to parse contract\n```\n")
             return 1
         
         if verbose:
             app_name = contract.get("definition", {}).get("app", {}).get("name", "Unknown")
             entities = contract.get("definition", {}).get("entities", [])
-            console.print(f"   App: {app_name}")
-            console.print(f"   Entities: {len(entities)}")
+            click.md(
+                f"""```yaml
+app: {app_name}
+entities: {len(entities)}
+```\n"""
+            )
         
         # Generate code
         if verbose:
-            console.print(f"\n[cyan]🔨 Generating code...[/]")
+            click.md("```log\n🔨 Generating code...\n```\n")
         
         generator = CodeGenerator(CodeGeneratorOptions(
             output_dir=output,
@@ -102,42 +111,46 @@ async def run_generate(
         result = await generator.generate(contract, output)
         
         if not result.success:
-            console.print("[red]❌ Code generation failed:[/]")
-            for error in result.errors:
-                console.print(f"   - {error}")
+            errors = "\n".join(f"❌ {e}" for e in result.errors)
+            click.md(f"## ❌ Code generation failed\n\n```log\n{errors}\n```\n")
             return 1
         
         if verbose:
-            console.print(f"   Generated {len(result.files)} files")
+            click.md(f"```log\n✅ Generated {len(result.files)} files\n```\n")
             for f in result.files[:5]:
-                console.print(f"   - {f.path}")
+                click.echo(f"- {f.path}")
             if len(result.files) > 5:
-                console.print(f"   ... and {len(result.files) - 5} more")
+                click.echo(f"... and {len(result.files) - 5} more")
         
         # Validate if requested
         if validate:
             if verbose:
-                console.print(f"\n[cyan]✅ Validating...[/]")
+                click.md("```log\n✅ Validating...\n```\n")
             
             pipeline = create_default_pipeline()
             # Simplified validation - just check files exist
             output_path = Path(output)
             if output_path.exists():
-                console.print("   Validation passed")
+                click.md("```log\n✅ Validation passed\n```\n")
             else:
-                console.print("[yellow]⚠️ Output directory not created[/]")
+                click.md("```log\n⚠️ Output directory not created\n```\n")
         
         # Success
-        console.print(f"\n[green]✅ Generation complete![/]")
-        console.print(f"   Files: {len(result.files)}")
-        console.print(f"   Time: {result.time_ms}ms")
-        console.print(f"\n[dim]Output: {output}[/]")
-        console.print(f"[dim]Next: cd {output} && npm install && npm run dev[/]")
+        click.md(
+            f"""## ✅ Generation complete
+
+```yaml
+files: {len(result.files)}
+time_ms: {result.time_ms}
+output: {output}
+next: cd {output} && npm install && npm run dev
+```\n"""
+        )
         
         return 0
         
     except Exception as e:
-        console.print(f"\n[red]❌ Error: {e}[/]")
+        click.md(f"## ❌ Error\n\n```log\n❌ Error: {e}\n```\n")
         if verbose:
             import traceback
             traceback.print_exc()
