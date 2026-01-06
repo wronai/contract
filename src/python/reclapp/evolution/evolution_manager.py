@@ -13,6 +13,7 @@ import os
 import signal
 import subprocess
 import time
+import glob
 from pathlib import Path
 from typing import Any, Optional
 
@@ -327,10 +328,17 @@ class EvolutionManager:
                 [npm_cmd, "install"],
                 cwd=str(api_dir),
                 capture_output=True,
+                text=True,
                 timeout=120
             )
             if result.returncode != 0:
-                self.task_queue.fail("npm-install", "npm install failed")
+                err = (result.stderr or result.stdout or "").strip()
+                if err:
+                    err = err[:2000]
+                else:
+                    err = "npm install failed"
+                self.renderer.codeblock("log", err)
+                self.task_queue.fail("npm-install", err[:180] if err else "npm install failed")
                 return False
             self.task_queue.done("npm-install")
         except Exception as e:
@@ -348,6 +356,17 @@ class EvolutionManager:
                 stderr=subprocess.PIPE
             )
             await asyncio.sleep(3)  # Wait for startup
+
+            if self._service_process.poll() is not None:
+                out_b, err_b = self._service_process.communicate(timeout=1)
+                out = (out_b or b"").decode(errors="replace") if isinstance(out_b, (bytes, bytearray)) else (out_b or "")
+                err = (err_b or b"").decode(errors="replace") if isinstance(err_b, (bytes, bytearray)) else (err_b or "")
+                combined = (err.strip() or out.strip() or "Service exited immediately")
+                combined = combined[:3000]
+                self.renderer.codeblock("log", combined)
+                self.task_queue.fail("start-service", combined[:180])
+                return False
+
             self.task_queue.done("start-service")
         except Exception as e:
             self.task_queue.fail("start-service", str(e))
@@ -359,7 +378,8 @@ class EvolutionManager:
         if healthy:
             self.task_queue.done("health-check")
         else:
-            self.task_queue.fail("health-check", "Service not responding")
+            msg = "Service not responding"
+            self.task_queue.fail("health-check", msg)
             return False
         
         return True
@@ -973,16 +993,16 @@ Evolution completed.
         """Find npm executable"""
         import shutil
         
-        # Try common locations
-        npm_paths = [
-            shutil.which("npm"),
-            "/usr/bin/npm",
-            "/usr/local/bin/npm",
-            os.path.expanduser("~/.nvm/versions/node/*/bin/npm"),
-        ]
-        
-        for path in npm_paths:
-            if path and os.path.exists(path):
+        npm = shutil.which("npm")
+        if npm:
+            return npm
+
+        for path in ("/usr/bin/npm", "/usr/local/bin/npm"):
+            if os.path.exists(path):
+                return path
+
+        for path in glob.glob(os.path.expanduser("~/.nvm/versions/node/*/bin/npm")):
+            if os.path.exists(path):
                 return path
         
         # Try to find via node

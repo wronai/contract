@@ -82,7 +82,7 @@ async def run_evolve(
         # Create evolution manager
         evolution = EvolutionManager(EvolutionOptions(
             output_dir=output,
-            verbose=verbose,
+            verbose=True,
             keep_running=keep_running,
             port=port,
             max_iterations=5

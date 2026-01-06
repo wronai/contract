@@ -8,7 +8,7 @@ Mirrors: src/core/contract-ai/evolution/shell-renderer.ts
 """
 
 import re
-from typing import Literal
+from typing import Literal, Optional
 
 # ANSI color codes
 COLORS = {
@@ -49,10 +49,39 @@ class ShellRenderer:
     
     def __init__(self, verbose: bool = True):
         self.verbose = verbose
+        self._click = None
+
+    def _get_click(self):
+        if self._click is not None:
+            return self._click
+        try:
+            import clickmd as click
+
+            self._click = click
+        except Exception:
+            self._click = False
+        return self._click
+
+    def _try_md(self, text: str) -> bool:
+        click = self._get_click()
+        if not click:
+            return False
+        click.md(text)
+        return True
+
+    def _try_echo(self, text: str) -> bool:
+        click = self._get_click()
+        if not click:
+            return False
+        click.echo(text)
+        return True
     
     def heading(self, level: int, text: str) -> None:
         """Print a heading"""
         if not self.verbose:
+            return
+
+        if self._try_md(f"{'#' * level} {text}\n"):
             return
         
         prefix = "#" * level
@@ -61,6 +90,9 @@ class ShellRenderer:
     def codeblock(self, language: Language, content: str) -> None:
         """Print a syntax-highlighted code block"""
         if not self.verbose:
+            return
+
+        if self._try_md(f"```{language}\n{content}\n```\n"):
             return
         
         print(f"{COLORS['dim']}```{language}{COLORS['reset']}")
@@ -75,11 +107,17 @@ class ShellRenderer:
         """Print plain text"""
         if not self.verbose:
             return
+
+        if self._try_echo(content):
+            return
         print(content)
     
     def success(self, message: str) -> None:
         """Print success message"""
         if not self.verbose:
+            return
+
+        if self._try_md(f"```log\n✅ {message}\n```\n"):
             return
         print(f"{COLORS['green']}✅ {message}{COLORS['reset']}")
     
@@ -87,17 +125,26 @@ class ShellRenderer:
         """Print error message"""
         if not self.verbose:
             return
+
+        if self._try_md(f"```log\n❌ {message}\n```\n"):
+            return
         print(f"{COLORS['red']}❌ {message}{COLORS['reset']}")
     
     def warning(self, message: str) -> None:
         """Print warning message"""
         if not self.verbose:
             return
+
+        if self._try_md(f"```log\n⚠️ {message}\n```\n"):
+            return
         print(f"{COLORS['yellow']}⚠️ {message}{COLORS['reset']}")
     
     def info(self, message: str) -> None:
         """Print info message"""
         if not self.verbose:
+            return
+
+        if self._try_md(f"```log\n→ {message}\n```\n"):
             return
         print(f"{COLORS['cyan']}ℹ️ {message}{COLORS['reset']}")
     
