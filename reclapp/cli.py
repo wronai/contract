@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Optional
 import builtins
 
-import click
+import clickmd as click
 from rich.console import Console
 from rich.panel import Panel
 
@@ -101,7 +101,7 @@ def main(ctx, prompt: Optional[str], output: str, port: int, verbose: bool, keep
     """
     if version:
         from . import __version__
-        console.print(f"[bold blue]Reclapp[/] v{__version__}")
+        click.md(f"```log\n📦 Reclapp v{__version__}\n```\n")
         return
     
     if ctx.invoked_subcommand is None:
@@ -121,33 +121,30 @@ def main(ctx, prompt: Optional[str], output: str, port: int, verbose: bool, keep
 def lifecycle(prompt: str, output: str, port: int, verbose: bool, keep_running: bool):
     """Run full lifecycle: prompt → contract → code → service → tests"""
     
-    console.print(Panel.fit(
-        "[bold blue]RECLAPP FULL LIFECYCLE[/]\n"
-        f"[dim]Prompt:[/] {prompt}\n"
-        f"[dim]Output:[/] {output}\n"
-        f"[dim]Port:[/] {port}",
-        title="🚀 Starting"
-    ))
-    
-    # Check if shell script exists
-    if LIFECYCLE_SCRIPT.exists():
-        cmd = [
-            str(LIFECYCLE_SCRIPT),
-            "--prompt", prompt,
-            "-o", output,
-            "--port", str(port),
-        ]
-        if verbose:
-            cmd.append("-v")
-        if keep_running:
-            cmd.append("--keep-running")
-        
-        env = setup_node_env()
-        result = subprocess.run(cmd, env=env, cwd=str(PROJECT_ROOT))
-        sys.exit(result.returncode)
-    else:
-        console.print("[red]Error:[/] Lifecycle script not found")
-        console.print(f"Expected: {LIFECYCLE_SCRIPT}")
+    click.md(
+        f"""## 🚀 Starting
+
+```log
+🚀 RECLAPP FULL LIFECYCLE
+→ Prompt: {prompt}
+→ Output: {output}
+→ Port: {port}
+```
+"""
+    )
+
+    try:
+        from .evolve_command import evolve_sync
+        exit_code = evolve_sync(
+            prompt=prompt,
+            output=output,
+            keep_running=keep_running,
+            verbose=verbose,
+            port=port,
+        )
+        sys.exit(exit_code)
+    except ImportError as e:
+        console.print(f"[red]Error:[/] Python lifecycle engine not available: {e}")
         sys.exit(1)
 
 
@@ -173,10 +170,10 @@ def generate(contract_path: str, output: str, verbose: bool, engine: str):
             sys.exit(exit_code)
         except ImportError as e:
             console.print(f"[yellow]Warning:[/] Python engine not available: {e}")
-            engine = "node"
+            sys.exit(1)
     elif engine == "python" and not is_markdown:
-        console.print("[yellow]Note:[/] TypeScript contracts require Node.js engine")
-        engine = "node"
+        console.print("[red]Error:[/] TypeScript contracts require Node.js engine")
+        sys.exit(1)
     
     if engine == "node":
         console.print(f"[blue]📄 Generating from:[/] {contract_path}")
@@ -202,22 +199,15 @@ def generate(contract_path: str, output: str, verbose: bool, engine: str):
 @main.command()
 def list():
     """List available contracts"""
-    
-    node = find_node()
-    if not node and NODE_CLI.exists():
-        cmd = [node, str(NODE_CLI), "list"]
-        env = setup_node_env()
-        subprocess.run(cmd, env=env, cwd=str(PROJECT_ROOT))
-    else:
-        # Fallback: list contract files
-        console.print("[bold]Available Contracts:[/]\n")
-        
-        examples_dir = PROJECT_ROOT / "examples"
-        if examples_dir.exists():
-            for pattern in ["**/*.reclapp.ts", "**/contract*.ts"]:
-                for f in examples_dir.glob(pattern):
-                    rel_path = f.relative_to(PROJECT_ROOT)
-                    console.print(f"  📄 {rel_path}")
+
+    console.print("[bold]Available Contracts:[/]\n")
+
+    examples_dir = PROJECT_ROOT / "examples"
+    if examples_dir.exists():
+        for pattern in ["**/*.reclapp.ts", "**/contract*.ts"]:
+            for f in examples_dir.glob(pattern):
+                rel_path = f.relative_to(PROJECT_ROOT)
+                console.print(f"  📄 {rel_path}")
 
 
 @main.command()
@@ -306,27 +296,8 @@ def setup(output: str, install: bool, yes: bool, dry_run: bool, skip_optional: b
         result = subprocess.run(cmd, cwd=str(PROJECT_ROOT))
         sys.exit(result.returncode)
     else:
-        # Fallback to Node.js CLI
-        node = find_node()
-        if node and NODE_CLI.exists():
-            cmd = [node, str(NODE_CLI), "setup"]
-            if output != ".":
-                cmd.extend(["-o", output])
-            if install:
-                cmd.append("--install")
-            if yes:
-                cmd.append("-y")
-            if dry_run:
-                cmd.append("--dry-run")
-            if skip_optional:
-                cmd.append("--skip-optional")
-            
-            env = setup_node_env()
-            result = subprocess.run(cmd, env=env, cwd=str(PROJECT_ROOT))
-            sys.exit(result.returncode)
-        else:
-            console.print("[red]Error:[/] Setup module not found")
-            sys.exit(1)
+        console.print("[red]Error:[/] Setup module not found")
+        sys.exit(1)
 
 
 @main.command()
@@ -352,9 +323,8 @@ def evolve(prompt: str, output: str, keep_running: bool, verbose: bool, no_menu:
             )
             sys.exit(exit_code)
         except ImportError as e:
-            console.print(f"[yellow]Warning:[/] Python engine not available: {e}")
-            console.print("[dim]Falling back to Node.js...[/]")
-            engine = "node"
+            console.print(f"[red]Error:[/] Python engine not available: {e}")
+            sys.exit(1)
     
     if engine == "node":
         # Use Node.js implementation

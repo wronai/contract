@@ -11,22 +11,19 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from rich.console import Console
-from rich.panel import Panel
+import clickmd as click
 
 # Add src/python to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src" / "python"))
 
 from reclapp.evolution import EvolutionManager, EvolutionOptions
-from reclapp.generator import ContractGenerator, CodeGenerator, ContractGeneratorOptions, CodeGeneratorOptions
-from reclapp.llm import OllamaClient, OllamaConfig, LLMManager
-
-console = Console()
+from reclapp.llm import LLMManager
 
 
 async def run_evolve(
     prompt: str,
     output: str = "./generated",
+    port: int = 3000,
     keep_running: bool = False,
     verbose: bool = True,
     use_python: bool = True
@@ -44,14 +41,18 @@ async def run_evolve(
     Returns:
         Exit code (0 for success)
     """
-    if verbose:
-        console.print(Panel.fit(
-            "[bold blue]RECLAPP EVOLUTION MODE[/]\n"
-            f"[dim]Prompt:[/] {prompt}\n"
-            f"[dim]Output:[/] {output}\n"
-            f"[dim]Engine:[/] Python Native",
-            title="🧬 Evolution"
-        ))
+    click.md(
+        f"""## 🧬 Evolution
+
+```log
+🚀 RECLAPP EVOLUTION MODE
+→ Prompt: {prompt}
+→ Output: {output}
+→ Port: {port}
+→ Engine: Python Native
+```
+"""
+    )
     
     try:
         # Initialize LLM client
@@ -59,13 +60,14 @@ async def run_evolve(
         await llm_manager.initialize()
         
         if not llm_manager.is_ready():
-            console.print("[yellow]⚠️ No LLM available. Using template-based generation.[/]")
+            click.md("```log\n⚠️ No LLM available. Using template-based generation.\n```\n")
         
         # Create evolution manager
         evolution = EvolutionManager(EvolutionOptions(
             output_dir=output,
             verbose=verbose,
             keep_running=keep_running,
+            port=port,
             max_iterations=5
         ))
         
@@ -79,23 +81,35 @@ async def run_evolve(
         result = await evolution.evolve(prompt, output)
         
         if result.success:
-            console.print(f"\n[green]✅ Evolution complete![/]")
-            console.print(f"   Files generated: {result.files_generated}")
-            console.print(f"   Time: {result.time_ms}ms")
-            console.print(f"\n[dim]Output: {output}[/]")
+            click.md(
+                f"""## ✅ Evolution complete
+
+```yaml
+files_generated: {result.files_generated}
+time_ms: {result.time_ms}
+output: {output}
+```
+"""
+            )
             
             if keep_running:
-                console.print("\n[yellow]Service would be running... (not implemented yet)[/]")
+                click.md("```log\n⚠️ Service would be running... (not implemented yet)\n```\n")
             
             return 0
         else:
-            console.print(f"\n[red]❌ Evolution failed[/]")
-            for error in result.errors[:5]:
-                console.print(f"   - {error}")
+            errors = "\n".join(f"❌ {e}" for e in result.errors[:5])
+            click.md(
+                f"""## ❌ Evolution failed
+
+```log
+{errors}
+```
+"""
+            )
             return 1
             
     except Exception as e:
-        console.print(f"\n[red]❌ Error: {e}[/]")
+        click.md(f"## ❌ Error\n\n```log\n❌ Error: {e}\n```\n")
         if verbose:
             import traceback
             traceback.print_exc()
@@ -105,11 +119,12 @@ async def run_evolve(
 def evolve_sync(
     prompt: str,
     output: str = "./generated",
+    port: int = 3000,
     keep_running: bool = False,
     verbose: bool = True
 ) -> int:
     """Synchronous wrapper for evolve command"""
-    return asyncio.run(run_evolve(prompt, output, keep_running, verbose))
+    return asyncio.run(run_evolve(prompt, output, port, keep_running, verbose))
 
 
 if __name__ == "__main__":
