@@ -119,7 +119,7 @@ output: {output}
             )
             
             if keep_running:
-                click.md("```log\n⚠️ Service would be running... (not implemented yet)\n```\n")
+                await show_interactive_menu(output, port, evolution)
             
             return 0
         else:
@@ -140,6 +140,90 @@ output: {output}
             import traceback
             traceback.print_exc()
         return 1
+
+
+async def show_interactive_menu(output_dir: str, port: int, evolution):
+    """Show interactive menu like TypeScript - mirrors bin/reclapp actions"""
+    import select
+    import webbrowser
+    import json
+    
+    click.md("""
+## Actions
+
+```yaml
+commands:
+  k: "keep running - monitor for issues"
+  r: "restart - regenerate service"  
+  c: "contract - show contract/contract.ai.json"
+  e: "state - show state/evolution-state.json"
+  l: "logs - view service logs"
+  S: "tasks - show task queue"
+  t: "test - run API health check"
+  o: "open - browser http://localhost:{port}"
+  q: "quit - stop and exit"
+```
+
+> Tip: Use `--keep-running` (`-k`) to skip this menu
+""".format(port=port))
+    
+    try:
+        while True:
+            print("> ", end="", flush=True)
+            
+            # Non-blocking input with timeout
+            if sys.stdin in select.select([sys.stdin], [], [], 60)[0]:
+                cmd = sys.stdin.readline().strip().lower()
+            else:
+                continue
+            
+            if cmd == 'q':
+                click.md("```log\n👋 Stopping service and exiting...\n```\n")
+                await evolution._stop_service()
+                break
+            elif cmd == 'c':
+                contract_path = Path(output_dir) / "contract" / "contract.ai.json"
+                if contract_path.exists():
+                    click.md(f"```json\n{contract_path.read_text()}\n```\n")
+                else:
+                    click.md("```log\n⚠️ Contract not found\n```\n")
+            elif cmd == 'e':
+                state_path = Path(output_dir) / "state" / "evolution-state.json"
+                if state_path.exists():
+                    click.md(f"```json\n{state_path.read_text()}\n```\n")
+                else:
+                    click.md("```log\n⚠️ State file not found\n```\n")
+            elif cmd == 't':
+                try:
+                    import urllib.request
+                    with urllib.request.urlopen(f"http://localhost:{port}/health", timeout=5) as resp:
+                        click.md(f"```log\n✅ Health check: {resp.status}\n```\n")
+                except Exception as e:
+                    click.md(f"```log\n❌ Health check failed: {e}\n```\n")
+            elif cmd == 'o':
+                webbrowser.open(f"http://localhost:{port}")
+                click.md(f"```log\n🌐 Opened http://localhost:{port}\n```\n")
+            elif cmd == 'l':
+                logs_dir = Path(output_dir) / "logs"
+                if logs_dir.exists():
+                    log_files = sorted(logs_dir.glob("*.md"), reverse=True)
+                    if log_files:
+                        click.md(f"```log\n📝 Latest log: {log_files[0].name}\n```\n")
+                        content = log_files[0].read_text()[:2000]
+                        click.md(f"```log\n{content}\n```\n")
+                    else:
+                        click.md("```log\n⚠️ No log files found\n```\n")
+                else:
+                    click.md("```log\n⚠️ Logs directory not found\n```\n")
+            elif cmd == 's':
+                evolution.task_queue.print()
+            elif cmd == 'k':
+                click.md("```log\n👀 Monitoring... Press 'q' to quit\n```\n")
+            else:
+                click.md("```log\n⚠️ Unknown command. Use: k, c, e, l, S, t, o, q\n```\n")
+    except KeyboardInterrupt:
+        click.md("```log\n👋 Interrupted, exiting...\n```\n")
+        await evolution._stop_service()
 
 
 def evolve_sync(

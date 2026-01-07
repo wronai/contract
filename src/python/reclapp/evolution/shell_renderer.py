@@ -2,28 +2,37 @@
 Shell Renderer
 
 Renders colorized markdown output in terminal.
+Uses clickmd.MarkdownRenderer as rendering backend.
 
 Mirrors: src/core/contract-ai/evolution/shell-renderer.ts
-@version 1.0.0
+@version 2.0.0 - Unified with clickmd
 """
 
 import re
+import sys
 from typing import Literal, Optional
 
-# ANSI color codes
-COLORS = {
-    "reset": "\033[0m",
-    "bold": "\033[1m",
-    "dim": "\033[2m",
-    "cyan": "\033[36m",
-    "green": "\033[32m",
-    "yellow": "\033[33m",
-    "magenta": "\033[35m",
-    "red": "\033[31m",
-    "blue": "\033[34m",
-    "gray": "\033[90m",
-    "white": "\033[37m",
-}
+# Import clickmd renderer (or fallback to local ANSI codes)
+try:
+    from clickmd.renderer import MarkdownRenderer as _ClickmdRenderer, _COLORS as COLORS
+    CLICKMD_AVAILABLE = True
+except ImportError:
+    CLICKMD_AVAILABLE = False
+    _ClickmdRenderer = None
+    # Fallback ANSI color codes
+    COLORS = {
+        "reset": "\033[0m",
+        "bold": "\033[1m",
+        "dim": "\033[2m",
+        "cyan": "\033[36m",
+        "green": "\033[32m",
+        "yellow": "\033[33m",
+        "magenta": "\033[35m",
+        "red": "\033[31m",
+        "blue": "\033[34m",
+        "gray": "\033[90m",
+        "white": "\033[37m",
+    }
 
 
 Language = Literal["yaml", "json", "bash", "typescript", "javascript", "markdown", "log", "text"]
@@ -32,6 +41,9 @@ Language = Literal["yaml", "json", "bash", "typescript", "javascript", "markdown
 class ShellRenderer:
     """
     Renders colorized output in terminal.
+    
+    Uses clickmd.MarkdownRenderer when available for consistent rendering
+    across all reclapp components.
     
     Supports syntax highlighting for:
     - YAML
@@ -49,9 +61,13 @@ class ShellRenderer:
     
     def __init__(self, verbose: bool = True):
         self.verbose = verbose
-        self._click = None
+        self._clickmd_renderer: Optional[_ClickmdRenderer] = None
         self._log_enabled = False
         self._log_buffer: list[str] = []
+        
+        # Initialize clickmd renderer if available
+        if CLICKMD_AVAILABLE and _ClickmdRenderer is not None:
+            self._clickmd_renderer = _ClickmdRenderer(use_colors=True, stream=sys.stdout)
 
     def enable_log(self) -> None:
         """Enable log buffering for markdown export"""
@@ -82,31 +98,31 @@ class ShellRenderer:
             clean = re.sub(r"\x1b\[[0-9;]*m", "", text)
             self._log_buffer.append(clean)
 
-    def _get_click(self):
-        if self._click is not None:
-            return self._click
+    def _get_clickmd(self):
+        """Get clickmd module (lazy load)"""
+        if hasattr(self, '_clickmd_module'):
+            return self._clickmd_module
         try:
-            import clickmd as click
-
-            self._click = click
+            import clickmd
+            self._clickmd_module = clickmd
         except Exception:
-            self._click = False
-        return self._click
+            self._clickmd_module = None
+        return self._clickmd_module
 
     def _try_md(self, text: str) -> bool:
-        click = self._get_click()
+        clickmd = self._get_clickmd()
         self._log(text)  # Buffer for log file
-        if not click:
+        if not clickmd:
             return False
-        click.md(text)
+        clickmd.md(text)
         return True
 
     def _try_echo(self, text: str) -> bool:
-        click = self._get_click()
+        clickmd = self._get_clickmd()
         self._log(text)  # Buffer for log file
-        if not click:
+        if not clickmd:
             return False
-        click.echo(text)
+        clickmd.echo(text)
         return True
     
     def heading(self, level: int, text: str) -> None:

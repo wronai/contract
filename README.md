@@ -78,7 +78,7 @@ reclapp validate                     # Validate Pydantic contracts
 
 ```bash
 # Generate full application from prompt
-./bin/reclapp evolve -p "Create a todo app" -o ./output
+./bin/reclapp evolve -p "Create a todo app" -o ./output2
 
 # With CI/CD and Docker
 ./bin/reclapp evolve -p "Create a blog with cicd and docker" -o ./output

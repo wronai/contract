@@ -232,20 +232,30 @@ def generate(contract_path: str, output: str, verbose: bool, engine: str):
 def list():
     """List available contracts"""
 
-    click.md("## Available Contracts\n")
+    click.md("## 📋 Available Contracts\n")
+    click.md("```log\n→ Scanning for contracts...\n```\n")
 
     examples_dir = PROJECT_ROOT / "examples"
+    contracts_found = []
     if examples_dir.exists():
-        for pattern in ["**/*.reclapp.ts", "**/contract*.ts"]:
+        for pattern in ["**/*.reclapp.ts", "**/contract*.ts", "**/*.rcl.md", "**/*.rcl"]:
             for f in examples_dir.glob(pattern):
                 rel_path = f.relative_to(PROJECT_ROOT)
-                click.echo(f"- 📄 {rel_path}")
+                contracts_found.append(str(rel_path))
+    
+    if contracts_found:
+        yaml_lines = [f'  - "{c}"' for c in sorted(set(contracts_found))[:20]]
+        click.md("```yaml\n# @type: contracts_list\ncontracts:\n" + "\n".join(yaml_lines) + "\n```\n")
+        click.md(f"```log\n✅ Found {len(contracts_found)} contract(s)\n```\n")
+    else:
+        click.md("```log\n⚠️ No contracts found in examples/\n```\n")
 
 
 @main.command()
 def validate():
     """Validate Pydantic contracts"""
-    click.md("```log\n🔎 Validating Pydantic contracts...\n```\n")
+    click.md("## 🔎 Contract Validation\n")
+    click.md("```log\n→ Validating Pydantic contracts...\n```\n")
     
     try:
         from examples.pydantic_contracts.contracts import (
@@ -261,12 +271,17 @@ def validate():
             ("Booking", BookingContract),
         ]
         
+        results = []
         for name, contract_cls in contracts:
-            contract = contract_cls.create()
-            entities = [e.name for e in contract.definition.entities]
-            port = contract.generation.techStack.backend.port
-            click.echo(f"- ✓ {name}: {entities} (port {port})")
+            try:
+                contract = contract_cls.create()
+                entities = [e.name for e in contract.definition.entities]
+                port = contract.generation.techStack.backend.port
+                results.append(f'  - name: "{name}"\n    status: "valid"\n    entities: {entities}\n    port: {port}')
+            except Exception as e:
+                results.append(f'  - name: "{name}"\n    status: "invalid"\n    error: "{str(e)[:100]}"')
         
+        click.md("```yaml\n# @type: validation_results\ncontracts:\n" + "\n".join(results) + "\n```\n")
         click.md("```log\n✅ All contracts valid!\n```\n")
     except ImportError as e:
         click.md(f"```log\n❌ Error: {e}\n```\n")
@@ -277,23 +292,24 @@ def validate():
 @click.option("--level", type=click.Choice(["simple", "medium", "complex", "all"]), default="simple")
 def prompts(level: str):
     """Show example prompts"""
+    click.md(f"## 💬 Example Prompts ({level})\n")
     
     try:
         from examples.pydantic_contracts.prompts import get_test_prompts
-        
         prompts_list = get_test_prompts(level)
-        click.md(f"## Test Prompts ({level})\n")
-        
-        for i, prompt in enumerate(prompts_list, 1):
-            click.echo(f"{i}. {prompt}")
-        
-        click.md(f"```log\nUsage: reclapp --prompt \"{prompts_list[0]}\"\n```\n")
     except ImportError:
         # Fallback prompts
-        click.md("## Example Prompts\n")
-        click.echo("1. Create a notes app")
-        click.echo("2. Create a todo list with tasks")
-        click.echo("3. Create a CRM system with contacts and deals")
+        prompts_list = [
+            "Create a notes app",
+            "Create a todo list with tasks",
+            "Create a CRM system with contacts and deals",
+        ]
+    
+    yaml_lines = [f'  - "{p}"' for p in prompts_list[:10]]
+    click.md("```yaml\n# @type: example_prompts\nprompts:\n" + "\n".join(yaml_lines) + "\n```\n")
+    
+    if prompts_list:
+        click.md(f'```log\n→ Usage: reclapp --prompt "{prompts_list[0]}"\n```\n')
 
 
 @main.command()
@@ -397,12 +413,12 @@ def llm():
 @llm.command("status")
 def llm_status():
     """Show LLM providers status and configuration."""
+    # Use unified reclapp.llm which re-exports pycontracts.llm
     import sys
-    sys.path.insert(0, str(PROJECT_ROOT / 'pycontracts' / 'llm'))
+    sys.path.insert(0, str(PROJECT_ROOT / "src" / "python"))
     
     try:
-        from config import LLMConfig
-        from clients import list_available_providers
+        from reclapp.llm import LLMConfig, list_available_providers
         
         config = LLMConfig()
 
@@ -500,10 +516,10 @@ def llm_status():
 def llm_models(provider: str):
     """List recommended models for each provider."""
     import sys
-    sys.path.insert(0, str(PROJECT_ROOT / 'pycontracts' / 'llm'))
+    sys.path.insert(0, str(PROJECT_ROOT / "src" / "python"))
     
     try:
-        from clients import RECOMMENDED_MODELS, OllamaClient
+        from reclapp.llm import RECOMMENDED_MODELS, OllamaClient
 
         click.md("## 📦 LLM Models\n")
 
@@ -658,11 +674,10 @@ def llm_key_unset(provider: str):
 def llm_test(provider: str, model: str):
     """Test LLM generation with a simple prompt."""
     import sys
-    sys.path.insert(0, str(PROJECT_ROOT / 'pycontracts' / 'llm'))
+    sys.path.insert(0, str(PROJECT_ROOT / "src" / "python"))
     
     try:
-        from config import LLMConfig
-        from clients import get_client
+        from reclapp.llm import LLMConfig, get_client
 
         LLMConfig()
 
@@ -711,10 +726,10 @@ def llm_config(ctx: click.Context):
 
     import sys
     import json
-    sys.path.insert(0, str(PROJECT_ROOT / 'pycontracts' / 'llm'))
+    sys.path.insert(0, str(PROJECT_ROOT / "src" / "python"))
 
     try:
-        from config import LLMConfig
+        from reclapp.llm import LLMConfig
 
         config = LLMConfig()
         data = config.to_dict()
