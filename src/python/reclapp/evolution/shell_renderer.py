@@ -50,6 +50,37 @@ class ShellRenderer:
     def __init__(self, verbose: bool = True):
         self.verbose = verbose
         self._click = None
+        self._log_enabled = False
+        self._log_buffer: list[str] = []
+
+    def enable_log(self) -> None:
+        """Enable log buffering for markdown export"""
+        self._log_enabled = True
+        self._log_buffer = []
+
+    def get_log(self) -> str:
+        """Get buffered log as clean markdown"""
+        return "\n".join(self._log_buffer)
+
+    def clear_log(self) -> None:
+        """Clear log buffer"""
+        self._log_buffer = []
+
+    def save_log(self, file_path: str) -> None:
+        """Save log to file as markdown"""
+        import os
+        dir_path = os.path.dirname(file_path)
+        if dir_path and not os.path.exists(dir_path):
+            os.makedirs(dir_path, exist_ok=True)
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(self.get_log())
+
+    def _log(self, text: str) -> None:
+        """Buffer log line if logging is enabled"""
+        if self._log_enabled:
+            # Strip ANSI codes for clean markdown
+            clean = re.sub(r"\x1b\[[0-9;]*m", "", text)
+            self._log_buffer.append(clean)
 
     def _get_click(self):
         if self._click is not None:
@@ -64,6 +95,7 @@ class ShellRenderer:
 
     def _try_md(self, text: str) -> bool:
         click = self._get_click()
+        self._log(text)  # Buffer for log file
         if not click:
             return False
         click.md(text)
@@ -71,6 +103,7 @@ class ShellRenderer:
 
     def _try_echo(self, text: str) -> bool:
         click = self._get_click()
+        self._log(text)  # Buffer for log file
         if not click:
             return False
         click.echo(text)
@@ -85,6 +118,7 @@ class ShellRenderer:
             return
         
         prefix = "#" * level
+        self._log(f"{prefix} {text}")
         print(f"\n{COLORS['bold']}{COLORS['cyan']}{prefix} {text}{COLORS['reset']}\n")
     
     def codeblock(self, language: Language, content: str) -> None:
@@ -95,12 +129,15 @@ class ShellRenderer:
         if self._try_md(f"```{language}\n{content}\n```\n"):
             return
         
+        self._log(f"```{language}")
         print(f"{COLORS['dim']}```{language}{COLORS['reset']}")
         
         for line in content.split("\n"):
+            self._log(line)
             highlighted = self._highlight_line(line, language)
             print(highlighted)
         
+        self._log("```")
         print(f"{COLORS['dim']}```{COLORS['reset']}")
     
     def text(self, content: str) -> None:
@@ -110,6 +147,7 @@ class ShellRenderer:
 
         if self._try_echo(content):
             return
+        self._log(content)
         print(content)
     
     def success(self, message: str) -> None:
@@ -119,6 +157,7 @@ class ShellRenderer:
 
         if self._try_md(f"```log\n✅ {message}\n```\n"):
             return
+        self._log(f"✅ {message}")
         print(f"{COLORS['green']}✅ {message}{COLORS['reset']}")
     
     def error(self, message: str) -> None:
@@ -128,6 +167,7 @@ class ShellRenderer:
 
         if self._try_md(f"```log\n❌ {message}\n```\n"):
             return
+        self._log(f"❌ {message}")
         print(f"{COLORS['red']}❌ {message}{COLORS['reset']}")
     
     def warning(self, message: str) -> None:
@@ -137,6 +177,7 @@ class ShellRenderer:
 
         if self._try_md(f"```log\n⚠️ {message}\n```\n"):
             return
+        self._log(f"⚠️ {message}")
         print(f"{COLORS['yellow']}⚠️ {message}{COLORS['reset']}")
     
     def info(self, message: str) -> None:
@@ -146,6 +187,7 @@ class ShellRenderer:
 
         if self._try_md(f"```log\n→ {message}\n```\n"):
             return
+        self._log(f"→ {message}")
         print(f"{COLORS['cyan']}ℹ️ {message}{COLORS['reset']}")
     
     def _highlight_line(self, line: str, language: Language) -> str:

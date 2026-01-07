@@ -14,8 +14,11 @@ import signal
 import subprocess
 import time
 import glob
+import uuid
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Callable, Optional, TypeVar
+
+T = TypeVar("T")
 
 from pydantic import BaseModel, Field
 
@@ -1014,6 +1017,96 @@ Evolution completed.
         
         return None
     
+    async def _with_llm_heartbeat(
+        self,
+        purpose: str,
+        coro,
+        heartbeat_interval: float = 5.0,
+        timeout: float = 120.0
+    ) -> T:
+        """
+        Wrap an async LLM call with heartbeat logging.
+        
+        Emits periodic logs like TS: '… waiting for LLM elapsed=Xs'
+        """
+        call_id = f"llm_{uuid.uuid4().hex[:8]}"
+        started_at = time.time()
+        
+        if self.options.verbose:
+            self.renderer.codeblock("yaml", "\n".join([
+                "# @type: llm_call_start",
+                f"# @purpose: {purpose}",
+                "llm_call:",
+                f'  id: "{call_id}"',
+                f'  purpose: "{purpose}"',
+                f"  timeout_sec: {timeout}",
+            ]))
+        
+        # Create heartbeat task
+        heartbeat_stop = asyncio.Event()
+        
+        async def heartbeat():
+            while not heartbeat_stop.is_set():
+                await asyncio.sleep(heartbeat_interval)
+                if not heartbeat_stop.is_set():
+                    elapsed = int(time.time() - started_at)
+                    self.renderer.codeblock("log", f"… waiting for LLM ({call_id}) elapsed={elapsed}s")
+        
+        heartbeat_task = asyncio.create_task(heartbeat())
+        
+        try:
+            # Run with timeout
+            result = await asyncio.wait_for(coro, timeout=timeout)
+            elapsed_ms = int((time.time() - started_at) * 1000)
+            
+            if self.options.verbose:
+                self.renderer.codeblock("yaml", "\n".join([
+                    "# @type: llm_call_done",
+                    f"# @purpose: {purpose}",
+                    "llm_call:",
+                    f'  id: "{call_id}"',
+                    '  status: "ok"',
+                    f"  elapsed_ms: {elapsed_ms}",
+                ]))
+            
+            return result
+            
+        except asyncio.TimeoutError:
+            elapsed_ms = int((time.time() - started_at) * 1000)
+            if self.options.verbose:
+                self.renderer.codeblock("yaml", "\n".join([
+                    "# @type: llm_call_error",
+                    f"# @purpose: {purpose}",
+                    "llm_call:",
+                    f'  id: "{call_id}"',
+                    '  status: "timeout"',
+                    f"  elapsed_ms: {elapsed_ms}",
+                ]))
+            raise
+            
+        except Exception as e:
+            elapsed_ms = int((time.time() - started_at) * 1000)
+            if self.options.verbose:
+                err_msg = str(e).replace('"', '\\"')[:180]
+                self.renderer.codeblock("yaml", "\n".join([
+                    "# @type: llm_call_error",
+                    f"# @purpose: {purpose}",
+                    "llm_call:",
+                    f'  id: "{call_id}"',
+                    '  status: "error"',
+                    f"  elapsed_ms: {elapsed_ms}",
+                    f'  error: "{err_msg}"',
+                ]))
+            raise
+            
+        finally:
+            heartbeat_stop.set()
+            heartbeat_task.cancel()
+            try:
+                await heartbeat_task
+            except asyncio.CancelledError:
+                pass
+    
     async def _kill_port(self, port: int):
         """Kill process using port"""
         try:
@@ -1308,7 +1401,12 @@ Generate ONLY the fixed server.ts code, no explanations."""
                     verbose=self.options.verbose, max_attempts=3
                 ))
                 generator.set_llm_client(self._llm_client)
-                result = await generator.generate(prompt)
+                
+                # Wrap with heartbeat logging
+                result = await self._with_llm_heartbeat(
+                    "contract_generation",
+                    generator.generate(prompt)
+                )
                 if result.success and result.contract:
                     return result.contract
             except Exception:
@@ -1382,8 +1480,14 @@ Generate ONLY the fixed server.ts code, no explanations."""
             generator.set_llm_client(self._llm_client)
             if self.options.verbose:
                 self.renderer.info("Using LLM for code generation")
-        
-        result = await generator.generate(contract, output_dir)
+            
+            # Wrap with heartbeat logging
+            result = await self._with_llm_heartbeat(
+                "code_generation",
+                generator.generate(contract, output_dir)
+            )
+        else:
+            result = await generator.generate(contract, output_dir)
         
         if result.success:
             return [f.path for f in result.files]

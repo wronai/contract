@@ -113,9 +113,10 @@ def setup_node_env() -> dict:
 @click.option("--port", default=3000, type=int, help="Service port")
 @click.option("--verbose", "-v", is_flag=True, help="Verbose output")
 @click.option("--keep-running", "-k", is_flag=True, help="Keep service running after tests")
+@click.option("--log-file", default=None, help="Path to save markdown log")
 @click.option("--version", is_flag=True, help="Show version")
 @click.pass_context
-def main(ctx, prompt: Optional[str], output: str, port: int, verbose: bool, keep_running: bool, version: bool):
+def main(ctx, prompt: Optional[str], output: str, port: int, verbose: bool, keep_running: bool, log_file: Optional[str], version: bool):
     """
     Reclapp - AI-Native Declarative Platform
     
@@ -136,7 +137,7 @@ def main(ctx, prompt: Optional[str], output: str, port: int, verbose: bool, keep
     if ctx.invoked_subcommand is None:
         if prompt:
             # Run full lifecycle with prompt
-            ctx.invoke(lifecycle, prompt=prompt, output=output, port=port, verbose=verbose, keep_running=keep_running)
+            ctx.invoke(lifecycle, prompt=prompt, output=output, port=port, verbose=verbose, keep_running=keep_running, log_file=log_file)
         else:
             click.echo(ctx.get_help())
 
@@ -147,7 +148,8 @@ def main(ctx, prompt: Optional[str], output: str, port: int, verbose: bool, keep
 @click.option("--port", default=3000, type=int, help="Service port")
 @click.option("--verbose", "-v", is_flag=True, help="Verbose output")
 @click.option("--keep-running", is_flag=True, help="Keep service running after tests")
-def lifecycle(prompt: str, output: str, port: int, verbose: bool, keep_running: bool):
+@click.option("--log-file", default=None, help="Path to save markdown log")
+def lifecycle(prompt: str, output: str, port: int, verbose: bool, keep_running: bool, log_file: Optional[str]):
     """Run full lifecycle: prompt → contract → code → service → tests"""
     
     click.md(
@@ -170,6 +172,7 @@ def lifecycle(prompt: str, output: str, port: int, verbose: bool, keep_running: 
             keep_running=keep_running,
             verbose=verbose,
             port=port,
+            log_file=log_file,
         )
         sys.exit(exit_code)
     except ImportError as e:

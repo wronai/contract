@@ -204,7 +204,8 @@ class TestShellRenderer:
         renderer.info("FYI")
         
         captured = capsys.readouterr()
-        assert "ℹ️" in captured.out
+        # clickmd uses arrow, fallback uses ℹ️
+        assert "ℹ️" in captured.out or "→" in captured.out
         assert "FYI" in captured.out
 
 

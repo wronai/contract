@@ -32,7 +32,8 @@ async def run_evolve(
     port: int = 3000,
     keep_running: bool = False,
     verbose: bool = True,
-    use_python: bool = True
+    use_python: bool = True,
+    log_file: Optional[str] = None
 ) -> int:
     """
     Run evolution mode with Python implementation.
@@ -43,6 +44,7 @@ async def run_evolve(
         keep_running: Keep service running after generation
         verbose: Verbose output
         use_python: Use Python implementation (vs Node.js fallback)
+        log_file: Optional path to save markdown log
         
     Returns:
         Exit code (0 for success)
@@ -88,12 +90,21 @@ async def run_evolve(
             max_iterations=5
         ))
         
+        # Enable log buffering if log file requested
+        if log_file:
+            evolution.renderer.enable_log()
+        
         # Set LLM client if available
         if provider:
             evolution.set_llm_client(provider)
         
         # Run evolution
         result = await evolution.evolve(prompt, output)
+        
+        # Save log file if requested
+        if log_file:
+            evolution.renderer.save_log(log_file)
+            click.md(f"```log\n📝 Log saved to: {log_file}\n```\n")
         
         if result.success:
             click.md(
@@ -136,10 +147,11 @@ def evolve_sync(
     output: str = "./generated",
     port: int = 3000,
     keep_running: bool = False,
-    verbose: bool = True
+    verbose: bool = True,
+    log_file: Optional[str] = None
 ) -> int:
     """Synchronous wrapper for evolve command"""
-    return asyncio.run(run_evolve(prompt, output, port, keep_running, verbose))
+    return asyncio.run(run_evolve(prompt, output, port, keep_running, verbose, log_file=log_file))
 
 
 if __name__ == "__main__":
@@ -150,6 +162,7 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output", default="./generated", help="Output directory")
     parser.add_argument("-k", "--keep-running", action="store_true", help="Keep service running")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
+    parser.add_argument("--log-file", default=None, help="Path to save markdown log")
     
     args = parser.parse_args()
     
@@ -157,6 +170,7 @@ if __name__ == "__main__":
         prompt=args.prompt,
         output=args.output,
         keep_running=args.keep_running,
-        verbose=args.verbose
+        verbose=args.verbose,
+        log_file=args.log_file
     )
     sys.exit(exit_code)
