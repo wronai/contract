@@ -17,6 +17,14 @@ from pydantic import BaseModel, Field
 from ..llm import LLMProvider, GenerateOptions
 from .base import BaseGenerator
 
+# Use clickmd logger for consistent markdown output
+try:
+    from clickmd import Logger
+    _HAS_CLICKMD = True
+except ImportError:
+    _HAS_CLICKMD = False
+    Logger = None  # type: ignore
+
 
 # ============================================================================
 # TYPES
@@ -78,6 +86,7 @@ class ContractGenerator(BaseGenerator[ContractGeneratorOptions, ContractGenerati
     def __init__(self, options: Optional[ContractGeneratorOptions] = None):
         opts = options or ContractGeneratorOptions()
         super().__init__(opts, verbose=opts.verbose)
+        self._log = Logger(verbose=opts.verbose) if _HAS_CLICKMD else None
     
     async def generate(self, user_prompt: str) -> ContractGenerationResult:
         """

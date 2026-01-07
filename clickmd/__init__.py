@@ -16,6 +16,18 @@ from typing import Any, Optional
 
 from .renderer import get_renderer, render_markdown, MarkdownRenderer
 
+# Logger for automatic markdown wrapping
+from .logger import (
+    Logger,
+    get_logger,
+    set_logger,
+    log_info,
+    log_success,
+    log_warning,
+    log_error,
+    log_action,
+)
+
 # Re-export decorators for backwards compatibility
 from .decorators import (
     CLICK_AVAILABLE,
@@ -84,6 +96,15 @@ __all__ = [
     "get_renderer",
     "MarkdownRenderer",
     "CLICK_AVAILABLE",
+    # Logger (auto-wrapping in codeblocks)
+    "Logger",
+    "get_logger",
+    "set_logger",
+    "log_info",
+    "log_success",
+    "log_warning",
+    "log_error",
+    "log_action",
     # Click decorators (require click)
     "group",
     "command",

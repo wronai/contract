@@ -104,6 +104,8 @@ class MarkdownRenderer:
             return self._highlight_bash(line)
         if l in ("typescript", "ts", "javascript", "js"):
             return self._highlight_js(line)
+        if l in ("python", "py"):
+            return self._highlight_python(line)
         if l in ("markdown", "md"):
             return self._highlight_markdown(line)
         if l in ("log",):
@@ -240,6 +242,50 @@ class MarkdownRenderer:
         if "//" in result:
             parts = result.split("//", 1)
             result = parts[0] + self._c("gray", "//" + parts[1])
+
+        return result
+
+    def _highlight_python(self, line: str) -> str:
+        # Comments
+        if line.strip().startswith("#"):
+            return self._c("gray", line)
+
+        result = line
+
+        # Keywords
+        keywords = [
+            "def", "class", "if", "elif", "else", "for", "while", "try", "except",
+            "finally", "with", "as", "import", "from", "return", "yield", "raise",
+            "pass", "break", "continue", "and", "or", "not", "in", "is", "lambda",
+            "async", "await", "None", "True", "False", "global", "nonlocal",
+        ]
+        for kw in keywords:
+            result = re.sub(rf"\b{re.escape(kw)}\b", self._c("magenta", kw), result)
+
+        # Decorators
+        result = re.sub(r"(@\w+)", lambda m: self._c("yellow", m.group(1)), result)
+
+        # Strings (single and double quotes)
+        result = re.sub(r'""".*?"""', lambda m: self._c("green", m.group(0)), result)
+        result = re.sub(r"'''.*?'''", lambda m: self._c("green", m.group(0)), result)
+        result = re.sub(r'"([^"\\]|\\.)*"', lambda m: self._c("green", m.group(0)), result)
+        result = re.sub(r"'([^'\\]|\\.)*'", lambda m: self._c("green", m.group(0)), result)
+
+        # f-strings (highlight the f prefix)
+        result = re.sub(r'\bf(["\'])', lambda m: self._c("cyan", "f") + m.group(1), result)
+
+        # Numbers
+        result = re.sub(r"\b(\d+\.?\d*)\b", lambda m: self._c("cyan", m.group(1)), result)
+
+        # Built-in functions
+        builtins = ["print", "len", "range", "str", "int", "float", "list", "dict", "set", "tuple", "type", "isinstance", "hasattr", "getattr", "setattr", "open", "super", "self"]
+        for bi in builtins:
+            result = re.sub(rf"\b{re.escape(bi)}\b(?=\s*\()", lambda m, b=bi: self._c("blue", b), result)
+
+        # Inline comments
+        if "#" in result:
+            parts = result.split("#", 1)
+            result = parts[0] + self._c("gray", "#" + parts[1])
 
         return result
 

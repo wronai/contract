@@ -1,0 +1,1 @@
+"""clickmd tests"""
