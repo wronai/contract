@@ -1,4 +1,4 @@
-.PHONY: help install dev test lint format type-check clean build publish publish-test docs
+.PHONY: help install dev test lint format type-check clean build publish publish-test docs examples examples-md examples-html
 
 PYTHON := python3
 PIP := pip
@@ -6,6 +6,8 @@ PYTEST := pytest
 RUFF := ruff
 BLACK := black
 MYPY := mypy
+EXAMPLES_DIR := examples
+EXAMPLES_OUT := examples_output
 
 help:
 	@echo "clickmd - Markdown rendering for CLI applications"
@@ -30,6 +32,11 @@ help:
 	@echo ""
 	@echo "Documentation:"
 	@echo "  docs         Generate documentation"
+	@echo ""
+	@echo "Examples:"
+	@echo "  examples     Run all examples sequentially"
+	@echo "  examples-md  Generate examples_output/*.md (no ANSI)"
+	@echo "  examples-html Generate examples_output/*.html and open in browser"
 
 install:
 	$(PIP) install -e .
@@ -80,6 +87,52 @@ publish: build
 docs:
 	@echo "Documentation is in README.md and docs/"
 	@echo "For API docs, consider using pdoc or sphinx"
+
+examples:
+	@echo "Running all clickmd examples..."
+	PYTHONPATH=.. $(PYTHON) $(EXAMPLES_DIR)/basic.py
+	PYTHONPATH=.. $(PYTHON) $(EXAMPLES_DIR)/custom_renderer.py
+	PYTHONPATH=.. $(PYTHON) $(EXAMPLES_DIR)/logging.py
+	PYTHONPATH=.. $(PYTHON) $(EXAMPLES_DIR)/logger_usage.py
+	@if PYTHONPATH=.. $(PYTHON) -c "import clickmd as c, sys; sys.exit(0 if getattr(c, 'CLICK_AVAILABLE', False) else 1)"; then \
+		PYTHONPATH=.. $(PYTHON) $(EXAMPLES_DIR)/cli_app.py hello --name Alice; \
+		PYTHONPATH=.. $(PYTHON) $(EXAMPLES_DIR)/cli_app.py status; \
+		PYTHONPATH=.. $(PYTHON) $(EXAMPLES_DIR)/markdown_help.py --help; \
+		PYTHONPATH=.. $(PYTHON) $(EXAMPLES_DIR)/markdown_help.py process --help; \
+	else \
+		echo "Skipping cli_app.py and markdown_help.py (click not installed). Install with: pip install clickmd[click]"; \
+	fi
+
+examples-md:
+	@echo "Generating markdown outputs for examples..."
+	rm -rf $(EXAMPLES_OUT)
+	mkdir -p $(EXAMPLES_OUT)
+	PYTHONPATH=.. $(PYTHON) $(EXAMPLES_DIR)/basic.py > $(EXAMPLES_OUT)/basic.md
+	PYTHONPATH=.. $(PYTHON) $(EXAMPLES_DIR)/custom_renderer.py > $(EXAMPLES_OUT)/custom_renderer.md
+	PYTHONPATH=.. $(PYTHON) $(EXAMPLES_DIR)/logging.py > $(EXAMPLES_OUT)/logging.md
+	PYTHONPATH=.. $(PYTHON) $(EXAMPLES_DIR)/logger_usage.py > $(EXAMPLES_OUT)/logger_usage.md
+	@if PYTHONPATH=.. $(PYTHON) -c "import clickmd as c, sys; sys.exit(0 if getattr(c, 'CLICK_AVAILABLE', False) else 1)"; then \
+		PYTHONPATH=.. $(PYTHON) $(EXAMPLES_DIR)/cli_app.py hello --name Alice > $(EXAMPLES_OUT)/cli_app.md; \
+		PYTHONPATH=.. $(PYTHON) $(EXAMPLES_DIR)/cli_app.py status >> $(EXAMPLES_OUT)/cli_app.md; \
+		PYTHONPATH=.. $(PYTHON) $(EXAMPLES_DIR)/cli_app.py example python >> $(EXAMPLES_OUT)/cli_app.md; \
+		PYTHONPATH=.. $(PYTHON) $(EXAMPLES_DIR)/markdown_help.py --help > $(EXAMPLES_OUT)/markdown_help.md; \
+		PYTHONPATH=.. $(PYTHON) $(EXAMPLES_DIR)/markdown_help.py process --help >> $(EXAMPLES_OUT)/markdown_help.md; \
+		PYTHONPATH=.. $(PYTHON) $(EXAMPLES_DIR)/markdown_help.py config list >> $(EXAMPLES_OUT)/markdown_help.md; \
+	else \
+		echo "# cli_app.py" > $(EXAMPLES_OUT)/cli_app.md; \
+		echo "" >> $(EXAMPLES_OUT)/cli_app.md; \
+		echo "Click is not installed. Install with: pip install clickmd[click]" >> $(EXAMPLES_OUT)/cli_app.md; \
+		echo "# markdown_help.py" > $(EXAMPLES_OUT)/markdown_help.md; \
+		echo "" >> $(EXAMPLES_OUT)/markdown_help.md; \
+		echo "Click is not installed. Install with: pip install clickmd[click]" >> $(EXAMPLES_OUT)/markdown_help.md; \
+	fi
+	@echo "Wrote markdown files to $(EXAMPLES_OUT)/"
+
+examples-html: examples-md
+	@echo "Converting markdown to HTML..."
+	$(PYTHON) tools/md_to_html.py $(EXAMPLES_OUT)
+	@echo "Opening HTML files in browser..."
+	@for html in $(EXAMPLES_OUT)/*.html; do xdg-open "$$html" >/dev/null 2>&1 || true; done
 
 # Development shortcuts
 .PHONY: t l f c

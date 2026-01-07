@@ -107,8 +107,8 @@ class ContractGenerator(BaseGenerator[ContractGeneratorOptions, ContractGenerati
         while attempts < self.options.max_attempts:
             attempts += 1
             
-            if self.options.verbose:
-                print(f"\n📋 Contract generation attempt {attempts}/{self.options.max_attempts}")
+            if self._log:
+                self._log.attempt(attempts, self.options.max_attempts, "contract generation")
             
             try:
                 # Build prompt
@@ -142,8 +142,8 @@ class ContractGenerator(BaseGenerator[ContractGeneratorOptions, ContractGenerati
                     # Success!
                     time_ms = int((time.time() - start_time) * 1000)
                     
-                    if self.options.verbose:
-                        print(f"✅ Contract generated successfully in {attempts} attempt(s)")
+                    if self._log:
+                        self._log.success(f"Contract generated successfully in {attempts} attempt(s)")
                     
                     return ContractGenerationResult(
                         success=True,
@@ -156,10 +156,10 @@ class ContractGenerator(BaseGenerator[ContractGeneratorOptions, ContractGenerati
                 
                 last_errors = validation_errors
                 
-                if self.options.verbose:
-                    print(f"❌ Validation errors: {len(validation_errors)}")
+                if self._log:
+                    self._log.error(f"Validation errors: {len(validation_errors)}")
                     for err in validation_errors[:3]:
-                        print(f"   - {err.path}: {err.message}")
+                        self._log.info(f"  {err.path}: {err.message}")
                         
             except Exception as e:
                 last_errors = [ContractValidationError(
@@ -167,8 +167,8 @@ class ContractGenerator(BaseGenerator[ContractGeneratorOptions, ContractGenerati
                     message=f"Generation error: {str(e)}"
                 )]
                 
-                if self.options.verbose:
-                    print(f"❌ Error: {e}")
+                if self._log:
+                    self._log.exception(e)
         
         # All attempts failed
         time_ms = int((time.time() - start_time) * 1000)

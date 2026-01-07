@@ -41,6 +41,30 @@ from .decorators import (
     Context,
 )
 
+# Markdown help for Click (require click installed)
+from .help import (
+    MarkdownCommand,
+    MarkdownGroup,
+    MarkdownHelpFormatter,
+    markdown_help,
+    success,
+    warning,
+    error,
+    info,
+    echo_md,
+)
+
+# Optional Rich backend
+from .rich_backend import (
+    RICH_AVAILABLE,
+    is_rich_available,
+    get_console,
+    render_md,
+    render_panel,
+    render_syntax,
+    render_table,
+)
+
 
 _MD_HINT_RE = re.compile(r"(^|\n)\s*#{1,6}\s|```|\*\*|\[[^\]]+\]\([^)]+\)")
 
@@ -92,6 +116,7 @@ __all__ = [
     # Core functions (no click dependency)
     "md",
     "echo",
+    "echo_md",
     "render_markdown",
     "get_renderer",
     "MarkdownRenderer",
@@ -114,4 +139,22 @@ __all__ = [
     "Choice",
     "Path",
     "Context",
+    # Markdown help for Click (USP)
+    "MarkdownCommand",
+    "MarkdownGroup",
+    "MarkdownHelpFormatter",
+    "markdown_help",
+    # Styled output panels
+    "success",
+    "warning",
+    "error",
+    "info",
+    # Rich backend (optional)
+    "RICH_AVAILABLE",
+    "is_rich_available",
+    "get_console",
+    "render_md",
+    "render_panel",
+    "render_syntax",
+    "render_table",
 ]

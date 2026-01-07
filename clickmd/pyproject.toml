@@ -32,6 +32,7 @@ dependencies = []
 
 [project.optional-dependencies]
 click = ["click>=8.0"]
+rich = ["rich>=13.0"]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
@@ -39,7 +40,7 @@ dev = [
     "mypy>=1.0",
     "black>=23.0",
 ]
-all = ["clickmd[click,dev]"]
+all = ["clickmd[click,rich,dev]"]
 
 [project.urls]
 Homepage = "https://github.com/wronai/clickmd"

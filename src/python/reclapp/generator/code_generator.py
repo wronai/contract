@@ -18,6 +18,14 @@ from pydantic import BaseModel, Field
 from ..llm import LLMProvider, GenerateOptions
 from .base import BaseGenerator
 
+# Use clickmd logger for consistent markdown output
+try:
+    from clickmd import Logger
+    _HAS_CLICKMD = True
+except ImportError:
+    _HAS_CLICKMD = False
+    Logger = None  # type: ignore
+
 
 # ============================================================================
 # TYPES
@@ -74,6 +82,7 @@ class CodeGenerator(BaseGenerator[CodeGeneratorOptions, CodeGenerationResult]):
     def __init__(self, options: Optional[CodeGeneratorOptions] = None):
         opts = options or CodeGeneratorOptions()
         super().__init__(opts, verbose=opts.verbose)
+        self._log = Logger(verbose=opts.verbose) if _HAS_CLICKMD else None
     
     async def generate(
         self,
@@ -97,8 +106,8 @@ class CodeGenerator(BaseGenerator[CodeGeneratorOptions, CodeGenerationResult]):
         
         target_dir = output_dir or self.options.output_dir
         
-        if self.options.verbose:
-            print(f"\n🔨 Generating code to {target_dir}")
+        if self._log:
+            self._log.action("generate", f"Generating code to {target_dir}")
         
         try:
             # Extract info from contract
@@ -116,22 +125,22 @@ class CodeGenerator(BaseGenerator[CodeGeneratorOptions, CodeGenerationResult]):
             language = backend.get("language", "typescript")
             framework = backend.get("framework", "express")
             
-            if self.options.verbose:
-                print(f"   Framework: {framework} ({language})")
-                print(f"   Entities: {len(entities)}")
+            if self._log:
+                self._log.info(f"Framework: {framework} ({language})")
+                self._log.info(f"Entities: {len(entities)}")
             
             # Try LLM generation first if client is available
             if self.llm_client:
-                if self.options.verbose:
-                    print(f"   🤖 Using LLM for code generation...")
+                if self._log:
+                    self._log.action("llm", "Using LLM for code generation...")
                 
                 llm_result = await self._generate_with_llm(contract, target_dir)
                 if llm_result.success and llm_result.files:
-                    if self.options.verbose:
-                        print(f"   ✅ LLM generated {len(llm_result.files)} files")
+                    if self._log:
+                        self._log.success(f"LLM generated {len(llm_result.files)} files")
                     return llm_result
-                elif self.options.verbose:
-                    print(f"   ⚠️ LLM generation failed, using templates")
+                elif self._log:
+                    self._log.warning("LLM generation failed, using templates")
             
             # Generate package.json
             package_json = self._generate_package_json(app_name, backend)
@@ -186,8 +195,8 @@ class CodeGenerator(BaseGenerator[CodeGeneratorOptions, CodeGenerationResult]):
             
             time_ms = int((time.time() - start_time) * 1000)
             
-            if self.options.verbose:
-                print(f"✅ Generated {len(files)} files in {time_ms}ms")
+            if self._log:
+                self._log.success(f"Generated {len(files)} files in {time_ms}ms")
             
             return CodeGenerationResult(
                 success=True,
@@ -201,8 +210,8 @@ class CodeGenerator(BaseGenerator[CodeGeneratorOptions, CodeGenerationResult]):
             errors.append(str(e))
             time_ms = int((time.time() - start_time) * 1000)
             
-            if self.options.verbose:
-                print(f"❌ Error: {e}")
+            if self._log:
+                self._log.exception(e)
             
             return CodeGenerationResult(
                 success=False,

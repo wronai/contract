@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>custom_renderer</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 24px; max-width: 980px; margin: 0 auto; }
+    h1, h2, h3, h4, h5, h6 { margin: 24px 0 12px; }
+    p { line-height: 1.5; margin: 10px 0; }
+    pre { background: #0b1020; color: #e6edf3; padding: 14px; border-radius: 10px; overflow-x: auto; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; }
+    a { color: #2563eb; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+    th { background: #f3f4f6; }
+  </style>
+</head>
+<body>
+<p>=== Default Renderer ===</p>
+<h1>Default Configuration</h1>
+<pre><code class="language-python">print(&#x27;Hello, World!&#x27;)</code></pre>
+<p>=== No-Color Renderer ===</p>
+<h1>No Colors</h1>
+<pre><code class="language-python">x = 42</code></pre>
+<p>=== Custom Stream (StringIO) ===</p>
+<p>Captured 54 characters:</p>
+<h2>Captured Output</h2>
+<pre><code class="language-json">{&quot;captured&quot;: true}</code></pre>
+<p>=== Using get_renderer() ===</p>
+<h1>Helper Function</h1>
+<p>=== Direct Highlighting ===</p>
+<p>YAML line: name: clickmd</p>
+<p>JSON line: &quot;key&quot;: &quot;value&quot;,</p>
+<p>Python/JS line: const x = &#x27;hello&#x27;;</p>
+<p>Bash line: echo hello world</p>
+<p>=== Full Markdown ===</p>
+<h1>Main Title</h1>
+<p>Some introductory text with bold words.</p>
+<pre><code class="language-python">def example():
+    return &quot;highlighted code&quot;</code></pre>
+<h2>Section Two</h2>
+<p>More text and a <a href="https://example.com">link</a>.</p>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>cli_app</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 24px; max-width: 980px; margin: 0 auto; }
+    h1, h2, h3, h4, h5, h6 { margin: 24px 0 12px; }
+    p { line-height: 1.5; margin: 10px 0; }
+    pre { background: #0b1020; color: #e6edf3; padding: 14px; border-radius: 10px; overflow-x: auto; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; }
+    a { color: #2563eb; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+    th { background: #f3f4f6; }
+  </style>
+</head>
+<body>
+<h2>👋 Hello, Alice!</h2>
+<p>Welcome to clickmd - making CLIs beautiful since 2024.</p>
+<h3>Quick Tips</h3>
+<pre><code class="language-yaml">features:
+  - Syntax highlighting
+  - Markdown rendering
+  - Zero dependencies (core)
+  - Click integration (optional)</code></pre>
+<h2>📊 Application Status</h2>
+<pre><code class="language-log">✅ Server: Running
+✅ Database: Connected
+⚠️ Cache: Warming up
+📦 Version: 1.0.0</code></pre>
+<h3>System Info</h3>
+<pre><code class="language-json">{
+  &quot;python&quot;: &quot;3.12&quot;,
+  &quot;clickmd&quot;: &quot;1.0.0&quot;,
+  &quot;platform&quot;: &quot;linux&quot;
+}</code></pre>
+<h2>🐍 Python Example</h2>
+<pre><code class="language-python">from dataclasses import dataclass
+
+@dataclass
+class User:
+    name: str
+    email: str
+    
+    def greet(self) -&gt; str:
+        return f&quot;Hello, {self.name}!&quot;
+
+user = User(&quot;Alice&quot;, &quot;alice@example.com&quot;)
+print(user.greet())</code></pre>
+</body>
+</html>

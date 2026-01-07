@@ -1,27 +1,10 @@
-#!/usr/bin/env python3
-"""
-Log-style colored output example.
 
-Demonstrates how to use clickmd for log-style output with automatic coloring.
-
-Run: python examples/logging.py
-"""
-
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-
-from clickmd import md
-
-
-def main():
-    md("""
 # 📋 Application Log Output
 
 clickmd automatically colors log-style output based on emoji prefixes and keywords.
 
 ## Success Messages (Green)
+
 
 ```log
 ✅ Build completed successfully
@@ -30,7 +13,9 @@ clickmd automatically colors log-style output based on emoji prefixes and keywor
 🚀 Application started on port 3000
 ```
 
+
 ## Warning Messages (Yellow)
+
 
 ```log
 ⚠️ Deprecated API usage detected
@@ -39,7 +24,9 @@ clickmd automatically colors log-style output based on emoji prefixes and keywor
 📝 Configuration file not found, using defaults
 ```
 
+
 ## Error Messages (Red)
+
 
 ```log
 🛑 Connection refused: localhost:5432
@@ -50,7 +37,9 @@ Exception: ValueError
 ERR_CONNECTION_REFUSED
 ```
 
+
 ## Info Messages (Cyan/Gray)
+
 
 ```log
 📦 Installing dependencies...
@@ -60,14 +49,18 @@ ERR_CONNECTION_REFUSED
 → Processing item 2 of 100
 ```
 
+
 ## Progress Messages (Magenta)
+
 
 ```log
 📊 Progress: 45% complete
 📊 Progress: [████████░░░░░░░░] 50%
 ```
 
+
 ## Mixed Example
+
 
 ```log
 🚀 Starting application...
@@ -80,8 +73,5 @@ ERR_CONNECTION_REFUSED
 ✅ All services ready
 🚀 Server listening on http://localhost:3000
 ```
-""")
 
 
-if __name__ == "__main__":
-    main()

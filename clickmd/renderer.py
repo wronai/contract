@@ -1,5 +1,19 @@
+"""
+clickmd.renderer - Markdown rendering with ANSI colors.
+
+Core rendering engine for clickmd with support for:
+- Headings, code blocks, syntax highlighting
+- Tables (ASCII/Unicode)
+- Panels/boxes with styles
+- Blockquotes, horizontal rules
+- Checklists, nested lists
+"""
+
+import os
 import re
+import shutil
 import sys
+from typing import Literal, Optional
 
 
 _COLORS = {
@@ -35,10 +49,22 @@ class MarkdownRenderer:
             is_tty = True
         self._use_colors = bool(use_colors) and is_tty
 
-    def _c(self, color: str, text: str) -> str:
+    def _c(self, color: str, text: str, bold: bool = False, dim: bool = False) -> str:
         if not self._use_colors:
             return text
-        return f"{_COLORS[color]}{text}{_COLORS['reset']}"
+        prefix = ""
+        if bold:
+            prefix += _COLORS["bold"]
+        if dim:
+            prefix += _COLORS["dim"]
+        return f"{prefix}{_COLORS[color]}{text}{_COLORS['reset']}"
+    
+    def _get_terminal_width(self) -> int:
+        """Get terminal width, default to 80 if unavailable."""
+        try:
+            return shutil.get_terminal_size().columns
+        except Exception:
+            return 80
 
     def _writeln(self, text: str) -> None:
         print(text, file=self._stream)

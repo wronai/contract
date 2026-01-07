@@ -9,6 +9,9 @@ Run: python examples/custom_renderer.py
 
 import sys
 from io import StringIO
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from clickmd import MarkdownRenderer, get_renderer
 

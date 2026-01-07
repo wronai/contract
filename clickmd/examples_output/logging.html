@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>logging</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 24px; max-width: 980px; margin: 0 auto; }
+    h1, h2, h3, h4, h5, h6 { margin: 24px 0 12px; }
+    p { line-height: 1.5; margin: 10px 0; }
+    pre { background: #0b1020; color: #e6edf3; padding: 14px; border-radius: 10px; overflow-x: auto; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; }
+    a { color: #2563eb; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+    th { background: #f3f4f6; }
+  </style>
+</head>
+<body>
+<h1>📋 Application Log Output</h1>
+<p>clickmd automatically colors log-style output based on emoji prefixes and keywords.</p>
+<h2>Success Messages (Green)</h2>
+<pre><code class="language-log">✅ Build completed successfully
+✅ All tests passed
+✅ Deployment finished
+🚀 Application started on port 3000</code></pre>
+<h2>Warning Messages (Yellow)</h2>
+<pre><code class="language-log">⚠️ Deprecated API usage detected
+⚠️ Cache miss - fetching from source
+🎫 Token expires in 24 hours
+📝 Configuration file not found, using defaults</code></pre>
+<h2>Error Messages (Red)</h2>
+<pre><code class="language-log">🛑 Connection refused: localhost:5432
+🛑 Authentication failed
+❌ Build failed with 3 errors
+Error: Module not found
+Exception: ValueError
+ERR_CONNECTION_REFUSED</code></pre>
+<h2>Info Messages (Cyan/Gray)</h2>
+<pre><code class="language-log">📦 Installing dependencies...
+💬 Sending notification...
+🔄 Refreshing cache...
+→ Processing item 1 of 100
+→ Processing item 2 of 100</code></pre>
+<h2>Progress Messages (Magenta)</h2>
+<pre><code class="language-log">📊 Progress: 45% complete
+📊 Progress: [████████░░░░░░░░] 50%</code></pre>
+<h2>Mixed Example</h2>
+<pre><code class="language-log">🚀 Starting application...
+📦 Loading configuration from config.yaml
+✅ Configuration loaded
+📦 Connecting to database...
+⚠️ Using default connection pool size
+✅ Database connected
+📊 Progress: Initializing services...
+✅ All services ready
+🚀 Server listening on http://localhost:3000</code></pre>
+</body>
+</html>

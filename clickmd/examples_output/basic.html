@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>basic</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 24px; max-width: 980px; margin: 0 auto; }
+    h1, h2, h3, h4, h5, h6 { margin: 24px 0 12px; }
+    p { line-height: 1.5; margin: 10px 0; }
+    pre { background: #0b1020; color: #e6edf3; padding: 14px; border-radius: 10px; overflow-x: auto; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; }
+    a { color: #2563eb; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+    th { background: #f3f4f6; }
+  </style>
+</head>
+<body>
+<h1>Welcome to clickmd! 🎨</h1>
+<p>This is a beautiful markdown renderer for your CLI applications.</p>
+<h2>Features</h2>
+<p>- Syntax highlighting for code blocks - Markdown formatting (bold, headers, links) - Zero dependencies for core functionality - Works with or without Click</p>
+<h2>Python Code Example</h2>
+<pre><code class="language-python">def greet(name: str) -&gt; str:
+    &quot;&quot;&quot;Generate a greeting.&quot;&quot;&quot;
+    return f&quot;Hello, {name}!&quot;
+
+if __name__ == &quot;__main__&quot;:
+    print(greet(&quot;World&quot;))</code></pre>
+<h2>JSON Data</h2>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;clickmd&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;features&quot;: [&quot;highlighting&quot;, &quot;markdown&quot;, &quot;colors&quot;],
+  &quot;stable&quot;: true,
+  &quot;downloads&quot;: 12345
+}</code></pre>
+<h2>YAML Configuration</h2>
+<pre><code class="language-yaml"># Application configuration
+app:
+  name: clickmd
+  version: &quot;1.0.0&quot;
+  debug: false
+  
+dependencies:
+  - click&gt;=8.0
+  - pytest&gt;=7.0</code></pre>
+<p>--- Using echo() ---</p>
+<h2>This is detected as markdown</h2>
+<p>Regular text without markdown markers Bold text is also detected</p>
+<h2>Status Log</h2>
+<pre><code class="language-log">🚀 Starting application...
+📦 Loading dependencies...
+✅ All systems ready!
+⚠️ Warning: Using development mode
+🛑 Error: Connection timeout (example)</code></pre>
+</body>
+</html>
