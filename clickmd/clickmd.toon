@@ -1,0 +1,226 @@
+# clickmd | 25f 6056L | python:25
+# Keys: M=modules, D=details, i=imports, c=classes, f=functions, m=methods
+M[25]:
+  progress.py,381
+  help.py,383
+  __init__.py,205
+  rich_backend.py,233
+  renderer.py,516
+  themes.py,356
+  decorators.py,47
+  devtools.py,380
+  logger.py,215
+  examples/basic.py,59
+  examples/logger_usage.py,138
+  examples/phase5_devtools.py,173
+  examples/logging.py,57
+  examples/cli_app.py,101
+  examples/custom_renderer.py,50
+  examples/markdown_help.py,123
+  examples/phase3_progress.py,134
+  examples/phase1_features.py,160
+  examples/phase4_themes.py,173
+  tests/test_core.py,54
+  tests/__init__.py,1
+  tests/test_renderer.py,154
+  tests/test_logger.py,152
+  tests/test_decorators.py,59
+  tools/md_to_html.py,143
+D:
+  progress.py:
+    i: sys,threading,time,contextlib.contextmanager,typing
+    e: T,SPINNERS,ProgressBar,progress,Spinner,spinner,LiveUpdate,live
+    ProgressBar: __init__(7),update(1),set(1),_render(0),finish(1)  # A customizable progress bar.
+    Spinner: __init__(5),start(0),_animate(0),stop(1),__enter__(0)  # An animated spinner for indeterminate...
+    LiveUpdate: __init__(1),update(1),clear(0),__enter__(0),__exit__(0)  # Live-updating display that refreshes...
+    StatusIndicator: __init__(0),start(1),done(1),fail(1),skip(1)  # A status indicator that shows step-by...
+    _is_tty()->bool
+    _clear_line()->None
+    _write_inline(text:str)->None
+    progress(iterable:Iterable[T];label:str='';total:Optional[int]=None)->Generator[T, None, None]
+    spinner(message:str='Loading...';style:str='dots')->Generator[Spinner, None, None]
+    live(initial:str='')->Generator[LiveUpdate, None, None]
+    countdown(seconds:int;message:str='Starting in';on_complete:Optional[Callable[Any;None]]=None)->None
+  help.py:
+    i: re,sys,textwrap,functools.wraps,renderer.{MarkdownRenderer,get_renderer},typing.{Any,Callable,Optional,TypeVar}
+    e: F,success,warning,error,info,echo_md
+    _is_tty()->bool
+    _render_markdown_help(text:str;use_colors:bool=True)->str
+    _strip_markdown_to_plain(text:str)->str
+    _format_option_help(help_text:str;use_colors:bool=True)->str
+    success(message:str)->None
+    warning(message:str)->None
+    error(message:str)->None
+    info(message:str)->None
+  __init__.py:
+    i: re,sys,renderer,typing.{Any,Optional}
+    e: _MD_HINT_RE,echo,md
+    echo(message:Optional[Any]=None;file=None;nl:bool=True;err:bool=False;color:Optional[bool]=None)->None
+    md(text:str)->None
+  rich_backend.py:
+    i: sys,rich.console.Console,rich.markdown.Markdown,rich.panel.Panel,rich.syntax.Syntax,rich.table.Table,rich.theme.Theme,typing.{Any,Optional,TextIO}
+    e: is_rich_available,get_console,render_md,render_panel,render_syntax,render_table,print_md,print_panel
+    _FallbackConsole: __init__(1),print(0),rule(1)  # Simple console wrapper when Rich is n...
+    is_rich_available()->bool
+    get_console(stream:Optional[TextIO]=None;force_terminal:Optional[bool]=None;no_color:bool=False)->Any
+    render_md(text:str;stream:Optional[TextIO]=None;use_rich:bool=True)->None
+    render_panel(content:str;title:Optional[str]=None;style:str='default';stream:Optional[TextIO]=None)->None
+    render_syntax(code:str;language:str='python';theme:str='monokai';line_numbers:bool=False;stream:Optional[TextIO]=None)->None
+    render_table(headers:list[str];rows:list[list[str]];title:Optional[str]=None;stream:Optional[TextIO]=None)->None
+    print_md(text:str)->None
+    print_panel(content:str)->None
+  renderer.py:
+    i: os,re,shutil,sys,typing.{Literal,Optional}
+    e: _COLORS,_ANSI_RE,strip_ansi,MarkdownRenderer,get_renderer,render_markdown,table,panel
+    MarkdownRenderer: __init__(2),_c(4),_get_terminal_width(0),_writeln(1),heading(2)
+    strip_ansi(text:str)->str
+    get_renderer(stream=None;use_colors:bool=True)->MarkdownRenderer
+    render_markdown(text:str;text_lang:str='markdown';stream=None;use_colors:bool=True)->None
+    table(headers:list[str];rows:list[list[str]])->None
+    panel(content:str)->None
+    blockquote(content:str)->None
+    hr(char:str='─';width:Optional[int]=None)->None
+    checklist(items:list[tuple[bool;str]])->None
+  themes.py:
+    i: os,sys,dataclasses.{dataclass,field},typing.{Dict,Literal,Optional}
+    e: ANSI_COLORS,COLOR_256,Theme,THEMES,get_theme,set_theme,register_theme,list_themes
+    Theme: get_color(1)  # Color theme definition.
+    _rgb_to_ansi(r:int;g:int;b:int)->str
+    _color_256(index:int)->str
+    _ansi_color(name:str)->str
+    _check_no_color()->bool
+    _detect_color_support()->Literal["none", "basic", "256", "truecolor"]
+    get_theme()->Theme
+    set_theme(name:str)->None
+    register_theme(theme:Theme)->None
+  devtools.py:
+    i: inspect,logging,os,sys,traceback,datetime,pathlib.Path,typing.{Any,Dict,List}
+    e: PrettyExceptionFormatter,install_excepthook,uninstall_excepthook,debug,inspect_obj,ClickmdHandler,diff,tree
+    PrettyExceptionFormatter: __init__(4),format_exception(3),_format_frame(2),_shorten_path(1),_highlight_python(1)  # Format exceptions with syntax highlig...
+    ClickmdHandler: __init__(5),emit(1),format_record(1)  # Logging handler that formats logs wit...
+    install_excepthook(show_locals:bool=False;context_lines:int=3)->None
+    uninstall_excepthook()->None
+    debug(obj:Any;name:str='';max_depth:int=3;max_items:int=20;stream:Optional[TextIO]=None)->None
+    _format_debug_value(obj:Any;renderer:MarkdownRenderer;depth:int=0;max_depth:int=3;max_items:int=20)->str
+    inspect_obj(obj:Any)->None
+    diff(old:Union[str;List[str]];new:Union[str;List[str]];old_name:str='old';new_name:str='new')->None
+    tree(data:Dict[str;Any];prefix:str='';is_last:bool=True;name:str='')->None
+  logger.py:
+    i: sys,traceback,contextlib.contextmanager,renderer.{MarkdownRenderer,get_renderer},typing.{Any,Literal,Optional,TextIO}
+    e: _LEVEL_EMOJI,_ACTION_EMOJI,Logger,get_logger,set_logger,log_info,log_success,log_warning
+    Logger: __init__(4),_emit(1),_render_log_block(1),flush(0),debug(1)  # Markdown-aware logger that wraps outp...
+    get_logger(verbose:bool=True)->Logger
+    set_logger(logger:Logger)->None
+    log_info(message:str)->None
+    log_success(message:str)->None
+    log_warning(message:str)->None
+    log_error(message:str)->None
+    log_action(action:str;message:str)->None
+  examples/logger_usage.py:
+    i: sys,clickmd.{Logger,md},pathlib.Path
+    e: basic_usage,action_logging,progress_and_steps,exception_handling,grouped_output,llm_logging,mixed_output,real_world_example
+    basic_usage()->None
+    action_logging()->None
+    progress_and_steps()->None
+    exception_handling()->None
+    grouped_output()->None
+    llm_logging()->None
+    mixed_output()->None
+    real_world_example()->None
+  examples/phase5_devtools.py:
+    i: logging,sys,clickmd,dataclasses.dataclass,pathlib.Path
+    e: User,demo_debug,demo_inspect,demo_tree,demo_diff,demo_logging,demo_pretty_exceptions,demo_combined
+    User:   # Sample user class for debugging.
+    demo_debug()->None
+    demo_inspect()->None
+    demo_tree()->None
+    demo_diff()->None
+    demo_logging()->None
+    demo_pretty_exceptions()->None
+    demo_combined()->None
+  examples/logging.py:
+    i: sys,clickmd.md,pathlib.Path
+    e: main
+    main()->None
+  examples/cli_app.py:
+    i: sys,clickmd,pathlib.Path
+    e: cli,hello,status,example
+    cli()->None
+    hello(name:str;formal:bool)->None
+    status()->None
+    example(language:str)->None
+  examples/custom_renderer.py:
+    i: sys,clickmd.{MarkdownRenderer,get_renderer},io.StringIO,pathlib.Path
+    e: main
+    main()->None
+  examples/markdown_help.py:
+    i: sys,clickmd,pathlib.Path
+    e: cli,process,config,version
+    cli()->None
+    process(input:str;output:str;format:str;verbose:bool;dry_run:bool)->None
+    config(action:str;key:str;value:str)->None
+    version()->None
+  examples/phase3_progress.py:
+    i: sys,time,clickmd,pathlib.Path
+    e: demo_progress_bar,demo_spinners,demo_status_indicator,demo_live_update,demo_countdown,demo_combined
+    demo_progress_bar()->None
+    demo_spinners()->None
+    demo_status_indicator()->None
+    demo_live_update()->None
+    demo_countdown()->None
+    demo_combined()->None
+  examples/phase1_features.py:
+    i: sys,clickmd,pathlib.Path
+    e: demo_tables,demo_panels,demo_blockquotes,demo_horizontal_rules,demo_checklists,demo_nested_lists,demo_combined
+    demo_tables()->None
+    demo_panels()->None
+    demo_blockquotes()->None
+    demo_horizontal_rules()->None
+    demo_checklists()->None
+    demo_nested_lists()->None
+    demo_combined()->None
+  examples/phase4_themes.py:
+    i: sys,clickmd,pathlib.Path
+    e: demo_available_themes,demo_theme_switching,demo_theme_colors,demo_color_support,demo_custom_theme,demo_no_color,demo_styled_output
+    demo_available_themes()->None
+    demo_theme_switching()->None
+    demo_theme_colors()->None
+    demo_color_support()->None
+    demo_custom_theme()->None
+    demo_no_color()->None
+    demo_styled_output()->None
+  tests/test_core.py:
+    i: io,sys,pytest,clickmd.{CLICK_AVAILABLE,echo,md}
+    e: TestMd,TestEcho,TestClickAvailable
+    TestMd: test_md_renders_text(1),test_md_handles_code_blocks(1)
+    TestEcho: test_echo_plain_text(1),test_echo_with_markdown_header(1),test_echo_with_code_fence(1),test_echo_with_bold(1),test_echo_none(1)
+    TestClickAvailable: test_click_available_is_boolean(0)
+  tests/test_renderer.py:
+    i: io,pytest,clickmd.renderer.{MarkdownRenderer,_COLORS,get_renderer,render_markdown,strip_ansi}
+    e: TestStripAnsi,TestMarkdownRenderer,TestHighlighting,TestGetRenderer,TestRenderMarkdown
+    TestStripAnsi: test_strips_color_codes(0),test_preserves_plain_text(0),test_handles_empty_string(0)
+    TestMarkdownRenderer: test_creates_renderer_with_defaults(0),test_creates_renderer_with_stream(0),test_disables_colors(0),test_heading_output(0),test_heading_levels(0)
+    TestHighlighting: test_yaml_highlighting(0),test_yaml_comment(0),test_json_highlighting(0),test_bash_highlighting(0),test_js_highlighting(0)
+    TestGetRenderer: test_returns_renderer(0),test_with_custom_stream(0)
+    TestRenderMarkdown: test_renders_to_stream(0),test_renders_code_blocks(0)
+  tests/test_logger.py:
+    i: io,pytest,clickmd.logger
+    e: TestLogger,TestLoggerSection,TestLoggerHeading,TestGlobalLogger,TestLoggerCustomStream
+    TestLogger: test_creates_logger(0),test_verbose_false_no_output(1),test_info_outputs(1),test_success_outputs(1),test_warning_outputs(1)
+    TestLoggerSection: test_section_groups_output(1),test_without_section_multiple_blocks(1)
+    TestLoggerHeading: test_heading_outputs(1),test_heading_not_in_codeblock(1)
+    TestGlobalLogger: test_get_logger_returns_logger(0),test_set_logger_changes_default(0),test_log_convenience_functions(1)
+    TestLoggerCustomStream: test_custom_stream(0),test_buffer_mode(0)
+  tests/test_decorators.py:
+    i: pytest,clickmd.decorators
+    e: TestClickAvailability,TestClickDecorators,TestClickNotAvailable
+    TestClickAvailability: test_click_available_is_boolean(0)
+    TestClickDecorators: test_group_decorator(0),test_command_decorator(0),test_option_decorator(0),test_argument_decorator(0),test_choice_type(0)
+    TestClickNotAvailable: test_decorators_raise_import_error(0),test_choice_raises_import_error(0),test_path_raises_import_error(0)
+  tools/md_to_html.py:
+    i: argparse,html,os,re,pathlib.Path
+    e: _BOLD_RE,_LINK_RE,markdown_to_html,convert_directory,main
+    _inline_md_to_html(text:str)->str
+    markdown_to_html(markdown_text:str;title:str)->str
+    convert_directory(md_dir:Path)->None
+    main()->int

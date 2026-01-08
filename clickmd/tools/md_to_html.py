@@ -8,26 +8,39 @@ from pathlib import Path
 
 
 _BOLD_RE = re.compile(r"\*\*([^*]+)\*\*")
+_ITALIC_RE = re.compile(r"\*([^*]+)\*")
 _LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+_INLINE_CODE_RE = re.compile(r"`([^`]+)`")
 
 
 def _inline_md_to_html(text: str) -> str:
-    escaped = html.escape(text)
+    """Convert inline markdown to HTML."""
+    # Process in order: code first (to protect content), then bold, italic, links
+    
+    # Inline code - protect content
+    def _code(m: re.Match[str]) -> str:
+        return f"<code>{html.escape(m.group(1))}</code>"
+    
+    result = _INLINE_CODE_RE.sub(_code, text)
+    
+    # Bold
+    result = _BOLD_RE.sub(lambda m: f"<strong>{html.escape(m.group(1))}</strong>", result)
+    
+    # Italic (but not inside code)
+    result = _ITALIC_RE.sub(lambda m: f"<em>{m.group(1)}</em>", result)
+    
+    # Links
+    result = _LINK_RE.sub(lambda m: f'<a href="{html.escape(m.group(2), quote=True)}">{m.group(1)}</a>', result)
+    
+    return result
 
-    def _bold(m: re.Match[str]) -> str:
-        return f"<strong>{html.escape(m.group(1))}</strong>"
 
-    def _link(m: re.Match[str]) -> str:
-        label = html.escape(m.group(1))
-        url = html.escape(m.group(2), quote=True)
-        return f'<a href="{url}">{label}</a>'
-
-    # Apply on unescaped source to preserve patterns, then escape pieces safely.
-    # We therefore re-run on original and rebuild.
-    # For simplicity, do patterns on escaped string (works because [ ] ( ) and * survive escaping).
-    escaped = _BOLD_RE.sub(lambda m: f"<strong>{m.group(1)}</strong>", escaped)
-    escaped = _LINK_RE.sub(lambda m: f'<a href="{m.group(2)}">{m.group(1)}</a>', escaped)
-    return escaped
+def _escape_text(text: str) -> str:
+    """Escape HTML but preserve already processed tags."""
+    # Only escape < > & that aren't part of our generated tags
+    text = text.replace("&", "&amp;")
+    # Don't escape < > if they're part of tags we generated
+    return text
 
 
 def markdown_to_html(markdown_text: str, title: str) -> str:
@@ -81,20 +94,41 @@ def markdown_to_html(markdown_text: str, title: str) -> str:
     out.append("<body>")
 
     paragraph: list[str] = []
+    in_list = False
+    list_items: list[str] = []
 
     def flush_paragraph() -> None:
         nonlocal paragraph
         if not paragraph:
             return
-        text = " ".join([p.strip() for p in paragraph if p.strip()])
-        if text:
-            out.append(f"<p>{_inline_md_to_html(text)}</p>")
+        # Each line becomes its own paragraph for better formatting
+        for p in paragraph:
+            text = p.strip()
+            if text:
+                out.append(f"<p>{_inline_md_to_html(text)}</p>")
         paragraph = []
+
+    def flush_list() -> None:
+        nonlocal in_list, list_items
+        if not in_list or not list_items:
+            in_list = False
+            list_items = []
+            return
+        out.append("<ul>")
+        for item in list_items:
+            out.append(f"<li>{_inline_md_to_html(item)}</li>")
+        out.append("</ul>")
+        in_list = False
+        list_items = []
 
     # very small table support (GitHub-style pipes)
     def is_table_row(s: str) -> bool:
         t = s.strip()
         return t.startswith("|") and t.endswith("|") and "|" in t[1:-1]
+
+    def is_list_item(s: str) -> bool:
+        t = s.strip()
+        return t.startswith("- ") or t.startswith("* ") or re.match(r"^\d+\.\s", t)
 
     i = 0
     while i < len(lines):
@@ -104,6 +138,7 @@ def markdown_to_html(markdown_text: str, title: str) -> str:
         fence = re.match(r"^(`{3,})(.*)$", stripped.strip())
         if fence:
             flush_paragraph()
+            flush_list()
             if not in_code:
                 start_code(fence.group(2))
             else:
@@ -120,14 +155,34 @@ def markdown_to_html(markdown_text: str, title: str) -> str:
         m = re.match(r"^(#{1,6})\s+(.*)$", stripped)
         if m:
             flush_paragraph()
+            flush_list()
             level = len(m.group(1))
             out.append(f"<h{level}>{_inline_md_to_html(m.group(2).strip())}</h{level}>")
+            i += 1
+            continue
+
+        # Unordered list items
+        list_match = re.match(r"^[-*]\s+(.*)$", stripped.strip())
+        if list_match:
+            flush_paragraph()
+            in_list = True
+            list_items.append(list_match.group(1))
+            i += 1
+            continue
+
+        # Ordered list items
+        ordered_match = re.match(r"^\d+\.\s+(.*)$", stripped.strip())
+        if ordered_match:
+            flush_paragraph()
+            in_list = True
+            list_items.append(ordered_match.group(1))
             i += 1
             continue
 
         # Tables (simple)
         if is_table_row(stripped) and i + 1 < len(lines) and re.match(r"^\|\s*[:-]-+.*\|$", lines[i + 1].strip()):
             flush_paragraph()
+            flush_list()
             header = [c.strip() for c in stripped.strip()[1:-1].split("|")]
             i += 2
             rows: list[list[str]] = []
@@ -143,16 +198,22 @@ def markdown_to_html(markdown_text: str, title: str) -> str:
             out.append("</tbody></table>")
             continue
 
-        # Blank line ends paragraph
+        # Blank line ends paragraph and list
         if not stripped.strip():
             flush_paragraph()
+            flush_list()
             i += 1
             continue
+
+        # Regular text - flush list first if we were in one
+        if in_list:
+            flush_list()
 
         paragraph.append(stripped)
         i += 1
 
     flush_paragraph()
+    flush_list()
     flush_code()
 
     out.append("</body>")

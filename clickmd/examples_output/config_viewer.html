@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>config_viewer.py</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 24px; max-width: 980px; margin: 0 auto; }
+    h1, h2, h3, h4, h5, h6 { margin: 24px 0 12px; }
+    p { line-height: 1.5; margin: 10px 0; }
+    pre { background: #0b1020; color: #e6edf3; padding: 14px; border-radius: 10px; overflow-x: auto; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; }
+    a { color: #2563eb; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+    th { background: #f3f4f6; }
+  </style>
+</head>
+<body>
+<h1>📄 Config Viewer</h1>
+<h2>YAML Configuration</h2>
+<pre><code class="language-yaml"># Application settings
+app:
+  name: MyApp
+  version: 1.0.0
+  debug: true
+
+# Database
+database:
+  host: localhost
+  port: 5432
+  name: myapp_db
+
+# Features
+features:
+  - authentication
+  - logging
+  - caching</code></pre>
+<h2>JSON Configuration</h2>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;my-project&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;scripts&quot;: {
+    &quot;build&quot;: &quot;webpack --mode production&quot;,
+    &quot;test&quot;: &quot;jest --coverage&quot;
+  },
+  &quot;dependencies&quot;: {
+    &quot;react&quot;: &quot;^18.0.0&quot;,
+    &quot;typescript&quot;: &quot;^5.0.0&quot;
+  }
+}</code></pre>
+<h2>TOML Configuration</h2>
+<pre><code class="language-toml">[project]
+name= &quot;clickmd&quot;
+version= &quot;1.5.0&quot;
+description= &quot;Markdown for CLI&quot;
+
+[project.optional-dependencies]
+click= [&quot;click&gt;=8.0&quot;]
+rich= [&quot;rich&gt;=13.0&quot;]
+
+[tool.pytest]
+testpaths= [&quot;tests&quot;]</code></pre>
+<h2>Environment Variables</h2>
+<pre><code class="language-text">┌──────────┬───────────────────────────────────────────────────────┐
+│Variable  │Value                                                  │
+├──────────┼───────────────────────────────────────────────────────┤
+│PATH      │/home/tom/.cargo/bin:/home/tom/.local/bin:/usr/loc...  │
+│HOME      │/home/tom                                              │
+│USER      │tom                                                    │
+│SHELL     │/bin/bash                                              │
+│TERM      │                                                       │
+└──────────┴───────────────────────────────────────────────────────┘</code></pre>
+<h2>Config Diff</h2>
+<pre><code class="language-diff">--- config.old.yaml
++++ config.new.yaml
+@@ -1,3 +1,4 @@
+ database:
+-  host: localhost
++  host: db.example.com
+   port: 5432
++  ssl: true</code></pre>
+<h2>Config Structure</h2>
+<pre><code class="language-text">config/
+├── app/
+│   ├── name: MyApp
+│   └── version: 1.0.0
+├── database/
+│   ├── connection/
+│   │   ├── host: localhost
+│   │   └── port: 5432
+│   └── pool/
+│       ├── min: 5
+│       └── max: 20
+└── logging/
+    ├── level: INFO
+    └── file: /var/log/app.log</code></pre>
+</body>
+</html>

@@ -1,0 +1,5551 @@
+header:
+  project: src
+  files: 109
+  lines: 34289
+  kb: 1009.7
+  languages:
+    typescript: 79
+    python: 30
+  modules_count: 109
+M:
+- index.ts:8:0.1kb
+- core/index.ts:8:0.2kb
+- cli/index.ts:8:0.1kb
+- types/js-yaml.d.ts:4:0.1kb
+- python/reclapp/__init__.py:50:1.4kb
+- python/reclapp/generator/base.py:56:2.1kb
+- python/reclapp/generator/code_generator.py:562:23.8kb
+- python/reclapp/generator/__init__.py:34:0.7kb
+- python/reclapp/generator/contract_generator.py:260:12.2kb
+- python/reclapp/generator/prompt_builder.py:114:4.1kb
+- python/reclapp/models/contract.py:145:6.3kb
+- python/reclapp/models/__init__.py:96:2.0kb
+- python/reclapp/models/validation.py:140:5.7kb
+- python/reclapp/models/generation.py:132:5.4kb
+- python/reclapp/models/definition.py:244:10.0kb
+- python/reclapp/cli/__init__.py:8:0.2kb
+- python/reclapp/cli/__main__.py:8:0.2kb
+- python/reclapp/cli/main.py:383:13.7kb
+- python/reclapp/llm/openrouter.py:73:2.9kb
+- python/reclapp/llm/manager.py:224:9.2kb
+- python/reclapp/llm/ollama.py:150:5.9kb
+- python/reclapp/llm/__init__.py:55:1.7kb
+- python/reclapp/llm/provider.py:82:2.6kb
+- python/reclapp/parser/__init__.py:19:0.4kb
+- python/reclapp/parser/markdown_parser.py:409:19.5kb
+- python/reclapp/evolution/shell_renderer.py:259:10.5kb
+- python/reclapp/evolution/state_analyzer.py:249:11.0kb
+- python/reclapp/evolution/__init__.py:32:0.8kb
+- python/reclapp/evolution/task_queue.py:163:6.9kb
+- python/reclapp/evolution/generators.py:485:16.5kb
+- python/reclapp/evolution/evolution_manager.py:1169:49.8kb
+- python/reclapp/validation/stages.py:340:14.5kb
+- python/reclapp/validation/__init__.py:70:1.9kb
+- python/reclapp/validation/pipeline.py:188:8.3kb
+- cli/commands/generate-ai.ts:222:8.7kb
+- core/contract-ai/index.ts:44:3.5kb
+- core/contract-ai/generator/index.ts:10:0.2kb
+- core/contract-ai/generator/contract-validator.ts:481:17.4kb
+- core/contract-ai/generator/prompt-builder.ts:186:6.7kb
+- core/contract-ai/generator/contract-generator.ts:379:12.3kb
+- core/contract-ai/templates/index.ts:226:8.0kb
+- core/contract-ai/code-generator/llm-generator.ts:509:16.6kb
+- core/contract-ai/code-generator/index.ts:9:0.2kb
+- core/contract-ai/analysis/project-state.ts:352:12.0kb
+- core/contract-ai/analysis/index.ts:26:0.6kb
+- core/contract-ai/analysis/refactoring-contract.ts:429:16.8kb
+- core/contract-ai/analysis/code-analyzer.ts:621:23.3kb
+- core/contract-ai/cli/index.ts:8:0.1kb
+- core/contract-ai/cli/cli-runner.ts:289:8.9kb
+- core/contract-ai/types/index.ts:313:9.3kb
+- core/contract-ai/types/generation.ts:277:8.0kb
+- core/contract-ai/types/validation.ts:367:10.0kb
+- core/contract-ai/types/definition.ts:379:10.3kb
+- core/contract-ai/types/contract-markdown.ts:171:4.2kb
+- core/contract-ai/llm/llm-config.ts:209:8.9kb
+- core/contract-ai/llm/index.ts:17:0.5kb
+- core/contract-ai/llm/llm-manager.ts:270:9.1kb
+- core/contract-ai/llm/parallel-executor.ts:542:18.3kb
+- core/contract-ai/llm/llm-provider.ts:379:13.0kb
+- core/contract-ai/llm/pydantic-validator.ts:361:11.7kb
+- core/contract-ai/llm/ollama-client.ts:199:6.4kb
+- core/contract-ai/llm/context-generator.ts:414:14.1kb
+- core/contract-ai/parser/index.ts:13:0.3kb
+- core/contract-ai/parser/markdown-parser.ts:310:12.4kb
+- core/contract-ai/evolution/index.ts:20:0.6kb
+- core/contract-ai/evolution/evolution-manager.ts:3844:156.3kb
+- core/contract-ai/evolution/shell-renderer.ts:407:14.1kb
+- core/contract-ai/evolution/llm-orchestrator.ts:254:8.7kb
+- core/contract-ai/evolution/git-analyzer.ts:262:9.6kb
+- core/contract-ai/evolution/task-handlers.ts:246:9.9kb
+- core/contract-ai/evolution/llm-prompts.ts:151:6.3kb
+- core/contract-ai/evolution/task-queue.ts:139:4.6kb
+- core/contract-ai/evolution/state-analyzer.ts:384:15.7kb
+- core/contract-ai/evolution/fallback-templates.ts:348:14.0kb
+- core/contract-ai/evolution/doc-generator.ts:207:7.3kb
+- core/contract-ai/evolution/task-executor.ts:302:11.3kb
+- core/contract-ai/evolution/service-manager.ts:216:6.5kb
+- core/contract-ai/evolution/code-rag.ts:712:26.4kb
+- core/contract-ai/evolution/test-generator.ts:249:9.6kb
+- core/contract-ai/validation/index.ts:47:1.8kb
+- core/contract-ai/validation/pipeline-orchestrator.ts:212:6.8kb
+- core/contract-ai/feedback/code-corrector.ts:281:10.2kb
+- core/contract-ai/feedback/index.ts:11:0.2kb
+- core/contract-ai/feedback/iteration-manager.ts:191:6.8kb
+- core/contract-ai/feedback/feedback-generator.ts:248:8.4kb
+- core/contract-ai/feedback/generation-log.ts:332:11.5kb
+- core/contract-ai/setup/index.ts:8:0.1kb
+- core/contract-ai/setup/dependency-checker.ts:530:19.0kb
+- core/contract-ai/sdk/index.ts:11:0.2kb
+- core/contract-ai/sdk/sdk-generator.ts:551:20.3kb
+- core/contract-ai/converter/index.ts:5:0.1kb
+- core/contract-ai/converter/to-contract-ai.ts:175:5.7kb
+- core/contract-ai/validation/stages/index.ts:13:0.3kb
+- core/contract-ai/validation/stages/schema-validator.ts:91:3.1kb
+- core/contract-ai/validation/stages/test-runner.ts:300:10.4kb
+- core/contract-ai/validation/stages/quality-checker.ts:189:7.0kb
+- core/contract-ai/validation/stages/assertion-validator.ts:253:9.0kb
+- core/contract-ai/validation/stages/static-analyzer.ts:160:5.6kb
+- core/contract-ai/validation/stages/security-scanner.ts:240:8.6kb
+- core/contract-ai/validation/stages/runtime-validator.ts:335:10.5kb
+- core/contract-ai/validation/stages/syntax-validator.ts:199:8.0kb
+- core/contract-ai/code-generator/prompt-templates/index.ts:8:0.2kb
+- core/contract-ai/code-generator/prompt-templates/tests.ts:75:2.7kb
+- core/contract-ai/code-generator/prompt-templates/api.ts:202:8.0kb
+- core/contract-ai/code-generator/prompt-templates/frontend.ts:247:8.7kb
+- core/contract-ai/templates/frontend/react-app.template.ts:176:4.8kb
+- core/contract-ai/templates/tests/e2e-native.template.ts:107:4.2kb
+- core/contract-ai/templates/contracts/index.ts:61:2.0kb
+- core/contract-ai/templates/api/server.template.ts:50:1.9kb
+meta:
+  legend:
+    p: path
+    l: lines
+    i: imports
+    e: exports
+    c: classes
+    f: functions
+    n: name
+    d: docstring
+    b: bases
+    m: methods
+    props: properties
+    sig: signature
+    ret: return_type
+    async: is_async
+    kb: kilobytes
+defaults:
+  lang: typescript
+modules:
+- p: index.ts
+  l: 8
+  kb: 0.1
+- p: core/index.ts
+  l: 8
+  kb: 0.2
+- p: cli/index.ts
+  l: 8
+  kb: 0.1
+- p: types/js-yaml.d.ts
+  l: 4
+  kb: 0.1
+- p: python/reclapp/__init__.py
+  lang: python
+  l: 50
+  kb: 1.4
+  i:
+  - models
+- p: python/reclapp/generator/base.py
+  lang: python
+  l: 56
+  kb: 2.1
+  i:
+  - abc.{ABC,abstractmethod}
+  - llm.LLMProvider
+  - pydantic.BaseModel
+  - typing.{Any,Generic,Optional,TypeVar}
+  e:
+  - BaseGenerator
+  c:
+  - n: BaseGenerator
+    b:
+    - ABC
+    d: Abstract base class for generators.
+    m:
+    - n: __init__
+      sig: (options:Optional[TOptions]=None, verbose:bool=False)
+      d: creates
+    - n: options
+      sig: ()
+      ret: Optional[TOptions]
+      d: options
+    - n: llm_client
+      sig: ()
+      ret: Optional[LLMProvider]
+      d: llm client
+    - n: verbose
+      sig: ()
+      ret: bool
+      d: verbose
+    - n: set_llm_client
+      sig: (client:LLMProvider)
+      ret: None
+      d: updates llm client
+    - n: require_llm_client
+      sig: ()
+      ret: LLMProvider
+      d: require llm client
+    - n: _estimate_tokens
+      sig: (text:str)
+      ret: int
+      d: estimate tokens
+    - n: _log
+      sig: (message:str)
+      ret: None
+      d: logs
+    - n: generate
+      sig: ()
+      ret: TResult
+      d: creates
+    attrs:
+    - n: _options
+      init: true
+    - n: _llm_client
+      init: true
+    - n: _verbose
+      init: true
+- p: python/reclapp/generator/code_generator.py
+  lang: python
+  l: 562
+  kb: 23.8
+  i:
+  - json
+  - re
+  - time
+  - base.BaseGenerator
+  - llm.{GenerateOptions,LLMProvider}
+  - pathlib.Path
+  - pydantic.{BaseModel,Field}
+  - typing.{Any,Literal,Optional}
+  e:
+  - GeneratedFile
+  - CodeGeneratorOptions
+  - CodeGenerationResult
+  - CodeGenerator
+  c:
+  - n: GeneratedFile
+    b:
+    - BaseModel
+    d: A generated file
+    props:
+    - 'path: str'
+    - 'content: str'
+    - 'language: str'
+    attrs: []
+  - n: CodeGeneratorOptions
+    b:
+    - BaseModel
+    d: Code generator options
+    props:
+    - 'output_dir: str'
+    - 'temperature: float'
+    - 'max_tokens: int'
+    - 'verbose: bool'
+    - 'dry_run: bool'
+    attrs: []
+  - n: CodeGenerationResult
+    b:
+    - BaseModel
+    d: Result of code generation
+    props:
+    - 'success: bool'
+    - 'files: list[GeneratedFile]'
+    - 'errors: list[str]'
+    - 'tokens_used: int'
+    - 'time_ms: int'
+    attrs: []
+  - n: CodeGenerator
+    d: Code generator using LLM.
+    m:
+    - n: __init__
+      sig: (options:Optional[CodeGeneratorOptions]=None)
+      d: creates
+    - n: generate
+      sig: (contract:dict[str,Any], output_dir:Optional[str]=None)
+      ret: CodeGenerationResult
+      d: creates
+    - n: _generate_package_json
+      sig: (app_name:str, backend:dict)
+      ret: str
+      d: creates package json
+    - n: _generate_index_file
+      sig: (contract:dict, backend:dict)
+      ret: str
+      d: creates index file
+    - n: _generate_entity_model
+      sig: (entity:dict, language:str)
+      ret: str
+      d: creates entity model
+    - n: _generate_route_file
+      sig: (entity:dict, api:dict, backend:dict)
+      ret: str
+      d: creates route file
+    - n: _generate_tsconfig
+      sig: ()
+      ret: str
+      d: creates tsconfig
+    - n: _map_field_type
+      sig: (contract_type:str)
+      ret: str
+      d: converts field type
+    - n: _write_files
+      sig: (files:list[GeneratedFile], output_dir:str)
+      ret: None
+      d: logs files
+    - n: _estimate_tokens
+      sig: (text:str)
+      ret: int
+      d: estimate tokens
+    - n: _generate_with_llm
+      sig: (contract:dict[str,Any], output_dir:str)
+      ret: CodeGenerationResult
+      d: creates with llm
+    - n: _get_system_prompt
+      sig: ()
+      ret: str
+      d: retrieves system prompt
+    attrs: []
+- p: python/reclapp/generator/__init__.py
+  lang: python
+  l: 34
+  kb: 0.7
+  i:
+  - base.BaseGenerator
+  - code_generator.{CodeGenerationResult,CodeGenerator,CodeGeneratorOptions,GeneratedFile}
+  - contract_generator.{ContractGenerationResult,ContractGenerator,ContractGeneratorOptions}
+  - prompt_builder.{PromptBuilder,PromptTemplate}
+- p: python/reclapp/generator/contract_generator.py
+  lang: python
+  l: 260
+  kb: 12.2
+  i:
+  - json
+  - re
+  - time
+  - base.BaseGenerator
+  - llm.{GenerateOptions,LLMProvider}
+  - pydantic.{BaseModel,Field}
+  - typing.{Any,Literal,Optional}
+  e:
+  - ContractGeneratorOptions
+  - ContractValidationError
+  - ContractGenerationResult
+  - ContractGenerator
+  c:
+  - n: ContractGeneratorOptions
+    b:
+    - BaseModel
+    d: Contract generator options
+    props:
+    - 'max_attempts: int'
+    - 'temperature: float'
+    - 'model: str'
+    - 'timeout: int'
+    - 'verbose: bool'
+    attrs: []
+  - n: ContractValidationError
+    b:
+    - BaseModel
+    d: Contract validation error
+    props:
+    - 'path: str'
+    - 'message: str'
+    - 'severity: Literal["error", "warning"]'
+    attrs: []
+  - n: ContractGenerationResult
+    b:
+    - BaseModel
+    d: Result of contract generation
+    props:
+    - 'success: bool'
+    - 'contract: Optional[dict[str, Any]]'
+    - 'attempts: int'
+    - 'errors: list[ContractValidationError]'
+    - 'tokens_used: int'
+    - 'time_ms: int'
+    attrs: []
+  - n: ContractGenerator
+    d: Contract AI generator with self-correction loop.
+    m:
+    - n: __init__
+      sig: (options:Optional[ContractGeneratorOptions]=None)
+      d: creates
+    - n: generate
+      sig: (user_prompt:str)
+      ret: ContractGenerationResult
+      d: creates
+    - n: _build_initial_prompt
+      sig: (user_prompt:str)
+      ret: GenerateOptions
+      d: creates initial prompt
+    - n: _build_correction_prompt
+      sig: (user_prompt:str, current_contract:Optional[dict], errors:list[ContractValidationError], attempt:int)
+      ret: GenerateOptions
+      d: creates correction prompt
+    - n: _call_llm
+      sig: (options:GenerateOptions)
+      ret: str
+      d: call llm
+    - n: _parse_contract_from_response
+      sig: (response:str)
+      ret: Optional[dict]
+      d: parses contract from response
+    - n: _validate_contract
+      sig: (contract:dict)
+      ret: list[ContractValidationError]
+      d: validates contract
+    - n: _estimate_tokens
+      sig: (text:str)
+      ret: int
+      d: estimate tokens
+    attrs: []
+- p: python/reclapp/generator/prompt_builder.py
+  lang: python
+  l: 114
+  kb: 4.1
+  i:
+  - pydantic.BaseModel
+  - typing.{Any,Optional}
+  e:
+  - PromptTemplate
+  - PromptBuilder
+  c:
+  - n: PromptTemplate
+    b:
+    - BaseModel
+    d: Prompt template definition
+    props:
+    - 'name: str'
+    - 'system: str'
+    - 'user: str'
+    - 'variables: list[str]'
+    attrs: []
+  - n: PromptBuilder
+    d: Builds prompts for LLM generation.
+    m:
+    - n: __init__
+      sig: ()
+      d: creates
+    - n: _register_default_templates
+      sig: ()
+      ret: None
+      d: registers default templates
+    - n: register_template
+      sig: (template:PromptTemplate)
+      ret: None
+      d: registers template
+    - n: get_template
+      sig: (name:str)
+      ret: Optional[PromptTemplate]
+      d: retrieves template
+    - n: build_contract_prompt
+      sig: (user_prompt:str)
+      ret: dict[str, str]
+      d: creates contract prompt
+    - n: build_code_prompt
+      sig: (file_type:str, context:str)
+      ret: dict[str, str]
+      d: creates code prompt
+    - n: build_fix_prompt
+      sig: (code:str, errors:list[str])
+      ret: dict[str, str]
+      d: creates fix prompt
+    - n: build_from_template
+      sig: (template_name:str, variables:dict[str,Any])
+      ret: dict[str, str]
+      d: creates from template
+    attrs:
+    - n: _templates
+      t: Dict
+      init: true
+- p: python/reclapp/models/contract.py
+  lang: python
+  l: 145
+  kb: 6.3
+  i:
+  - datetime
+  - definition.DefinitionLayer
+  - generation.GenerationLayer
+  - pydantic.{BaseModel,Field}
+  - typing.{Literal,Optional}
+  - validation.ValidationLayer
+  e:
+  - ContractMetadata
+  - ContractAI
+  - is_valid_contract
+  - has_definition_layer
+  - has_generation_layer
+  - has_validation_layer
+  - create_minimal_contract
+  c:
+  - n: ContractMetadata
+    b:
+    - BaseModel
+    d: Contract metadata
+    props:
+    - 'version: str'
+    - 'author: Optional[str]'
+    - 'createdAt: datetime'
+    - 'updatedAt: datetime'
+    - 'tags: Optional[list[str]]'
+    - 'source: Optional[Literal["llm-generated", "manual", "imported"]]'
+    - 'sessionId: Optional[str]'
+    attrs: []
+  - n: ContractAI
+    b:
+    - BaseModel
+    d: Contract AI - complete specification for LLM code generation
+    props:
+    - 'definition: DefinitionLayer'
+    - 'generation: GenerationLayer'
+    - 'validation: ValidationLayer'
+    - 'metadata: Optional[ContractMetadata]'
+    attrs: []
+  f:
+  - n: is_valid_contract
+    sig: (obj:object)
+    ret: bool
+    d: is valid contract
+  - n: has_definition_layer
+    sig: (contract:dict)
+    ret: bool
+    d: has definition layer
+  - n: has_generation_layer
+    sig: (contract:dict)
+    ret: bool
+    d: has generation layer
+  - n: has_validation_layer
+    sig: (contract:dict)
+    ret: bool
+    d: has validation layer
+  - n: create_minimal_contract
+    sig: (name:str, version:str='1.0.0', entities:Optional[list[dict]]=None)
+    ret: ContractAI
+    d: creates minimal contract
+- p: python/reclapp/models/__init__.py
+  lang: python
+  l: 96
+  kb: 2.0
+  i:
+  - definition
+- p: python/reclapp/models/validation.py
+  lang: python
+  l: 140
+  kb: 5.7
+  i:
+  - enum.Enum
+  - pydantic.{BaseModel,Field}
+  - typing.{Any,Literal,Optional}
+  e:
+  - AssertionType
+  - Assertion
+  - TestType
+  - TestDefinition
+  - StaticRule
+  - QualityGate
+  - AcceptanceCriteria
+  - ValidationLayer
+  c:
+  - n: AssertionType
+    b:
+    - str
+    - Enum
+    values:
+    - FILE_EXISTS="file-exists"
+    - FILE_CONTAINS="file-contains"
+    - ENDPOINT_RETURNS="endpoint-returns"
+    - ENDPOINT_STATUS="endpoint-status"
+    - SCHEMA_VALID="schema-valid"
+    - TYPE_CHECK="type-check"
+    - LINT_PASS="lint-pass"
+    - TEST_PASS="test-pass"
+    d: Assertion types for validation
+    attrs: []
+  - n: Assertion
+    b:
+    - BaseModel
+    d: Validation assertion
+    props:
+    - 'type: AssertionType'
+    - 'target: str'
+    - 'expected: Any'
+    - 'description: Optional[str]'
+    - 'severity: Literal["error", "warning", "info"]'
+    attrs: []
+  - n: TestType
+    b:
+    - str
+    - Enum
+    values:
+    - UNIT="unit"
+    - INTEGRATION="integration"
+    - E2E="e2e"
+    - API="api"
+    - CONTRACT="contract"
+    d: Test types
+    attrs: []
+  - n: TestDefinition
+    b:
+    - BaseModel
+    d: Test definition
+    props:
+    - 'name: str'
+    - 'type: TestType'
+    - 'description: Optional[str]'
+    - 'entity: Optional[str]'
+    - 'steps: Optional[list[dict[str, Any]]]'
+    - 'setup: Optional[str]'
+    - 'teardown: Optional[str]'
+    attrs: []
+  - n: StaticRule
+    b:
+    - BaseModel
+    d: Static analysis rule
+    props:
+    - 'id: str'
+    - 'name: str'
+    - 'description: Optional[str]'
+    - 'severity: Literal["error", "warning", "info"]'
+    - 'pattern: Optional[str]'
+    - 'fix: Optional[str]'
+    attrs: []
+  - n: QualityGate
+    b:
+    - BaseModel
+    d: Quality gate definition
+    props:
+    - 'name: str'
+    - 'metric: str'
+    - 'threshold: float'
+    - 'operator: Literal["eq", "gt", "gte", "lt", "lte"]'
+    - 'blocking: bool'
+    attrs: []
+  - n: AcceptanceCriteria
+    b:
+    - BaseModel
+    d: Acceptance criteria for generated code
+    props:
+    - 'testsPass: bool'
+    - 'minCoverage: Optional[int]'
+    - 'noErrors: bool'
+    - 'noWarnings: bool'
+    - 'lintClean: bool'
+    - 'maxComplexity: Optional[int]'
+    attrs: []
+  - n: ValidationLayer
+    b:
+    - BaseModel
+    d: 'Layer 3: Validation - defines HOW to verify and WHEN ready'
+    props:
+    - 'assertions: list[Assertion]'
+    - 'tests: list[TestDefinition]'
+    - 'staticRules: list[StaticRule]'
+    - 'qualityGates: list[QualityGate]'
+    - 'acceptance: AcceptanceCriteria'
+    attrs: []
+- p: python/reclapp/models/generation.py
+  lang: python
+  l: 132
+  kb: 5.4
+  i:
+  - enum.Enum
+  - pydantic.{BaseModel,Field}
+  - typing.{Any,Literal,Optional}
+  e:
+  - InstructionPriority
+  - Instruction
+  - PatternType
+  - Pattern
+  - ConstraintType
+  - Constraint
+  - BackendTechStack
+  - FrontendTechStack
+  - DatabaseTechStack
+  - TechStack
+  c:
+  - n: InstructionPriority
+    b:
+    - str
+    - Enum
+    values:
+    - MUST="must"
+    - SHOULD="should"
+    - MAY="may"
+    - MUST_NOT="must-not"
+    d: Instruction priority levels
+    attrs: []
+  - n: Instruction
+    b:
+    - BaseModel
+    d: Generation instruction for LLM
+    props:
+    - 'target: str'
+    - 'priority: InstructionPriority'
+    - 'instruction: str'
+    - 'rationale: Optional[str]'
+    attrs: []
+  - n: PatternType
+    b:
+    - str
+    - Enum
+    values:
+    - REPOSITORY="repository"
+    - SERVICE="service"
+    - CONTROLLER="controller"
+    - FACTORY="factory"
+    - SINGLETON="singleton"
+    - OBSERVER="observer"
+    - STRATEGY="strategy"
+    - DECORATOR="decorator"
+    d: Design pattern types
+    attrs: []
+  - n: Pattern
+    b:
+    - BaseModel
+    d: Design pattern specification
+    props:
+    - 'name: str'
+    - 'type: PatternType'
+    - 'description: Optional[str]'
+    - 'appliesTo: Optional[list[str]]'
+    - 'template: Optional[str]'
+    attrs: []
+  - n: ConstraintType
+    b:
+    - str
+    - Enum
+    values:
+    - SECURITY="security"
+    - PERFORMANCE="performance"
+    - COMPATIBILITY="compatibility"
+    - STYLE="style"
+    - ARCHITECTURE="architecture"
+    d: Constraint types
+    attrs: []
+  - n: Constraint
+    b:
+    - BaseModel
+    d: Generation constraint
+    props:
+    - 'type: ConstraintType'
+    - 'name: str'
+    - 'description: Optional[str]'
+    - 'enforcement: Literal["required", "recommended", "optional"]'
+    - 'check: Optional[str]'
+    attrs: []
+  - n: BackendTechStack
+    b:
+    - BaseModel
+    d: Backend technology stack configuration
+    props:
+    - 'runtime: str'
+    - 'language: str'
+    - 'framework: str'
+    - 'port: int'
+    - 'orm: Optional[str]'
+    attrs: []
+  - n: FrontendTechStack
+    b:
+    - BaseModel
+    d: Frontend technology stack configuration
+    props:
+    - 'framework: str'
+    - 'language: str'
+    - 'styling: str'
+    - 'port: int'
+    attrs: []
+  - n: DatabaseTechStack
+    b:
+    - BaseModel
+    d: Database technology stack configuration
+    props:
+    - 'type: Literal["postgresql", "mysql", "sqlite", "mongodb", "in-memory"]'
+    - 'host: Optional[str]'
+    - 'port: Optional[int]'
+    - 'name: Optional[str]'
+    attrs: []
+  - n: TechStack
+    b:
+    - BaseModel
+    d: Complete technology stack configuration
+    props:
+    - 'backend: BackendTechStack'
+    - 'frontend: Optional[FrontendTechStack]'
+    - 'database: DatabaseTechStack'
+    attrs: []
+- p: python/reclapp/models/definition.py
+  lang: python
+  l: 244
+  kb: 10.0
+  i:
+  - enum.Enum
+  - pydantic.{BaseModel,Field}
+  - typing.{Any,Literal,Optional,Union}
+  e:
+  - BasicFieldType
+  - ExtendedFieldType
+  - RelationType
+  - FieldAnnotations
+  - FieldDefinition
+  - RelationDefinition
+  - IndexDefinition
+  - EntityDefinition
+  - EventDefinition
+  - WorkflowStepType
+  c:
+  - n: BasicFieldType
+    b:
+    - str
+    - Enum
+    values:
+    - STRING="String"
+    - INT="Int"
+    - FLOAT="Float"
+    - BOOLEAN="Boolean"
+    - UUID="UUID"
+    - DATETIME="DateTime"
+    d: Basic field types supported by Contract AI
+    attrs: []
+  - n: ExtendedFieldType
+    b:
+    - str
+    - Enum
+    values:
+    - EMAIL="Email"
+    - URL="URL"
+    - PHONE="Phone"
+    - MONEY="Money"
+    - JSON="JSON"
+    - TEXT="Text"
+    d: Extended field types with validation
+    attrs: []
+  - n: RelationType
+    b:
+    - str
+    - Enum
+    values:
+    - ONE_TO_ONE="OneToOne"
+    - ONE_TO_MANY="OneToMany"
+    - MANY_TO_ONE="ManyToOne"
+    - MANY_TO_MANY="ManyToMany"
+    d: Relation types between entities
+    attrs: []
+  - n: FieldAnnotations
+    b:
+    - BaseModel
+    d: Field annotations defining validation and behavior
+    props:
+    - 'required: Optional[bool]'
+    - 'unique: Optional[bool]'
+    - 'generated: Optional[bool]'
+    - 'default: Optional[Any]'
+    - 'min: Optional[int]'
+    - 'max: Optional[int]'
+    - 'pattern: Optional[str]'
+    - 'enum: Optional[list[str]]'
+    - 'relation: Optional[str]'
+    - 'description: Optional[str]'
+    attrs: []
+  - n: FieldDefinition
+    b:
+    - BaseModel
+    d: Entity field definition
+    props:
+    - 'name: str'
+    - 'type: str'
+    - 'annotations: Optional[FieldAnnotations]'
+    attrs: []
+  - n: RelationDefinition
+    b:
+    - BaseModel
+    d: Relation definition between entities
+    props:
+    - 'name: str'
+    - 'type: RelationType'
+    - 'target: str'
+    - 'foreignKey: Optional[str]'
+    attrs: []
+  - n: IndexDefinition
+    b:
+    - BaseModel
+    d: Database index definition
+    props:
+    - 'name: str'
+    - 'fields: list[str]'
+    - 'unique: Optional[bool]'
+    attrs: []
+  - n: EntityDefinition
+    b:
+    - BaseModel
+    d: Domain entity definition
+    props:
+    - 'name: str'
+    - 'description: Optional[str]'
+    - 'fields: list[FieldDefinition]'
+    - 'relations: Optional[list[RelationDefinition]]'
+    - 'indexes: Optional[list[IndexDefinition]]'
+    - 'tags: Optional[list[str]]'
+    attrs: []
+  - n: EventDefinition
+    b:
+    - BaseModel
+    d: Domain event definition
+    props:
+    - 'name: str'
+    - 'description: Optional[str]'
+    - 'fields: list[FieldDefinition]'
+    - 'triggers: Optional[list[str]]'
+    - 'sourceEntity: Optional[str]'
+    attrs: []
+  - n: WorkflowStepType
+    b:
+    - str
+    - Enum
+    values:
+    - ACTION="action"
+    - CONDITION="condition"
+    - PARALLEL="parallel"
+    - LOOP="loop"
+    - WAIT="wait"
+    - NOTIFY="notify"
+    - TRANSFORM="transform"
+    - VALIDATE="validate"
+    d: Workflow step types
+    attrs: []
+- p: python/reclapp/cli/__init__.py
+  lang: python
+  l: 8
+  kb: 0.2
+  i:
+  - main.cli
+- p: python/reclapp/cli/__main__.py
+  lang: python
+  l: 8
+  kb: 0.2
+  i:
+  - main
+- p: python/reclapp/cli/main.py
+  lang: python
+  l: 383
+  kb: 13.7
+  i:
+  - argparse
+  - asyncio
+  - sys
+  - pathlib.Path
+  - typing.Optional
+  e:
+  - create_parser
+  - cmd_evolve
+  - show_interactive_menu
+  - show_file
+  - check_health
+  - show_logs
+  - cmd_generate
+  - cmd_validate
+  - cmd_status
+  - cli
+  f:
+  - n: create_parser
+    sig: ()
+    ret: argparse.ArgumentParser
+    d: creates parser
+  - n: cmd_evolve
+    sig: (args:Any)
+    ret: int
+    d: cmd evolve
+  - n: show_interactive_menu
+    sig: (output_dir:str, port:int)
+    d: show interactive menu
+  - n: show_file
+    sig: (path:str)
+    d: show file
+  - n: check_health
+    sig: (port:int)
+    d: checks health
+  - n: show_logs
+    sig: (output_dir:str)
+    d: show logs
+  - n: cmd_generate
+    sig: (args:Any)
+    ret: int
+    d: cmd generate
+  - n: cmd_validate
+    sig: (args:Any)
+    ret: int
+    d: cmd validate
+  - n: cmd_status
+    sig: (args:Any)
+    ret: int
+    d: cmd status
+  - n: cli
+    sig: (args:Optional[list[str]]=None)
+    ret: int
+    d: cli
+  - n: main
+    sig: ()
+    d: main
+- p: python/reclapp/llm/openrouter.py
+  lang: python
+  l: 73
+  kb: 2.9
+  i:
+  - os
+  - time
+  - httpx
+  - provider.{GenerateOptions,LLMModelInfo,LLMProvider,LLMResponse}
+  - pydantic.BaseModel
+  - typing.Optional
+  e:
+  - OpenRouterConfig
+  - OpenRouterClient
+  c:
+  - n: OpenRouterConfig
+    b:
+    - BaseModel
+    props:
+    - 'api_key: str'
+    - 'base_url: str'
+    - 'model: str'
+    - 'timeout: int'
+    attrs: []
+  - n: OpenRouterClient
+    b:
+    - LLMProvider
+    m:
+    - n: __init__
+      sig: (config:Optional[OpenRouterConfig]=None)
+      d: creates
+    - n: name
+      sig: ()
+      ret: str
+      d: name
+    - n: model
+      sig: ()
+      ret: str
+      d: model
+    - n: is_available
+      sig: ()
+      ret: bool
+      d: is available
+    - n: list_models
+      sig: ()
+      ret: list[LLMModelInfo]
+      d: list models
+    - n: generate
+      sig: (options:GenerateOptions)
+      ret: LLMResponse
+      d: creates
+    - n: close
+      sig: ()
+      d: stops
+    - n: __aenter__
+      sig: ()
+      d: aenter
+    - n: __aexit__
+      sig: ()
+      d: aexit
+    attrs:
+    - n: config
+      init: true
+    - n: _client
+      init: true
+- p: python/reclapp/llm/manager.py
+  lang: python
+  l: 224
+  kb: 9.2
+  i:
+  - os
+  - ollama.{OllamaClient,OllamaConfig}
+  - openrouter.OpenRouterClient
+  - pathlib.Path
+  - provider.{GenerateOptions,LLMModelInfo,LLMProvider,LLMProviderStatus,LLMResponse}
+  - typing.Optional
+  e:
+  - ProviderInfo
+  - LLMManager
+  c:
+  - n: ProviderInfo
+    d: Information about a configured provider
+    m:
+    - n: __init__
+      sig: (name:str, status:LLMProviderStatus, provider:Optional[LLMProvider]=None)
+      d: creates
+    attrs:
+    - n: name
+      init: true
+    - n: status
+      init: true
+    - n: provider
+      init: true
+    - n: models
+      t: List
+      init: true
+    - n: error
+      init: true
+  - n: LLMManager
+    d: LLM Manager with multi-provider support.
+    m:
+    - n: __init__
+      sig: (verbose:bool=False)
+      d: creates
+    - n: is_available
+      sig: ()
+      ret: bool
+      d: is available
+    - n: is_ready
+      sig: ()
+      ret: bool
+      d: is ready
+    - n: get_provider
+      sig: ()
+      ret: Optional[LLMProvider]
+      d: retrieves provider
+    - n: primary_provider
+      sig: ()
+      ret: Optional[LLMProvider]
+      d: primary provider
+    - n: providers
+      sig: ()
+      ret: dict[str, ProviderInfo]
+      d: providers
+    - n: initialize
+      sig: ()
+      ret: None
+      d: initializes
+    - n: _load_env_file
+      sig: ()
+      ret: None
+      d: retrieves env file
+    - n: _init_ollama
+      sig: ()
+      ret: None
+      d: creates ollama
+    - n: _init_openrouter
+      sig: ()
+      ret: None
+      d: creates openrouter
+    - n: add_provider
+      sig: (name:str, provider:LLMProvider)
+      ret: None
+      d: creates provider
+    - n: generate
+      sig: (options:GenerateOptions, provider_name:Optional[str]=None)
+      ret: LLMResponse
+      d: creates
+    attrs:
+    - n: _providers
+      t: Dict
+      init: true
+    - n: _provider_info
+      t: Dict
+      init: true
+    - n: _primary_provider
+      init: true
+    - n: _initialized
+      init: true
+    - n: _verbose
+      init: true
+- p: python/reclapp/llm/ollama.py
+  lang: python
+  l: 150
+  kb: 5.9
+  i:
+  - os
+  - time
+  - httpx
+  - provider.{GenerateOptions,LLMModelInfo,LLMProvider,LLMResponse}
+  - pydantic.BaseModel
+  - typing.Optional
+  e:
+  - OllamaConfig
+  - OllamaClient
+  c:
+  - n: OllamaConfig
+    b:
+    - BaseModel
+    d: Ollama configuration
+    props:
+    - 'host: str'
+    - 'model: str'
+    - 'timeout: int'
+    - 'retries: int'
+    attrs: []
+  - n: OllamaClient
+    b:
+    - LLMProvider
+    d: Ollama LLM Client
+    m:
+    - n: __init__
+      sig: (config:Optional[OllamaConfig]=None)
+      d: creates
+    - n: name
+      sig: ()
+      ret: str
+      d: name
+    - n: model
+      sig: ()
+      ret: str
+      d: model
+    - n: is_available
+      sig: ()
+      ret: bool
+      d: is available
+    - n: list_models
+      sig: ()
+      ret: list[LLMModelInfo]
+      d: list models
+    - n: has_model
+      sig: (model_name:Optional[str]=None)
+      ret: bool
+      d: has model
+    - n: generate
+      sig: (options:GenerateOptions)
+      ret: LLMResponse
+      d: creates
+    - n: _sleep
+      sig: (attempt:int)
+      d: sleep
+    - n: close
+      sig: ()
+      d: stops
+    - n: __aenter__
+      sig: ()
+      d: aenter
+    - n: __aexit__
+      sig: ()
+      d: aexit
+    attrs:
+    - n: config
+      init: true
+    - n: _client
+      init: true
+- p: python/reclapp/llm/__init__.py
+  lang: python
+  l: 55
+  kb: 1.7
+  i:
+  - sys
+  - llm.{LLMConfig,get_client,list_available_providers}
+  - manager.{LLMManager,ProviderInfo}
+  - ollama.{OllamaClient,OllamaConfig}
+  - openrouter.OpenRouterClient
+  - pathlib.Path
+  - provider.{GenerateOptions,LLMModelInfo,LLMProvider,LLMProviderStatus,LLMResponse}
+- p: python/reclapp/llm/provider.py
+  lang: python
+  l: 82
+  kb: 2.6
+  i:
+  - abc.{ABC,abstractmethod}
+  - enum.Enum
+  - pydantic.{BaseModel,Field}
+  - typing.{Any,Literal,Optional}
+  e:
+  - LLMProviderStatus
+  - GenerateOptions
+  - LLMResponse
+  - LLMModelInfo
+  - LLMProvider
+  c:
+  - n: LLMProviderStatus
+    b:
+    - str
+    - Enum
+    values:
+    - AVAILABLE="available"
+    - UNAVAILABLE="unavailable"
+    - NOT_CONFIGURED="not_configured"
+    - ERROR="error"
+    d: Provider status
+    attrs: []
+  - n: GenerateOptions
+    b:
+    - BaseModel
+    d: Options for LLM generation
+    props:
+    - 'system: str'
+    - 'user: str'
+    - 'temperature: float'
+    - 'max_tokens: int'
+    - 'response_format: Literal["json", "text"]'
+    - 'stop: Optional[list[str]]'
+    attrs: []
+  - n: LLMResponse
+    b:
+    - BaseModel
+    d: Response from LLM generation
+    props:
+    - 'content: str'
+    - 'model: str'
+    - 'provider: str'
+    - 'tokens_used: int'
+    - 'duration_ms: int'
+    - 'raw: Optional[dict[str, Any]]'
+    attrs: []
+  - n: LLMModelInfo
+    b:
+    - BaseModel
+    d: Information about an available model
+    props:
+    - 'name: str'
+    - 'size: Optional[str]'
+    - 'modified: Optional[str]'
+    - 'is_code_model: bool'
+    attrs: []
+  - n: LLMProvider
+    b:
+    - ABC
+    d: Abstract base class for LLM providers.
+    m:
+    - n: name
+      sig: ()
+      ret: str
+      d: name
+    - n: model
+      sig: ()
+      ret: str
+      d: model
+    - n: is_available
+      sig: ()
+      ret: bool
+      d: is available
+    - n: list_models
+      sig: ()
+      ret: list[LLMModelInfo]
+      d: list models
+    - n: generate
+      sig: (options:GenerateOptions)
+      ret: LLMResponse
+      d: creates
+    - n: has_model
+      sig: (model_name:str)
+      ret: bool
+      d: has model
+    - n: get_code_models
+      sig: (models:list[LLMModelInfo])
+      ret: list[LLMModelInfo]
+      d: retrieves code models
+    attrs: []
+- p: python/reclapp/parser/__init__.py
+  lang: python
+  l: 19
+  kb: 0.4
+  i:
+  - markdown_parser.{ContractFrontmatter,ContractMarkdown,MarkdownEntityDefinition,parse_contract_markdown,validate_contract}
+- p: python/reclapp/parser/markdown_parser.py
+  lang: python
+  l: 409
+  kb: 19.5
+  i:
+  - json
+  - re
+  - yaml
+  - pydantic.{BaseModel,Field}
+  - typing.{Any,Literal,Optional}
+  e:
+  - EntityField
+  - MarkdownEntityDefinition
+  - ApiEndpoint
+  - MarkdownAssertion
+  - TestCase
+  - AcceptanceScenario
+  - AcceptanceTest
+  - ContractFrontmatter
+  - BackendTech
+  - FrontendTech
+  c:
+  - n: EntityField
+    b:
+    - BaseModel
+    d: Entity field from markdown table
+    props:
+    - 'name: str'
+    - 'type: FieldType'
+    - 'required: bool'
+    - 'auto: bool'
+    - 'description: Optional[str]'
+    attrs: []
+  - n: MarkdownEntityDefinition
+    b:
+    - BaseModel
+    d: Entity definition parsed from markdown
+    props:
+    - 'name: str'
+    - 'description: Optional[str]'
+    - 'fields: list[EntityField]'
+    - 'typescript: Optional[str]'
+    - 'example: Optional[dict[str, Any]]'
+    attrs: []
+  - n: ApiEndpoint
+    b:
+    - BaseModel
+    d: API endpoint definition
+    props:
+    - 'method: Literal["GET", "POST", "PUT", "PATCH", "DELETE"]'
+    - 'path: str'
+    - 'description: Optional[str]'
+    - 'requestBody: Optional[str]'
+    - 'responseBody: Optional[str]'
+    attrs: []
+  - n: MarkdownAssertion
+    b:
+    - BaseModel
+    d: Business rule assertion
+    props:
+    - 'name: str'
+    - 'condition: str'
+    - 'severity: Literal["error", "warning"]'
+    attrs: []
+  - n: TestCase
+    b:
+    - BaseModel
+    d: API test case
+    props:
+    - 'name: str'
+    - 'method: str'
+    - 'path: str'
+    - 'body: Optional[dict[str, Any]]'
+    - 'expect: Optional[dict[str, Any]]'
+    attrs: []
+  - n: AcceptanceScenario
+    b:
+    - BaseModel
+    d: Gherkin scenario
+    props:
+    - 'name: str'
+    - 'steps: list[str]'
+    attrs: []
+  - n: AcceptanceTest
+    b:
+    - BaseModel
+    d: Gherkin feature with scenarios
+    props:
+    - 'feature: str'
+    - 'scenarios: list[AcceptanceScenario]'
+    attrs: []
+  - n: ContractFrontmatter
+    b:
+    - BaseModel
+    d: YAML frontmatter from contract.md
+    props:
+    - 'contract: Optional[dict[str, Any]]'
+    - 'generation: Optional[dict[str, Any]]'
+    - 'runtime: Optional[dict[str, Any]]'
+    - 'tech: Optional[dict[str, Any]]'
+    attrs: []
+  - n: BackendTech
+    b:
+    - BaseModel
+    d: Backend technology configuration
+    props:
+    - 'framework: str'
+    - 'language: str'
+    - 'runtime: str'
+    - 'features: list[str]'
+    - 'validation: str'
+    attrs: []
+  - n: FrontendTech
+    b:
+    - BaseModel
+    d: Frontend technology configuration
+    props:
+    - 'framework: str'
+    - 'bundler: str'
+    - 'styling: str'
+    - 'state: str'
+    - 'features: list[str]'
+    attrs: []
+  f:
+  - n: parse_contract_markdown
+    sig: (content:str)
+    ret: ContractMarkdown
+    d: parses contract markdown
+  - n: _extract_frontmatter
+    sig: (content:str)
+    ret: tuple[ContractFrontmatter, str]
+    d: parses frontmatter
+  - n: _parse_app_section
+    sig: (body:str)
+    ret: AppDefinition
+    d: parses app section
+  - n: _parse_entities_section
+    sig: (body:str)
+    ret: list[MarkdownEntityDefinition]
+    d: parses entities section
+  - n: _parse_entity_content
+    sig: (name:str, content:str)
+    ret: MarkdownEntityDefinition
+    d: parses entity content
+  - n: _parse_markdown_table
+    sig: (content:str)
+    ret: list[EntityField]
+    d: parses markdown table
+  - n: _parse_field_type
+    sig: (type_str:str)
+    ret: FieldType
+    d: parses field type
+  - n: _parse_api_section
+    sig: (body:str)
+    ret: ApiDefinition
+    d: parses api section
+  - n: _parse_endpoint_tables
+    sig: (section:str)
+    ret: list[ApiEndpoint]
+    d: parses endpoint tables
+  - n: _parse_rules_section
+    sig: (body:str)
+    ret: RulesDefinition
+    d: parses rules section
+  - n: _parse_tech_section
+    sig: (body:str, frontmatter:ContractFrontmatter)
+    ret: TechStack
+    d: parses tech section
+  - n: _parse_tests_section
+    sig: (body:str)
+    ret: TestsDefinition
+    d: parses tests section
+  - n: _parse_gherkin
+    sig: (content:str)
+    ret: list[AcceptanceTest]
+    d: parses gherkin
+  - n: _extract_section
+    sig: (body:str, header:str)
+    ret: str
+    d: parses section
+  - n: _extract_field
+    sig: (section:str, label:str)
+    ret: str
+    d: parses field
+- p: python/reclapp/evolution/shell_renderer.py
+  lang: python
+  l: 259
+  kb: 10.5
+  i:
+  - re
+  - sys
+  - clickmd.renderer.{COLORS,_ClickmdRenderer}
+  - typing.{Literal,Optional}
+  e:
+  - ShellRenderer
+  c:
+  - n: ShellRenderer
+    d: Renders colorized output in terminal.
+    m:
+    - n: __init__
+      sig: (verbose:bool=True)
+      d: creates
+    - n: enable_log
+      sig: ()
+      ret: None
+      d: enable log
+    - n: get_log
+      sig: ()
+      ret: str
+      d: retrieves log
+    - n: clear_log
+      sig: ()
+      ret: None
+      d: deletes log
+    - n: save_log
+      sig: (file_path:str)
+      ret: None
+      d: caches log
+    - n: _log
+      sig: (text:str)
+      ret: None
+      d: logs
+    - n: _get_clickmd
+      sig: ()
+      d: retrieves clickmd
+    - n: _try_md
+      sig: (text:str)
+      ret: bool
+      d: try md
+    - n: _try_echo
+      sig: (text:str)
+      ret: bool
+      d: try echo
+    - n: heading
+      sig: (level:int, text:str)
+      ret: None
+      d: heading
+    - n: codeblock
+      sig: (language:Language, content:str)
+      ret: None
+      d: codeblock
+    - n: text
+      sig: (content:str)
+      ret: None
+      d: text
+    attrs:
+    - n: verbose
+      init: true
+    - n: _clickmd_renderer
+      init: true
+    - n: _log_enabled
+      init: true
+    - n: _log_buffer
+      t: List
+      init: true
+- p: python/reclapp/evolution/state_analyzer.py
+  lang: python
+  l: 249
+  kb: 11.0
+  i:
+  - json
+  - dataclasses.{dataclass,field}
+  - enum.Enum
+  - pathlib.Path
+  - typing.{Any,Optional}
+  e:
+  - StateLevel
+  - DiscrepancyType
+  - StateDiscrepancy
+  - ContractState
+  - CodeState
+  - RuntimeState
+  - MultiLevelState
+  - StateAnalyzer
+  c:
+  - n: StateLevel
+    b:
+    - str
+    - Enum
+    values:
+    - CONTRACT="contract"
+    - CODE="code"
+    - RUNTIME="runtime"
+    d: State analysis levels
+    attrs: []
+  - n: DiscrepancyType
+    b:
+    - str
+    - Enum
+    values:
+    - MISSING_ENTITY="missing_entity"
+    - MISSING_FIELD="missing_field"
+    - TYPE_MISMATCH="type_mismatch"
+    - MISSING_ENDPOINT="missing_endpoint"
+    - MISSING_FILE="missing_file"
+    - SCHEMA_MISMATCH="schema_mismatch"
+    - RUNTIME_ERROR="runtime_error"
+    d: Types of state discrepancies
+    attrs: []
+  - n: StateDiscrepancy
+    d: A discrepancy between expected and actual state
+    m:
+    - n: to_dict
+      sig: ()
+      ret: dict
+      d: converts dict
+    dec:
+    - dataclass
+    attrs:
+    - n: level
+      t: StateLevel
+    - n: type
+      t: DiscrepancyType
+    - n: path
+      t: str
+    - n: expected
+      t: Any
+    - n: actual
+      t: Any
+    - n: message
+      t: str
+    - n: severity
+      t: str
+    dataclass: true
+    fields:
+    - n: level
+      t: StateLevel
+    - n: type
+      t: DiscrepancyType
+    - n: path
+      t: str
+    - n: expected
+      t: Any
+    - n: actual
+      t: Any
+    - n: message
+      t: str
+    - n: severity
+      t: str
+      default: '"error"'
+  - n: ContractState
+    d: State extracted from contract
+    dec:
+    - dataclass
+    attrs:
+    - n: app_name
+      t: str
+    - n: version
+      t: str
+    - n: entities
+      t: list[dict]
+    - n: endpoints
+      t: list[dict]
+    - n: tech_stack
+      t: dict
+    dataclass: true
+    fields:
+    - n: app_name
+      t: str
+      default: '""'
+    - n: version
+      t: str
+      default: '"1.0.0"'
+    - n: entities
+      t: list[dict]
+      factory: list
+    - n: endpoints
+      t: list[dict]
+      factory: list
+    - n: tech_stack
+      t: dict
+      factory: dict
+  - n: CodeState
+    d: State extracted from generated code
+    dec:
+    - dataclass
+    attrs:
+    - n: files
+      t: list[str]
+    - n: models
+      t: list[str]
+    - n: routes
+      t: list[str]
+    - n: has_package_json
+      t: bool
+    - n: has_tsconfig
+      t: bool
+    dataclass: true
+    fields:
+    - n: files
+      t: list[str]
+      factory: list
+    - n: models
+      t: list[str]
+      factory: list
+    - n: routes
+      t: list[str]
+      factory: list
+    - n: has_package_json
+      t: bool
+      default: 'False'
+    - n: has_tsconfig
+      t: bool
+      default: 'False'
+  - n: RuntimeState
+    d: State extracted from running service
+    dec:
+    - dataclass
+    attrs:
+    - n: is_running
+      t: bool
+    - n: port
+      t: int
+    - n: health_ok
+      t: bool
+    - n: endpoints_responding
+      t: list[str]
+    dataclass: true
+    fields:
+    - n: is_running
+      t: bool
+      default: 'False'
+    - n: port
+      t: int
+      default: '0'
+    - n: health_ok
+      t: bool
+      default: 'False'
+    - n: endpoints_responding
+      t: list[str]
+      factory: list
+  - n: MultiLevelState
+    d: Combined multi-level state
+    m:
+    - n: is_consistent
+      sig: ()
+      ret: bool
+      d: is consistent
+    - n: to_dict
+      sig: ()
+      ret: dict
+      d: converts dict
+    dec:
+    - dataclass
+    attrs:
+    - n: contract
+      t: ContractState
+    - n: code
+      t: CodeState
+    - n: runtime
+      t: RuntimeState
+    - n: discrepancies
+      t: list[StateDiscrepancy]
+    dataclass: true
+    fields:
+    - n: contract
+      t: ContractState
+      factory: ContractState
+    - n: code
+      t: CodeState
+      factory: CodeState
+    - n: runtime
+      t: RuntimeState
+      factory: RuntimeState
+    - n: discrepancies
+      t: list[StateDiscrepancy]
+      factory: list
+  - n: StateAnalyzer
+    d: Analyzes state across contract, code, and runtime levels.
+    m:
+    - n: __init__
+      sig: (target_dir:str, verbose:bool=False)
+      d: creates
+    - n: analyze
+      sig: (contract:Optional[dict]=None)
+      ret: MultiLevelState
+      d: processes
+    - n: _load_contract
+      sig: ()
+      ret: Optional[dict]
+      d: retrieves contract
+    - n: _analyze_contract
+      sig: (contract:dict)
+      ret: ContractState
+      d: processes contract
+    - n: _analyze_code
+      sig: ()
+      ret: CodeState
+      d: processes code
+    - n: _analyze_runtime
+      sig: ()
+      ret: RuntimeState
+      d: processes runtime
+    - n: _find_discrepancies
+      sig: (state:MultiLevelState)
+      ret: list[StateDiscrepancy]
+      d: retrieves discrepancies
+    - n: write_state_snapshot
+      sig: (state:MultiLevelState)
+      ret: str
+      d: logs state snapshot
+    attrs:
+    - n: target_dir
+      init: true
+    - n: verbose
+      init: true
+- p: python/reclapp/evolution/__init__.py
+  lang: python
+  l: 32
+  kb: 0.8
+  i:
+  - evolution_manager.{EvolutionManager,EvolutionOptions,EvolutionResult}
+  - generators.EvolutionGenerators
+  - shell_renderer.ShellRenderer
+  - state_analyzer.{DiscrepancyType,MultiLevelState,StateAnalyzer,StateDiscrepancy,StateLevel}
+  - task_queue.{Task,TaskQueue,TaskStatus}
+- p: python/reclapp/evolution/task_queue.py
+  lang: python
+  l: 163
+  kb: 6.9
+  i:
+  - datetime
+  - enum.Enum
+  - pydantic.{BaseModel,Field}
+  - typing.{Literal,Optional}
+  e:
+  - Task
+  - TaskQueue
+  c:
+  - n: Task
+    b:
+    - BaseModel
+    d: Task definition
+    props:
+    - 'id: str'
+    - 'name: str'
+    - 'status: TaskStatus'
+    - 'started_at: Optional[datetime]'
+    - 'completed_at: Optional[datetime]'
+    - 'error: Optional[str]'
+    - 'children: Optional[list["Task"]]'
+    attrs: []
+  - n: TaskQueue
+    d: Task queue with status tracking and YAML output.
+    m:
+    - n: __init__
+      sig: (verbose:bool=True)
+      d: creates
+    - n: renderer
+      sig: ()
+      ret: '"ShellRenderer"'
+      d: renderer
+    - n: add
+      sig: (name:str, task_id:Optional[str]=None)
+      ret: Task
+      d: creates
+    - n: start
+      sig: (task_id:str)
+      ret: None
+      d: starts
+    - n: done
+      sig: (task_id:str)
+      ret: None
+      d: done
+    - n: fail
+      sig: (task_id:str, error:str)
+      ret: None
+      d: fail
+    - n: skip
+      sig: (task_id:str)
+      ret: None
+      d: skip
+    - n: get_task
+      sig: (task_id:str)
+      ret: Optional[Task]
+      d: retrieves task
+    - n: get_stats
+      sig: ()
+      ret: dict[str, int]
+      d: retrieves stats
+    - n: print
+      sig: ()
+      ret: None
+      d: logs
+    - n: _find_task
+      sig: (task_id:str)
+      ret: Optional[Task]
+      d: retrieves task
+    - n: _print_todo_list
+      sig: (force:bool=False)
+      ret: None
+      d: logs todo list
+    attrs:
+    - n: tasks
+      t: List
+      init: true
+    - n: verbose
+      init: true
+    - n: _renderer
+      init: true
+- p: python/reclapp/evolution/generators.py
+  lang: python
+  l: 485
+  kb: 16.5
+  i:
+  - json
+  - pathlib.Path
+  - typing.{Any,Optional}
+  e:
+  - EvolutionGenerators
+  c:
+  - n: EvolutionGenerators
+    d: Template generators for evolution pipeline.
+    m:
+    - n: __init__
+      sig: (contract:Optional[dict]=None, port:int=3000)
+      d: creates
+    - n: set_contract
+      sig: (contract:dict)
+      ret: None
+      d: updates contract
+    - n: generate_database
+      sig: (target_dir:str)
+      ret: None
+      d: creates database
+    - n: generate_frontend
+      sig: (target_dir:str)
+      ret: None
+      d: creates frontend
+    - n: generate_dockerfile
+      sig: (target_dir:str)
+      ret: None
+      d: creates dockerfile
+    - n: generate_cicd
+      sig: (target_dir:str)
+      ret: None
+      d: creates cicd
+    - n: generate_docs
+      sig: (target_dir:str)
+      ret: None
+      d: creates docs
+    - n: generate_test_fixtures
+      sig: (target_dir:str)
+      ret: None
+      d: creates test fixtures
+    - n: generate_test_config
+      sig: (target_dir:str)
+      ret: None
+      d: creates test config
+    - n: generate_e2e_tests
+      sig: (target_dir:str)
+      ret: Optional[str]
+      d: creates e2e tests
+    attrs:
+    - n: _contract
+      init: true
+    - n: _port
+      init: true
+- p: python/reclapp/evolution/evolution_manager.py
+  lang: python
+  l: 1169
+  kb: 49.8
+  i:
+  - asyncio
+  - json
+  - os
+  - signal
+  - subprocess
+  - time
+  - glob
+  - uuid
+  - pathlib.Path
+  - pydantic.{BaseModel,Field}
+  e:
+  - T
+  - EvolutionOptions
+  - EvolutionResult
+  - EvolutionManager
+  c:
+  - n: EvolutionOptions
+    b:
+    - BaseModel
+    d: Evolution manager options
+    props:
+    - 'output_dir: str'
+    - 'max_iterations: int'
+    - 'auto_fix: bool'
+    - 'verbose: bool'
+    - 'keep_running: bool'
+    - 'port: int'
+    attrs: []
+  - n: EvolutionResult
+    b:
+    - BaseModel
+    d: Result of evolution run
+    props:
+    - 'success: bool'
+    - 'iterations: int'
+    - 'files_generated: int'
+    - 'tests_passed: int'
+    - 'tests_failed: int'
+    - 'errors: list[str]'
+    - 'time_ms: int'
+    - 'service_port: Optional[int]'
+    attrs: []
+  - n: EvolutionManager
+    d: Evolution manager with auto-healing code generation.
+    m:
+    - n: __init__
+      sig: (options:Optional[EvolutionOptions]=None)
+      d: creates
+    - n: set_llm_client
+      sig: (client:Any)
+      ret: None
+      d: updates llm client
+    - n: evolve
+      sig: (prompt:str, output_dir:Optional[str]=None)
+      ret: EvolutionResult
+      d: evolve
+    - n: _setup_tasks
+      sig: ()
+      d: initializes tasks
+    - n: _phase_setup
+      sig: (target_dir:str)
+      d: phase setup
+    - n: _phase_contract
+      sig: (prompt:str, target_dir:str)
+      ret: Optional[dict]
+      d: phase contract
+    - n: _phase_code_generation
+      sig: (contract:dict, target_dir:str)
+      ret: list[str]
+      d: phase code generation
+    - n: _phase_service
+      sig: (target_dir:str)
+      ret: bool
+      d: phase service
+    - n: _phase_tests
+      sig: (target_dir:str)
+      ret: tuple[int, int]
+      d: phase tests
+    - n: _phase_additional
+      sig: (target_dir:str)
+      d: phase additional
+    - n: _phase_verification
+      sig: (target_dir:str)
+      d: phase verification
+    - n: _generate_database
+      sig: (target_dir:str)
+      d: creates database
+    attrs:
+    - n: options
+      init: true
+    - n: task_queue
+      init: true
+    - n: renderer
+      init: true
+    - n: _llm_client
+      init: true
+    - n: _service_process
+      init: true
+    - n: _contract
+      init: true
+  const:
+  - n: T
+    v: TypeVar("T")
+- p: python/reclapp/validation/stages.py
+  lang: python
+  l: 340
+  kb: 14.5
+  i:
+  - re
+  - subprocess
+  - pipeline.{StageError,StageResult,ValidationContext,ValidationStage}
+  - typing.Any
+  e:
+  - create_syntax_validator
+  - create_schema_validator
+  - create_assertion_validator
+  - create_static_analyzer
+  - create_test_runner
+  - create_quality_checker
+  - create_security_scanner
+  - create_runtime_validator
+  f:
+  - n: create_syntax_validator
+    sig: ()
+    ret: ValidationStage
+    d: creates syntax validator
+  - n: _check_js_syntax
+    sig: (filename:str, content:str)
+    ret: list[StageError]
+    d: checks js syntax
+  - n: _check_python_syntax
+    sig: (filename:str, content:str)
+    ret: list[StageError]
+    d: checks python syntax
+  - n: create_schema_validator
+    sig: ()
+    ret: ValidationStage
+    d: creates schema validator
+  - n: create_assertion_validator
+    sig: ()
+    ret: ValidationStage
+    d: creates assertion validator
+  - n: create_static_analyzer
+    sig: ()
+    ret: ValidationStage
+    d: creates static analyzer
+  - n: create_test_runner
+    sig: ()
+    ret: ValidationStage
+    d: creates test runner
+  - n: create_quality_checker
+    sig: ()
+    ret: ValidationStage
+    d: creates quality checker
+  - n: create_security_scanner
+    sig: ()
+    ret: ValidationStage
+    d: creates security scanner
+  - n: create_runtime_validator
+    sig: ()
+    ret: ValidationStage
+    d: creates runtime validator
+- p: python/reclapp/validation/__init__.py
+  lang: python
+  l: 70
+  kb: 1.9
+  i:
+  - pipeline
+  - stages
+  e:
+  - create_default_pipeline
+  f:
+  - n: create_default_pipeline
+    sig: (options:dict=None)
+    ret: '"ValidationPipeline"'
+    d: creates default pipeline
+- p: python/reclapp/validation/pipeline.py
+  lang: python
+  l: 188
+  kb: 8.3
+  i:
+  - asyncio
+  - time
+  - pydantic.{BaseModel,Field}
+  - typing.{Any,Callable,Optional}
+  e:
+  - StageError
+  - StageResult
+  - PipelineResult
+  - GeneratedCode
+  - ValidationContext
+  - ValidationStage
+  - PipelineOptions
+  - CRITICAL_STAGES
+  - ValidationPipeline
+  c:
+  - n: StageError
+    b:
+    - BaseModel
+    d: Error from a validation stage
+    props:
+    - 'message: str'
+    - 'file: Optional[str]'
+    - 'line: Optional[int]'
+    - 'severity: str'
+    - 'code: Optional[str]'
+    attrs: []
+  - n: StageResult
+    b:
+    - BaseModel
+    d: Result from a single validation stage
+    props:
+    - 'stage: str'
+    - 'passed: bool'
+    - 'time_ms: int'
+    - 'errors: list[StageError]'
+    - 'warnings: list[StageError]'
+    - 'metrics: dict[str, Any]'
+    attrs: []
+  - n: PipelineResult
+    b:
+    - BaseModel
+    d: Result from the complete validation pipeline
+    props:
+    - 'passed: bool'
+    - 'stages: list[StageResult]'
+    - 'total_time_ms: int'
+    - 'errors_count: int'
+    - 'warnings_count: int'
+    attrs: []
+  - n: GeneratedCode
+    b:
+    - BaseModel
+    d: Generated code structure
+    props:
+    - 'files: dict[str, str]'
+    - 'entry_point: Optional[str]'
+    attrs: []
+  - n: ValidationContext
+    b:
+    - BaseModel
+    d: Context passed between validation stages
+    props:
+    - 'contract: dict[str, Any]'
+    - 'code: GeneratedCode'
+    - 'work_dir: str'
+    - 'previous_results: dict[str, StageResult]'
+    attrs: []
+  - n: ValidationStage
+    b:
+    - BaseModel
+    d: Validation stage definition
+    props:
+    - 'name: str'
+    - 'validator: Callable[[ValidationContext], StageResult]'
+    - 'critical: bool'
+    - 'timeout: int'
+    attrs: []
+  - n: PipelineOptions
+    b:
+    - BaseModel
+    d: Pipeline configuration options
+    props:
+    - 'fail_fast: bool'
+    - 'timeout: int'
+    - 'verbose: bool'
+    - 'work_dir: str'
+    attrs: []
+  - n: ValidationPipeline
+    d: 8-stage validation pipeline orchestrator.
+    m:
+    - n: __init__
+      sig: (fail_fast:bool=True, timeout:int=60000, verbose:bool=False, work_dir:str='/tmp/reclapp-validation')
+      d: creates
+    - n: register_stage
+      sig: (stage:ValidationStage)
+      ret: None
+      d: registers stage
+    - n: register_stages
+      sig: (stages:list[ValidationStage])
+      ret: None
+      d: registers stages
+    - n: validate
+      sig: (contract:dict[str,Any], code:GeneratedCode)
+      ret: PipelineResult
+      d: validates
+    - n: _run_stage
+      sig: (stage:ValidationStage, context:ValidationContext)
+      ret: StageResult
+      d: starts stage
+    - n: get_stage_names
+      sig: ()
+      ret: list[str]
+      d: retrieves stage names
+    attrs:
+    - n: options
+      init: true
+    - n: stages
+      t: List
+      init: true
+  const:
+  - n: CRITICAL_STAGES
+    t: Dict
+    v: '{"syntax", "assertions", "security"}'
+- p: cli/commands/generate-ai.ts
+  l: 222
+  kb: 8.7
+  i:
+  - fs
+  - path
+  e:
+  - parseArgs
+  - loadContract
+  - GenerateAIOptions
+  - writeGeneratedFiles
+  - generateAI
+  - printHelp
+  f:
+  - n: parseArgs
+    sig: '(args: string[])'
+    ret: GenerateAIOptions
+    d: parses args
+  - n: printHelp
+    sig: ()
+    ret: void
+    d: logs help
+  - n: generateAI
+    sig: '(options: GenerateAIOptions)'
+    ret: Promise<void>
+    d: creates ai
+  - n: loadContract
+    sig: '(filePath: string)'
+    ret: Promise<any>
+    d: retrieves contract
+  - n: writeGeneratedFiles
+    sig: '(files: Array<{ path: string; content: string }>, outputDir: string)'
+    ret: Promise<void>
+    d: logs generated files
+- p: core/contract-ai/index.ts
+  l: 44
+  kb: 3.5
+- p: core/contract-ai/generator/index.ts
+  l: 10
+  kb: 0.2
+- p: core/contract-ai/generator/contract-validator.ts
+  l: 481
+  kb: 17.4
+  i:
+  - ../types
+  e:
+  - createContractValidator
+  - ContractValidator
+  c:
+  - n: ContractValidator
+    m:
+    - n: validate
+      sig: '(contract: unknown)'
+      ret: ContractValidationResult
+      d: validates
+    - n: validateDefinitionLayer
+      sig: '(layer: unknown)'
+      ret: ContractValidationError[]
+      d: validates definition layer
+    - n: validateGenerationLayer
+      sig: '(layer: unknown)'
+      ret: ContractValidationError[]
+      d: validates generation layer
+    - n: validateValidationLayer
+      sig: '(layer: unknown)'
+      ret: ContractValidationError[]
+      d: validates validation layer
+    - n: validateCrossLayerConsistency
+      sig: '(contract: ContractAI)'
+      ret: ContractValidationError[]
+      d: validates cross layer consistency
+    - n: isValidFieldType
+      sig: '(type: FieldType)'
+      ret: boolean
+      d: is valid field type
+    attrs: []
+  f:
+  - n: createContractValidator
+    sig: ()
+    ret: ContractValidator
+    d: creates contract validator
+  const:
+  - n: VALID_BASIC_TYPES
+    t: '-'
+    v: '-'
+  - n: VALID_EXTENDED_TYPES
+    t: '-'
+    v: '-'
+  - n: VALID_FIELD_TYPES
+    t: '-'
+    v: '-'
+  - n: ERROR_CODES
+    t: '-'
+    v: '-'
+- p: core/contract-ai/generator/prompt-builder.ts
+  l: 186
+  kb: 6.7
+  i:
+  - ../types
+  e:
+  - createPromptBuilder
+  - ContractPromptBuilder
+  c:
+  - n: ContractPromptBuilder
+    m:
+    - n: buildSystemPrompt
+      sig: ()
+      ret: string
+      d: creates system prompt
+    - n: buildUserPrompt
+      sig: '(requirements: string)'
+      ret: string
+      d: creates user prompt
+    - n: buildCorrectionPrompt
+      sig: '(originalPrompt: string, contract: Partial<ContractAI>, errors: ContractValidationError[])'
+      ret: string
+      d: creates correction prompt
+    - n: buildExampleContracts
+      sig: ()
+      ret: string
+      d: creates example contracts
+    attrs: []
+  f:
+  - n: createPromptBuilder
+    sig: ()
+    ret: ContractPromptBuilder
+    d: creates prompt builder
+- p: core/contract-ai/generator/contract-generator.ts
+  l: 379
+  kb: 12.3
+  i:
+  - .{/contract-validator,/prompt-builder}
+  - ..{/llm/pydantic-validator,/types}
+  e:
+  - ContractGeneratorOptions
+  - FeedbackLevel
+  - createContractGenerator
+  - LLMClient
+  - ContractGenerator
+  - ContractGenerationResult
+  - LLMPrompt
+  c:
+  - n: ContractGenerator
+    m:
+    - n: constructor
+      sig: '(options: Partial<ContractGeneratorOptions>)'
+      d: constructor
+    - n: setLLMClient
+      sig: '(client: LLMClient)'
+      ret: void
+      d: updates llm client
+    - n: generate
+      sig: '(userPrompt: string)'
+      ret: Promise<ContractGenerationResult>
+      d: creates
+    - n: tryCreateSchemaValidator
+      sig: ()
+      ret: Promise<Awaited<ReturnType<typeof createPydanticValidator>> | null>
+      d: try create schema validator
+    - n: mapSchemaErrors
+      sig: '(errors: SchemaValidationError[])'
+      ret: ContractValidationError[]
+      d: converts schema errors
+    - n: buildInitialPrompt
+      sig: '(userPrompt: string)'
+      ret: LLMPrompt
+      d: creates initial prompt
+    - n: buildCorrectionPrompt
+      sig: '(userPrompt: string, contract: Partial<ContractAI>, errors: ContractValidationError[], attempt: number)'
+      ret: LLMPrompt
+      d: creates correction prompt
+    - n: callLLM
+      sig: '(prompt: LLMPrompt)'
+      ret: Promise<string>
+      d: call llm
+    - n: parseContractFromResponse
+      sig: '(response: string)'
+      ret: Partial<ContractAI> | null
+      d: parses contract from response
+    - n: generateFeedbackLevel
+      sig: '(attempt: number)'
+      ret: FeedbackLevel
+      d: creates feedback level
+    - n: estimateTokens
+      sig: '(text: string)'
+      ret: number
+      d: estimate tokens
+    - n: simulateLLMResponse
+      sig: '(prompt: LLMPrompt)'
+      ret: string
+      d: simulate llm response
+    attrs: []
+  f:
+  - n: createContractGenerator
+    sig: (options?)
+    ret: ContractGenerator
+    d: creates contract generator
+  const:
+  - n: DEFAULT_OPTIONS
+    t: '-'
+    v: '-'
+- p: core/contract-ai/templates/index.ts
+  l: 226
+  kb: 8.0
+  i:
+  - fs
+  - path
+  e:
+  - TemplateVariable
+  - TemplateQuery
+  - TemplateMatch
+  - Template
+  - TemplateRAG
+  c:
+  - n: TemplateRAG
+    m:
+    - n: constructor
+      sig: (templateDir?)
+      d: constructor
+    - n: loadTemplates
+      sig: ()
+      ret: void
+      d: retrieves templates
+    - n: search
+      sig: '(query: TemplateQuery)'
+      ret: TemplateMatch[]
+      d: filters
+    - n: get
+      sig: '(id: string)'
+      ret: Template | undefined
+      d: retrieves
+    - n: getByCategory
+      sig: '(category: string)'
+      ret: Template[]
+      d: retrieves by category
+    - n: render
+      sig: '(templateId: string, variables: Record<string, any>)'
+      ret: string
+      d: formats
+    - n: buildContextFromContract
+      sig: '(contract: any)'
+      ret: string
+      d: creates context from contract
+    - n: getRelevantTemplates
+      sig: '(contract: any, task: string)'
+      ret: Template[]
+      d: retrieves relevant templates
+    - n: exportAsContext
+      sig: '(templates: Template[])'
+      ret: string
+      d: export as context
+    - n: getAllIds
+      sig: ()
+      ret: string[]
+      d: retrieves all ids
+    - n: count
+      sig: ()
+      ret: number
+      d: count
+    attrs: []
+- p: core/contract-ai/code-generator/llm-generator.ts
+  l: 509
+  kb: 16.6
+  i:
+  - .{/prompt-templates/api,/prompt-templates/frontend,/prompt-templates/tests}
+  - ..{/generator/contract-generator,/types}
+  e:
+  - CodeGeneratorOptions
+  - LLMCodeGenerator
+  - createLLMCodeGenerator
+  - SyntaxError
+  c:
+  - n: LLMCodeGenerator
+    m:
+    - n: constructor
+      sig: '(options: Partial<CodeGeneratorOptions>)'
+      d: constructor
+    - n: setLLMClient
+      sig: '(client: LLMClient)'
+      ret: void
+      d: updates llm client
+    - n: getLLMClient
+      sig: ()
+      ret: LLMClient | null
+      d: retrieves llm client
+    - n: registerTemplate
+      sig: '(target: GenerationTarget, template: PromptTemplate)'
+      ret: void
+      d: registers template
+    - n: generate
+      sig: '(contract: ContractAI)'
+      ret: Promise<GeneratedCode>
+      d: creates
+    - n: generateTarget
+      sig: '(contract: ContractAI, target: GenerationTarget)'
+      ret: Promise<GeneratedFile[]>
+      d: creates target
+    - n: determineTargets
+      sig: '(contract: ContractAI)'
+      ret: GenerationTarget[]
+      d: determine targets
+    - n: callLLM
+      sig: '(systemPrompt: string, userPrompt: string)'
+      ret: Promise<string>
+      d: call llm
+    - n: parseFilesFromResponse
+      sig: '(response: string, target: GenerationTarget)'
+      ret: GeneratedFile[]
+      d: parses files from response
+    - n: validateBasicSyntax
+      sig: '(file: GeneratedFile)'
+      ret: SyntaxError[]
+      d: validates basic syntax
+    - n: simulateLLMResponse
+      sig: '(prompt: string)'
+      ret: string
+      d: simulate llm response
+    attrs: []
+  f:
+  - n: createLLMCodeGenerator
+    sig: (options?)
+    ret: LLMCodeGenerator
+    d: creates llm code generator
+  const:
+  - n: DEFAULT_OPTIONS
+    t: '-'
+    v: '-'
+- p: core/contract-ai/code-generator/index.ts
+  l: 9
+  kb: 0.2
+- p: core/contract-ai/analysis/project-state.ts
+  l: 352
+  kb: 12.0
+  i:
+  - fs
+  - path
+  - ./code-analyzer
+  e:
+  - HotspotInfo
+  - ProjectStateGenerator
+  - EndpointInfo
+  - ProjectState
+  - DependencyInfo
+  - EntityInfo
+  - ModuleInfo
+  c:
+  - n: ProjectStateGenerator
+    m:
+    - n: constructor
+      sig: '(report: AnalysisReport, rootDir: string)'
+      d: constructor
+    - n: generate
+      sig: ()
+      ret: ProjectState
+      d: creates
+    - n: extractModules
+      sig: ()
+      ret: ModuleInfo[]
+      d: parses modules
+    - n: extractEntities
+      sig: ()
+      ret: EntityInfo[]
+      d: parses entities
+    - n: extractEndpoints
+      sig: ()
+      ret: EndpointInfo[]
+      d: parses endpoints
+    - n: extractDependencies
+      sig: ()
+      ret: DependencyInfo[]
+      d: parses dependencies
+    - n: identifyHotspots
+      sig: ()
+      ret: HotspotInfo[]
+      d: identify hotspots
+    - n: calculateRiskScore
+      sig: '(fn: FunctionInfo)'
+      ret: number
+      d: processes risk score
+    - n: getRiskReason
+      sig: '(fn: FunctionInfo, score: number)'
+      ret: string
+      d: retrieves risk reason
+    - n: summarizeCallGraph
+      sig: ()
+      ret: ProjectState['callGraph']
+      d: summarize call graph
+    - n: toJSON
+      sig: ()
+      ret: string
+      d: converts json
+    - n: save
+      sig: '(outputDir: string)'
+      ret: string
+      d: caches
+    attrs: []
+- p: core/contract-ai/analysis/index.ts
+  l: 26
+  kb: 0.6
+- p: core/contract-ai/analysis/refactoring-contract.ts
+  l: 429
+  kb: 16.8
+  i:
+  - ./code-analyzer
+  e:
+  - RefactoringType
+  - RefactoringContract
+  - RefactoringContractGenerator
+  - RefactoringIssue
+  c:
+  - n: RefactoringContractGenerator
+    m:
+    - n: constructor
+      sig: '(report: AnalysisReport, repoUrl?)'
+      d: constructor
+    - n: generate
+      sig: ()
+      ret: RefactoringContract
+      d: creates
+    - n: identifyIssues
+      sig: ()
+      ret: RefactoringIssue[]
+      d: identify issues
+    - n: createIssue
+      sig: '(id: number, file: FileInfo, fn: FunctionInfo, type: RefactoringType, metrics: RefactoringIssue[''metrics''])'
+      ret: RefactoringIssue
+      d: creates issue
+    - n: generateLLMContext
+      sig: '(fn: FunctionInfo, type: RefactoringType, metrics: RefactoringIssue[''metrics''])'
+      ret: RefactoringIssue['llmContext']
+      d: creates llm context
+    - n: determineSeverity
+      sig: '(metrics: RefactoringIssue[''metrics''])'
+      ret: RefactoringIssue['severity']
+      d: determine severity
+    - n: estimateEffort
+      sig: '(type: RefactoringType, metrics: RefactoringIssue[''metrics''], severity: RefactoringIssue[''severity''])'
+      ret: number
+      d: estimate effort
+    - n: generateRationale
+      sig: '(type: RefactoringType, metrics: RefactoringIssue[''metrics''])'
+      ret: string
+      d: creates rationale
+    - n: getAction
+      sig: '(type: RefactoringType)'
+      ret: string
+      d: retrieves action
+    - n: countBySeverity
+      sig: '(issues: RefactoringIssue[])'
+      ret: Record<string, number>
+      d: count by severity
+    - n: generateRecommendations
+      sig: '(issues: RefactoringIssue[])'
+      ret: string[]
+      d: creates recommendations
+    - n: toJSON
+      sig: ()
+      ret: string
+      d: converts json
+    attrs: []
+  const:
+  - n: THRESHOLDS
+    t: '-'
+    v: '-'
+- p: core/contract-ai/analysis/code-analyzer.ts
+  l: 621
+  kb: 23.3
+  i:
+  - fs
+  - path
+  e:
+  - CodeAnalyzer
+  - FileInfo
+  - AnalysisReport
+  - FunctionInfo
+  - DuplicateGroup
+  c:
+  - n: CodeAnalyzer
+    m:
+    - n: constructor
+      sig: '(rootDir: string)'
+      d: constructor
+    - n: analyze
+      sig: ()
+      ret: Promise<AnalysisReport>
+      d: processes
+    - n: findSourceFiles
+      sig: ()
+      ret: string[]
+      d: retrieves source files
+    - n: analyzeFile
+      sig: '(filePath: string)'
+      ret: FileInfo
+      d: processes file
+    - n: parseCSharpJava
+      sig: '(content: string, lines: string[], info: FileInfo)'
+      ret: void
+      d: parses c sharp java
+    - n: parseGo
+      sig: '(content: string, lines: string[], info: FileInfo)'
+      ret: void
+      d: parses go
+    - n: parseCpp
+      sig: '(content: string, lines: string[], info: FileInfo)'
+      ret: void
+      d: parses cpp
+    - n: parseTypeScript
+      sig: '(content: string, lines: string[], info: FileInfo)'
+      ret: void
+      d: parses type script
+    - n: parsePython
+      sig: '(content: string, lines: string[], info: FileInfo)'
+      ret: void
+      d: parses python
+    - n: findFunctionEnd
+      sig: '(lines: string[], startIdx: number)'
+      ret: number
+      d: retrieves function end
+    - n: findPythonFunctionEnd
+      sig: '(lines: string[], startIdx: number)'
+      ret: number
+      d: retrieves python function end
+    - n: calculateComplexity
+      sig: '(code: string)'
+      ret: number
+      d: processes complexity
+    attrs: []
+- p: core/contract-ai/cli/index.ts
+  l: 8
+  kb: 0.1
+- p: core/contract-ai/cli/cli-runner.ts
+  l: 289
+  kb: 8.9
+  i:
+  - ..{/evolution/shell-renderer,/evolution/task-queue}
+  e:
+  - createCLIRunner
+  - CLIRunnerOptions
+  - CLIRunner
+  - CLITaskResult
+  - CLIRunnerResult
+  - CLITask
+  c:
+  - n: CLIRunner
+    m:
+    - n: constructor
+      sig: '(options: CLIRunnerOptions)'
+      d: constructor
+    - n: header
+      sig: ()
+      ret: void
+      d: header
+    - n: addTask
+      sig: '(task: CLITask)'
+      ret: this
+      d: creates task
+    - n: addTasks
+      sig: '(tasks: CLITask[])'
+      ret: this
+      d: creates tasks
+    - n: log
+      sig: '(message: string)'
+      ret: void
+      d: logs
+    - n: yaml
+      sig: '(type: string, description: string, data: Record<string, unknown>)'
+      ret: void
+      d: yaml
+    - n: printTodo
+      sig: ()
+      ret: void
+      d: logs todo
+    - n: run
+      sig: ()
+      ret: Promise<CLIRunnerResult>
+      d: starts
+    - n: getRenderer
+      sig: ()
+      ret: ShellRenderer
+      d: retrieves renderer
+    - n: getTaskQueue
+      sig: ()
+      ret: TaskQueue
+      d: retrieves task queue
+    attrs: []
+  f:
+  - n: createCLIRunner
+    sig: '(name: string, version: string, options?)'
+    ret: CLIRunner
+    d: creates cli runner
+- p: core/contract-ai/types/index.ts
+  l: 313
+  kb: 9.3
+  i:
+  - .{/definition,/generation,/validation}
+  e:
+  - ContractValidationError
+  - StageResult
+  - createEmptyContract
+  - ContractAI
+  - GeneratedCode
+  - isValidContractAI
+  - touchContract
+  - ContractMetadata
+  - PipelineResult
+  - ContractValidationResult
+  f:
+  - n: isValidContractAI
+    sig: '(obj: unknown)'
+    d: is valid contract ai
+  - n: hasDefinitionLayer
+    sig: '(contract: Partial<ContractAI>)'
+    ret: boolean
+    d: has definition layer
+  - n: hasGenerationLayer
+    sig: '(contract: Partial<ContractAI>)'
+    ret: boolean
+    d: has generation layer
+  - n: hasValidationLayer
+    sig: '(contract: Partial<ContractAI>)'
+    ret: boolean
+    d: has validation layer
+  - n: createEmptyContract
+    sig: '(appName: string, version: string)'
+    ret: ContractAI
+    d: creates empty contract
+  - n: touchContract
+    sig: '(contract: ContractAI)'
+    ret: ContractAI
+    d: touch contract
+- p: core/contract-ai/types/generation.ts
+  l: 277
+  kb: 8.0
+  e:
+  - BackendConfig
+  - GenerationTarget
+  - TechStack
+  - InstructionPriority
+  - GenerationLayer
+  - DatabaseConfig
+  - FrontendConfig
+  - PatternVariable
+  - CodeExample
+  - ConstraintType
+- p: core/contract-ai/types/validation.ts
+  l: 367
+  kb: 10.0
+  e:
+  - ExpectedResult
+  - SecurityCheck
+  - HasErrorHandlingCheck
+  - SecurityCheckType
+  - ExportsClassCheck
+  - ExportsFunctionCheck
+  - TestSpecification
+  - AcceptanceCriteria
+  - TestScenario
+  - ComparisonOperator
+- p: core/contract-ai/types/definition.ts
+  l: 379
+  kb: 10.3
+  e:
+  - AppDefinition
+  - WorkflowStepDefinition
+  - EventDefinition
+  - FieldDefinition
+  - FieldAnnotations
+  - ApiResourceDefinition
+  - RelationDefinition
+  - IndexDefinition
+  - ApiEndpointDefinition
+  - WorkflowStepType
+- p: core/contract-ai/types/contract-markdown.ts
+  l: 171
+  kb: 4.2
+  e:
+  - TechStackConfig
+  - ValidationRule
+  - AcceptanceScenario
+  - ContractMarkdown
+  - BusinessRules
+  - MarkdownAssertion
+  - MarkdownEntityDefinition
+  - TestCase
+  - ApiEndpoint
+  - FieldType
+- p: core/contract-ai/llm/llm-config.ts
+  l: 209
+  kb: 8.9
+  i:
+  - ./llm-provider
+  e:
+  - buildProviderConfigs
+  - generateEnvTemplate
+  - LLMEnvConfig
+  - loadConfigFromEnv
+  f:
+  - n: loadConfigFromEnv
+    sig: ()
+    ret: LLMEnvConfig
+    d: retrieves config from env
+  - n: buildProviderConfigs
+    sig: '(envConfig: LLMEnvConfig)'
+    ret: LLMConfig[]
+    d: creates provider configs
+  - n: generateEnvTemplate
+    sig: ()
+    ret: string
+    d: creates env template
+- p: core/contract-ai/llm/index.ts
+  l: 17
+  kb: 0.5
+- p: core/contract-ai/llm/llm-manager.ts
+  l: 270
+  kb: 9.1
+  i:
+  - ./llm-provider
+  e:
+  - TaskContext
+  - LLMManager
+  - createFreeModelsManager
+  - ProviderStatus
+  - createLLMManagerFromEnv
+  - LLMManagerConfig
+  c:
+  - n: LLMManager
+    m:
+    - n: constructor
+      sig: '(config: LLMManagerConfig)'
+      d: constructor
+    - n: initializeProviders
+      sig: ()
+      ret: void
+      d: initializes providers
+    - n: checkAvailability
+      sig: ()
+      ret: Promise<ProviderStatus[]>
+      d: checks availability
+    - n: getBestProvider
+      sig: '(context: TaskContext)'
+      ret: ILLMProvider | null
+      d: retrieves best provider
+    - n: chat
+      sig: '(messages: LLMMessage[], context?, config?)'
+      ret: Promise<LLMResponse>
+      d: chat
+    - n: streamChat
+      sig: '(messages: LLMMessage[], context?, config?)'
+      ret: AsyncGenerator<string>
+      d: stream chat
+    - n: getProvider
+      sig: '(type: LLMProviderType)'
+      ret: ILLMProvider | undefined
+      d: retrieves provider
+    - n: getStatuses
+      sig: ()
+      ret: ProviderStatus[]
+      d: retrieves statuses
+    - n: delay
+      sig: '(ms: number)'
+      ret: Promise<void>
+      d: delay
+    attrs: []
+  f:
+  - n: createLLMManagerFromEnv
+    sig: ()
+    ret: LLMManager
+    d: creates llm manager from env
+  - n: createFreeModelsManager
+    sig: ()
+    ret: LLMManager
+    d: creates free models manager
+- p: core/contract-ai/llm/parallel-executor.ts
+  l: 542
+  kb: 18.3
+  i:
+  - events
+  - ./llm-provider
+  e:
+  - ProviderStats
+  - ParallelExecutorConfig
+  - ParallelExecutor
+  - BatchRequest
+  - createParallelExecutor
+  - createFreeModelsExecutor
+  - WorkerPool
+  - TaskResult
+  - ParallelTask
+  - TaskQueue
+  c:
+  - n: WorkerPool
+    m:
+    - n: constructor
+      sig: '(config: ParallelExecutorConfig)'
+      d: constructor
+    - n: addWorker
+      sig: '(type: LLMProviderType, provider: ILLMProvider)'
+      ret: void
+      d: creates worker
+    - n: getWorker
+      sig: '(type: LLMProviderType)'
+      ret: ILLMProvider | undefined
+      d: retrieves worker
+    - n: getAllWorkers
+      sig: ()
+      ret: Map<LLMProviderType, ILLMProvider>
+      d: retrieves all workers
+    - n: getStats
+      sig: '(type: LLMProviderType)'
+      ret: ProviderStats | undefined
+      d: retrieves stats
+    - n: getAllStats
+      sig: ()
+      ret: ProviderStats[]
+      d: retrieves all stats
+    - n: canMakeRequest
+      sig: '(type: LLMProviderType)'
+      ret: boolean
+      d: checks make request
+    - n: recordRequest
+      sig: '(type: LLMProviderType, success: boolean, latency: number)'
+      ret: void
+      d: record request
+    - n: incrementLoad
+      sig: '(type: LLMProviderType)'
+      ret: void
+      d: increment load
+    - n: decrementLoad
+      sig: '(type: LLMProviderType)'
+      ret: void
+      d: decrement load
+    - n: selectProvider
+      sig: '(strategy: string, preferred?)'
+      ret: LLMProviderType | null
+      d: retrieves provider
+    - n: roundRobinSelect
+      sig: '(available: LLMProviderType[])'
+      ret: LLMProviderType
+      d: round robin select
+    attrs: []
+  - n: TaskQueue
+    m:
+    - n: enqueue
+      sig: '(task: ParallelTask)'
+      ret: void
+      d: enqueue
+    - n: dequeue
+      sig: ()
+      ret: ParallelTask | null
+      d: dequeue
+    - n: size
+      sig: ()
+      ret: number
+      d: size
+    - n: isEmpty
+      sig: ()
+      ret: boolean
+      d: is empty
+    - n: clear
+      sig: ()
+      ret: void
+      d: deletes
+    attrs: []
+  - n: ParallelExecutor
+    m:
+    - n: constructor
+      sig: '(config: Partial<ParallelExecutorConfig>)'
+      d: constructor
+    - n: addProvider
+      sig: '(config: LLMConfig)'
+      ret: void
+      d: creates provider
+    - n: addProviders
+      sig: '(configs: LLMConfig[])'
+      ret: void
+      d: creates providers
+    - n: submitTask
+      sig: '(task: Omit<ParallelTask, ''id'' | ''createdAt''>)'
+      ret: Promise<TaskResult>
+      d: submit task
+    - n: submitBatch
+      sig: '(request: BatchRequest)'
+      ret: Promise<TaskResult[]>
+      d: submit batch
+    - n: parallelGenerate
+      sig: '(prompts: Array<{ messages: LLMMessage[]; config?: Partial<LLMConfig> }>, options: { maxConcurrency?: number;
+        onProgress?: (i: number, total: number) => void })'
+      ret: Promise<LLMResponse[]>
+      d: parallel generate
+    - n: broadcastGenerate
+      sig: '(messages: LLMMessage[], config?)'
+      ret: Promise<Map<LLMProviderType, LLMResponse>>
+      d: broadcast generate
+    - n: raceGenerate
+      sig: '(messages: LLMMessage[], config?)'
+      ret: Promise<LLMResponse>
+      d: race generate
+    - n: getStats
+      sig: ()
+      ret: ProviderStats[]
+      d: retrieves stats
+    - n: getQueueSize
+      sig: ()
+      ret: number
+      d: retrieves queue size
+    - n: getActiveRequests
+      sig: ()
+      ret: number
+      d: retrieves active requests
+    - n: executeTask
+      sig: '(task: ParallelTask)'
+      ret: Promise<TaskResult>
+      d: starts task
+    attrs: []
+  f:
+  - n: createParallelExecutor
+    sig: '(configs: LLMConfig[], options?)'
+    ret: ParallelExecutor
+    d: creates parallel executor
+  - n: createFreeModelsExecutor
+    sig: ()
+    ret: ParallelExecutor
+    d: creates free models executor
+- p: core/contract-ai/llm/llm-provider.ts
+  l: 379
+  kb: 13.0
+  e:
+  - LiteLLMProvider
+  - OpenRouterProvider
+  - LLMConfig
+  - LLMProviderType
+  - createProvider
+  - OpenAIResponse
+  - LLMResponse
+  - ILLMProvider
+  - OllamaProvider
+  - LLMProviderConfig
+  c:
+  - n: OllamaProvider
+    m:
+    - n: isAvailable
+      sig: ()
+      ret: Promise<boolean>
+      d: is available
+    - n: chat
+      sig: '(messages: LLMMessage[], config?)'
+      ret: Promise<LLMResponse>
+      d: chat
+    attrs: []
+  - n: LiteLLMProvider
+    m:
+    - n: isAvailable
+      sig: ()
+      ret: Promise<boolean>
+      d: is available
+    - n: chat
+      sig: '(messages: LLMMessage[], config?)'
+      ret: Promise<LLMResponse>
+      d: chat
+    attrs: []
+  - n: OpenRouterProvider
+    m:
+    - n: isAvailable
+      sig: ()
+      ret: Promise<boolean>
+      d: is available
+    - n: chat
+      sig: '(messages: LLMMessage[], config?)'
+      ret: Promise<LLMResponse>
+      d: chat
+    attrs: []
+  - n: WindsurfProvider
+    m:
+    - n: isAvailable
+      sig: ()
+      ret: Promise<boolean>
+      d: is available
+    - n: chat
+      sig: '(messages: LLMMessage[], config?)'
+      ret: Promise<LLMResponse>
+      d: chat
+    attrs: []
+  f:
+  - n: createProvider
+    sig: '(config: LLMConfig)'
+    ret: ILLMProvider
+    d: creates provider
+- p: core/contract-ai/llm/pydantic-validator.ts
+  l: 361
+  kb: 11.7
+  i:
+  - fs
+  - path
+  e:
+  - JSONSchema
+  - SchemaValidationResult
+  - createPydanticValidator
+  - ValidationError
+  - PydanticValidator
+  c:
+  - n: PydanticValidator
+    m:
+    - n: constructor
+      sig: (schemasDir?)
+      d: constructor
+    - n: normalizeSchemaName
+      sig: '(name: string)'
+      ret: string
+      d: normalize schema name
+    - n: loadSchemas
+      sig: ()
+      ret: Promise<void>
+      d: retrieves schemas
+    - n: loadSchemasFromDir
+      sig: '(dir: string)'
+      ret: Promise<void>
+      d: retrieves schemas from dir
+    - n: getSchema
+      sig: '(name: string)'
+      ret: JSONSchema | undefined
+      d: retrieves schema
+    - n: resolveJsonPointer
+      sig: '(root: any, pointer: string)'
+      ret: JSONSchema | undefined
+      d: resolve json pointer
+    - n: resolveRef
+      sig: '(ref: string, rootSchema: JSONSchema)'
+      ret: JSONSchema | undefined
+      d: resolve ref
+    - n: validate
+      sig: '(schemaName: string, data: unknown)'
+      ret: SchemaValidationResult
+      d: validates
+    - n: validateValue
+      sig: '(value: unknown, schema: JSONSchema, path: string, rootSchema: JSONSchema)'
+      ret: ValidationError[]
+      d: validates value
+    - n: getType
+      sig: '(value: unknown)'
+      ret: string
+      d: retrieves type
+    - n: validateFormat
+      sig: '(value: string, format: string, path: string)'
+      ret: ValidationError | null
+      d: validates format
+    - n: getLoadedSchemas
+      sig: ()
+      ret: string[]
+      d: retrieves loaded schemas
+    attrs: []
+  f:
+  - n: createPydanticValidator
+    sig: (schemasDir?)
+    ret: Promise<PydanticValidator>
+    d: creates pydantic validator
+- p: core/contract-ai/llm/ollama-client.ts
+  l: 199
+  kb: 6.4
+  i:
+  - http
+  - https
+  - ../generator/contract-generator
+  e:
+  - OllamaConfig
+  - GenerateOptions
+  - OllamaGenerateResponse
+  - OllamaGenerateRequest
+  - createOllamaClient
+  - checkOllamaAvailable
+  - OllamaClient
+  c:
+  - n: OllamaClient
+    m:
+    - n: constructor
+      sig: (config?)
+      d: constructor
+    - n: isAvailable
+      sig: ()
+      ret: Promise<boolean>
+      d: is available
+    - n: hasModel
+      sig: (modelName?)
+      ret: Promise<boolean>
+      d: has model
+    - n: generate
+      sig: '(opts: GenerateOptions)'
+      ret: Promise<string>
+      d: creates
+    - n: httpGet
+      sig: '(path: string)'
+      ret: 'Promise<{ statusCode: number; body: string }>'
+      d: http get
+    - n: httpPost
+      sig: '(path: string, data: any)'
+      ret: 'Promise<{ statusCode: number; body: string }>'
+      d: http post
+    - n: sleep
+      sig: '(ms: number)'
+      ret: Promise<void>
+      d: sleep
+    - n: getConfig
+      sig: ()
+      ret: OllamaConfig
+      d: retrieves config
+    attrs: []
+  f:
+  - n: createOllamaClient
+    sig: (config?)
+    ret: OllamaClient
+    d: creates ollama client
+  - n: checkOllamaAvailable
+    sig: (host?)
+    ret: Promise<boolean>
+    d: checks ollama available
+- p: core/contract-ai/llm/context-generator.ts
+  l: 414
+  kb: 14.1
+  i:
+  - fs
+  - path
+  - .{/llm-manager,/llm-provider}
+  - ../types
+  e:
+  - ContextGenerator
+  - ContextInfo
+  - GenerationStep
+  - GenerationPlan
+  c:
+  - n: ContextGenerator
+    m:
+    - n: constructor
+      sig: '(llmManager: LLMManager, context: ContextInfo)'
+      d: constructor
+    - n: createPlan
+      sig: '(prompt: string)'
+      ret: Promise<GenerationPlan>
+      d: creates plan
+    - n: executeStep
+      sig: '(step: GenerationStep)'
+      ret: Promise<GeneratedFile[]>
+      d: starts step
+    - n: executePlan
+      sig: '(plan: GenerationPlan, onProgress?)'
+      ret: Promise<Map<string, GeneratedFile[]>>
+      d: starts plan
+    - n: generateContract
+      sig: '(prompt: string)'
+      ret: Promise<ContractAI | null>
+      d: creates contract
+    - n: generateCodeFile
+      sig: '(fileType: ''api'' | ''service'' | ''test'' | ''frontend'', contract: ContractAI, entityName: string)'
+      ret: Promise<GeneratedFile | null>
+      d: creates code file
+    - n: refactorCode
+      sig: '(code: string, instructions: string, context: string)'
+      ret: Promise<string>
+      d: refactor code
+    - n: buildUserPrompt
+      sig: '(step: GenerationStep)'
+      ret: string
+      d: creates user prompt
+    - n: buildCodePrompt
+      sig: '(fileType: string, entity: any, contract: ContractAI)'
+      ret: string
+      d: creates code prompt
+    - n: parseResponse
+      sig: '(response: LLMResponse, step: GenerationStep)'
+      ret: GeneratedFile[]
+      d: parses response
+    - n: extractCode
+      sig: '(content: string)'
+      ret: string
+      d: parses code
+    - n: getDefaultFilePath
+      sig: '(step: GenerationStep)'
+      ret: string
+      d: retrieves default file path
+    attrs: []
+  const:
+  - n: SYSTEM_PROMPTS
+    t: '-'
+    v: '-'
+- p: core/contract-ai/parser/index.ts
+  l: 13
+  kb: 0.3
+- p: core/contract-ai/parser/markdown-parser.ts
+  l: 310
+  kb: 12.4
+  i:
+  - js-yaml
+  - ../types/contract-markdown
+  e:
+  - parseEntitiesSection
+  - parseFieldType
+  - parseContractMarkdown
+  - parseEndpointTables
+  - parseTestsSection
+  - parseTechSection
+  - extractFrontmatter
+  - parseEntityContent
+  - parseGherkin
+  - extractSection
+  f:
+  - n: parseContractMarkdown
+    sig: '(content: string)'
+    ret: ContractMarkdown
+    d: parses contract markdown
+  - n: extractFrontmatter
+    sig: '(content: string)'
+    ret: "{ \n  frontmatter: ContractFrontmatter; \n  body: string \n}"
+    d: parses frontmatter
+  - n: parseAppSection
+    sig: '(body: string)'
+    ret: ContractMarkdown['app']
+    d: parses app section
+  - n: parseEntitiesSection
+    sig: '(body: string)'
+    ret: MarkdownEntityDefinition[]
+    d: parses entities section
+  - n: parseEntityContent
+    sig: '(name: string, content: string)'
+    ret: MarkdownEntityDefinition
+    d: parses entity content
+  - n: parseMarkdownTable
+    sig: '(content: string)'
+    ret: EntityField[]
+    d: parses markdown table
+  - n: parseFieldType
+    sig: '(typeStr: string)'
+    ret: FieldType
+    d: parses field type
+  - n: parseApiSection
+    sig: '(body: string)'
+    ret: ContractMarkdown['api']
+    d: parses api section
+  - n: parseEndpointTables
+    sig: '(section: string)'
+    ret: ApiEndpoint[]
+    d: parses endpoint tables
+  - n: parseRulesSection
+    sig: '(body: string)'
+    ret: ContractMarkdown['rules']
+    d: parses rules section
+  - n: parseTechSection
+    sig: '(body: string, frontmatter: ContractFrontmatter)'
+    ret: ContractMarkdown['tech']
+    d: parses tech section
+  - n: parseTestsSection
+    sig: '(body: string)'
+    ret: ContractMarkdown['tests']
+    d: parses tests section
+  - n: parseGherkin
+    sig: '(content: string)'
+    ret: AcceptanceTest[]
+    d: parses gherkin
+  - n: extractSection
+    sig: '(body: string, header: string)'
+    ret: string
+    d: parses section
+  - n: extractField
+    sig: '(section: string, label: string)'
+    ret: string
+    d: parses field
+- p: core/contract-ai/evolution/index.ts
+  l: 20
+  kb: 0.6
+- p: core/contract-ai/evolution/evolution-manager.ts
+  l: 3844
+  kb: 156.3
+  i:
+  - child_process
+  - fs
+  - path
+  - net
+  - ''
+  - ..{/generator/contract-generator,/templates,/types}
+  e:
+  - FileChange
+  - EvolutionManager
+  - EvolutionOptions
+  - LogEntry
+  - ServiceStatus
+  - createEvolutionManager
+  - EvolutionCycle
+  c:
+  - n: EvolutionManager
+    m:
+    - n: constructor
+      sig: '(options: Partial<EvolutionOptions>)'
+      d: constructor
+    - n: initCodeRAG
+      sig: ()
+      ret: 'Promise<{ files: number; chunks: number }>'
+      d: creates code rag
+    - n: askCode
+      sig: '(question: string)'
+      ret: 'Promise<{ answer: string; sources: SearchResult[] }>'
+      d: ask code
+    - n: findSymbolUsages
+      sig: '(symbol: string)'
+      ret: CodeChunk[]
+      d: retrieves symbol usages
+    - n: getCodeStructure
+      sig: ()
+      ret: '{ level: number; name: string; count: number }[]'
+      d: retrieves code structure
+    - n: buildRAGContext
+      sig: '(query: string, maxChunks: number)'
+      ret: Promise<string>
+      d: creates rag context
+    - n: buildContractDrivenPrompt
+      sig: '(task: string)'
+      ret: string
+      d: creates contract driven prompt
+    - n: getTechStackFromContract
+      sig: ()
+      ret: '{ language: string; framework: string; database?: string }'
+      d: retrieves tech stack from contract
+    - n: analyzeState
+      sig: ()
+      ret: Promise<MultiLevelState>
+      d: processes state
+    - n: reconcileState
+      sig: ()
+      ret: 'Promise<{ fixed: number; remaining: number }>'
+      d: reconcile state
+    - n: importFromGit
+      sig: (targetDir?)
+      ret: Promise<ContractAI | null>
+      d: import from git
+    - n: getGitState
+      sig: ()
+      ret: GitState | null
+      d: retrieves git state
+    attrs: []
+  f:
+  - n: createEvolutionManager
+    sig: (options?)
+    ret: EvolutionManager
+    d: creates evolution manager
+  const:
+  - n: DEFAULT_OPTIONS
+    t: '-'
+    v: '-'
+- p: core/contract-ai/evolution/shell-renderer.ts
+  l: 407
+  kb: 14.1
+  e:
+  - ShellRenderer
+  - getRenderer
+  - renderMarkdown
+  c:
+  - n: ShellRenderer
+    m:
+    - n: constructor
+      sig: (useColors)
+      d: constructor
+    - n: enableLog
+      sig: ()
+      ret: void
+      d: enable log
+    - n: getLog
+      sig: ()
+      ret: string
+      d: retrieves log
+    - n: clearLog
+      sig: ()
+      ret: void
+      d: deletes log
+    - n: log
+      sig: '(text: string)'
+      ret: void
+      d: logs
+    - n: c
+      sig: '(color: keyof typeof COLORS, text: string)'
+      ret: string
+      d: c
+    - n: heading
+      sig: '(level: number, text: string)'
+      ret: void
+      d: heading
+    - n: codeblock
+      sig: '(lang: string, content: string)'
+      ret: void
+      d: codeblock
+    - n: renderMarkdownWithFences
+      sig: '(markdownText: string, textLang: string)'
+      ret: void
+      d: formats markdown with fences
+    - n: highlightLine
+      sig: '(lang: string, line: string)'
+      ret: string
+      d: highlight line
+    - n: highlightLog
+      sig: '(line: string)'
+      ret: string
+      d: highlight log
+    - n: highlightJs
+      sig: '(line: string)'
+      ret: string
+      d: highlight js
+    attrs: []
+  f:
+  - n: getRenderer
+    sig: ()
+    ret: ShellRenderer
+    d: retrieves renderer
+  - n: renderMarkdown
+    sig: '(text: string)'
+    ret: void
+    d: formats markdown
+  const:
+  - n: COLORS
+    t: '-'
+    v: '-'
+- p: core/contract-ai/evolution/llm-orchestrator.ts
+  l: 254
+  kb: 8.7
+  i:
+  - fs
+  - path
+  - .{/fallback-templates,/shell-renderer}
+  - ..{/generator/contract-generator,/templates/contracts,/types}
+  e:
+  - LLMOrchestratorOptions
+  - LLMOrchestrator
+  - GenerationResult
+  c:
+  - n: LLMOrchestrator
+    m:
+    - n: constructor
+      sig: '(options: LLMOrchestratorOptions, renderer: ShellRenderer)'
+      d: constructor
+    - n: setClient
+      sig: '(client: LLMClient)'
+      ret: void
+      d: updates client
+    - n: getClient
+      sig: ()
+      ret: LLMClient | null
+      d: retrieves client
+    - n: isAvailable
+      sig: ()
+      ret: boolean
+      d: is available
+    - n: withTimeout
+      sig: '(promise: Promise<T>, ms: number)'
+      ret: Promise<T>
+      d: with timeout
+    - n: withRetries
+      sig: '(fn: () => Promise<T>, maxRetries: number, delayMs: number)'
+      ret: Promise<T>
+      d: with retries
+    - n: orchestrateFrontend
+      sig: '(contract: ContractAI)'
+      ret: Promise<GenerationResult>
+      d: orchestrate frontend
+    - n: orchestrateCustomLayer
+      sig: '(contract: ContractAI, layerName: string)'
+      ret: Promise<GenerationResult>
+      d: orchestrate custom layer
+    - n: generateReadme
+      sig: '(contract: ContractAI)'
+      ret: 'Promise<{ content: string; source: ''llm'' | ''fallback'' }>'
+      d: creates readme
+    - n: parseFilesFromResponse
+      sig: '(response: string, target: string)'
+      ret: GeneratedFile[]
+      d: parses files from response
+    - n: getFallbackReadme
+      sig: '(contract: ContractAI)'
+      ret: string
+      d: retrieves fallback readme
+    attrs: []
+- p: core/contract-ai/evolution/git-analyzer.ts
+  l: 262
+  kb: 9.6
+  i:
+  - child_process
+  - fs
+  - path
+  - ..{/generator/contract-generator,/types}
+  e:
+  - GitState
+  - GitAnalyzer
+  c:
+  - n: GitAnalyzer
+    m:
+    - n: constructor
+      sig: '(cwd: string)'
+      d: constructor
+    - n: isGitRepo
+      sig: ()
+      ret: boolean
+      d: is git repo
+    - n: getBranch
+      sig: ()
+      ret: string
+      d: retrieves branch
+    - n: getLastCommit
+      sig: ()
+      ret: '{ hash: string; message: string; date: string } | null'
+      d: retrieves last commit
+    - n: getRecentCommits
+      sig: (count)
+      ret: 'Array<{ hash: string; message: string; date: string }>'
+      d: retrieves recent commits
+    - n: getStatus
+      sig: ()
+      ret: '{ modified: string[]; untracked: string[]; staged: string[] }'
+      d: retrieves status
+    - n: getRemotes
+      sig: ()
+      ret: string[]
+      d: retrieves remotes
+    - n: getFileStructure
+      sig: ()
+      ret: '{ path: string; type: ''file'' | ''dir'' }[]'
+      d: retrieves file structure
+    - n: detectStack
+      sig: ()
+      ret: '{ language: string; framework: string; dependencies: string[] }'
+      d: detect stack
+    - n: getFullState
+      sig: ()
+      ret: GitState
+      d: retrieves full state
+    - n: generateContractFromCode
+      sig: (llmClient?)
+      ret: Promise<ContractAI | null>
+      d: creates contract from code
+    attrs: []
+- p: core/contract-ai/evolution/task-handlers.ts
+  l: 246
+  kb: 9.9
+  i:
+  - fs
+  - path
+  - .{/shell-renderer,/task-queue}
+  - ../types
+  e:
+  - handleMultiLevelAnalysis
+  - TaskContext
+  - PlanValidation
+  - handleLayer2Validation
+  - handleGenerateFrontend
+  - handleValidateApi
+  - TaskHandler
+  - handleInstallAndStart
+  - handleStateFile
+  - handleContractSave
+  f:
+  - n: handleFolders
+    sig: '(ctx: TaskContext)'
+    ret: Promise<TaskResult>
+    d: handles folders
+  - n: handleStateFile
+    sig: '(ctx: TaskContext, writeSnapshot: () => void)'
+    ret: Promise<TaskResult>
+    d: handles state file
+  - n: handleContractSave
+    sig: '(ctx: TaskContext, writeSnapshot: () => void)'
+    ret: Promise<TaskResult>
+    d: handles contract save
+  - n: handleValidatePlan
+    sig: '(ctx: TaskContext, validate: () => PlanValidation)'
+    ret: Promise<TaskResult>
+    d: handles validate plan
+  - n: handleValidateApi
+    sig: '(ctx: TaskContext)'
+    ret: Promise<TaskResult>
+    d: handles validate api
+  - n: handleLayer2Validation
+    sig: '(ctx: TaskContext, validate: () => Layer2Result)'
+    ret: Promise<TaskResult>
+    d: handles layer2 validation
+  - n: handleMultiLevelAnalysis
+    sig: '(ctx: TaskContext, analyze: () => Promise<MultiLevelAnalysis>)'
+    ret: Promise<TaskResult>
+    d: handles multi level analysis
+  - n: handleInstallAndStart
+    sig: '(ctx: TaskContext, startService: () => Promise<void>)'
+    ret: Promise<TaskResult>
+    d: handles install and start
+  - n: handleRunTests
+    sig: '(ctx: TaskContext, runTests: () => Promise<{ passed: boolean; error?: string }>)'
+    ret: Promise<TaskResult>
+    d: handles run tests
+  - n: handleGenerateFrontend
+    sig: '(ctx: TaskContext, orchestrate: () => Promise<boolean>, generateFallback: () => Record<string, string>)'
+    ret: Promise<TaskResult>
+    d: handles generate frontend
+- p: core/contract-ai/evolution/llm-prompts.ts
+  l: 151
+  kb: 6.3
+  i:
+  - ..{/templates/contracts,/types}
+  e:
+  - EvolutionTrigger
+  - PromptContext
+  - PromptBuilder
+  c:
+  - n: PromptBuilder
+    m:
+    - n: buildSystemPrompt
+      sig: ()
+      ret: string
+      d: creates system prompt
+    - n: buildUserPrompt
+      sig: '(contract: ContractAI, ctx: PromptContext)'
+      ret: string
+      d: creates user prompt
+    - n: buildContractDrivenPrompt
+      sig: '(contract: ContractAI, task: string, port: number)'
+      ret: string
+      d: creates contract driven prompt
+    - n: buildFixPrompt
+      sig: '(error: string, codeContext?)'
+      ret: string
+      d: creates fix prompt
+    attrs: []
+- p: core/contract-ai/evolution/task-queue.ts
+  l: 139
+  kb: 4.6
+  i:
+  - ./shell-renderer
+  e:
+  - TaskQueue
+  - Task
+  - TaskStatus
+  c:
+  - n: TaskQueue
+    m:
+    - n: constructor
+      sig: (verbose)
+      d: constructor
+    - n: add
+      sig: '(name: string, id?)'
+      ret: Task
+      d: creates
+    - n: start
+      sig: '(id: string)'
+      ret: void
+      d: starts
+    - n: done
+      sig: '(id: string)'
+      ret: void
+      d: done
+    - n: fail
+      sig: '(id: string, error: string)'
+      ret: void
+      d: fail
+    - n: skip
+      sig: '(id: string)'
+      ret: void
+      d: skip
+    - n: printTodoList
+      sig: (force)
+      ret: void
+      d: logs todo list
+    - n: print
+      sig: ()
+      ret: void
+      d: logs
+    - n: getIcon
+      sig: '(status: TaskStatus)'
+      ret: string
+      d: retrieves icon
+    - n: getTasks
+      sig: ()
+      ret: Task[]
+      d: retrieves tasks
+    - n: clear
+      sig: ()
+      ret: void
+      d: deletes
+    attrs: []
+- p: core/contract-ai/evolution/state-analyzer.ts
+  l: 384
+  kb: 15.7
+  i:
+  - fs
+  - path
+  - ../types
+  e:
+  - StateAnalyzer
+  - MultiLevelState
+  - StateDiscrepancy
+  c:
+  - n: StateAnalyzer
+    m:
+    - n: constructor
+      sig: '(outputDir: string, port: number)'
+      d: constructor
+    - n: setPort
+      sig: '(port: number)'
+      ret: void
+      d: updates port
+    - n: analyzeContract
+      sig: ()
+      ret: '{ entities: string[]; endpoints: string[]; targets: string[] }'
+      d: processes contract
+    - n: analyzeSourceCode
+      sig: ()
+      ret: '{ files: string[]; detectedEndpoints: string[]; detectedEntities: string[] }'
+      d: processes source code
+    - n: scanDir
+      sig: '(dir: string, files: string[])'
+      ret: void
+      d: scan dir
+    - n: analyzeService
+      sig: '(endpointsToProbe: string[])'
+      ret: 'Promise<{ running: boolean; healthEndpoint: boolean; respondingEndpoints: string[]; probes: Array<{ endpoint:
+        string; ok: boolean; status?: number; error?: string }>; port: number }>'
+      d: processes service
+    - n: analyzeLogs
+      sig: ()
+      ret: '{ errors: string[]; warnings: string[]; lastActivity: string | null }'
+      d: processes logs
+    - n: findDiscrepancies
+      sig: '(contract: ReturnType<typeof this.analyzeContract>, sourceCode: ReturnType<typeof this.analyzeSourceCode>, service:
+        Awaited<ReturnType<typeof this.analyzeService>>, logs: ReturnType<typeof this.analyzeLogs>)'
+      ret: StateDiscrepancy[]
+      d: retrieves discrepancies
+    - n: analyze
+      sig: ()
+      ret: Promise<MultiLevelState>
+      d: processes
+    - n: generateReconciliationPlan
+      sig: '(state: MultiLevelState)'
+      ret: string[]
+      d: creates reconciliation plan
+    attrs: []
+- p: core/contract-ai/evolution/fallback-templates.ts
+  l: 348
+  kb: 14.0
+  i:
+  - ../types
+  - ../templates/api/server.template
+  - ../templates/frontend/react-app.template
+  - ../templates/tests/e2e-native.template
+  e:
+  - FallbackOptions
+  - FallbackTemplates
+  c:
+  - n: FallbackTemplates
+    m:
+    - n: generate
+      sig: '(contract: ContractAI, options: FallbackOptions)'
+      ret: string
+      d: creates
+    - n: generateServer
+      sig: '(contract: ContractAI, port: number)'
+      ret: string
+      d: creates server
+    - n: generatePackageJson
+      sig: ()
+      ret: string
+      d: creates package json
+    - n: generateTsConfig
+      sig: ()
+      ret: string
+      d: creates ts config
+    - n: parseFiles
+      sig: '(response: string)'
+      ret: GeneratedFile[]
+      d: parses files
+    - n: stripJsonComments
+      sig: '(json: string)'
+      ret: string
+      d: strip json comments
+    - n: generateE2ETests
+      sig: '(port: number, entityName: string, basePath: string, entityFields?)'
+      ret: string
+      d: creates e2 e tests
+    - n: generateTestPayload
+      sig: '(entityName: string, fields?)'
+      ret: string
+      d: creates test payload
+    - n: generateUpdatePayload
+      sig: '(entityName: string, fields?)'
+      ret: string
+      d: creates update payload
+    - n: generateFrontend
+      sig: '(port: number, entityName: string)'
+      ret: Record<string, string>
+      d: creates frontend
+    - n: generateWithFrontend
+      sig: '(contract: ContractAI, options: FallbackOptions)'
+      ret: string
+      d: creates with frontend
+    attrs: []
+- p: core/contract-ai/evolution/doc-generator.ts
+  l: 207
+  kb: 7.3
+  i:
+  - fs
+  - path
+  - ./shell-renderer
+  - ..{/generator/contract-generator,/templates/contracts,/types}
+  e:
+  - DocGenerator
+  - DocGeneratorOptions
+  c:
+  - n: DocGenerator
+    m:
+    - n: constructor
+      sig: '(options: DocGeneratorOptions, llmClient: LLMClient | null)'
+      d: constructor
+    - n: generateReadme
+      sig: '(contract: ContractAI)'
+      ret: Promise<void>
+      d: creates readme
+    - n: getFallbackReadme
+      sig: '(contract: ContractAI)'
+      ret: string
+      d: retrieves fallback readme
+    attrs: []
+- p: core/contract-ai/evolution/task-executor.ts
+  l: 302
+  kb: 11.3
+  i:
+  - child_process
+  - fs
+  - path
+  - events
+  e:
+  - TaskState
+  - createTaskExecutor
+  - RingBuffer
+  - ExecutorTask
+  - TaskExecutor
+  - TaskExecutorOptions
+  c:
+  - n: RingBuffer
+    m:
+    - n: constructor
+      sig: '(size: number)'
+      d: constructor
+    - n: append
+      sig: '(item: T)'
+      ret: void
+      d: append
+    - n: getAll
+      sig: ()
+      ret: T[]
+      d: retrieves all
+    - n: clear
+      sig: ()
+      ret: void
+      d: deletes
+    attrs: []
+  - n: TaskExecutor
+    m:
+    - n: constructor
+      sig: '(options: Partial<TaskExecutorOptions>)'
+      d: constructor
+    - n: addTask
+      sig: '(command: string, options: Partial<ExecutorTask>)'
+      ret: ExecutorTask
+      d: creates task
+    - n: addTasksFromFile
+      sig: '(filePath: string)'
+      ret: void
+      d: creates tasks from file
+    - n: processQueue
+      sig: ()
+      ret: Promise<void>
+      d: processes queue
+    - n: executeTask
+      sig: '(taskId: string)'
+      ret: Promise<void>
+      d: starts task
+    - n: startWatching
+      sig: '(filePath: string)'
+      ret: void
+      d: starts watching
+    - n: stopWatching
+      sig: ()
+      ret: void
+      d: stops watching
+    - n: checkFileChanges
+      sig: ()
+      ret: void
+      d: checks file changes
+    - n: log
+      sig: '(message: string)'
+      ret: void
+      d: logs
+    - n: printMarkdown
+      sig: ()
+      ret: void
+      d: logs markdown
+    - n: getIcon
+      sig: '(state: TaskState)'
+      ret: string
+      d: retrieves icon
+    - n: renderMarkdown
+      sig: ()
+      ret: string
+      d: formats markdown
+    attrs: []
+  f:
+  - n: createTaskExecutor
+    sig: (options?)
+    ret: TaskExecutor
+    d: creates task executor
+- p: core/contract-ai/evolution/service-manager.ts
+  l: 216
+  kb: 6.5
+  i:
+  - child_process
+  - fs
+  - path
+  e:
+  - ServiceManager
+  - ServiceManagerOptions
+  - ServiceStatus
+  - LogCallback
+  c:
+  - n: ServiceManager
+    m:
+    - n: constructor
+      sig: '(options: ServiceManagerOptions)'
+      d: constructor
+    - n: setLogCallback
+      sig: '(callback: LogCallback)'
+      ret: void
+      d: updates log callback
+    - n: getStatus
+      sig: ()
+      ret: ServiceStatus
+      d: retrieves status
+    - n: start
+      sig: ()
+      ret: Promise<boolean>
+      d: starts
+    - n: stop
+      sig: ()
+      ret: Promise<void>
+      d: stops
+    - n: restart
+      sig: ()
+      ret: Promise<boolean>
+      d: restart
+    - n: checkHealth
+      sig: ()
+      ret: Promise<boolean>
+      d: checks health
+    - n: waitForHealth
+      sig: (maxAttempts)
+      ret: Promise<boolean>
+      d: wait for health
+    - n: startMonitoring
+      sig: (onUnhealthy?)
+      ret: void
+      d: starts monitoring
+    - n: stopMonitoring
+      sig: ()
+      ret: void
+      d: stops monitoring
+    - n: runCommand
+      sig: '(command: string, args: string[], cwd: string)'
+      ret: 'Promise<{ stdout: string; stderr: string }>'
+      d: starts command
+    - n: killProcessOnPort
+      sig: '(port: number)'
+      ret: Promise<void>
+      d: kill process on port
+    attrs: []
+- p: core/contract-ai/evolution/code-rag.ts
+  l: 712
+  kb: 26.4
+  i:
+  - fs
+  - path
+  - child_process
+  - ../generator/contract-generator
+  e:
+  - CodeChunk
+  - CodeIndex
+  - SemanticChunker
+  - CodeIndexer
+  - CodeRAG
+  - HierarchicalRetriever
+  - SearchResult
+  - HierarchicalLevel
+  c:
+  - n: SemanticChunker
+    m:
+    - n: constructor
+      sig: '(language: string)'
+      d: constructor
+    - n: parseFile
+      sig: '(filePath: string, content: string)'
+      ret: CodeChunk[]
+      d: parses file
+    - n: parseTypeScript
+      sig: '(filePath: string, content: string, parentId: string)'
+      ret: CodeChunk[]
+      d: parses type script
+    - n: parsePython
+      sig: '(filePath: string, content: string, parentId: string)'
+      ret: CodeChunk[]
+      d: parses python
+    - n: detectLanguage
+      sig: '(ext: string)'
+      ret: string
+      d: detect language
+    - n: generateId
+      sig: '(filePath: string, type: string, line: number)'
+      ret: string
+      d: creates id
+    - n: extractImports
+      sig: '(content: string, lang: string)'
+      ret: string[]
+      d: parses imports
+    - n: extractExports
+      sig: '(content: string, lang: string)'
+      ret: string[]
+      d: parses exports
+    - n: extractSignature
+      sig: '(code: string, type: string)'
+      ret: string
+      d: parses signature
+    - n: extractLocalDependencies
+      sig: '(code: string)'
+      ret: string[]
+      d: parses local dependencies
+    attrs: []
+  - n: CodeIndexer
+    m:
+    - n: constructor
+      sig: (llmClient?)
+      d: constructor
+    - n: indexDirectory
+      sig: '(dir: string, excludePatterns: string[])'
+      ret: Promise<void>
+      d: index directory
+    - n: generateSummary
+      sig: '(chunk: CodeChunk)'
+      ret: Promise<string>
+      d: creates summary
+    - n: scanDirectory
+      sig: '(dir: string, excludePatterns: string[])'
+      ret: string[]
+      d: scan directory
+    - n: getIndex
+      sig: ()
+      ret: CodeIndex
+      d: retrieves index
+    - n: getChunk
+      sig: '(id: string)'
+      ret: CodeChunk | undefined
+      d: retrieves chunk
+    - n: getChunksByFile
+      sig: '(filePath: string)'
+      ret: CodeChunk[]
+      d: retrieves chunks by file
+    - n: getChunksBySymbol
+      sig: '(name: string)'
+      ret: CodeChunk[]
+      d: retrieves chunks by symbol
+    - n: getCallers
+      sig: '(chunkId: string)'
+      ret: CodeChunk[]
+      d: retrieves callers
+    - n: getCallees
+      sig: '(chunkId: string)'
+      ret: CodeChunk[]
+      d: retrieves callees
+    attrs: []
+  - n: HierarchicalRetriever
+    m:
+    - n: constructor
+      sig: '(indexer: CodeIndexer, llmClient?)'
+      d: constructor
+    - n: search
+      sig: '(query: string, topK: number)'
+      ret: Promise<SearchResult[]>
+      d: filters
+    - n: searchFiles
+      sig: '(query: string, index: CodeIndex)'
+      ret: string[]
+      d: filters files
+    - n: scoreChunk
+      sig: '(chunk: CodeChunk, query: string)'
+      ret: number
+      d: score chunk
+    - n: traceCallPath
+      sig: '(fromId: string, toId: string, maxDepth: number)'
+      ret: string[][]
+      d: trace call path
+    - n: getHierarchy
+      sig: ()
+      ret: HierarchicalLevel[]
+      d: retrieves hierarchy
+    attrs: []
+  - n: CodeRAG
+    m:
+    - n: constructor
+      sig: (llmClient?)
+      d: constructor
+    - n: index
+      sig: '(dir: string)'
+      ret: 'Promise<{ files: number; chunks: number }>'
+      d: index
+    - n: ask
+      sig: '(question: string)'
+      ret: 'Promise<{ answer: string; sources: SearchResult[] }>'
+      d: ask
+    - n: findUsages
+      sig: '(symbolName: string)'
+      ret: CodeChunk[]
+      d: retrieves usages
+    - n: getStructure
+      sig: ()
+      ret: HierarchicalLevel[]
+      d: retrieves structure
+    - n: exportIndex
+      sig: ()
+      ret: string
+      d: export index
+    attrs: []
+- p: core/contract-ai/evolution/test-generator.ts
+  l: 249
+  kb: 9.6
+  i:
+  - fs
+  - path
+  - .{/fallback-templates,/shell-renderer}
+  - ..{/generator/contract-generator,/templates/contracts,/types}
+  e:
+  - TestGenerator
+  - TestRunResult
+  - TestGeneratorOptions
+  c:
+  - n: TestGenerator
+    m:
+    - n: constructor
+      sig: '(options: TestGeneratorOptions, llmClient: LLMClient | null)'
+      d: constructor
+    - n: generateTestFiles
+      sig: '(contract: ContractAI)'
+      ret: Promise<void>
+      d: creates test files
+    - n: generateTestConfig
+      sig: '(testDir: string)'
+      ret: Promise<void>
+      d: creates test config
+    - n: getFallbackTestConfig
+      sig: ()
+      ret: string
+      d: retrieves fallback test config
+    - n: generateApiE2ETests
+      sig: '(e2eDir: string, entityName: string, pluralName: string)'
+      ret: Promise<void>
+      d: creates api e2 e tests
+    - n: detectApiBasePath
+      sig: '(pluralName: string)'
+      ret: string
+      d: detect api base path
+    - n: generateFixtures
+      sig: '(fixturesDir: string, entityName: string)'
+      ret: Promise<void>
+      d: creates fixtures
+    - n: getFallbackFixtures
+      sig: '(entityName: string, lowerName: string)'
+      ret: Record<string, any>
+      d: retrieves fallback fixtures
+    attrs: []
+- p: core/contract-ai/validation/index.ts
+  l: 47
+  kb: 1.8
+  i:
+  - ''
+  e:
+  - createDefaultValidationPipeline
+  f:
+  - n: createDefaultValidationPipeline
+    sig: '(options: Partial<PipelineOptions>)'
+    ret: ValidationPipelineOrchestrator
+    d: creates default validation pipeline
+- p: core/contract-ai/validation/pipeline-orchestrator.ts
+  l: 212
+  kb: 6.8
+  i:
+  - ../types
+  e:
+  - ValidationPipelineOrchestrator
+  - PipelineOptions
+  - ValidationStage
+  - ValidationContext
+  - createValidationPipeline
+  c:
+  - n: ValidationPipelineOrchestrator
+    m:
+    - n: constructor
+      sig: '(options: Partial<PipelineOptions>)'
+      d: constructor
+    - n: registerStage
+      sig: '(stage: ValidationStage)'
+      ret: void
+      d: registers stage
+    - n: registerStages
+      sig: '(stages: ValidationStage[])'
+      ret: void
+      d: registers stages
+    - n: validate
+      sig: '(contract: ContractAI, code: GeneratedCode)'
+      ret: Promise<PipelineResult>
+      d: validates
+    - n: runStage
+      sig: '(stage: ValidationStage, context: ValidationContext)'
+      ret: Promise<StageResult>
+      d: starts stage
+    - n: shouldContinue
+      sig: '(stageOrName: ValidationStage | string, result: StageResult)'
+      ret: boolean
+      d: checks continue
+    - n: getStages
+      sig: ()
+      ret: ValidationStage[]
+      d: retrieves stages
+    - n: clearStages
+      sig: ()
+      ret: void
+      d: deletes stages
+    attrs: []
+  f:
+  - n: createValidationPipeline
+    sig: (options?)
+    ret: ValidationPipelineOrchestrator
+    d: creates validation pipeline
+  const:
+  - n: DEFAULT_OPTIONS
+    t: '-'
+    v: '-'
+  - n: CRITICAL_STAGES
+    t: '-'
+    v: '-'
+- p: core/contract-ai/feedback/code-corrector.ts
+  l: 281
+  kb: 10.2
+  i:
+  - ./feedback-generator
+  - ..{/generator/contract-generator,/types}
+  e:
+  - createCodeCorrector
+  - CodeCorrector
+  - CorrectorOptions
+  - ContractHint
+  c:
+  - n: CodeCorrector
+    m:
+    - n: constructor
+      sig: '(options: Partial<CorrectorOptions>)'
+      d: constructor
+    - n: setLLMClient
+      sig: '(client: LLMClient)'
+      ret: void
+      d: updates llm client
+    - n: correct
+      sig: '(code: GeneratedCode, feedback: ValidationFeedback, contract: ContractAI)'
+      ret: Promise<GeneratedCode>
+      d: correct
+    - n: inferTargetFromPath
+      sig: '(path: string)'
+      ret: string | undefined
+      d: infer target from path
+    - n: correctFile
+      sig: '(file: GeneratedFile, issues: ValidationIssue[], hints: ContractHint[], contract: ContractAI)'
+      ret: Promise<GeneratedFile>
+      d: correct file
+    - n: groupIssuesByFile
+      sig: '(issues: ValidationIssue[])'
+      ret: Map<string, ValidationIssue[]>
+      d: group issues by file
+    - n: buildCorrectionPrompt
+      sig: '(file: GeneratedFile, issues: ValidationIssue[], hints: ContractHint[], contract: ContractAI)'
+      ret: string
+      d: creates correction prompt
+    - n: getSystemPrompt
+      sig: ()
+      ret: string
+      d: retrieves system prompt
+    - n: extractCodeFromResponse
+      sig: '(response: string)'
+      ret: string
+      d: parses code from response
+    - n: simulateCorrection
+      sig: '(content: string, issues: ValidationIssue[])'
+      ret: string
+      d: simulate correction
+    - n: addTryCatch
+      sig: '(content: string)'
+      ret: string
+      d: creates try catch
+    - n: addEmailValidation
+      sig: '(content: string)'
+      ret: string
+      d: creates email validation
+    attrs: []
+  f:
+  - n: createCodeCorrector
+    sig: (options?)
+    ret: CodeCorrector
+    d: creates code corrector
+  const:
+  - n: DEFAULT_OPTIONS
+    t: '-'
+    v: '-'
+- p: core/contract-ai/feedback/index.ts
+  l: 11
+  kb: 0.2
+- p: core/contract-ai/feedback/iteration-manager.ts
+  l: 191
+  kb: 6.8
+  i:
+  - .{/code-corrector,/feedback-generator}
+  - ..{/code-generator/llm-generator,/types,/validation/pipeline-orchestrator}
+  e:
+  - IterationHistoryEntry
+  - IterationResult
+  - IterationManager
+  - createIterationManager
+  - IterationManagerOptions
+  c:
+  - n: IterationManager
+    m:
+    - n: constructor
+      sig: '(options: Partial<IterationManagerOptions>)'
+      d: constructor
+    - n: validateAndCorrect
+      sig: '(contract: ContractAI, initialCode: GeneratedCode, pipeline: ValidationPipelineOrchestrator, codeGenerator: LLMCodeGenerator)'
+      ret: Promise<IterationResult>
+      d: validates and correct
+    - n: meetsAcceptanceCriteria
+      sig: '(contract: ContractAI, result: PipelineResult)'
+      ret: boolean
+      d: meets acceptance criteria
+    - n: correctCode
+      sig: '(contract: ContractAI, currentCode: GeneratedCode, feedback: ValidationFeedback, codeGenerator: LLMCodeGenerator)'
+      ret: Promise<GeneratedCode>
+      d: correct code
+    attrs: []
+  f:
+  - n: createIterationManager
+    sig: (options?)
+    ret: IterationManager
+    d: creates iteration manager
+  const:
+  - n: DEFAULT_OPTIONS
+    t: '-'
+    v: '-'
+- p: core/contract-ai/feedback/feedback-generator.ts
+  l: 248
+  kb: 8.4
+  i:
+  - ../types
+  e:
+  - FeedbackGenerator
+  - ValidationIssue
+  - ValidationFeedback
+  - createFeedbackGenerator
+  c:
+  - n: FeedbackGenerator
+    m:
+    - n: generateFeedback
+      sig: '(contract: ContractAI, result: PipelineResult)'
+      ret: ValidationFeedback
+      d: creates feedback
+    - n: buildCorrectionPrompt
+      sig: '(contract: ContractAI, currentCode: { path: string; content: string }[], feedback: ValidationFeedback)'
+      ret: string
+      d: creates correction prompt
+    - n: extractIssues
+      sig: '(result: PipelineResult)'
+      ret: ValidationIssue[]
+      d: parses issues
+    - n: generateSummary
+      sig: '(issues: ValidationIssue[])'
+      ret: string
+      d: creates summary
+    - n: extractContractHints
+      sig: '(contract: ContractAI, issues: ValidationIssue[])'
+      ret: string[]
+      d: parses contract hints
+    - n: getFilesToFix
+      sig: '(issues: ValidationIssue[])'
+      ret: string[]
+      d: retrieves files to fix
+    - n: groupIssuesByFile
+      sig: '(issues: ValidationIssue[])'
+      ret: Record<string, ValidationIssue[]>
+      d: group issues by file
+    - n: getSuggestionForError
+      sig: (code?, message?)
+      ret: string | undefined
+      d: retrieves suggestion for error
+    attrs: []
+  f:
+  - n: createFeedbackGenerator
+    sig: ()
+    ret: FeedbackGenerator
+    d: creates feedback generator
+- p: core/contract-ai/feedback/generation-log.ts
+  l: 332
+  kb: 11.5
+  i:
+  - fs
+  - path
+  - ../types
+  e:
+  - LogWriterOptions
+  - createGenerationLogWriter
+  - GenerationLogWriter
+  - GenerationLogEntry
+  c:
+  - n: GenerationLogWriter
+    m:
+    - n: constructor
+      sig: '(options: LogWriterOptions)'
+      d: constructor
+    - n: writeLog
+      sig: '(entry: GenerationLogEntry)'
+      ret: string
+      d: logs log
+    - n: buildHeader
+      sig: '(appName: string, version: string)'
+      ret: string
+      d: creates header
+    - n: buildMetadata
+      sig: '(entry: GenerationLogEntry, dateStr: string, timeStr: string, entityCount: number)'
+      ret: string
+      d: creates metadata
+    - n: buildRunSection
+      sig: '(entry: GenerationLogEntry)'
+      ret: string
+      d: creates run section
+    - n: buildIterationSection
+      sig: '(entry: GenerationLogEntry)'
+      ret: string
+      d: creates iteration section
+    - n: buildNextStepsSection
+      sig: '(entry: GenerationLogEntry)'
+      ret: string
+      d: creates next steps section
+    - n: buildGenerationSection
+      sig: '(generatedCode: GeneratedCode)'
+      ret: string
+      d: creates generation section
+    - n: buildStageIssues
+      sig: '(stage: StageResult)'
+      ret: string
+      d: creates stage issues
+    - n: escapeTableCell
+      sig: '(value: string)'
+      ret: string
+      d: escape table cell
+    - n: buildValidationSection
+      sig: '(pipelineResult: PipelineResult)'
+      ret: string
+      d: creates validation section
+    - n: buildContractSection
+      sig: '(contract: ContractAI)'
+      ret: string
+      d: creates contract section
+    attrs: []
+  f:
+  - n: createGenerationLogWriter
+    sig: '(options: LogWriterOptions)'
+    ret: GenerationLogWriter
+    d: creates generation log writer
+  const:
+  - n: LABELS
+    t: '-'
+    v: '-'
+- p: core/contract-ai/setup/index.ts
+  l: 8
+  kb: 0.1
+- p: core/contract-ai/setup/dependency-checker.ts
+  l: 530
+  kb: 19.0
+  i:
+  - child_process
+  - fs
+  - path
+  - os
+  e:
+  - checkEnvironment
+  - printEnvironmentStatus
+  - DependencyStatus
+  - EnvironmentReport
+  - DependencyChecker
+  - DependencyCheck
+  - Dependency
+  - InstallGuide
+  - DependencyPriority
+  - SetupTask
+  c:
+  - n: DependencyChecker
+    m:
+    - n: constructor
+      sig: ()
+      d: constructor
+    - n: checkDependency
+      sig: '(dep: Dependency)'
+      ret: Promise<DependencyCheck>
+      d: checks dependency
+    - n: checkAll
+      sig: ()
+      ret: Promise<DependencyCheck[]>
+      d: checks all
+    - n: generateReport
+      sig: ()
+      ret: Promise<EnvironmentReport>
+      d: creates report
+    - n: generateSetupTasks
+      sig: '(checks: DependencyCheck[])'
+      ret: SetupTask[]
+      d: creates setup tasks
+    - n: saveSetupTasks
+      sig: '(outputDir: string, tasks: SetupTask[])'
+      ret: string
+      d: caches setup tasks
+    - n: generateSetupMarkdown
+      sig: '(tasks: SetupTask[])'
+      ret: string
+      d: creates setup markdown
+    - n: printStatus
+      sig: '(report: EnvironmentReport)'
+      ret: void
+      d: logs status
+    - n: getInstallCommand
+      sig: '(dep: Dependency)'
+      ret: string
+      d: retrieves install command
+    - n: getNpmVersion
+      sig: ()
+      ret: string | undefined
+      d: retrieves npm version
+    - n: compareVersions
+      sig: '(v1: string, v2: string)'
+      ret: number
+      d: compare versions
+    attrs: []
+  f:
+  - n: checkEnvironment
+    sig: ()
+    ret: Promise<EnvironmentReport>
+    d: checks environment
+  - n: printEnvironmentStatus
+    sig: ()
+    ret: Promise<void>
+    d: logs environment status
+- p: core/contract-ai/sdk/index.ts
+  l: 11
+  kb: 0.2
+- p: core/contract-ai/sdk/sdk-generator.ts
+  l: 551
+  kb: 20.3
+  i:
+  - ../types
+  e:
+  - SDKGenerator
+  - createSDKGenerator
+  - SDKGeneratorOptions
+  - GeneratedSDK
+  c:
+  - n: SDKGenerator
+    m:
+    - n: constructor
+      sig: '(options: SDKGeneratorOptions)'
+      d: constructor
+    - n: generate
+      sig: '(contract: ContractAI)'
+      ret: GeneratedSDK
+      d: creates
+    - n: generateTypes
+      sig: '(contract: ContractAI)'
+      ret: string
+      d: creates types
+    - n: generateEntityType
+      sig: '(entity: EntityDefinition)'
+      ret: string[]
+      d: creates entity type
+    - n: generateInputTypes
+      sig: '(entity: EntityDefinition)'
+      ret: string[]
+      d: creates input types
+    - n: generateApiResponseTypes
+      sig: '(contract: ContractAI)'
+      ret: string[]
+      d: creates api response types
+    - n: generateZodSchemas
+      sig: '(contract: ContractAI)'
+      ret: string
+      d: creates zod schemas
+    - n: generateEntitySchema
+      sig: '(entity: EntityDefinition)'
+      ret: string[]
+      d: creates entity schema
+    - n: generateClient
+      sig: '(contract: ContractAI)'
+      ret: string
+      d: creates client
+    - n: generateEntityClientMethods
+      sig: '(entity: EntityDefinition)'
+      ret: string[]
+      d: creates entity client methods
+    - n: generateHooks
+      sig: '(contract: ContractAI)'
+      ret: string
+      d: creates hooks
+    - n: generateEntityHooks
+      sig: '(entity: EntityDefinition)'
+      ret: string[]
+      d: creates entity hooks
+    attrs: []
+  f:
+  - n: createSDKGenerator
+    sig: (options?)
+    ret: SDKGenerator
+    d: creates sdk generator
+- p: core/contract-ai/converter/index.ts
+  l: 5
+  kb: 0.1
+- p: core/contract-ai/converter/to-contract-ai.ts
+  l: 175
+  kb: 5.7
+  i:
+  - ..{/types,/types/contract-markdown}
+  e:
+  - mapDatabaseType
+  - convertToContractAI
+  - extractResources
+  - convertEntity
+  - extractInstructions
+  - capitalize
+  - mapFieldType
+  f:
+  - n: convertToContractAI
+    sig: '(contract: ContractMarkdown)'
+    ret: 'ContractAI & { app: any; entities: any[] }'
+    d: converts to contract ai
+  - n: convertEntity
+    sig: '(entity: MarkdownEntityDefinition)'
+    ret: ContractAI['definition']['entities'][0]
+    d: converts entity
+  - n: mapFieldType
+    sig: '(type: string)'
+    ret: string
+    d: converts field type
+  - n: mapDatabaseType
+    sig: '(type: string)'
+    ret: '''sqlite'' | ''postgresql'' | ''mysql'' | ''mongodb'' | ''in-memory'''
+    d: converts database type
+  - n: extractResources
+    sig: '(contract: ContractMarkdown)'
+    ret: any[]
+    d: parses resources
+  - n: extractInstructions
+    sig: '(contract: ContractMarkdown)'
+    ret: any[]
+    d: parses instructions
+  - n: capitalize
+    sig: '(str: string)'
+    ret: string
+    d: capitalize
+- p: core/contract-ai/validation/stages/index.ts
+  l: 13
+  kb: 0.3
+- p: core/contract-ai/validation/stages/schema-validator.ts
+  l: 91
+  kb: 3.1
+  i:
+  - ../pipeline-orchestrator
+  - ../..{/llm/pydantic-validator,/types}
+  e:
+  - createSchemaValidator
+  - SchemaValidator
+  c:
+  - n: SchemaValidator
+    m:
+    - n: extractFileFromSchemaPath
+      sig: '(schemaPath: string, files: Array<{ path: string }>)'
+      ret: string | undefined
+      d: parses file from schema path
+    - n: validator
+      sig: '(context: ValidationContext)'
+      ret: Promise<StageResult>
+      d: validator
+    attrs: []
+  f:
+  - n: createSchemaValidator
+    sig: ()
+    ret: SchemaValidator
+    d: creates schema validator
+- p: core/contract-ai/validation/stages/test-runner.ts
+  l: 300
+  kb: 10.4
+  i:
+  - child_process
+  - fs
+  - path
+  - ../pipeline-orchestrator
+  - ../../types
+  e:
+  - JestResult
+  - TestRunner
+  - TestFileResult
+  - createTestRunner
+  c:
+  - n: TestRunner
+    m:
+    - n: validator
+      sig: '(context: ValidationContext)'
+      ret: Promise<StageResult>
+      d: validator
+    - n: generateTestFiles
+      sig: '(specs: TestSpecification[], contract: ContractAI)'
+      ret: Map<string, string>
+      d: creates test files
+    - n: generateTestFile
+      sig: '(spec: TestSpecification, contract: ContractAI)'
+      ret: string
+      d: creates test file
+    - n: generateTestCase
+      sig: '(scenario: TestScenario, endpoint: string, type: string)'
+      ret: string
+      d: creates test case
+    - n: parseMethod
+      sig: '(when: string)'
+      ret: string
+      d: parses method
+    - n: parsePath
+      sig: '(when: string, defaultEndpoint: string)'
+      ret: string
+      d: parses path
+    - n: writeTestFiles
+      sig: '(workDir: string, testFiles: Map<string, string>)'
+      ret: string[]
+      d: logs test files
+    - n: runJest
+      sig: '(workDir: string, testFiles: Map<string, string>)'
+      ret: Promise<JestResult>
+      d: starts jest
+    - n: canRunRealJest
+      sig: '(workDir: string)'
+      ret: boolean
+      d: checks run real jest
+    - n: runRealJest
+      sig: '(workDir: string)'
+      ret: JestResult
+      d: starts real jest
+    - n: simulateJest
+      sig: '(testFiles: Map<string, string>)'
+      ret: JestResult
+      d: simulate jest
+    attrs: []
+  f:
+  - n: createTestRunner
+    sig: ()
+    ret: TestRunner
+    d: creates test runner
+- p: core/contract-ai/validation/stages/quality-checker.ts
+  l: 189
+  kb: 7.0
+  i:
+  - ../pipeline-orchestrator
+  - ../../types
+  e:
+  - QualityChecker
+  - createQualityChecker
+  c:
+  - n: QualityChecker
+    m:
+    - n: validator
+      sig: '(context: ValidationContext)'
+      ret: Promise<StageResult>
+      d: validator
+    - n: checkThreshold
+      sig: '(value: number, threshold: number, operator: string)'
+      ret: boolean
+      d: checks threshold
+    - n: calculateLinesOfCode
+      sig: '(files: GeneratedFile[])'
+      ret: number
+      d: processes lines of code
+    - n: calculateAverageComplexity
+      sig: '(files: GeneratedFile[])'
+      ret: number
+      d: processes average complexity
+    - n: calculateDuplicationRatio
+      sig: '(files: GeneratedFile[])'
+      ret: number
+      d: processes duplication ratio
+    - n: calculateTypeCoverage
+      sig: '(files: GeneratedFile[])'
+      ret: number
+      d: processes type coverage
+    attrs: []
+  f:
+  - n: createQualityChecker
+    sig: ()
+    ret: QualityChecker
+    d: creates quality checker
+- p: core/contract-ai/validation/stages/assertion-validator.ts
+  l: 253
+  kb: 9.0
+  i:
+  - ../pipeline-orchestrator
+  - ../../types
+  e:
+  - createAssertionValidator
+  - AssertionValidator
+  c:
+  - n: AssertionValidator
+    m:
+    - n: getFileForAssertion
+      sig: '(assertion: CodeAssertion)'
+      ret: string | undefined
+      d: retrieves file for assertion
+    - n: validator
+      sig: '(context: ValidationContext)'
+      ret: Promise<StageResult>
+      d: validator
+    - n: checkAssertion
+      sig: '(assertion: CodeAssertion, files: GeneratedFile[])'
+      ret: '{ passed: boolean; details?: string }'
+      d: checks assertion
+    - n: checkFileExists
+      sig: '(path: string, files: GeneratedFile[])'
+      ret: '{ passed: boolean }'
+      d: checks file exists
+    - n: checkFileContains
+      sig: '(path: string, pattern: string, files: GeneratedFile[])'
+      ret: '{ passed: boolean }'
+      d: checks file contains
+    - n: checkFileNotContains
+      sig: '(path: string, pattern: string, files: GeneratedFile[])'
+      ret: '{ passed: boolean }'
+      d: checks file not contains
+    - n: checkExportsFunction
+      sig: '(path: string, functionName: string, files: GeneratedFile[])'
+      ret: '{ passed: boolean }'
+      d: checks exports function
+    - n: checkExportsClass
+      sig: '(path: string, className: string, files: GeneratedFile[])'
+      ret: '{ passed: boolean }'
+      d: checks exports class
+    - n: checkHasErrorHandling
+      sig: '(path: string, files: GeneratedFile[])'
+      ret: '{ passed: boolean }'
+      d: checks has error handling
+    - n: checkHasValidation
+      sig: '(entityName: string, fieldName: string, files: GeneratedFile[])'
+      ret: '{ passed: boolean }'
+      d: checks has validation
+    - n: hasFieldValidation
+      sig: '(content: string, fieldName: string)'
+      ret: boolean
+      d: has field validation
+    - n: findFile
+      sig: '(path: string, files: GeneratedFile[])'
+      ret: GeneratedFile | undefined
+      d: retrieves file
+    attrs: []
+  f:
+  - n: createAssertionValidator
+    sig: ()
+    ret: AssertionValidator
+    d: creates assertion validator
+- p: core/contract-ai/validation/stages/static-analyzer.ts
+  l: 160
+  kb: 5.6
+  i:
+  - ../pipeline-orchestrator
+  - ../../types
+  e:
+  - createStaticAnalyzer
+  - StaticAnalyzer
+  c:
+  - n: StaticAnalyzer
+    m:
+    - n: validator
+      sig: '(context: ValidationContext)'
+      ret: Promise<StageResult>
+      d: validator
+    - n: checkRule
+      sig: '(ruleName: string, file: GeneratedFile)'
+      ret: 'Array<{ message: string; line?: number }>'
+      d: checks rule
+    - n: runBuiltInRules
+      sig: '(file: GeneratedFile)'
+      ret: StageResult['warnings']
+      d: starts built in rules
+    attrs: []
+  f:
+  - n: createStaticAnalyzer
+    sig: ()
+    ret: StaticAnalyzer
+    d: creates static analyzer
+- p: core/contract-ai/validation/stages/security-scanner.ts
+  l: 240
+  kb: 8.6
+  i:
+  - ../pipeline-orchestrator
+  - ../../types
+  e:
+  - createSecurityScanner
+  - SecurityScanner
+  c:
+  - n: SecurityScanner
+    m:
+    - n: validator
+      sig: '(context: ValidationContext)'
+      ret: Promise<StageResult>
+      d: validator
+    - n: runSecurityCheck
+      sig: '(check: SecurityCheck, file: GeneratedFile)'
+      ret: 'Array<{ message: string; line?: number }>'
+      d: starts security check
+    - n: checkHardcodedSecrets
+      sig: '(lines: string[], filePath: string)'
+      ret: 'Array<{ message: string; line?: number }>'
+      d: checks hardcoded secrets
+    - n: checkSqlInjection
+      sig: '(lines: string[])'
+      ret: 'Array<{ message: string; line?: number }>'
+      d: checks sql injection
+    - n: checkXss
+      sig: '(lines: string[])'
+      ret: 'Array<{ message: string; line?: number }>'
+      d: checks xss
+    - n: checkInputValidation
+      sig: '(file: GeneratedFile)'
+      ret: 'Array<{ message: string; line?: number }>'
+      d: checks input validation
+    - n: checkHttpsOnly
+      sig: '(lines: string[])'
+      ret: 'Array<{ message: string; line?: number }>'
+      d: checks https only
+    - n: runBuiltInChecks
+      sig: '(file: GeneratedFile)'
+      ret: StageResult['errors']
+      d: starts built in checks
+    attrs: []
+  f:
+  - n: createSecurityScanner
+    sig: ()
+    ret: SecurityScanner
+    d: creates security scanner
+- p: core/contract-ai/validation/stages/runtime-validator.ts
+  l: 335
+  kb: 10.5
+  i:
+  - child_process
+  - http
+  - ../pipeline-orchestrator
+  - ../../types
+  e:
+  - EndpointTestResult
+  - RuntimeValidator
+  - ContainerInfo
+  - createRuntimeValidator
+  c:
+  - n: RuntimeValidator
+    m:
+    - n: validator
+      sig: '(context: ValidationContext)'
+      ret: Promise<StageResult>
+      d: validator
+    - n: isDockerAvailable
+      sig: ()
+      ret: boolean
+      d: is docker available
+    - n: hasDockerfile
+      sig: '(workDir: string)'
+      ret: boolean
+      d: has dockerfile
+    - n: buildAndRun
+      sig: '(workDir: string)'
+      ret: Promise<ContainerInfo>
+      d: creates and run
+    - n: waitForHealthy
+      sig: '(port: number)'
+      ret: Promise<boolean>
+      d: wait for healthy
+    - n: testEndpoints
+      sig: '(port: number, entities: EntityDefinition[])'
+      ret: Promise<EndpointTestResult[]>
+      d: checks endpoints
+    - n: testEndpoint
+      sig: '(baseUrl: string, method: string, path: string, expectedStatus: number, body?)'
+      ret: Promise<EndpointTestResult>
+      d: checks endpoint
+    - n: httpRequest
+      sig: '(method: string, url: string, body?)'
+      ret: 'Promise<{ status: number; data: any }>'
+      d: http request
+    - n: cleanup
+      sig: '(containerId: string)'
+      ret: Promise<void>
+      d: cleanup
+    - n: getRandomPort
+      sig: ()
+      ret: number
+      d: retrieves random port
+    - n: sleep
+      sig: '(ms: number)'
+      ret: Promise<void>
+      d: sleep
+    - n: createResult
+      sig: '(errors: StageResult[''errors''], warnings: StageResult[''warnings''], startTime: number)'
+      ret: StageResult
+      d: creates result
+    attrs: []
+  f:
+  - n: createRuntimeValidator
+    sig: ()
+    ret: RuntimeValidator
+    d: creates runtime validator
+- p: core/contract-ai/validation/stages/syntax-validator.ts
+  l: 199
+  kb: 8.0
+  i:
+  - ../pipeline-orchestrator
+  - ../../types
+  e:
+  - createSyntaxValidator
+  - SyntaxValidator
+  c:
+  - n: SyntaxValidator
+    m:
+    - n: validator
+      sig: '(context: ValidationContext)'
+      ret: Promise<StageResult>
+      d: validator
+    - n: checkBasicSyntax
+      sig: '(filePath: string, content: string)'
+      ret: StageResult['errors']
+      d: checks basic syntax
+    - n: checkRequiredFiles
+      sig: '(context: ValidationContext)'
+      ret: StageResult['errors']
+      d: checks required files
+    - n: fileExists
+      sig: '(requiredPath: string, existingPaths: string[])'
+      ret: boolean
+      d: file exists
+    - n: generateNameVariants
+      sig: '(name: string)'
+      ret: string[]
+      d: creates name variants
+    attrs: []
+  f:
+  - n: createSyntaxValidator
+    sig: ()
+    ret: SyntaxValidator
+    d: creates syntax validator
+- p: core/contract-ai/code-generator/prompt-templates/index.ts
+  l: 8
+  kb: 0.2
+- p: core/contract-ai/code-generator/prompt-templates/tests.ts
+  l: 75
+  kb: 2.7
+  i:
+  - ../../types
+  e:
+  - TestsPromptTemplate
+  - PromptTemplate
+  - createTestsPromptTemplate
+  c:
+  - n: TestsPromptTemplate
+    m:
+    - n: buildPrompt
+      sig: '(contract: ContractAI)'
+      ret: string
+      d: creates prompt
+    - n: getRequiredFiles
+      sig: '(contract: ContractAI)'
+      ret: string[]
+      d: retrieves required files
+    - n: getSystemPrompt
+      sig: ()
+      ret: string
+      d: retrieves system prompt
+    attrs: []
+  f:
+  - n: createTestsPromptTemplate
+    sig: ()
+    ret: TestsPromptTemplate
+    d: creates tests prompt template
+- p: core/contract-ai/code-generator/prompt-templates/api.ts
+  l: 202
+  kb: 8.0
+  i:
+  - ../../types
+  e:
+  - createApiPromptTemplate
+  - ApiPromptTemplate
+  - PromptTemplate
+  c:
+  - n: ApiPromptTemplate
+    m:
+    - n: buildPrompt
+      sig: '(contract: ContractAI)'
+      ret: string
+      d: creates prompt
+    - n: getRequiredFiles
+      sig: '(contract: ContractAI)'
+      ret: string[]
+      d: retrieves required files
+    - n: getSystemPrompt
+      sig: ()
+      ret: string
+      d: retrieves system prompt
+    - n: formatTechStack
+      sig: '(techStack: ContractAI[''generation''][''techStack''])'
+      ret: string
+      d: formats tech stack
+    - n: formatEntities
+      sig: '(entities: EntityDefinition[])'
+      ret: string
+      d: formats entities
+    - n: formatApi
+      sig: (api?)
+      ret: string
+      d: formats api
+    - n: formatInstructions
+      sig: '(instructions: ContractAI[''generation''][''instructions''], target: string)'
+      ret: string
+      d: formats instructions
+    - n: formatPatterns
+      sig: '(patterns: ContractAI[''generation''][''patterns''], target: string)'
+      ret: string
+      d: formats patterns
+    - n: formatConstraints
+      sig: '(constraints: ContractAI[''generation''][''constraints''])'
+      ret: string
+      d: formats constraints
+    - n: formatTestScenarios
+      sig: '(tests: ContractAI[''validation''][''tests''])'
+      ret: string
+      d: formats test scenarios
+    - n: toKebabCase
+      sig: '(str: string)'
+      ret: string
+      d: converts kebab case
+    attrs: []
+  f:
+  - n: createApiPromptTemplate
+    sig: ()
+    ret: ApiPromptTemplate
+    d: creates api prompt template
+- p: core/contract-ai/code-generator/prompt-templates/frontend.ts
+  l: 247
+  kb: 8.7
+  i:
+  - ./api
+  - ../../types
+  e:
+  - FrontendPromptTemplate
+  - createFrontendPromptTemplate
+  c:
+  - n: FrontendPromptTemplate
+    m:
+    - n: buildPrompt
+      sig: '(contract: ContractAI)'
+      ret: string
+      d: creates prompt
+    - n: getRequiredFiles
+      sig: '(contract: ContractAI)'
+      ret: string[]
+      d: retrieves required files
+    - n: getSystemPrompt
+      sig: ()
+      ret: string
+      d: retrieves system prompt
+    - n: formatTechStack
+      sig: '(techStack: ContractAI[''generation''][''techStack''])'
+      ret: string
+      d: formats tech stack
+    - n: formatEntitiesWithComponents
+      sig: '(entities: EntityDefinition[])'
+      ret: string
+      d: formats entities with components
+    - n: formatInstructions
+      sig: '(instructions: ContractAI[''generation''][''instructions''], target: string)'
+      ret: string
+      d: formats instructions
+    - n: formatPatterns
+      sig: '(patterns: ContractAI[''generation''][''patterns''], target: string)'
+      ret: string
+      d: formats patterns
+    - n: formatConstraints
+      sig: '(constraints: ContractAI[''generation''][''constraints''])'
+      ret: string
+      d: formats constraints
+    - n: getInputType
+      sig: '(fieldType: string)'
+      ret: string
+      d: retrieves input type
+    attrs: []
+  f:
+  - n: createFrontendPromptTemplate
+    sig: ()
+    ret: FrontendPromptTemplate
+    d: creates frontend prompt template
+- p: core/contract-ai/templates/frontend/react-app.template.ts
+  l: 176
+  kb: 4.8
+- p: core/contract-ai/templates/tests/e2e-native.template.ts
+  l: 107
+  kb: 4.2
+- p: core/contract-ai/templates/contracts/index.ts
+  l: 61
+  kb: 2.0
+  i:
+  - fs
+  - path
+  e:
+  - loadStageContract
+  - getStageRequirements
+  - StageContract
+  f:
+  - n: loadStageContract
+    sig: '(stage: string)'
+    ret: StageContract | null
+    d: retrieves stage contract
+  - n: getStageRequirements
+    sig: '(stage: string)'
+    ret: string
+    d: retrieves stage requirements
+- p: core/contract-ai/templates/api/server.template.ts
+  l: 50
+  kb: 1.9

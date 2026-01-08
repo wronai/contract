@@ -1,0 +1,336 @@
+project: clickmd
+generated: "2026-01-07T20:43:21.265843"
+modules[25]{path,lang,items}:
+  progress.py,python,30
+  help.py,python,9
+  __init__.py,python,2
+  rich_backend.py,python,13
+  renderer.py,python,31
+  themes.py,python,14
+  decorators.py,python,0
+  devtools.py,python,15
+  logger.py,python,30
+  examples/basic.py,python,0
+  examples/logger_usage.py,python,8
+  examples/phase5_devtools.py,python,7
+  examples/logging.py,python,1
+  examples/cli_app.py,python,4
+  examples/custom_renderer.py,python,1
+  examples/markdown_help.py,python,4
+  examples/phase3_progress.py,python,6
+  examples/phase1_features.py,python,7
+  examples/phase4_themes.py,python,7
+  tests/test_core.py,python,11
+  tests/__init__.py,python,0
+  tests/test_renderer.py,python,26
+  tests/test_logger.py,python,22
+  tests/test_decorators.py,python,10
+  tools/md_to_html.py,python,4
+
+function_details:
+  progress.py:
+    functions[30]{name,kind,sig,loc,async,lines,cc,does}:
+      _is_tty,function,() -> bool,56-58,false,3,2,Check if stdout is a TTY.
+      _clear_line,function,() -> None,61-65,false,5,2,Clear current line in terminal.
+      _write_inline,function,"(text:str) -> None",68-74,false,7,2,Write text inline (overwriting current line).
+      progress,function,"(iterable:Iterable[T], label:str='', total:Optional[int]=None) -> Generator[T, None, None]",201-240,false,40,6,Wrap an iterable with a progress bar.
+      spinner,function,"(message:str='Loading...', style:str='dots') -> Generator[Spinner, None, None]",321-346,false,26,2,Context manager for a spinner.
+      live,function,"(initial:str='') -> Generator[LiveUpdate, None, None]",402-418,false,17,2,Context manager for live-updating display.
+      countdown,function,"(seconds:int, message:str='Starting in', on_complete:Optional[Callable[Any,None]]=None) -> None",482-511,false,30,4,Display a countdown timer.
+      ProgressBar.__init__,method,"(total:int, label:str='', width:int=40, fill_char:str='█', empty_char:str='░', show_percent:bool=True, show_count:bool=True) -> None",93-118,false,26,1,creates
+      ProgressBar.update,method,"(advance:int=1) -> None",120-123,false,4,1,Advance the progress bar.
+      ProgressBar.set,method,"(value:int) -> None",125-128,false,4,1,Set progress to specific value.
+      ProgressBar._render,method,() -> None,130-169,false,40,10,Render the progress bar.
+      ProgressBar.finish,method,"(message:str='') -> None",171-192,false,22,5,Complete the progress bar.
+      ProgressBar.__enter__,method,"() -> \"ProgressBar\"",194-195,false,2,1,enter
+      ProgressBar.__exit__,method,() -> None,197-198,false,2,1,exit
+      Spinner.__init__,method,"(message:str='Loading...', style:str='dots', color:str='cyan', success_message:str='', fail_message:str='') -> None",256-274,false,19,1,creates
+      Spinner.start,method,() -> None,276-284,false,9,2,Start the spinner animation.
+      Spinner._animate,method,() -> None,286-293,false,8,2,Animation loop (runs in thread).
+      Spinner.stop,method,"(success:bool=True) -> None",295-310,false,16,5,Stop the spinner.
+      Spinner.__enter__,method,"() -> \"Spinner\"",312-314,false,3,1,enter
+      Spinner.__exit__,method,"(exc_type:Any, exc_val:Any, exc_tb:Any) -> None",316-317,false,2,1,exit
+      LiveUpdate.__init__,method,"(initial:str='') -> None",364-367,false,4,1,creates
+      LiveUpdate.update,method,"(content:str) -> None",369-383,false,15,3,Update the display content.
+      LiveUpdate.clear,method,() -> None,385-392,false,8,3,Clear the display.
+      LiveUpdate.__enter__,method,"() -> \"LiveUpdate\"",394-395,false,2,1,enter
+      LiveUpdate.__exit__,method,() -> None,397-398,false,2,1,exit
+      StatusIndicator.__init__,method,() -> None,439-442,false,4,1,creates
+      StatusIndicator.start,method,"(message:str) -> None",444-452,false,9,2,Start a new status step.
+      StatusIndicator.done,method,"(message:str='') -> None",454-463,false,10,3,Mark current step as done.
+      StatusIndicator.fail,method,"(message:str='') -> None",465-469,false,5,2,Mark current step as failed.
+      StatusIndicator.skip,method,"(message:str='') -> None",471-475,false,5,2,Mark current step as skipped.
+  help.py:
+    functions[9]{name,kind,sig,loc,async,lines,cc,does}:
+      _is_tty,function,() -> bool,53-55,false,3,2,Check if stdout is a TTY.
+      _render_markdown_help,function,"(text:str, use_colors:bool=True) -> str",58-80,false,23,4,Render markdown text for help output.
+      _strip_markdown_to_plain,function,"(text:str) -> str",83-116,false,34,1,"Convert markdown to plain text, preserving structure."
+      _format_option_help,function,"(help_text:str, use_colors:bool=True) -> str",119-165,false,47,4,Format option/argument help text with inline markdown.
+      success,function,"(message:str) -> None",466-473,false,8,2,Display a success message in a green panel.
+      warning,function,"(message:str) -> None",476-483,false,8,2,Display a warning message in a yellow panel.
+      error,function,"(message:str) -> None",486-493,false,8,2,Display an error message in a red panel.
+      info,function,"(message:str) -> None",496-503,false,8,2,Display an info message in a blue panel.
+      echo_md,function,"(text:str, err:bool=False) -> None",506-522,false,17,3,Echo markdown-formatted text to the terminal.
+  __init__.py:
+    functions[2]{name,kind,sig,loc,async,lines,cc,does}:
+      echo,function,"(message:Optional[Any]=None, file=None, nl:bool=True, err:bool=False, color:Optional[bool]=None) -> None",121-157,false,37,12,Smart echo that auto-detects markdown and renders it with colors.
+      md,function,"(text:str) -> None",160-161,false,2,1,md
+  rich_backend.py:
+    functions[13]{name,kind,sig,loc,async,lines,cc,does}:
+      is_rich_available,function,() -> bool,42-44,false,3,1,Check if Rich is installed and available.
+      get_console,function,"(stream:Optional[TextIO]=None, force_terminal:Optional[bool]=None, no_color:bool=False) -> Any",51-78,false,28,8,Get or create a Rich Console instance.
+      render_md,function,"(text:str, stream:Optional[TextIO]=None, use_rich:bool=True) -> None",104-131,false,28,7,Render markdown text to the terminal.
+      render_panel,function,"(content:str, title:Optional[str]=None, style:str='default', stream:Optional[TextIO]=None) -> None",134-194,false,61,6,Render content in a styled panel/box.
+      render_syntax,function,"(code:str, language:str='python', theme:str='monokai', line_numbers:bool=False, stream:Optional[TextIO]=None) -> None",197-230,false,34,3,Render syntax-highlighted code.
+      render_table,function,"(headers:list[str], rows:list[list[str]], title:Optional[str]=None, stream:Optional[TextIO]=None) -> None",233-285,false,53,14,Render a formatted table.
+      print_md,function,"(text:str) -> None",289-291,false,3,1,Print markdown (alias for render_md).
+      print_panel,function,"(content:str) -> None",294-296,false,3,1,Print a panel (alias for render_panel).
+      print_syntax,function,"(code:str, language:str='python') -> None",299-301,false,3,1,Print syntax-highlighted code (alias for render_syntax).
+      print_table,function,"(headers:list[str], rows:list[list[str]]) -> None",304-306,false,3,1,Print a table (alias for render_table).
+      _FallbackConsole.__init__,method,"(stream:TextIO) -> None",84-85,false,2,1,creates
+      _FallbackConsole.print,method,() -> None,87-91,false,5,2,"Print to stream, ignoring Rich-specific kwargs."
+      _FallbackConsole.rule,method,"(title:str='') -> None",93-101,false,9,2,Print a horizontal rule.
+  renderer.py:
+    functions[31]{name,kind,sig,loc,async,lines,cc,does}:
+      strip_ansi,function,"(text:str) -> str",38-39,false,2,1,strip ansi
+      get_renderer,function,"(stream=None, use_colors:bool=True) -> MarkdownRenderer",634-637,false,4,2,retrieves renderer
+      render_markdown,function,"(text:str, text_lang:str='markdown', stream=None, use_colors:bool=True) -> None",640-641,false,2,1,formats markdown
+      table,function,"(headers:list[str], rows:list[list[str]]) -> None",645-647,false,3,1,Render a table.
+      panel,function,"(content:str) -> None",650-652,false,3,1,Render a panel.
+      blockquote,function,"(content:str) -> None",655-657,false,3,1,Render a blockquote.
+      hr,function,"(char:str='─', width:Optional[int]=None) -> None",660-662,false,3,1,Render a horizontal rule.
+      checklist,function,"(items:list[tuple[bool,str]]) -> None",665-667,false,3,1,Render a checklist.
+      MarkdownRenderer.__init__,method,"(use_colors:bool=True, stream=None) -> None",43-50,false,8,4,creates
+      MarkdownRenderer._c,method,"(color:str, text:str, bold:bool=False, dim:bool=False) -> str",52-60,false,9,4,c
+      MarkdownRenderer._get_terminal_width,method,() -> int,62-67,false,6,2,"Get terminal width, default to 80 if unavailable."
+      MarkdownRenderer._writeln,method,"(text:str) -> None",69-70,false,2,1,writeln
+      MarkdownRenderer.heading,method,"(level:int, text:str) -> None",72-76,false,5,1,heading
+      MarkdownRenderer.codeblock,method,"(lang:str, content:str) -> None",78-85,false,8,5,codeblock
+      MarkdownRenderer.render_markdown_with_fences,method,"(markdown_text:str, text_lang:str='markdown') -> None",87-121,false,35,8,formats markdown with fences
+      MarkdownRenderer._highlight_line,method,"(lang:str, line:str) -> str",123-139,false,17,9,highlight line
+      MarkdownRenderer._highlight_log,method,"(line:str) -> str",141-165,false,25,20,highlight log
+      MarkdownRenderer._highlight_markdown,method,"(line:str) -> str",167-182,false,16,2,highlight markdown
+      MarkdownRenderer._highlight_yaml,method,"(line:str) -> str",184-213,false,30,11,highlight yaml
+      MarkdownRenderer._highlight_json,method,"(line:str) -> str",215-222,false,8,1,highlight json
+      MarkdownRenderer._highlight_bash,method,"(line:str) -> str",224-234,false,11,5,highlight bash
+      MarkdownRenderer._highlight_js,method,"(line:str) -> str",236-272,false,37,4,highlight js
+      MarkdownRenderer._highlight_python,method,"(line:str) -> str",274-316,false,43,5,highlight python
+      MarkdownRenderer.table,method,"(headers:list[str], rows:list[list[str]], style:Literal[ascii,unicode,minimal,none]='unicode', align:Optional[list[Literal[left,center,right]]]=None) -> None",323-419,false,97,26,Render a table with configurable style.
+      MarkdownRenderer._get_table_chars,method,"(style:str) -> dict[str, str]",421-478,false,58,4,Get table border characters for style.
+      MarkdownRenderer.panel,method,"(content:str, title:Optional[str]=None, style:Literal[default,info,warning,error,success]='default', width:Optional[int]=None) -> None",484-545,false,62,6,Render content in a styled panel/box.
+      MarkdownRenderer.blockquote,method,"(content:str) -> None",551-560,false,10,2,Render a blockquote.
+      MarkdownRenderer.horizontal_rule,method,"(char:str='─', width:Optional[int]=None) -> None",566-578,false,13,2,Render a horizontal rule.
+      MarkdownRenderer.checklist,method,"(items:list[tuple[bool,str]]) -> None",584-598,false,15,3,Render a checklist.
+      MarkdownRenderer.list_item,method,"(text:str, level:int=0, marker:str='•') -> None",604-615,false,12,1,Render a list item with indentation.
+      MarkdownRenderer.numbered_list,method,"(items:list[str], start:int=1) -> None",617-627,false,11,2,Render a numbered list.
+  themes.py:
+    functions[14]{name,kind,sig,loc,async,lines,cc,does}:
+      _rgb_to_ansi,function,"(r:int, g:int, b:int) -> str",87-89,false,3,1,Convert RGB to ANSI True Color escape sequence.
+      _color_256,function,"(index:int) -> str",92-94,false,3,1,Generate 256-color escape sequence.
+      _ansi_color,function,"(name:str) -> str",97-100,false,4,1,Generate basic ANSI color escape sequence.
+      _check_no_color,function,() -> bool,332-337,false,6,2,"Check if NO_COLOR is set (https://no-color.org/)."
+      _detect_color_support,function,"() -> Literal[\"none\", \"basic\", \"256\", \"truecolor\"]",340-362,false,23,8,Detect terminal color support level.
+      get_theme,function,() -> Theme,369-371,false,3,1,Get the current theme.
+      set_theme,function,"(name:str) -> None",374-390,false,17,2,Set the current theme by name.
+      register_theme,function,"(theme:Theme) -> None",393-400,false,8,1,Register a custom theme.
+      list_themes,function,"() -> list[str]",403-405,false,3,1,Get list of available theme names.
+      is_no_color,function,() -> bool,408-410,false,3,1,Check if colors are disabled (NO_COLOR standard).
+      get_color_support,function,"() -> Literal[\"none\", \"basic\", \"256\", \"truecolor\"]",413-415,false,3,1,Get detected terminal color support level.
+      color,function,"(name:str, text:str, bold:bool=False, dim:bool=False, use_theme:bool=True) -> str",418-467,false,50,7,Apply color to text using current theme.
+      init_theme_from_env,function,() -> None,470-478,false,9,2,Initialize theme from environment variables.
+      Theme.get_color,method,"(name:str) -> str",152-156,false,5,2,Get color value by name.
+  devtools.py:
+    functions[15]{name,kind,sig,loc,async,lines,cc,does}:
+      install_excepthook,function,"(show_locals:bool=False, context_lines:int=3) -> None",161-189,false,29,1,Install pretty exception hook.
+      uninstall_excepthook,function,() -> None,192-196,false,5,1,Restore original exception hook.
+      debug,function,"(obj:Any, name:str='', max_depth:int=3, max_items:int=20, stream:Optional[TextIO]=None) -> None",203-227,false,25,2,Pretty-print an object for debugging.
+      _format_debug_value,function,"(obj:Any, renderer:MarkdownRenderer, depth:int=0, max_depth:int=3, max_items:int=20) -> str",230-324,false,95,24,Format a value for debug output.
+      inspect_obj,function,"(obj:Any) -> None",327-365,false,39,9,"Inspect an object showing its type, methods, and attributes."
+      diff,function,"(old:Union[str,List[str]], new:Union[str,List[str]], old_name:str='old', new_name:str='new') -> None",453-494,false,42,9,Display a colored diff between two texts.
+      tree,function,"(data:Dict[str,Any], prefix:str='', is_last:bool=True, name:str='') -> None",501-540,false,40,10,Display data in a tree structure.
+      PrettyExceptionFormatter.__init__,method,"(show_locals:bool=True, context_lines:int=3, max_string_length:int=80, theme:str='default') -> None",51-62,false,12,1,creates
+      PrettyExceptionFormatter.format_exception,method,"(exc_type:type, exc_value:BaseException, exc_tb:Any) -> str",64-97,false,34,2,Format an exception with full traceback.
+      PrettyExceptionFormatter._format_frame,method,"(frame:Any, is_last:bool=False) -> List[str]",99-122,false,24,3,Format a single traceback frame.
+      PrettyExceptionFormatter._shorten_path,method,"(filepath:str) -> str",124-150,false,27,7,Shorten file path for display.
+      PrettyExceptionFormatter._highlight_python,method,"(code:str) -> str",152-154,false,3,1,Apply Python syntax highlighting.
+      ClickmdHandler.__init__,method,"(stream:Optional[TextIO]=None, use_colors:bool=True, show_time:bool=True, show_level:bool=True, show_name:bool=False) -> None",398-412,false,15,2,creates
+      ClickmdHandler.emit,method,"(record:Any) -> None",414-420,false,7,2,Emit a log record.
+      ClickmdHandler.format_record,method,"(record:Any) -> str",422-446,false,25,5,Format a log record with styling.
+  logger.py:
+    functions[30]{name,kind,sig,loc,async,lines,cc,does}:
+      get_logger,function,"(verbose:bool=True) -> Logger",274-279,false,6,2,Get or create the default logger
+      set_logger,function,"(logger:Logger) -> None",282-285,false,4,1,Set the default logger
+      log_info,function,"(message:str) -> None",289-290,false,2,1,logs info
+      log_success,function,"(message:str) -> None",292-293,false,2,1,logs success
+      log_warning,function,"(message:str) -> None",295-296,false,2,1,logs warning
+      log_error,function,"(message:str) -> None",298-299,false,2,1,logs error
+      log_action,function,"(action:str, message:str) -> None",301-302,false,2,1,logs action
+      Logger.__init__,method,"(verbose:bool=True, stream:Optional[TextIO]=None, use_colors:bool=True, buffer_logs:bool=False) -> None",100-114,false,15,2,creates
+      Logger._emit,method,"(message:str) -> None",116-126,false,11,4,Emit a log line
+      Logger._render_log_block,method,"(lines:list[str]) -> None",128-134,false,7,2,Render lines as a markdown log codeblock
+      Logger.flush,method,() -> None,136-140,false,5,2,Flush buffered logs
+      Logger.debug,method,"(message:str) -> None",146-148,false,3,1,Debug message (gray)
+      Logger.info,method,"(message:str) -> None",150-152,false,3,1,Info message (default)
+      Logger.warning,method,"(message:str) -> None",154-156,false,3,1,Warning message (yellow)
+      Logger.error,method,"(message:str) -> None",158-160,false,3,1,Error message (red)
+      Logger.success,method,"(message:str) -> None",162-164,false,3,1,Success message (green)
+      Logger.action,method,"(action:str, message:str) -> None",170-173,false,4,1,Log an action with appropriate emoji
+      Logger.start,method,"(message:str) -> None",175-177,false,3,1,Log start of operation
+      Logger.done,method,"(message:str) -> None",179-181,false,3,1,Log completion
+      Logger.fail,method,"(message:str) -> None",183-185,false,3,1,Log failure
+      Logger.progress,method,"(label:str, current:int, total:int) -> None",191-194,false,4,2,Log progress
+      Logger.step,method,"(step_num:int, total:int, message:str) -> None",196-198,false,3,1,Log a step in a sequence
+      Logger.exception,method,"(exc:Exception, show_traceback:bool=False) -> None",200-206,false,7,3,Log an exception
+      Logger.key_value,method,"(key:str, value:Any) -> None",208-210,false,3,1,Log a key-value pair
+      Logger.llm,method,"(provider:str, model:str) -> None",212-215,false,4,1,Log LLM selection
+      Logger.attempt,method,"(current:int, total:int, context:str='') -> None",217-220,false,4,2,Log an attempt
+      Logger.section,method,"(title:str='') -> None",227-245,false,19,2,Context manager for grouping logs into a single codeblock.
+      Logger.heading,method,"(level:int, text:str) -> None",251-255,false,5,2,Render a markdown heading (outside codeblock)
+      Logger.md,method,"(text:str) -> None",257-261,false,5,2,Render raw markdown
+      Logger.raw,method,"(text:str) -> None",263-267,false,5,2,Output raw text (no wrapping)
+  examples/logger_usage.py:
+    functions[8]{name,kind,sig,loc,async,lines,cc,does}:
+      basic_usage,function,() -> None,19-29,false,11,1,Basic Logger usage
+      action_logging,function,() -> None,32-44,false,13,1,Action-based logging with emojis
+      progress_and_steps,function,() -> None,47-64,false,18,1,Progress and step logging
+      exception_handling,function,() -> None,67-83,false,17,3,Exception logging
+      grouped_output,function,() -> None,86-104,false,19,1,Grouped output using sections
+      llm_logging,function,() -> None,107-123,false,17,1,LLM-specific logging
+      mixed_output,function,() -> None,126-152,false,27,1,Mixed markdown and log output
+      real_world_example,function,() -> None,155-194,false,40,1,Real-world evolution pipeline example
+  examples/phase5_devtools.py:
+    functions[7]{name,kind,sig,loc,async,lines,cc,does}:
+      demo_debug,function,() -> None,35-66,false,32,1,Demonstrate debug output.
+      demo_inspect,function,() -> None,69-81,false,13,1,Demonstrate object inspection.
+      demo_tree,function,() -> None,84-111,false,28,1,Demonstrate tree view.
+      demo_diff,function,() -> None,114-129,false,16,1,Demonstrate diff visualization.
+      demo_logging,function,() -> None,132-147,false,16,1,Demonstrate logging handler.
+      demo_pretty_exceptions,function,() -> None,150-176,false,27,2,Demonstrate pretty exceptions.
+      demo_combined,function,() -> None,179-207,false,29,1,Demonstrate combined usage.
+  examples/logging.py:
+    functions[1]{name,kind,sig,loc,async,lines,cc,does}:
+      main,function,() -> None,18-83,false,66,1,main
+  examples/cli_app.py:
+    functions[4]{name,kind,sig,loc,async,lines,cc,does}:
+      cli,function,() -> None,29-31,false,3,1,Example CLI application with clickmd.
+      hello,function,"(name:str, formal:bool) -> None",37-60,false,24,2,Say hello with style.
+      status,function,() -> None,64-85,false,22,1,Show application status.
+      example,function,"(language:str) -> None",90-142,false,53,1,Show code example for a language.
+  examples/custom_renderer.py:
+    functions[1]{name,kind,sig,loc,async,lines,cc,does}:
+      main,function,() -> None,19-78,false,60,1,main
+  examples/markdown_help.py:
+    functions[4]{name,kind,sig,loc,async,lines,cc,does}:
+      cli,function,() -> None,27-48,false,22,1,# 🚀 My Awesome CLI
+      process,function,"(input:str, output:str, format:str, verbose:bool, dry_run:bool) -> None",58-113,false,56,3,# Process Data
+      config,function,"(action:str, key:str, value:str) -> None",120-171,false,52,8,# Configuration Management
+      version,function,() -> None,175-191,false,17,1,# Version Information
+  examples/phase3_progress.py:
+    functions[6]{name,kind,sig,loc,async,lines,cc,does}:
+      demo_progress_bar,function,() -> None,24-42,false,19,4,Demonstrate progress bar.
+      demo_spinners,function,() -> None,45-68,false,24,2,Demonstrate spinners.
+      demo_status_indicator,function,() -> None,71-95,false,25,1,Demonstrate status indicator.
+      demo_live_update,function,() -> None,98-119,false,22,3,Demonstrate live updates.
+      demo_countdown,function,() -> None,122-125,false,4,1,Demonstrate countdown.
+      demo_combined,function,() -> None,128-168,false,41,3,Demonstrate combined usage.
+  examples/phase1_features.py:
+    functions[7]{name,kind,sig,loc,async,lines,cc,does}:
+      demo_tables,function,() -> None,24-51,false,28,1,Demonstrate table rendering.
+      demo_panels,function,() -> None,54-77,false,24,1,Demonstrate panel/box rendering.
+      demo_blockquotes,function,() -> None,80-99,false,20,1,Demonstrate blockquote rendering.
+      demo_horizontal_rules,function,() -> None,102-116,false,15,1,Demonstrate horizontal rule rendering.
+      demo_checklists,function,() -> None,119-138,false,20,1,Demonstrate checklist rendering.
+      demo_nested_lists,function,() -> None,141-165,false,25,1,Demonstrate nested list rendering.
+      demo_combined,function,() -> None,168-196,false,29,1,Demonstrate combined usage.
+  examples/phase4_themes.py:
+    functions[7]{name,kind,sig,loc,async,lines,cc,does}:
+      demo_available_themes,function,() -> None,27-44,false,18,1,Show available themes.
+      demo_theme_switching,function,() -> None,47-68,false,22,2,Demonstrate theme switching.
+      demo_theme_colors,function,() -> None,71-95,false,25,2,Show theme color palette.
+      demo_color_support,function,() -> None,98-121,false,24,2,Show terminal color support detection.
+      demo_custom_theme,function,() -> None,124-170,false,47,1,Demonstrate custom theme creation.
+      demo_no_color,function,() -> None,173-196,false,24,2,Demonstrate NO_COLOR behavior.
+      demo_styled_output,function,() -> None,199-215,false,17,1,Show styled output with current theme.
+  tests/test_core.py:
+    functions[11]{name,kind,sig,loc,async,lines,cc,does}:
+      TestMd.test_md_renders_text,method,(capsys) -> None,11-14,false,4,1,checks md renders text
+      TestMd.test_md_handles_code_blocks,method,(capsys) -> None,16-23,false,8,1,checks md handles code blocks
+      TestEcho.test_echo_plain_text,method,(capsys) -> None,27-30,false,4,1,checks echo plain text
+      TestEcho.test_echo_with_markdown_header,method,(capsys) -> None,32-35,false,4,1,checks echo with markdown header
+      TestEcho.test_echo_with_code_fence,method,(capsys) -> None,37-40,false,4,1,checks echo with code fence
+      TestEcho.test_echo_with_bold,method,(capsys) -> None,42-45,false,4,1,checks echo with bold
+      TestEcho.test_echo_none,method,(capsys) -> None,47-50,false,4,1,checks echo none
+      TestEcho.test_echo_no_newline,method,(capsys) -> None,52-55,false,4,1,checks echo no newline
+      TestEcho.test_echo_to_stderr,method,(capsys) -> None,57-60,false,4,1,checks echo to stderr
+      TestEcho.test_echo_to_custom_file,method,() -> None,62-65,false,4,1,checks echo to custom file
+      TestClickAvailable.test_click_available_is_boolean,method,() -> None,69-70,false,2,1,checks click available is boolean
+  tests/test_renderer.py:
+    functions[26]{name,kind,sig,loc,async,lines,cc,does}:
+      TestStripAnsi.test_strips_color_codes,method,() -> None,16-18,false,3,1,checks strips color codes
+      TestStripAnsi.test_preserves_plain_text,method,() -> None,20-22,false,3,1,checks preserves plain text
+      TestStripAnsi.test_handles_empty_string,method,() -> None,24-25,false,2,1,checks handles empty string
+      TestMarkdownRenderer.test_creates_renderer_with_defaults,method,() -> None,29-31,false,3,1,checks creates renderer with defaults
+      TestMarkdownRenderer.test_creates_renderer_with_stream,method,() -> None,33-36,false,4,1,checks creates renderer with stream
+      TestMarkdownRenderer.test_disables_colors,method,() -> None,38-40,false,3,1,checks disables colors
+      TestMarkdownRenderer.test_heading_output,method,() -> None,42-47,false,6,1,checks heading output
+      TestMarkdownRenderer.test_heading_levels,method,() -> None,49-55,false,7,1,checks heading levels
+      TestMarkdownRenderer.test_codeblock_output,method,() -> None,57-64,false,8,1,checks codeblock output
+      TestMarkdownRenderer.test_render_markdown_with_fences,method,() -> None,66-83,false,18,1,checks render markdown with fences
+      TestHighlighting.test_yaml_highlighting,method,() -> None,87-92,false,6,1,checks yaml highlighting
+      TestHighlighting.test_yaml_comment,method,() -> None,94-98,false,5,1,checks yaml comment
+      TestHighlighting.test_json_highlighting,method,() -> None,100-105,false,6,1,checks json highlighting
+      TestHighlighting.test_bash_highlighting,method,() -> None,107-112,false,6,1,checks bash highlighting
+      TestHighlighting.test_js_highlighting,method,() -> None,114-119,false,6,1,checks js highlighting
+      TestHighlighting.test_python_highlighting,method,() -> None,121-126,false,6,1,checks python highlighting
+      TestHighlighting.test_python_decorator,method,() -> None,128-132,false,5,1,checks python decorator
+      TestHighlighting.test_python_comment,method,() -> None,134-138,false,5,1,checks python comment
+      TestHighlighting.test_markdown_heading,method,() -> None,140-144,false,5,1,checks markdown heading
+      TestHighlighting.test_markdown_bold,method,() -> None,146-150,false,5,1,checks markdown bold
+      TestHighlighting.test_log_success,method,() -> None,152-156,false,5,1,checks log success
+      TestHighlighting.test_log_error,method,() -> None,158-162,false,5,1,checks log error
+      TestGetRenderer.test_returns_renderer,method,() -> None,166-168,false,3,1,checks returns renderer
+      TestGetRenderer.test_with_custom_stream,method,() -> None,170-173,false,4,1,checks with custom stream
+      TestRenderMarkdown.test_renders_to_stream,method,() -> None,177-181,false,5,1,checks renders to stream
+      TestRenderMarkdown.test_renders_code_blocks,method,() -> None,183-192,false,10,1,checks renders code blocks
+  tests/test_logger.py:
+    functions[22]{name,kind,sig,loc,async,lines,cc,does}:
+      TestLogger.test_creates_logger,method,() -> None,19-21,false,3,1,checks creates logger
+      TestLogger.test_verbose_false_no_output,method,(capsys) -> None,23-27,false,5,1,checks verbose false no output
+      TestLogger.test_info_outputs,method,(capsys) -> None,29-34,false,6,1,checks info outputs
+      TestLogger.test_success_outputs,method,(capsys) -> None,36-41,false,6,1,checks success outputs
+      TestLogger.test_warning_outputs,method,(capsys) -> None,43-48,false,6,1,checks warning outputs
+      TestLogger.test_error_outputs,method,(capsys) -> None,50-55,false,6,1,checks error outputs
+      TestLogger.test_action_outputs,method,(capsys) -> None,57-62,false,6,1,checks action outputs
+      TestLogger.test_progress_outputs,method,(capsys) -> None,64-69,false,6,1,checks progress outputs
+      TestLogger.test_step_outputs,method,(capsys) -> None,71-76,false,6,1,checks step outputs
+      TestLogger.test_attempt_outputs,method,(capsys) -> None,78-83,false,6,1,checks attempt outputs
+      TestLogger.test_exception_outputs,method,(capsys) -> None,85-93,false,9,2,checks exception outputs
+      TestLogger.test_key_value_outputs,method,(capsys) -> None,95-100,false,6,1,checks key value outputs
+      TestLogger.test_llm_outputs,method,(capsys) -> None,102-108,false,7,1,checks llm outputs
+      TestLoggerSection.test_section_groups_output,method,(capsys) -> None,112-121,false,10,1,checks section groups output
+      TestLoggerSection.test_without_section_multiple_blocks,method,(capsys) -> None,123-129,false,7,1,checks without section multiple blocks
+      TestLoggerHeading.test_heading_outputs,method,(capsys) -> None,133-137,false,5,1,checks heading outputs
+      TestLoggerHeading.test_heading_not_in_codeblock,method,(capsys) -> None,139-144,false,6,3,checks heading not in codeblock
+      TestGlobalLogger.test_get_logger_returns_logger,method,() -> None,148-150,false,3,1,checks get logger returns logger
+      TestGlobalLogger.test_set_logger_changes_default,method,() -> None,152-155,false,4,1,checks set logger changes default
+      TestGlobalLogger.test_log_convenience_functions,method,(capsys) -> None,157-169,false,13,1,checks log convenience functions
+      TestLoggerCustomStream.test_custom_stream,method,() -> None,173-178,false,6,1,checks custom stream
+      TestLoggerCustomStream.test_buffer_mode,method,() -> None,180-186,false,7,1,checks buffer mode
+  tests/test_decorators.py:
+    functions[10]{name,kind,sig,loc,async,lines,cc,does}:
+      TestClickAvailability.test_click_available_is_boolean,method,() -> None,19-20,false,2,1,checks click available is boolean
+      TestClickDecorators.test_group_decorator,method,() -> None,25-30,false,6,1,checks group decorator
+      TestClickDecorators.test_command_decorator,method,() -> None,32-37,false,6,1,checks command decorator
+      TestClickDecorators.test_option_decorator,method,() -> None,39-45,false,7,1,checks option decorator
+      TestClickDecorators.test_argument_decorator,method,() -> None,47-53,false,7,1,checks argument decorator
+      TestClickDecorators.test_choice_type,method,() -> None,55-57,false,3,1,checks choice type
+      TestClickDecorators.test_path_type,method,() -> None,59-61,false,3,1,checks path type
+      TestClickNotAvailable.test_decorators_raise_import_error,method,() -> None,66-70,false,5,1,checks decorators raise import error
+      TestClickNotAvailable.test_choice_raises_import_error,method,() -> None,72-74,false,3,1,checks choice raises import error
+      TestClickNotAvailable.test_path_raises_import_error,method,() -> None,76-78,false,3,1,checks path raises import error
+  tools/md_to_html.py:
+    functions[4]{name,kind,sig,loc,async,lines,cc,does}:
+      _inline_md_to_html,function,"(text:str) -> str",14-30,false,17,1,inline md to html
+      markdown_to_html,function,"(markdown_text:str, title:str) -> str",33-161,false,129,18,markdown to html
+      convert_directory,function,"(md_dir:Path) -> None",164-170,false,7,2,converts directory
+      main,function,() -> int,173-183,false,11,3,main

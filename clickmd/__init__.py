@@ -14,7 +14,18 @@ import re
 import sys
 from typing import Any, Optional
 
-from .renderer import get_renderer, render_markdown, MarkdownRenderer
+from .renderer import (
+    get_renderer,
+    render_markdown,
+    MarkdownRenderer,
+    strip_ansi,
+    # Phase 1 features
+    table,
+    panel,
+    blockquote,
+    hr,
+    checklist,
+)
 
 # Logger for automatic markdown wrapping
 from .logger import (
@@ -28,17 +39,77 @@ from .logger import (
     log_action,
 )
 
-# Re-export decorators for backwards compatibility
+# Re-export decorators - complete Click API
 from .decorators import (
     CLICK_AVAILABLE,
+    _click,
+    # Decorators
     group,
     command,
     option,
     argument,
     pass_context,
+    pass_obj,
+    make_pass_decorator,
+    confirmation_option,
+    help_option,
+    password_option,
+    version_option,
+    # Parameter types
+    STRING,
+    INT,
+    FLOAT,
+    BOOL,
+    UUID,
+    UNPROCESSED,
     Choice,
     Path,
+    File,
+    DateTime,
+    IntRange,
+    FloatRange,
+    Tuple,
+    ParamType,
+    # Core classes
     Context,
+    Command,
+    Group,
+    Option,
+    Argument,
+    Parameter,
+    HelpFormatter,
+    CommandCollection,
+    # Utility functions
+    click_echo,
+    secho,
+    style,
+    unstyle,
+    echo_via_pager,
+    clear,
+    prompt,
+    confirm,
+    getchar,
+    pause,
+    edit,
+    progressbar,
+    open_file,
+    format_filename,
+    get_app_dir,
+    get_binary_stream,
+    get_text_stream,
+    get_current_context,
+    launch,
+    wrap_text,
+    # Exceptions
+    ClickException,
+    Abort,
+    UsageError,
+    BadParameter,
+    BadOptionUsage,
+    BadArgumentUsage,
+    FileError,
+    MissingParameter,
+    NoSuchOption,
 )
 
 # Markdown help for Click (require click installed)
@@ -63,6 +134,44 @@ from .rich_backend import (
     render_panel,
     render_syntax,
     render_table,
+)
+
+# Phase 3: Progress, spinners, live updates
+from .progress import (
+    ProgressBar,
+    progress,
+    Spinner,
+    spinner,
+    LiveUpdate,
+    live,
+    StatusIndicator,
+    countdown,
+    SPINNERS,
+)
+
+# Phase 4: Theming
+from .themes import (
+    Theme,
+    THEMES,
+    get_theme,
+    set_theme,
+    register_theme,
+    list_themes,
+    is_no_color,
+    get_color_support,
+    color,
+)
+
+# Phase 5: Dev Tools
+from .devtools import (
+    PrettyExceptionFormatter,
+    install_excepthook,
+    uninstall_excepthook,
+    debug,
+    inspect_obj,
+    ClickmdHandler,
+    diff,
+    tree,
 )
 
 
@@ -120,7 +229,14 @@ __all__ = [
     "render_markdown",
     "get_renderer",
     "MarkdownRenderer",
+    "strip_ansi",
     "CLICK_AVAILABLE",
+    # Phase 1: Tables, panels, blockquotes, etc.
+    "table",
+    "panel",
+    "blockquote",
+    "hr",
+    "checklist",
     # Logger (auto-wrapping in codeblocks)
     "Logger",
     "get_logger",
@@ -130,15 +246,73 @@ __all__ = [
     "log_warning",
     "log_error",
     "log_action",
-    # Click decorators (require click)
+    # Click API (require click) - Decorators
     "group",
     "command",
     "option",
     "argument",
     "pass_context",
+    "pass_obj",
+    "make_pass_decorator",
+    "confirmation_option",
+    "help_option",
+    "password_option",
+    "version_option",
+    # Click API - Parameter types
+    "STRING",
+    "INT",
+    "FLOAT",
+    "BOOL",
+    "UUID",
+    "UNPROCESSED",
     "Choice",
     "Path",
+    "File",
+    "DateTime",
+    "IntRange",
+    "FloatRange",
+    "Tuple",
+    "ParamType",
+    # Click API - Core classes
     "Context",
+    "Command",
+    "Group",
+    "Option",
+    "Argument",
+    "Parameter",
+    "HelpFormatter",
+    "CommandCollection",
+    # Click API - Utility functions
+    "click_echo",
+    "secho",
+    "style",
+    "unstyle",
+    "echo_via_pager",
+    "clear",
+    "prompt",
+    "confirm",
+    "getchar",
+    "pause",
+    "edit",
+    "progressbar",
+    "open_file",
+    "format_filename",
+    "get_app_dir",
+    "get_binary_stream",
+    "get_text_stream",
+    "get_current_context",
+    "launch",
+    "wrap_text",
+    # Click API - Exceptions
+    "ClickException",
+    "Abort",
+    "UsageError",
+    "BadParameter",
+    "BadOptionUsage",
+    "BadArgumentUsage",
+    "FileError",
+    "MissingParameter",
+    "NoSuchOption",
     # Markdown help for Click (USP)
     "MarkdownCommand",
     "MarkdownGroup",
@@ -157,4 +331,33 @@ __all__ = [
     "render_panel",
     "render_syntax",
     "render_table",
+    # Phase 3: Progress, spinners, live updates
+    "ProgressBar",
+    "progress",
+    "Spinner",
+    "spinner",
+    "LiveUpdate",
+    "live",
+    "StatusIndicator",
+    "countdown",
+    "SPINNERS",
+    # Phase 4: Theming
+    "Theme",
+    "THEMES",
+    "get_theme",
+    "set_theme",
+    "register_theme",
+    "list_themes",
+    "is_no_color",
+    "get_color_support",
+    "color",
+    # Phase 5: Dev Tools
+    "PrettyExceptionFormatter",
+    "install_excepthook",
+    "uninstall_excepthook",
+    "debug",
+    "inspect_obj",
+    "ClickmdHandler",
+    "diff",
+    "tree",
 ]

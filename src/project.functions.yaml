@@ -1,0 +1,5770 @@
+project: src
+generated_at: '2026-01-07T18:31:32.060854'
+modules:
+- path: python/reclapp/generator/base.py
+  language: python
+  functions:
+  - name: BaseGenerator.__init__
+    kind: method
+    sig: (options:Optional[TOptions]=None, verbose:bool=False) -> None
+    start_line: 34
+    end_line: 37
+    does: creates
+  - name: BaseGenerator.options
+    kind: method
+    sig: () -> Optional[TOptions]
+    start_line: 40
+    end_line: 42
+    does: Get generator options
+  - name: BaseGenerator.llm_client
+    kind: method
+    sig: () -> Optional[LLMProvider]
+    start_line: 45
+    end_line: 47
+    does: Get LLM client
+  - name: BaseGenerator.verbose
+    kind: method
+    sig: () -> bool
+    start_line: 50
+    end_line: 52
+    does: Check if verbose mode is enabled
+  - name: BaseGenerator.set_llm_client
+    kind: method
+    sig: (client:LLMProvider) -> None
+    start_line: 54
+    end_line: 56
+    does: Set the LLM client for generation
+  - name: BaseGenerator.require_llm_client
+    kind: method
+    sig: () -> LLMProvider
+    start_line: 58
+    end_line: 62
+    does: Get LLM client or raise error if not set
+  - name: BaseGenerator._estimate_tokens
+    kind: method
+    sig: (text:str) -> int
+    start_line: 64
+    end_line: 66
+    does: 'Estimate token count (rough approximation: ~4 chars per token)'
+  - name: BaseGenerator._log
+    kind: method
+    sig: (message:str) -> None
+    start_line: 68
+    end_line: 71
+    does: Log message if verbose mode is enabled
+  - name: BaseGenerator.generate
+    kind: method
+    sig: async () -> TResult
+    start_line: 74
+    end_line: 76
+    does: Main generation method - must be implemented by subclasses
+- path: python/reclapp/generator/code_generator.py
+  language: python
+  functions:
+  - name: CodeGenerator.__init__
+    kind: method
+    sig: (options:Optional[CodeGeneratorOptions]=None) -> None
+    start_line: 74
+    end_line: 76
+    does: creates
+  - name: CodeGenerator.generate
+    kind: method
+    sig: async (contract:dict[str,Any], output_dir:Optional[str]=None) -> CodeGenerationResult
+    start_line: 78
+    end_line: 213
+    does: Generate application code from contract.
+  - name: CodeGenerator._generate_package_json
+    kind: method
+    sig: (app_name:str, backend:dict) -> str
+    start_line: 215
+    end_line: 242
+    does: Generate package.json
+  - name: CodeGenerator._generate_index_file
+    kind: method
+    sig: async (contract:dict, backend:dict) -> str
+    start_line: 244
+    end_line: 281
+    does: Generate main index file
+  - name: CodeGenerator._generate_entity_model
+    kind: method
+    sig: (entity:dict, language:str) -> str
+    start_line: 283
+    end_line: 303
+    does: Generate entity model file
+  - name: CodeGenerator._generate_route_file
+    kind: method
+    sig: async (entity:dict, api:dict, backend:dict) -> str
+    start_line: 305
+    end_line: 370
+    does: Generate route file for entity
+  - name: CodeGenerator._generate_tsconfig
+    kind: method
+    sig: () -> str
+    start_line: 372
+    end_line: 390
+    does: Generate tsconfig.json
+  - name: CodeGenerator._map_field_type
+    kind: method
+    sig: (contract_type:str) -> str
+    start_line: 392
+    end_line: 406
+    does: Map contract field type to TypeScript type
+  - name: CodeGenerator._write_files
+    kind: method
+    sig: (files:list[GeneratedFile], output_dir:str) -> None
+    start_line: 408
+    end_line: 415
+    does: Write generated files to disk
+  - name: CodeGenerator._estimate_tokens
+    kind: method
+    sig: (text:str) -> int
+    start_line: 417
+    end_line: 419
+    does: Estimate token count
+  - name: CodeGenerator._generate_with_llm
+    kind: method
+    sig: async (contract:dict[str,Any], output_dir:str) -> CodeGenerationResult
+    start_line: 421
+    end_line: 487
+    does: Generate code using LLM
+  - name: CodeGenerator._get_system_prompt
+    kind: method
+    sig: () -> str
+    start_line: 489
+    end_line: 561
+    does: Get system prompt for LLM code generation
+  - name: CodeGenerator._build_llm_prompt
+    kind: method
+    sig: (contract:dict[str,Any]) -> str
+    start_line: 563
+    end_line: 686
+    does: Build prompt for LLM code generation
+  - name: CodeGenerator._parse_llm_response
+    kind: method
+    sig: (content:str) -> list[GeneratedFile]
+    start_line: 688
+    end_line: 733
+    does: Parse LLM response to extract generated files
+- path: python/reclapp/generator/contract_generator.py
+  language: python
+  functions:
+  - name: ContractGenerator.__init__
+    kind: method
+    sig: (options:Optional[ContractGeneratorOptions]=None) -> None
+    start_line: 78
+    end_line: 80
+    does: creates
+  - name: ContractGenerator.generate
+    kind: method
+    sig: async (user_prompt:str) -> ContractGenerationResult
+    start_line: 82
+    end_line: 174
+    does: Generate a ContractAI from natural language prompt.
+  - name: ContractGenerator._build_initial_prompt
+    kind: method
+    sig: (user_prompt:str) -> GenerateOptions
+    start_line: 176
+    end_line: 217
+    does: Build initial generation prompt
+  - name: ContractGenerator._build_correction_prompt
+    kind: method
+    sig: (user_prompt:str, current_contract:Optional[dict], errors:list[ContractValidationError], attempt:int) -> GenerateOptions
+    start_line: 219
+    end_line: 247
+    does: Build correction prompt based on previous errors
+  - name: ContractGenerator._call_llm
+    kind: method
+    sig: async (options:GenerateOptions) -> str
+    start_line: 249
+    end_line: 252
+    does: Call LLM and get response
+  - name: ContractGenerator._parse_contract_from_response
+    kind: method
+    sig: (response:str) -> Optional[dict]
+    start_line: 254
+    end_line: 276
+    does: Parse ContractAI JSON from LLM response
+  - name: ContractGenerator._validate_contract
+    kind: method
+    sig: (contract:dict) -> list[ContractValidationError]
+    start_line: 278
+    end_line: 344
+    does: Validate contract structure
+  - name: ContractGenerator._estimate_tokens
+    kind: method
+    sig: (text:str) -> int
+    start_line: 346
+    end_line: 349
+    does: Estimate token count (rough approximation)
+- path: python/reclapp/generator/prompt_builder.py
+  language: python
+  functions:
+  - name: PromptBuilder.__init__
+    kind: method
+    sig: () -> None
+    start_line: 32
+    end_line: 34
+    does: creates
+  - name: PromptBuilder._register_default_templates
+    kind: method
+    sig: () -> None
+    start_line: 36
+    end_line: 85
+    does: Register default prompt templates
+  - name: PromptBuilder.register_template
+    kind: method
+    sig: (template:PromptTemplate) -> None
+    start_line: 87
+    end_line: 89
+    does: Register a custom template
+  - name: PromptBuilder.get_template
+    kind: method
+    sig: (name:str) -> Optional[PromptTemplate]
+    start_line: 91
+    end_line: 93
+    does: Get a template by name
+  - name: PromptBuilder.build_contract_prompt
+    kind: method
+    sig: (user_prompt:str) -> dict[str, str]
+    start_line: 95
+    end_line: 101
+    does: Build prompt for contract generation
+  - name: PromptBuilder.build_code_prompt
+    kind: method
+    sig: (file_type:str, context:str) -> dict[str, str]
+    start_line: 103
+    end_line: 113
+    does: Build prompt for code generation
+  - name: PromptBuilder.build_fix_prompt
+    kind: method
+    sig: (code:str, errors:list[str]) -> dict[str, str]
+    start_line: 115
+    end_line: 126
+    does: Build prompt for code fixing
+  - name: PromptBuilder.build_from_template
+    kind: method
+    sig: (template_name:str, variables:dict[str,Any]) -> dict[str, str]
+    start_line: 128
+    end_line: 141
+    does: Build prompt from named template with variables
+- path: python/reclapp/models/contract.py
+  language: python
+  functions:
+  - name: is_valid_contract
+    kind: function
+    sig: (obj:object) -> bool
+    start_line: 86
+    end_line: 103
+    does: Check if object is a valid ContractAI
+  - name: has_definition_layer
+    kind: function
+    sig: (contract:dict) -> bool
+    start_line: 106
+    end_line: 121
+    does: Check if contract has Definition layer
+  - name: has_generation_layer
+    kind: function
+    sig: (contract:dict) -> bool
+    start_line: 124
+    end_line: 130
+    does: Check if contract has Generation layer
+  - name: has_validation_layer
+    kind: function
+    sig: (contract:dict) -> bool
+    start_line: 133
+    end_line: 139
+    does: Check if contract has Validation layer
+  - name: create_minimal_contract
+    kind: function
+    sig: (name:str, version:str='1.0.0', entities:Optional[list[dict]]=None) -> ContractAI
+    start_line: 146
+    end_line: 200
+    does: Create a minimal ContractAI with defaults
+- path: python/reclapp/cli/main.py
+  language: python
+  functions:
+  - name: create_parser
+    kind: function
+    sig: () -> argparse.ArgumentParser
+    start_line: 21
+    end_line: 142
+    does: Create the argument parser
+  - name: cmd_evolve
+    kind: function
+    sig: async (args:Any) -> int
+    start_line: 145
+    end_line: 219
+    does: Execute the evolve command
+  - name: show_interactive_menu
+    kind: function
+    sig: async (output_dir:str, port:int) -> None
+    start_line: 222
+    end_line: 273
+    does: Show interactive menu like TypeScript - mirrors bin/reclapp actions
+  - name: show_file
+    kind: function
+    sig: async (path:str) -> None
+    start_line: 276
+    end_line: 285
+    does: Display file contents
+  - name: check_health
+    kind: function
+    sig: async (port:int) -> None
+    start_line: 288
+    end_line: 296
+    does: Check service health
+  - name: show_logs
+    kind: function
+    sig: async (output_dir:str) -> None
+    start_line: 299
+    end_line: 312
+    does: Show latest log file
+  - name: cmd_generate
+    kind: function
+    sig: async (args:Any) -> int
+    start_line: 315
+    end_line: 366
+    does: Execute the generate command
+  - name: cmd_validate
+    kind: function
+    sig: async (args:Any) -> int
+    start_line: 369
+    end_line: 423
+    does: Execute the validate command
+  - name: cmd_status
+    kind: function
+    sig: async (args:Any) -> int
+    start_line: 426
+    end_line: 447
+    does: Execute the status command
+  - name: cli
+    kind: function
+    sig: (args:Optional[list[str]]=None) -> int
+    start_line: 450
+    end_line: 470
+    does: Main CLI entry point
+  - name: main
+    kind: function
+    sig: () -> None
+    start_line: 473
+    end_line: 475
+    does: Entry point for console script
+- path: python/reclapp/llm/openrouter.py
+  language: python
+  functions:
+  - name: OpenRouterClient.__init__
+    kind: method
+    sig: (config:Optional[OpenRouterConfig]=None) -> None
+    start_line: 19
+    end_line: 26
+    does: creates
+  - name: OpenRouterClient.name
+    kind: method
+    sig: () -> str
+    start_line: 29
+    end_line: 30
+    does: name
+  - name: OpenRouterClient.model
+    kind: method
+    sig: () -> str
+    start_line: 33
+    end_line: 34
+    does: model
+  - name: OpenRouterClient.is_available
+    kind: method
+    sig: async () -> bool
+    start_line: 36
+    end_line: 37
+    does: is available
+  - name: OpenRouterClient.list_models
+    kind: method
+    sig: async () -> list[LLMModelInfo]
+    start_line: 39
+    end_line: 40
+    does: list models
+  - name: OpenRouterClient.generate
+    kind: method
+    sig: async (options:GenerateOptions) -> LLMResponse
+    start_line: 42
+    end_line: 85
+    does: creates
+  - name: OpenRouterClient.close
+    kind: method
+    sig: async () -> None
+    start_line: 87
+    end_line: 88
+    does: stops
+  - name: OpenRouterClient.__aenter__
+    kind: method
+    sig: async () -> None
+    start_line: 90
+    end_line: 91
+    does: aenter
+  - name: OpenRouterClient.__aexit__
+    kind: method
+    sig: async () -> None
+    start_line: 93
+    end_line: 94
+    does: aexit
+- path: python/reclapp/llm/manager.py
+  language: python
+  functions:
+  - name: ProviderInfo.__init__
+    kind: method
+    sig: (name:str, status:LLMProviderStatus, provider:Optional[LLMProvider]=None) -> None
+    start_line: 20
+    end_line: 25
+    does: creates
+  - name: LLMManager.__init__
+    kind: method
+    sig: (verbose:bool=False) -> None
+    start_line: 46
+    end_line: 51
+    does: creates
+  - name: LLMManager.is_available
+    kind: method
+    sig: () -> bool
+    start_line: 54
+    end_line: 59
+    does: Check if any provider is available
+  - name: LLMManager.is_ready
+    kind: method
+    sig: () -> bool
+    start_line: 61
+    end_line: 63
+    does: Check if manager is initialized and has available provider
+  - name: LLMManager.get_provider
+    kind: method
+    sig: () -> Optional[LLMProvider]
+    start_line: 65
+    end_line: 67
+    does: Get the primary available provider
+  - name: LLMManager.primary_provider
+    kind: method
+    sig: () -> Optional[LLMProvider]
+    start_line: 70
+    end_line: 74
+    does: Get the primary (first available) provider
+  - name: LLMManager.providers
+    kind: method
+    sig: () -> dict[str, ProviderInfo]
+    start_line: 77
+    end_line: 79
+    does: Get all provider info
+  - name: LLMManager.initialize
+    kind: method
+    sig: async () -> None
+    start_line: 81
+    end_line: 113
+    does: Initialize all configured providers
+  - name: LLMManager._load_env_file
+    kind: method
+    sig: () -> None
+    start_line: 115
+    end_line: 140
+    does: retrieves env file
+  - name: LLMManager._init_ollama
+    kind: method
+    sig: async () -> None
+    start_line: 142
+    end_line: 160
+    does: Initialize Ollama provider
+  - name: LLMManager._init_openrouter
+    kind: method
+    sig: async () -> None
+    start_line: 162
+    end_line: 186
+    does: Initialize OpenRouter provider if API key is set
+  - name: LLMManager.add_provider
+    kind: method
+    sig: (name:str, provider:LLMProvider) -> None
+    start_line: 188
+    end_line: 195
+    does: Add a custom provider
+  - name: LLMManager.generate
+    kind: method
+    sig: async (options:GenerateOptions, provider_name:Optional[str]=None) -> LLMResponse
+    start_line: 197
+    end_line: 228
+    does: Generate completion using available provider.
+  - name: LLMManager.generate_with_fallback
+    kind: method
+    sig: async (options:GenerateOptions, providers:Optional[list[str]]=None) -> LLMResponse
+    start_line: 230
+    end_line: 261
+    does: Generate with fallback to other providers on failure.
+  - name: LLMManager.get_status
+    kind: method
+    sig: () -> dict
+    start_line: 263
+    end_line: 273
+    does: Get status of all providers
+  - name: LLMManager.close
+    kind: method
+    sig: async () -> None
+    start_line: 275
+    end_line: 279
+    does: Close all provider connections
+  - name: LLMManager.__aenter__
+    kind: method
+    sig: async () -> None
+    start_line: 281
+    end_line: 283
+    does: aenter
+  - name: LLMManager.__aexit__
+    kind: method
+    sig: async () -> None
+    start_line: 285
+    end_line: 286
+    does: aexit
+- path: python/reclapp/llm/ollama.py
+  language: python
+  functions:
+  - name: OllamaClient.__init__
+    kind: method
+    sig: (config:Optional[OllamaConfig]=None) -> None
+    start_line: 42
+    end_line: 47
+    does: creates
+  - name: OllamaClient.name
+    kind: method
+    sig: () -> str
+    start_line: 50
+    end_line: 51
+    does: name
+  - name: OllamaClient.model
+    kind: method
+    sig: () -> str
+    start_line: 54
+    end_line: 55
+    does: model
+  - name: OllamaClient.is_available
+    kind: method
+    sig: async () -> bool
+    start_line: 57
+    end_line: 63
+    does: Check if Ollama is running
+  - name: OllamaClient.list_models
+    kind: method
+    sig: async () -> list[LLMModelInfo]
+    start_line: 65
+    end_line: 89
+    does: List available Ollama models
+  - name: OllamaClient.has_model
+    kind: method
+    sig: async (model_name:Optional[str]=None) -> bool
+    start_line: 91
+    end_line: 107
+    does: Check if model is available
+  - name: OllamaClient.generate
+    kind: method
+    sig: async (options:GenerateOptions) -> LLMResponse
+    start_line: 109
+    end_line: 174
+    does: Generate completion using Ollama.
+  - name: OllamaClient._sleep
+    kind: method
+    sig: async (attempt:int) -> None
+    start_line: 176
+    end_line: 179
+    does: Exponential backoff sleep
+  - name: OllamaClient.close
+    kind: method
+    sig: async () -> None
+    start_line: 181
+    end_line: 183
+    does: Close HTTP client
+  - name: OllamaClient.__aenter__
+    kind: method
+    sig: async () -> None
+    start_line: 185
+    end_line: 186
+    does: aenter
+  - name: OllamaClient.__aexit__
+    kind: method
+    sig: async () -> None
+    start_line: 188
+    end_line: 189
+    does: aexit
+- path: python/reclapp/llm/provider.py
+  language: python
+  functions:
+  - name: LLMProvider.name
+    kind: method
+    sig: () -> str
+    start_line: 64
+    end_line: 66
+    does: Provider name
+  - name: LLMProvider.model
+    kind: method
+    sig: () -> str
+    start_line: 70
+    end_line: 72
+    does: Current model name
+  - name: LLMProvider.is_available
+    kind: method
+    sig: async () -> bool
+    start_line: 75
+    end_line: 77
+    does: Check if provider is available
+  - name: LLMProvider.list_models
+    kind: method
+    sig: async () -> list[LLMModelInfo]
+    start_line: 80
+    end_line: 82
+    does: List available models
+  - name: LLMProvider.generate
+    kind: method
+    sig: async (options:GenerateOptions) -> LLMResponse
+    start_line: 85
+    end_line: 87
+    does: Generate completion
+  - name: LLMProvider.has_model
+    kind: method
+    sig: async (model_name:str) -> bool
+    start_line: 89
+    end_line: 96
+    does: Check if specific model is available
+  - name: LLMProvider.get_code_models
+    kind: method
+    sig: (models:list[LLMModelInfo]) -> list[LLMModelInfo]
+    start_line: 98
+    end_line: 104
+    does: Filter models suitable for code generation
+- path: python/reclapp/parser/markdown_parser.py
+  language: python
+  functions:
+  - name: parse_contract_markdown
+    kind: function
+    sig: (content:str) -> ContractMarkdown
+    start_line: 171
+    end_line: 195
+    does: Parse contract markdown content into ContractMarkdown structure.
+  - name: _extract_frontmatter
+    kind: function
+    sig: (content:str) -> tuple[ContractFrontmatter, str]
+    start_line: 202
+    end_line: 226
+    does: Extract YAML frontmatter from content
+  - name: _parse_app_section
+    kind: function
+    sig: (body:str) -> AppDefinition
+    start_line: 233
+    end_line: 242
+    does: 'Parse ## App Definition section'
+  - name: _parse_entities_section
+    kind: function
+    sig: (body:str) -> list[MarkdownEntityDefinition]
+    start_line: 245
+    end_line: 258
+    does: 'Parse ## Entities section'
+  - name: _parse_entity_content
+    kind: function
+    sig: (name:str, content:str) -> MarkdownEntityDefinition
+    start_line: 261
+    end_line: 289
+    does: Parse entity content from markdown
+  - name: _parse_markdown_table
+    kind: function
+    sig: (content:str) -> list[EntityField]
+    start_line: 292
+    end_line: 328
+    does: Parse markdown table into EntityField list
+  - name: _parse_field_type
+    kind: function
+    sig: (type_str:str) -> FieldType
+    start_line: 331
+    end_line: 350
+    does: Parse field type string to FieldType
+  - name: _parse_api_section
+    kind: function
+    sig: (body:str) -> ApiDefinition
+    start_line: 353
+    end_line: 364
+    does: 'Parse ## API section'
+  - name: _parse_endpoint_tables
+    kind: function
+    sig: (section:str) -> list[ApiEndpoint]
+    start_line: 367
+    end_line: 388
+    does: Parse API endpoint tables
+  - name: _parse_rules_section
+    kind: function
+    sig: (body:str) -> RulesDefinition
+    start_line: 391
+    end_line: 407
+    does: 'Parse ## Business Rules section'
+  - name: _parse_tech_section
+    kind: function
+    sig: (body:str, frontmatter:ContractFrontmatter) -> TechStack
+    start_line: 410
+    end_line: 462
+    does: 'Parse ## Tech Stack section'
+  - name: _parse_tests_section
+    kind: function
+    sig: (body:str) -> TestsDefinition
+    start_line: 465
+    end_line: 485
+    does: 'Parse ## Tests section'
+  - name: _parse_gherkin
+    kind: function
+    sig: (content:str) -> list[AcceptanceTest]
+    start_line: 488
+    end_line: 511
+    does: Parse Gherkin format tests
+  - name: _extract_section
+    kind: function
+    sig: (body:str, header:str) -> str
+    start_line: 518
+    end_line: 523
+    does: Extract content under a markdown header
+  - name: _extract_field
+    kind: function
+    sig: (section:str, label:str) -> str
+    start_line: 526
+    end_line: 530
+    does: Extract **Label:** value from section
+  - name: _extract_list_from_field
+    kind: function
+    sig: (section:str, label:str) -> list[str]
+    start_line: 533
+    end_line: 538
+    does: Extract comma-separated list from field
+  - name: _extract_checkbox_list
+    kind: function
+    sig: (section:str) -> list[str]
+    start_line: 541
+    end_line: 549
+    does: Extract checkbox list items
+  - name: validate_contract
+    kind: function
+    sig: (contract:ContractMarkdown) -> ContractValidationResult
+    start_line: 556
+    end_line: 595
+    does: Validate parsed contract.
+- path: python/reclapp/evolution/shell_renderer.py
+  language: python
+  functions:
+  - name: ShellRenderer.__init__
+    kind: method
+    sig: (verbose:bool=True) -> None
+    start_line: 62
+    end_line: 70
+    does: creates
+  - name: ShellRenderer.enable_log
+    kind: method
+    sig: () -> None
+    start_line: 72
+    end_line: 75
+    does: Enable log buffering for markdown export
+  - name: ShellRenderer.get_log
+    kind: method
+    sig: () -> str
+    start_line: 77
+    end_line: 79
+    does: Get buffered log as clean markdown
+  - name: ShellRenderer.clear_log
+    kind: method
+    sig: () -> None
+    start_line: 81
+    end_line: 83
+    does: Clear log buffer
+  - name: ShellRenderer.save_log
+    kind: method
+    sig: (file_path:str) -> None
+    start_line: 85
+    end_line: 92
+    does: Save log to file as markdown
+  - name: ShellRenderer._log
+    kind: method
+    sig: (text:str) -> None
+    start_line: 94
+    end_line: 99
+    does: Buffer log line if logging is enabled
+  - name: ShellRenderer._get_clickmd
+    kind: method
+    sig: () -> None
+    start_line: 101
+    end_line: 110
+    does: Get clickmd module (lazy load)
+  - name: ShellRenderer._try_md
+    kind: method
+    sig: (text:str) -> bool
+    start_line: 112
+    end_line: 118
+    does: try md
+  - name: ShellRenderer._try_echo
+    kind: method
+    sig: (text:str) -> bool
+    start_line: 120
+    end_line: 126
+    does: try echo
+  - name: ShellRenderer.heading
+    kind: method
+    sig: (level:int, text:str) -> None
+    start_line: 128
+    end_line: 138
+    does: Print a heading
+  - name: ShellRenderer.codeblock
+    kind: method
+    sig: (language:Language, content:str) -> None
+    start_line: 140
+    end_line: 157
+    does: Print a syntax-highlighted code block
+  - name: ShellRenderer.text
+    kind: method
+    sig: (content:str) -> None
+    start_line: 159
+    end_line: 167
+    does: Print plain text
+  - name: ShellRenderer.success
+    kind: method
+    sig: (message:str) -> None
+    start_line: 169
+    end_line: 177
+    does: Print success message
+  - name: ShellRenderer.error
+    kind: method
+    sig: (message:str) -> None
+    start_line: 179
+    end_line: 187
+    does: Print error message
+  - name: ShellRenderer.warning
+    kind: method
+    sig: (message:str) -> None
+    start_line: 189
+    end_line: 197
+    does: Print warning message
+  - name: ShellRenderer.info
+    kind: method
+    sig: (message:str) -> None
+    start_line: 199
+    end_line: 207
+    does: Print info message
+  - name: ShellRenderer._highlight_line
+    kind: method
+    sig: (line:str, language:Language) -> str
+    start_line: 209
+    end_line: 222
+    does: Apply syntax highlighting to a line
+  - name: ShellRenderer._highlight_yaml
+    kind: method
+    sig: (line:str) -> str
+    start_line: 224
+    end_line: 252
+    does: Highlight YAML syntax
+  - name: ShellRenderer._highlight_json
+    kind: method
+    sig: (line:str) -> str
+    start_line: 254
+    end_line: 280
+    does: Highlight JSON syntax
+  - name: ShellRenderer._highlight_bash
+    kind: method
+    sig: (line:str) -> str
+    start_line: 282
+    end_line: 294
+    does: Highlight Bash syntax
+  - name: ShellRenderer._highlight_js
+    kind: method
+    sig: (line:str) -> str
+    start_line: 296
+    end_line: 319
+    does: Highlight JavaScript/TypeScript syntax
+  - name: ShellRenderer._highlight_log
+    kind: method
+    sig: (line:str) -> str
+    start_line: 321
+    end_line: 331
+    does: Highlight log messages
+- path: python/reclapp/evolution/state_analyzer.py
+  language: python
+  functions:
+  - name: StateDiscrepancy.to_dict
+    kind: method
+    sig: () -> dict
+    start_line: 46
+    end_line: 55
+    does: converts dict
+  - name: MultiLevelState.is_consistent
+    kind: method
+    sig: () -> bool
+    start_line: 95
+    end_line: 97
+    does: Check if all levels are consistent
+  - name: MultiLevelState.to_dict
+    kind: method
+    sig: () -> dict
+    start_line: 99
+    end_line: 118
+    does: converts dict
+  - name: StateAnalyzer.__init__
+    kind: method
+    sig: (target_dir:str, verbose:bool=False) -> None
+    start_line: 136
+    end_line: 138
+    does: creates
+  - name: StateAnalyzer.analyze
+    kind: method
+    sig: async (contract:Optional[dict]=None) -> MultiLevelState
+    start_line: 140
+    end_line: 161
+    does: Perform full multi-level analysis
+  - name: StateAnalyzer._load_contract
+    kind: method
+    sig: () -> Optional[dict]
+    start_line: 163
+    end_line: 171
+    does: Load contract from file
+  - name: StateAnalyzer._analyze_contract
+    kind: method
+    sig: (contract:dict) -> ContractState
+    start_line: 173
+    end_line: 204
+    does: Extract state from contract
+  - name: StateAnalyzer._analyze_code
+    kind: method
+    sig: () -> CodeState
+    start_line: 206
+    end_line: 229
+    does: Extract state from generated code
+  - name: StateAnalyzer._analyze_runtime
+    kind: method
+    sig: async () -> RuntimeState
+    start_line: 231
+    end_line: 261
+    does: Extract state from running service
+  - name: StateAnalyzer._find_discrepancies
+    kind: method
+    sig: (state:MultiLevelState) -> list[StateDiscrepancy]
+    start_line: 263
+    end_line: 311
+    does: Find discrepancies between state levels
+  - name: StateAnalyzer.write_state_snapshot
+    kind: method
+    sig: (state:MultiLevelState) -> str
+    start_line: 313
+    end_line: 321
+    does: Write state snapshot to file
+- path: python/reclapp/evolution/task_queue.py
+  language: python
+  functions:
+  - name: TaskQueue.__init__
+    kind: method
+    sig: (verbose:bool=True) -> None
+    start_line: 53
+    end_line: 56
+    does: creates
+  - name: TaskQueue.renderer
+    kind: method
+    sig: () -> "ShellRenderer"
+    start_line: 59
+    end_line: 64
+    does: Lazy load renderer
+  - name: TaskQueue.add
+    kind: method
+    sig: (name:str, task_id:Optional[str]=None) -> Task
+    start_line: 66
+    end_line: 74
+    does: Add a new task to the queue
+  - name: TaskQueue.start
+    kind: method
+    sig: (task_id:str) -> None
+    start_line: 76
+    end_line: 82
+    does: Mark a task as running
+  - name: TaskQueue.done
+    kind: method
+    sig: (task_id:str) -> None
+    start_line: 84
+    end_line: 96
+    does: Mark a task as done
+  - name: TaskQueue.fail
+    kind: method
+    sig: (task_id:str, error:str) -> None
+    start_line: 98
+    end_line: 105
+    does: Mark a task as failed
+  - name: TaskQueue.skip
+    kind: method
+    sig: (task_id:str) -> None
+    start_line: 107
+    end_line: 112
+    does: Mark a task as skipped
+  - name: TaskQueue.get_task
+    kind: method
+    sig: (task_id:str) -> Optional[Task]
+    start_line: 114
+    end_line: 116
+    does: Get task by ID
+  - name: TaskQueue.get_stats
+    kind: method
+    sig: () -> dict[str, int]
+    start_line: 118
+    end_line: 127
+    does: Get task statistics
+  - name: TaskQueue.print
+    kind: method
+    sig: () -> None
+    start_line: 129
+    end_line: 131
+    does: Print current task list
+  - name: TaskQueue._find_task
+    kind: method
+    sig: (task_id:str) -> Optional[Task]
+    start_line: 133
+    end_line: 135
+    does: Find task by ID
+  - name: TaskQueue._print_todo_list
+    kind: method
+    sig: (force:bool=False) -> None
+    start_line: 137
+    end_line: 195
+    does: Print task list as YAML
+  - name: TaskQueue.get_icon
+    kind: method
+    sig: (status:TaskStatus) -> str
+    start_line: 198
+    end_line: 207
+    does: Get status icon
+- path: python/reclapp/evolution/generators.py
+  language: python
+  functions:
+  - name: EvolutionGenerators.__init__
+    kind: method
+    sig: (contract:Optional[dict]=None, port:int=3000) -> None
+    start_line: 22
+    end_line: 24
+    does: creates
+  - name: EvolutionGenerators.set_contract
+    kind: method
+    sig: (contract:dict) -> None
+    start_line: 26
+    end_line: 28
+    does: Set contract for generation
+  - name: EvolutionGenerators.generate_database
+    kind: method
+    sig: async (target_dir:str) -> None
+    start_line: 30
+    end_line: 92
+    does: Generate Prisma database schema
+  - name: EvolutionGenerators.generate_frontend
+    kind: method
+    sig: async (target_dir:str) -> None
+    start_line: 94
+    end_line: 313
+    does: Generate React frontend
+  - name: EvolutionGenerators.generate_dockerfile
+    kind: method
+    sig: async (target_dir:str) -> None
+    start_line: 315
+    end_line: 348
+    does: Generate Dockerfile for the API
+  - name: EvolutionGenerators.generate_cicd
+    kind: method
+    sig: async (target_dir:str) -> None
+    start_line: 350
+    end_line: 376
+    does: Generate CI/CD templates
+  - name: EvolutionGenerators.generate_docs
+    kind: method
+    sig: async (target_dir:str) -> None
+    start_line: 378
+    end_line: 428
+    does: Generate README documentation
+  - name: EvolutionGenerators.generate_test_fixtures
+    kind: method
+    sig: async (target_dir:str) -> None
+    start_line: 430
+    end_line: 460
+    does: Generate test fixture files
+  - name: EvolutionGenerators.generate_test_config
+    kind: method
+    sig: async (target_dir:str) -> None
+    start_line: 462
+    end_line: 485
+    does: Generate test configuration file
+  - name: EvolutionGenerators.generate_e2e_tests
+    kind: method
+    sig: async (target_dir:str) -> Optional[str]
+    start_line: 487
+    end_line: 596
+    does: Generate E2E test file
+- path: python/reclapp/evolution/evolution_manager.py
+  language: python
+  functions:
+  - name: EvolutionManager.__init__
+    kind: method
+    sig: (options:Optional[EvolutionOptions]=None) -> None
+    start_line: 89
+    end_line: 95
+    does: creates
+  - name: EvolutionManager.set_llm_client
+    kind: method
+    sig: (client:Any) -> None
+    start_line: 97
+    end_line: 99
+    does: Set the LLM client
+  - name: EvolutionManager.evolve
+    kind: method
+    sig: async (prompt:str, output_dir:Optional[str]=None) -> EvolutionResult
+    start_line: 101
+    end_line: 206
+    does: Run the full evolution pipeline with auto-healing.
+  - name: EvolutionManager._setup_tasks
+    kind: method
+    sig: () -> None
+    start_line: 208
+    end_line: 249
+    does: Setup full task queue (21 tasks like TypeScript)
+  - name: EvolutionManager._phase_setup
+    kind: method
+    sig: async (target_dir:str) -> None
+    start_line: 251
+    end_line: 269
+    does: 'Phase 1: Setup directories and state'
+  - name: EvolutionManager._phase_contract
+    kind: method
+    sig: async (prompt:str, target_dir:str) -> Optional[dict]
+    start_line: 271
+    end_line: 289
+    does: 'Phase 2: Generate and save contract'
+  - name: EvolutionManager._phase_code_generation
+    kind: method
+    sig: async (contract:dict, target_dir:str) -> list[str]
+    start_line: 291
+    end_line: 306
+    does: 'Phase 3: Generate code'
+  - name: EvolutionManager._phase_service
+    kind: method
+    sig: async (target_dir:str) -> bool
+    start_line: 308
+    end_line: 388
+    does: 'Phase 4: Install deps and start service'
+  - name: EvolutionManager._phase_tests
+    kind: method
+    sig: async (target_dir:str) -> tuple[int, int]
+    start_line: 390
+    end_line: 411
+    does: 'Phase 5: Generate and run E2E tests'
+  - name: EvolutionManager._phase_additional
+    kind: method
+    sig: async (target_dir:str) -> None
+    start_line: 413
+    end_line: 438
+    does: 'Phase 5-9: Additional generation (Database, Docker, CI/CD, Frontend, Docs)'
+  - name: EvolutionManager._phase_verification
+    kind: method
+    sig: async (target_dir:str) -> None
+    start_line: 440
+    end_line: 473
+    does: 'Phase 10: Final verification with multi-level state analysis'
+  - name: EvolutionManager._generate_database
+    kind: method
+    sig: async (target_dir:str) -> None
+    start_line: 475
+    end_line: 540
+    does: Generate Prisma database schema
+  - name: EvolutionManager._generate_frontend
+    kind: method
+    sig: async (target_dir:str) -> None
+    start_line: 542
+    end_line: 762
+    does: Generate React frontend
+  - name: EvolutionManager._generate_dockerfile
+    kind: method
+    sig: async (target_dir:str) -> None
+    start_line: 764
+    end_line: 798
+    does: Generate Dockerfile for the API
+  - name: EvolutionManager._generate_cicd
+    kind: method
+    sig: async (target_dir:str) -> None
+    start_line: 800
+    end_line: 826
+    does: Generate CI/CD templates
+  - name: EvolutionManager._generate_docs
+    kind: method
+    sig: async (target_dir:str) -> None
+    start_line: 828
+    end_line: 881
+    does: Generate README documentation
+  - name: EvolutionManager._generate_api_docs
+    kind: method
+    sig: async (target_dir:str) -> None
+    start_line: 883
+    end_line: 907
+    does: Generate API.md documentation like TypeScript
+  - name: EvolutionManager._generate_test_fixtures
+    kind: method
+    sig: async (target_dir:str) -> None
+    start_line: 909
+    end_line: 939
+    does: Generate test fixtures like TypeScript
+  - name: EvolutionManager._generate_test_config
+    kind: method
+    sig: async (target_dir:str) -> None
+    start_line: 941
+    end_line: 964
+    does: Generate test configuration like TypeScript
+  - name: EvolutionManager._save_evolution_log
+    kind: method
+    sig: async (target_dir:str) -> None
+    start_line: 966
+    end_line: 993
+    does: Save evolution log like TypeScript
+  - name: EvolutionManager._find_npm
+    kind: method
+    sig: () -> Optional[str]
+    start_line: 995
+    end_line: 1018
+    does: Find npm executable
+  - name: EvolutionManager._with_llm_heartbeat
+    kind: method
+    sig: async (purpose:str, coro, heartbeat_interval:float=5.0, timeout:float=120.0) -> T
+    start_line: 1020
+    end_line: 1108
+    does: Wrap an async LLM call with heartbeat logging.
+  - name: EvolutionManager._kill_port
+    kind: method
+    sig: async (port:int) -> None
+    start_line: 1110
+    end_line: 1126
+    does: Kill process using port
+  - name: EvolutionManager._check_health
+    kind: method
+    sig: async (retries:int=5) -> bool
+    start_line: 1128
+    end_line: 1142
+    does: Check service health
+  - name: EvolutionManager._stop_service
+    kind: method
+    sig: async () -> None
+    start_line: 1144
+    end_line: 1152
+    does: Stop the service
+  - name: EvolutionManager._generate_e2e_tests
+    kind: method
+    sig: async (target_dir:str) -> Optional[str]
+    start_line: 1154
+    end_line: 1263
+    does: Generate E2E test file
+  - name: EvolutionManager._run_e2e_tests
+    kind: method
+    sig: async (target_dir:str) -> tuple[int, int]
+    start_line: 1265
+    end_line: 1313
+    does: Run E2E tests and return (passed, failed)
+  - name: EvolutionManager._auto_fix_code
+    kind: method
+    sig: async (target_dir:str, failed_count:int) -> None
+    start_line: 1315
+    end_line: 1376
+    does: Try to fix failing code with LLM - mirrors TypeScript recovery logic
+  - name: EvolutionManager._extract_code_block
+    kind: method
+    sig: (content:str, language:str='') -> str
+    start_line: 1378
+    end_line: 1392
+    does: Extract code block from markdown response
+  - name: EvolutionManager._generate_contract
+    kind: method
+    sig: async (prompt:str) -> Optional[dict]
+    start_line: 1394
+    end_line: 1435
+    does: Generate contract from prompt using LLM or fallback to template
+  - name: EvolutionManager._extract_app_name
+    kind: method
+    sig: (prompt:str) -> str
+    start_line: 1437
+    end_line: 1442
+    does: parses app name
+  - name: EvolutionManager._extract_entities
+    kind: method
+    sig: (prompt:str) -> list[dict]
+    start_line: 1444
+    end_line: 1466
+    does: parses entities
+  - name: EvolutionManager._generate_code
+    kind: method
+    sig: async (contract:dict, output_dir:str) -> list[str]
+    start_line: 1468
+    end_line: 1494
+    does: Generate code from contract using LLM
+  - name: EvolutionManager._validate_code
+    kind: method
+    sig: async (output_dir:str) -> list[str]
+    start_line: 1496
+    end_line: 1500
+    does: Validate generated code
+  - name: EvolutionManager.get_task_queue
+    kind: method
+    sig: () -> TaskQueue
+    start_line: 1502
+    end_line: 1504
+    does: Get the task queue
+- path: python/reclapp/validation/stages.py
+  language: python
+  functions:
+  - name: create_syntax_validator
+    kind: function
+    sig: () -> ValidationStage
+    start_line: 21
+    end_line: 54
+    does: Create syntax validation stage.
+  - name: _check_js_syntax
+    kind: function
+    sig: (filename:str, content:str) -> list[StageError]
+    start_line: 57
+    end_line: 94
+    does: Check JavaScript/TypeScript syntax
+  - name: _check_python_syntax
+    kind: function
+    sig: (filename:str, content:str) -> list[StageError]
+    start_line: 97
+    end_line: 111
+    does: Check Python syntax using compile()
+  - name: create_schema_validator
+    kind: function
+    sig: () -> ValidationStage
+    start_line: 118
+    end_line: 160
+    does: Create schema validation stage.
+  - name: create_assertion_validator
+    kind: function
+    sig: () -> ValidationStage
+    start_line: 167
+    end_line: 221
+    does: Create assertion validation stage.
+  - name: create_static_analyzer
+    kind: function
+    sig: () -> ValidationStage
+    start_line: 228
+    end_line: 276
+    does: Create static analysis stage.
+  - name: create_test_runner
+    kind: function
+    sig: () -> ValidationStage
+    start_line: 283
+    end_line: 321
+    does: Create test runner stage.
+  - name: create_quality_checker
+    kind: function
+    sig: () -> ValidationStage
+    start_line: 328
+    end_line: 383
+    does: Create quality checker stage.
+  - name: create_security_scanner
+    kind: function
+    sig: () -> ValidationStage
+    start_line: 390
+    end_line: 430
+    does: Create security scanner stage.
+  - name: create_runtime_validator
+    kind: function
+    sig: () -> ValidationStage
+    start_line: 437
+    end_line: 457
+    does: Create runtime validation stage.
+- path: python/reclapp/validation/__init__.py
+  language: python
+  functions:
+  - name: create_default_pipeline
+    kind: function
+    sig: (options:dict=None) -> "ValidationPipeline"
+    start_line: 58
+    end_line: 81
+    does: Create a configured validation pipeline with all stages.
+- path: python/reclapp/validation/pipeline.py
+  language: python
+  functions:
+  - name: ValidationPipeline.__init__
+    kind: method
+    sig: (fail_fast:bool=True, timeout:int=60000, verbose:bool=False, work_dir:str='/tmp/reclapp-validation') -> None
+    start_line: 118
+    end_line: 131
+    does: creates
+  - name: ValidationPipeline.register_stage
+    kind: method
+    sig: (stage:ValidationStage) -> None
+    start_line: 133
+    end_line: 135
+    does: Register a validation stage
+  - name: ValidationPipeline.register_stages
+    kind: method
+    sig: (stages:list[ValidationStage]) -> None
+    start_line: 137
+    end_line: 139
+    does: Register multiple validation stages
+  - name: ValidationPipeline.validate
+    kind: method
+    sig: async (contract:dict[str,Any], code:GeneratedCode) -> PipelineResult
+    start_line: 141
+    end_line: 208
+    does: Run the validation pipeline.
+  - name: ValidationPipeline._run_stage
+    kind: method
+    sig: async (stage:ValidationStage, context:ValidationContext) -> StageResult
+    start_line: 210
+    end_line: 251
+    does: Run a single validation stage with timeout
+  - name: ValidationPipeline.get_stage_names
+    kind: method
+    sig: () -> list[str]
+    start_line: 253
+    end_line: 255
+    does: Get list of registered stage names
+- path: cli/commands/generate-ai.ts
+  language: typescript
+  functions:
+  - name: parseArgs
+    kind: function
+    sig: '(args: string[]) -> GenerateAIOptions'
+    start_line: 43
+    end_line: 93
+    does: parses args
+  - name: printHelp
+    kind: function
+    sig: () -> void
+    start_line: 95
+    end_line: 122
+    does: logs help
+  - name: generateAI
+    kind: function
+    sig: 'async (options: GenerateAIOptions) -> Promise<void>'
+    start_line: 128
+    end_line: 243
+    does: creates ai
+  - name: loadContract
+    kind: function
+    sig: 'async (filePath: string) -> Promise<any>'
+    start_line: 249
+    end_line: 270
+    does: retrieves contract
+  - name: writeGeneratedFiles
+    kind: function
+    sig: 'async (files: Array<{ path: string; content: string }>, outputDir: string) -> Promise<void>'
+    start_line: 272
+    end_line: 290
+    does: logs generated files
+- path: core/contract-ai/generator/contract-validator.ts
+  language: typescript
+  functions:
+  - name: createContractValidator
+    kind: function
+    sig: () -> ContractValidator
+    start_line: 566
+    end_line: 568
+    does: creates contract validator
+  - name: ContractValidator.validate
+    kind: method
+    sig: '(contract: unknown) -> ContractValidationResult'
+    start_line: 55
+    end_line: 90
+    does: validates
+  - name: ContractValidator.validateDefinitionLayer
+    kind: method
+    sig: '(layer: unknown) -> ContractValidationError[]'
+    start_line: 95
+    end_line: 235
+    does: validates definition layer
+  - name: ContractValidator.validateGenerationLayer
+    kind: method
+    sig: '(layer: unknown) -> ContractValidationError[]'
+    start_line: 240
+    end_line: 375
+    does: validates generation layer
+  - name: ContractValidator.validateValidationLayer
+    kind: method
+    sig: '(layer: unknown) -> ContractValidationError[]'
+    start_line: 380
+    end_line: 513
+    does: validates validation layer
+  - name: ContractValidator.validateCrossLayerConsistency
+    kind: method
+    sig: '(contract: ContractAI) -> ContractValidationError[]'
+    start_line: 518
+    end_line: 550
+    does: validates cross layer consistency
+  - name: ContractValidator.isValidFieldType
+    kind: method
+    sig: '(type: FieldType) -> boolean'
+    start_line: 555
+    end_line: 559
+    does: is valid field type
+- path: core/contract-ai/generator/prompt-builder.ts
+  language: typescript
+  functions:
+  - name: createPromptBuilder
+    kind: function
+    sig: () -> ContractPromptBuilder
+    start_line: 222
+    end_line: 224
+    does: creates prompt builder
+  - name: ContractPromptBuilder.buildSystemPrompt
+    kind: method
+    sig: () -> string
+    start_line: 24
+    end_line: 88
+    does: creates system prompt
+  - name: ContractPromptBuilder.buildUserPrompt
+    kind: method
+    sig: '(requirements: string) -> string'
+    start_line: 93
+    end_line: 108
+    does: creates user prompt
+  - name: ContractPromptBuilder.buildCorrectionPrompt
+    kind: method
+    sig: '(originalPrompt: string, contract: Partial<ContractAI>, errors: ContractValidationError[]) -> string'
+    start_line: 113
+    end_line: 142
+    does: creates correction prompt
+  - name: ContractPromptBuilder.buildExampleContracts
+    kind: method
+    sig: () -> string
+    start_line: 147
+    end_line: 215
+    does: creates example contracts
+- path: core/contract-ai/generator/contract-generator.ts
+  language: typescript
+  functions:
+  - name: createContractGenerator
+    kind: function
+    sig: (options?) -> ContractGenerator
+    start_line: 451
+    end_line: 453
+    does: creates contract generator
+  - name: ContractGenerator.constructor
+    kind: method
+    sig: '(options: Partial<ContractGeneratorOptions>) -> None'
+    start_line: 104
+    end_line: 108
+    does: constructor
+  - name: ContractGenerator.setLLMClient
+    kind: method
+    sig: '(client: LLMClient) -> void'
+    start_line: 113
+    end_line: 115
+    does: updates llm client
+  - name: ContractGenerator.generate
+    kind: method
+    sig: 'async (userPrompt: string) -> Promise<ContractGenerationResult>'
+    start_line: 120
+    end_line: 220
+    does: creates
+  - name: ContractGenerator.tryCreateSchemaValidator
+    kind: method
+    sig: async () -> Promise<Awaited<ReturnType<typeof createPydanticValidator>> | null>
+    start_line: 222
+    end_line: 232
+    does: try create schema validator
+  - name: ContractGenerator.mapSchemaErrors
+    kind: method
+    sig: '(errors: SchemaValidationError[]) -> ContractValidationError[]'
+    start_line: 234
+    end_line: 242
+    does: converts schema errors
+  - name: ContractGenerator.buildInitialPrompt
+    kind: method
+    sig: '(userPrompt: string) -> LLMPrompt'
+    start_line: 247
+    end_line: 252
+    does: creates initial prompt
+  - name: ContractGenerator.buildCorrectionPrompt
+    kind: method
+    sig: '(userPrompt: string, contract: Partial<ContractAI>, errors: ContractValidationError[], attempt: number) -> LLMPrompt'
+    start_line: 257
+    end_line: 285
+    does: creates correction prompt
+  - name: ContractGenerator.callLLM
+    kind: method
+    sig: 'async (prompt: LLMPrompt) -> Promise<string>'
+    start_line: 290
+    end_line: 302
+    does: call llm
+  - name: ContractGenerator.parseContractFromResponse
+    kind: method
+    sig: '(response: string) -> Partial<ContractAI> | null'
+    start_line: 307
+    end_line: 333
+    does: parses contract from response
+  - name: ContractGenerator.generateFeedbackLevel
+    kind: method
+    sig: '(attempt: number) -> FeedbackLevel'
+    start_line: 338
+    end_line: 342
+    does: creates feedback level
+  - name: ContractGenerator.estimateTokens
+    kind: method
+    sig: '(text: string) -> number'
+    start_line: 347
+    end_line: 350
+    does: estimate tokens
+  - name: ContractGenerator.simulateLLMResponse
+    kind: method
+    sig: '(prompt: LLMPrompt) -> string'
+    start_line: 355
+    end_line: 444
+    does: simulate llm response
+- path: core/contract-ai/templates/index.ts
+  language: typescript
+  functions:
+  - name: TemplateRAG.constructor
+    kind: method
+    sig: (templateDir?) -> None
+    start_line: 61
+    end_line: 64
+    does: constructor
+  - name: TemplateRAG.loadTemplates
+    kind: method
+    sig: () -> void
+    start_line: 69
+    end_line: 89
+    does: retrieves templates
+  - name: TemplateRAG.search
+    kind: method
+    sig: '(query: TemplateQuery) -> TemplateMatch[]'
+    start_line: 94
+    end_line: 144
+    does: filters
+  - name: TemplateRAG.get
+    kind: method
+    sig: '(id: string) -> Template | undefined'
+    start_line: 149
+    end_line: 151
+    does: retrieves
+  - name: TemplateRAG.getByCategory
+    kind: method
+    sig: '(category: string) -> Template[]'
+    start_line: 156
+    end_line: 159
+    does: retrieves by category
+  - name: TemplateRAG.render
+    kind: method
+    sig: '(templateId: string, variables: Record<string, any>) -> string'
+    start_line: 164
+    end_line: 187
+    does: formats
+  - name: TemplateRAG.buildContextFromContract
+    kind: method
+    sig: '(contract: any) -> string'
+    start_line: 192
+    end_line: 223
+    does: creates context from contract
+  - name: TemplateRAG.getRelevantTemplates
+    kind: method
+    sig: '(contract: any, task: string) -> Template[]'
+    start_line: 228
+    end_line: 249
+    does: retrieves relevant templates
+  - name: TemplateRAG.exportAsContext
+    kind: method
+    sig: '(templates: Template[]) -> string'
+    start_line: 254
+    end_line: 274
+    does: export as context
+  - name: TemplateRAG.getAllIds
+    kind: method
+    sig: () -> string[]
+    start_line: 279
+    end_line: 281
+    does: retrieves all ids
+  - name: TemplateRAG.count
+    kind: method
+    sig: () -> number
+    start_line: 286
+    end_line: 288
+    does: count
+- path: core/contract-ai/code-generator/llm-generator.ts
+  language: typescript
+  functions:
+  - name: createLLMCodeGenerator
+    kind: function
+    sig: (options?) -> LLMCodeGenerator
+    start_line: 653
+    end_line: 655
+    does: creates llm code generator
+  - name: LLMCodeGenerator.constructor
+    kind: method
+    sig: '(options: Partial<CodeGeneratorOptions>) -> None'
+    start_line: 75
+    end_line: 83
+    does: constructor
+  - name: LLMCodeGenerator.setLLMClient
+    kind: method
+    sig: '(client: LLMClient) -> void'
+    start_line: 88
+    end_line: 90
+    does: updates llm client
+  - name: LLMCodeGenerator.getLLMClient
+    kind: method
+    sig: () -> LLMClient | null
+    start_line: 92
+    end_line: 94
+    does: retrieves llm client
+  - name: LLMCodeGenerator.registerTemplate
+    kind: method
+    sig: '(target: GenerationTarget, template: PromptTemplate) -> void'
+    start_line: 99
+    end_line: 101
+    does: registers template
+  - name: LLMCodeGenerator.generate
+    kind: method
+    sig: 'async (contract: ContractAI) -> Promise<GeneratedCode>'
+    start_line: 106
+    end_line: 148
+    does: creates
+  - name: LLMCodeGenerator.generateTarget
+    kind: method
+    sig: 'async (contract: ContractAI, target: GenerationTarget) -> Promise<GeneratedFile[]>'
+    start_line: 153
+    end_line: 181
+    does: creates target
+  - name: LLMCodeGenerator.determineTargets
+    kind: method
+    sig: '(contract: ContractAI) -> GenerationTarget[]'
+    start_line: 186
+    end_line: 204
+    does: determine targets
+  - name: LLMCodeGenerator.callLLM
+    kind: method
+    sig: 'async (systemPrompt: string, userPrompt: string) -> Promise<string>'
+    start_line: 209
+    end_line: 221
+    does: call llm
+  - name: LLMCodeGenerator.parseFilesFromResponse
+    kind: method
+    sig: '(response: string, target: GenerationTarget) -> GeneratedFile[]'
+    start_line: 226
+    end_line: 268
+    does: parses files from response
+  - name: LLMCodeGenerator.validateBasicSyntax
+    kind: method
+    sig: '(file: GeneratedFile) -> SyntaxError[]'
+    start_line: 273
+    end_line: 321
+    does: validates basic syntax
+  - name: LLMCodeGenerator.simulateLLMResponse
+    kind: method
+    sig: '(prompt: string) -> string'
+    start_line: 326
+    end_line: 646
+    does: simulate llm response
+- path: core/contract-ai/analysis/project-state.ts
+  language: typescript
+  functions:
+  - name: ProjectStateGenerator.constructor
+    kind: method
+    sig: '(report: AnalysisReport, rootDir: string) -> None'
+    start_line: 119
+    end_line: 122
+    does: constructor
+  - name: ProjectStateGenerator.generate
+    kind: method
+    sig: () -> ProjectState
+    start_line: 127
+    end_line: 170
+    does: creates
+  - name: ProjectStateGenerator.extractModules
+    kind: method
+    sig: () -> ModuleInfo[]
+    start_line: 175
+    end_line: 203
+    does: parses modules
+  - name: ProjectStateGenerator.extractEntities
+    kind: method
+    sig: () -> EntityInfo[]
+    start_line: 208
+    end_line: 230
+    does: parses entities
+  - name: ProjectStateGenerator.extractEndpoints
+    kind: method
+    sig: () -> EndpointInfo[]
+    start_line: 235
+    end_line: 264
+    does: parses endpoints
+  - name: ProjectStateGenerator.extractDependencies
+    kind: method
+    sig: () -> DependencyInfo[]
+    start_line: 269
+    end_line: 283
+    does: parses dependencies
+  - name: ProjectStateGenerator.identifyHotspots
+    kind: method
+    sig: () -> HotspotInfo[]
+    start_line: 288
+    end_line: 317
+    does: identify hotspots
+  - name: ProjectStateGenerator.calculateRiskScore
+    kind: method
+    sig: '(fn: FunctionInfo) -> number'
+    start_line: 322
+    end_line: 346
+    does: processes risk score
+  - name: ProjectStateGenerator.getRiskReason
+    kind: method
+    sig: '(fn: FunctionInfo, score: number) -> string'
+    start_line: 351
+    end_line: 360
+    does: retrieves risk reason
+  - name: ProjectStateGenerator.summarizeCallGraph
+    kind: method
+    sig: () -> ProjectState['callGraph']
+    start_line: 365
+    end_line: 381
+    does: summarize call graph
+  - name: ProjectStateGenerator.toJSON
+    kind: method
+    sig: () -> string
+    start_line: 390
+    end_line: 392
+    does: converts json
+  - name: ProjectStateGenerator.save
+    kind: method
+    sig: '(outputDir: string) -> string'
+    start_line: 397
+    end_line: 407
+    does: caches
+  - name: ProjectStateGenerator.toLLMSummary
+    kind: method
+    sig: () -> string
+    start_line: 412
+    end_line: 438
+    does: converts llm summary
+- path: core/contract-ai/analysis/refactoring-contract.ts
+  language: typescript
+  functions:
+  - name: RefactoringContractGenerator.constructor
+    kind: method
+    sig: '(report: AnalysisReport, repoUrl?) -> None'
+    start_line: 103
+    end_line: 106
+    does: constructor
+  - name: RefactoringContractGenerator.generate
+    kind: method
+    sig: () -> RefactoringContract
+    start_line: 111
+    end_line: 130
+    does: creates
+  - name: RefactoringContractGenerator.identifyIssues
+    kind: method
+    sig: () -> RefactoringIssue[]
+    start_line: 135
+    end_line: 179
+    does: identify issues
+  - name: RefactoringContractGenerator.createIssue
+    kind: method
+    sig: '(id: number, file: FileInfo, fn: FunctionInfo, type: RefactoringType, metrics: RefactoringIssue[''metrics'']) ->
+      RefactoringIssue'
+    start_line: 184
+    end_line: 212
+    does: creates issue
+  - name: RefactoringContractGenerator.generateLLMContext
+    kind: method
+    sig: '(fn: FunctionInfo, type: RefactoringType, metrics: RefactoringIssue[''metrics'']) -> RefactoringIssue[''llmContext'']'
+    start_line: 217
+    end_line: 280
+    does: creates llm context
+  - name: RefactoringContractGenerator.determineSeverity
+    kind: method
+    sig: '(metrics: RefactoringIssue[''metrics'']) -> RefactoringIssue[''severity'']'
+    start_line: 285
+    end_line: 297
+    does: determine severity
+  - name: RefactoringContractGenerator.estimateEffort
+    kind: method
+    sig: '(type: RefactoringType, metrics: RefactoringIssue[''metrics''], severity: RefactoringIssue[''severity'']) -> number'
+    start_line: 302
+    end_line: 327
+    does: estimate effort
+  - name: RefactoringContractGenerator.generateRationale
+    kind: method
+    sig: '(type: RefactoringType, metrics: RefactoringIssue[''metrics'']) -> string'
+    start_line: 332
+    end_line: 345
+    does: creates rationale
+  - name: RefactoringContractGenerator.getAction
+    kind: method
+    sig: '(type: RefactoringType) -> string'
+    start_line: 350
+    end_line: 360
+    does: retrieves action
+  - name: RefactoringContractGenerator.countBySeverity
+    kind: method
+    sig: '(issues: RefactoringIssue[]) -> Record<string, number>'
+    start_line: 365
+    end_line: 371
+    does: count by severity
+  - name: RefactoringContractGenerator.generateRecommendations
+    kind: method
+    sig: '(issues: RefactoringIssue[]) -> string[]'
+    start_line: 376
+    end_line: 402
+    does: creates recommendations
+  - name: RefactoringContractGenerator.toJSON
+    kind: method
+    sig: () -> string
+    start_line: 411
+    end_line: 413
+    does: converts json
+  - name: RefactoringContractGenerator.toMarkdown
+    kind: method
+    sig: () -> string
+    start_line: 418
+    end_line: 464
+    does: converts markdown
+  - name: RefactoringContractGenerator.toTodoList
+    kind: method
+    sig: () -> string
+    start_line: 469
+    end_line: 511
+    does: converts todo list
+- path: core/contract-ai/analysis/code-analyzer.ts
+  language: typescript
+  functions:
+  - name: CodeAnalyzer.constructor
+    kind: method
+    sig: '(rootDir: string) -> None'
+    start_line: 79
+    end_line: 81
+    does: constructor
+  - name: CodeAnalyzer.analyze
+    kind: method
+    sig: async () -> Promise<AnalysisReport>
+    start_line: 86
+    end_line: 141
+    does: processes
+  - name: CodeAnalyzer.findSourceFiles
+    kind: method
+    sig: () -> string[]
+    start_line: 146
+    end_line: 171
+    does: retrieves source files
+  - name: CodeAnalyzer.analyzeFile
+    kind: method
+    sig: '(filePath: string) -> FileInfo'
+    start_line: 176
+    end_line: 208
+    does: processes file
+  - name: CodeAnalyzer.parseCSharpJava
+    kind: method
+    sig: '(content: string, lines: string[], info: FileInfo) -> void'
+    start_line: 213
+    end_line: 252
+    does: parses c sharp java
+  - name: CodeAnalyzer.parseGo
+    kind: method
+    sig: '(content: string, lines: string[], info: FileInfo) -> void'
+    start_line: 257
+    end_line: 298
+    does: parses go
+  - name: CodeAnalyzer.parseCpp
+    kind: method
+    sig: '(content: string, lines: string[], info: FileInfo) -> void'
+    start_line: 303
+    end_line: 342
+    does: parses cpp
+  - name: CodeAnalyzer.parseTypeScript
+    kind: method
+    sig: '(content: string, lines: string[], info: FileInfo) -> void'
+    start_line: 347
+    end_line: 412
+    does: parses type script
+  - name: CodeAnalyzer.parsePython
+    kind: method
+    sig: '(content: string, lines: string[], info: FileInfo) -> void'
+    start_line: 417
+    end_line: 452
+    does: parses python
+  - name: CodeAnalyzer.findFunctionEnd
+    kind: method
+    sig: '(lines: string[], startIdx: number) -> number'
+    start_line: 457
+    end_line: 476
+    does: retrieves function end
+  - name: CodeAnalyzer.findPythonFunctionEnd
+    kind: method
+    sig: '(lines: string[], startIdx: number) -> number'
+    start_line: 481
+    end_line: 493
+    does: retrieves python function end
+  - name: CodeAnalyzer.calculateComplexity
+    kind: method
+    sig: '(code: string) -> number'
+    start_line: 498
+    end_line: 518
+    does: processes complexity
+  - name: CodeAnalyzer.extractFunctionCalls
+    kind: method
+    sig: '(code: string) -> string[]'
+    start_line: 523
+    end_line: 538
+    does: parses function calls
+  - name: CodeAnalyzer.calculateCallGraphMetrics
+    kind: method
+    sig: '(functions: FunctionInfo[], callGraph: Map<string, string[]>) -> void'
+    start_line: 543
+    end_line: 570
+    does: processes call graph metrics
+  - name: CodeAnalyzer.findDuplicates
+    kind: method
+    sig: '(functions: FunctionInfo[]) -> DuplicateGroup[]'
+    start_line: 575
+    end_line: 601
+    does: retrieves duplicates
+  - name: CodeAnalyzer.generateRecommendations
+    kind: method
+    sig: '(files: FileInfo[], functions: FunctionInfo[], duplicates: DuplicateGroup[]) -> string[]'
+    start_line: 606
+    end_line: 633
+    does: creates recommendations
+  - name: CodeAnalyzer.detectLanguage
+    kind: method
+    sig: '(ext: string) -> string'
+    start_line: 638
+    end_line: 650
+    does: detect language
+  - name: CodeAnalyzer.toMarkdown
+    kind: method
+    sig: '(report: AnalysisReport) -> string'
+    start_line: 655
+    end_line: 706
+    does: converts markdown
+  - name: CodeAnalyzer.toContract
+    kind: method
+    sig: '(report: AnalysisReport) -> object'
+    start_line: 711
+    end_line: 750
+    does: converts contract
+- path: core/contract-ai/cli/cli-runner.ts
+  language: typescript
+  functions:
+  - name: createCLIRunner
+    kind: function
+    sig: '(name: string, version: string, options?) -> CLIRunner'
+    start_line: 346
+    end_line: 352
+    does: creates cli runner
+  - name: CLIRunner.constructor
+    kind: method
+    sig: '(options: CLIRunnerOptions) -> None'
+    start_line: 68
+    end_line: 79
+    does: constructor
+  - name: CLIRunner.header
+    kind: method
+    sig: () -> void
+    start_line: 84
+    end_line: 86
+    does: header
+  - name: CLIRunner.addTask
+    kind: method
+    sig: '(task: CLITask) -> this'
+    start_line: 91
+    end_line: 95
+    does: creates task
+  - name: CLIRunner.addTasks
+    kind: method
+    sig: '(tasks: CLITask[]) -> this'
+    start_line: 100
+    end_line: 105
+    does: creates tasks
+  - name: CLIRunner.log
+    kind: method
+    sig: '(message: string) -> void'
+    start_line: 110
+    end_line: 112
+    does: logs
+  - name: CLIRunner.yaml
+    kind: method
+    sig: '(type: string, description: string, data: Record<string, unknown>) -> void'
+    start_line: 117
+    end_line: 181
+    does: yaml
+  - name: CLIRunner.printTodo
+    kind: method
+    sig: () -> void
+    start_line: 186
+    end_line: 202
+    does: logs todo
+  - name: CLIRunner.run
+    kind: method
+    sig: async () -> Promise<CLIRunnerResult>
+    start_line: 207
+    end_line: 325
+    does: starts
+  - name: CLIRunner.getRenderer
+    kind: method
+    sig: () -> ShellRenderer
+    start_line: 330
+    end_line: 332
+    does: retrieves renderer
+  - name: CLIRunner.getTaskQueue
+    kind: method
+    sig: () -> TaskQueue
+    start_line: 337
+    end_line: 339
+    does: retrieves task queue
+- path: core/contract-ai/types/index.ts
+  language: typescript
+  functions:
+  - name: isValidContractAI
+    kind: function
+    sig: '(obj: unknown) -> None'
+    start_line: 121
+    end_line: 133
+    does: is valid contract ai
+  - name: hasDefinitionLayer
+    kind: function
+    sig: '(contract: Partial<ContractAI>) -> boolean'
+    start_line: 138
+    end_line: 147
+    does: has definition layer
+  - name: hasGenerationLayer
+    kind: function
+    sig: '(contract: Partial<ContractAI>) -> boolean'
+    start_line: 152
+    end_line: 162
+    does: has generation layer
+  - name: hasValidationLayer
+    kind: function
+    sig: '(contract: Partial<ContractAI>) -> boolean'
+    start_line: 167
+    end_line: 178
+    does: has validation layer
+  - name: createEmptyContract
+    kind: function
+    sig: '(appName: string, version: string) -> ContractAI'
+    start_line: 187
+    end_line: 233
+    does: creates empty contract
+  - name: touchContract
+    kind: function
+    sig: '(contract: ContractAI) -> ContractAI'
+    start_line: 238
+    end_line: 248
+    does: touch contract
+- path: core/contract-ai/llm/llm-config.ts
+  language: typescript
+  functions:
+  - name: loadConfigFromEnv
+    kind: function
+    sig: () -> LLMEnvConfig
+    start_line: 116
+    end_line: 144
+    does: retrieves config from env
+  - name: buildProviderConfigs
+    kind: function
+    sig: '(envConfig: LLMEnvConfig) -> LLMConfig[]'
+    start_line: 149
+    end_line: 202
+    does: creates provider configs
+  - name: generateEnvTemplate
+    kind: function
+    sig: () -> string
+    start_line: 207
+    end_line: 274
+    does: creates env template
+- path: core/contract-ai/llm/llm-manager.ts
+  language: typescript
+  functions:
+  - name: createLLMManagerFromEnv
+    kind: function
+    sig: () -> LLMManager
+    start_line: 242
+    end_line: 300
+    does: creates llm manager from env
+  - name: createFreeModelsManager
+    kind: function
+    sig: () -> LLMManager
+    start_line: 305
+    end_line: 333
+    does: creates free models manager
+  - name: LLMManager.constructor
+    kind: method
+    sig: '(config: LLMManagerConfig) -> None'
+    start_line: 58
+    end_line: 67
+    does: constructor
+  - name: LLMManager.initializeProviders
+    kind: method
+    sig: () -> void
+    start_line: 72
+    end_line: 85
+    does: initializes providers
+  - name: LLMManager.checkAvailability
+    kind: method
+    sig: async () -> Promise<ProviderStatus[]>
+    start_line: 90
+    end_line: 116
+    does: checks availability
+  - name: LLMManager.getBestProvider
+    kind: method
+    sig: '(context: TaskContext) -> ILLMProvider | null'
+    start_line: 121
+    end_line: 152
+    does: retrieves best provider
+  - name: LLMManager.chat
+    kind: method
+    sig: 'async (messages: LLMMessage[], context?, config?) -> Promise<LLMResponse>'
+    start_line: 157
+    end_line: 194
+    does: chat
+  - name: LLMManager.streamChat
+    kind: method
+    sig: 'async (messages: LLMMessage[], context?, config?) -> AsyncGenerator<string>'
+    start_line: 199
+    end_line: 211
+    does: stream chat
+  - name: LLMManager.getProvider
+    kind: method
+    sig: '(type: LLMProviderType) -> ILLMProvider | undefined'
+    start_line: 216
+    end_line: 218
+    does: retrieves provider
+  - name: LLMManager.getStatuses
+    kind: method
+    sig: () -> ProviderStatus[]
+    start_line: 223
+    end_line: 225
+    does: retrieves statuses
+  - name: LLMManager.delay
+    kind: method
+    sig: '(ms: number) -> Promise<void>'
+    start_line: 230
+    end_line: 232
+    does: delay
+- path: core/contract-ai/llm/parallel-executor.ts
+  language: typescript
+  functions:
+  - name: createParallelExecutor
+    kind: function
+    sig: '(configs: LLMConfig[], options?) -> ParallelExecutor'
+    start_line: 616
+    end_line: 623
+    does: creates parallel executor
+  - name: createFreeModelsExecutor
+    kind: function
+    sig: () -> ParallelExecutor
+    start_line: 628
+    end_line: 675
+    does: creates free models executor
+  - name: WorkerPool.constructor
+    kind: method
+    sig: '(config: ParallelExecutorConfig) -> None'
+    start_line: 87
+    end_line: 87
+    does: constructor
+  - name: WorkerPool.addWorker
+    kind: method
+    sig: '(type: LLMProviderType, provider: ILLMProvider) -> void'
+    start_line: 89
+    end_line: 102
+    does: creates worker
+  - name: WorkerPool.getWorker
+    kind: method
+    sig: '(type: LLMProviderType) -> ILLMProvider | undefined'
+    start_line: 104
+    end_line: 106
+    does: retrieves worker
+  - name: WorkerPool.getAllWorkers
+    kind: method
+    sig: () -> Map<LLMProviderType, ILLMProvider>
+    start_line: 108
+    end_line: 110
+    does: retrieves all workers
+  - name: WorkerPool.getStats
+    kind: method
+    sig: '(type: LLMProviderType) -> ProviderStats | undefined'
+    start_line: 112
+    end_line: 114
+    does: retrieves stats
+  - name: WorkerPool.getAllStats
+    kind: method
+    sig: () -> ProviderStats[]
+    start_line: 116
+    end_line: 118
+    does: retrieves all stats
+  - name: WorkerPool.canMakeRequest
+    kind: method
+    sig: '(type: LLMProviderType) -> boolean'
+    start_line: 120
+    end_line: 130
+    does: checks make request
+  - name: WorkerPool.recordRequest
+    kind: method
+    sig: '(type: LLMProviderType, success: boolean, latency: number) -> void'
+    start_line: 132
+    end_line: 151
+    does: record request
+  - name: WorkerPool.incrementLoad
+    kind: method
+    sig: '(type: LLMProviderType) -> void'
+    start_line: 153
+    end_line: 156
+    does: increment load
+  - name: WorkerPool.decrementLoad
+    kind: method
+    sig: '(type: LLMProviderType) -> void'
+    start_line: 158
+    end_line: 161
+    does: decrement load
+  - name: WorkerPool.selectProvider
+    kind: method
+    sig: '(strategy: string, preferred?) -> LLMProviderType | null'
+    start_line: 163
+    end_line: 180
+    does: retrieves provider
+  - name: WorkerPool.roundRobinSelect
+    kind: method
+    sig: '(available: LLMProviderType[]) -> LLMProviderType'
+    start_line: 182
+    end_line: 196
+    does: round robin select
+  - name: WorkerPool.leastLoadedSelect
+    kind: method
+    sig: '(available: LLMProviderType[]) -> LLMProviderType'
+    start_line: 198
+    end_line: 211
+    does: least loaded select
+  - name: WorkerPool.lowestLatencySelect
+    kind: method
+    sig: '(available: LLMProviderType[]) -> LLMProviderType'
+    start_line: 213
+    end_line: 229
+    does: lowest latency select
+  - name: TaskQueue.enqueue
+    kind: method
+    sig: '(task: ParallelTask) -> void'
+    start_line: 244
+    end_line: 247
+    does: enqueue
+  - name: TaskQueue.dequeue
+    kind: method
+    sig: () -> ParallelTask | null
+    start_line: 249
+    end_line: 257
+    does: dequeue
+  - name: TaskQueue.size
+    kind: method
+    sig: () -> number
+    start_line: 259
+    end_line: 265
+    does: size
+  - name: TaskQueue.isEmpty
+    kind: method
+    sig: () -> boolean
+    start_line: 267
+    end_line: 269
+    does: is empty
+  - name: TaskQueue.clear
+    kind: method
+    sig: () -> void
+    start_line: 271
+    end_line: 275
+    does: deletes
+  - name: ParallelExecutor.constructor
+    kind: method
+    sig: '(config: Partial<ParallelExecutorConfig>) -> None'
+    start_line: 290
+    end_line: 303
+    does: constructor
+  - name: ParallelExecutor.addProvider
+    kind: method
+    sig: '(config: LLMConfig) -> void'
+    start_line: 308
+    end_line: 312
+    does: creates provider
+  - name: ParallelExecutor.addProviders
+    kind: method
+    sig: '(configs: LLMConfig[]) -> void'
+    start_line: 317
+    end_line: 321
+    does: creates providers
+  - name: ParallelExecutor.submitTask
+    kind: method
+    sig: 'async (task: Omit<ParallelTask, ''id'' | ''createdAt''>) -> Promise<TaskResult>'
+    start_line: 326
+    end_line: 337
+    does: submit task
+  - name: ParallelExecutor.submitBatch
+    kind: method
+    sig: 'async (request: BatchRequest) -> Promise<TaskResult[]>'
+    start_line: 342
+    end_line: 370
+    does: submit batch
+  - name: ParallelExecutor.parallelGenerate
+    kind: method
+    sig: 'async (prompts: Array<{ messages: LLMMessage[]; config?: Partial<LLMConfig> }>, options: { maxConcurrency?: number;
+      onProgress?: (i: number, total: number) => void }) -> Promise<LLMResponse[]>'
+    start_line: 375
+    end_line: 395
+    does: parallel generate
+  - name: ParallelExecutor.broadcastGenerate
+    kind: method
+    sig: 'async (messages: LLMMessage[], config?) -> Promise<Map<LLMProviderType, LLMResponse>>'
+    start_line: 400
+    end_line: 425
+    does: broadcast generate
+  - name: ParallelExecutor.raceGenerate
+    kind: method
+    sig: 'async (messages: LLMMessage[], config?) -> Promise<LLMResponse>'
+    start_line: 430
+    end_line: 444
+    does: race generate
+  - name: ParallelExecutor.getStats
+    kind: method
+    sig: () -> ProviderStats[]
+    start_line: 449
+    end_line: 451
+    does: retrieves stats
+  - name: ParallelExecutor.getQueueSize
+    kind: method
+    sig: () -> number
+    start_line: 456
+    end_line: 458
+    does: retrieves queue size
+  - name: ParallelExecutor.getActiveRequests
+    kind: method
+    sig: () -> number
+    start_line: 463
+    end_line: 465
+    does: retrieves active requests
+  - name: ParallelExecutor.executeTask
+    kind: method
+    sig: 'async (task: ParallelTask) -> Promise<TaskResult>'
+    start_line: 471
+    end_line: 552
+    does: starts task
+  - name: ParallelExecutor.executeWithConcurrency
+    kind: method
+    sig: 'async (promises: Promise<T>[]) -> Promise<T[]>'
+    start_line: 554
+    end_line: 581
+    does: starts with concurrency
+  - name: ParallelExecutor.withTimeout
+    kind: method
+    sig: 'async (promise: Promise<T>, ms: number) -> Promise<T>'
+    start_line: 583
+    end_line: 598
+    does: with timeout
+  - name: ParallelExecutor.generateTaskId
+    kind: method
+    sig: () -> string
+    start_line: 600
+    end_line: 602
+    does: creates task id
+  - name: ParallelExecutor.delay
+    kind: method
+    sig: '(ms: number) -> Promise<void>'
+    start_line: 604
+    end_line: 606
+    does: delay
+- path: core/contract-ai/llm/llm-provider.ts
+  language: typescript
+  functions:
+  - name: createProvider
+    kind: function
+    sig: '(config: LLMConfig) -> ILLMProvider'
+    start_line: 450
+    end_line: 463
+    does: creates provider
+  - name: OllamaProvider.isAvailable
+    kind: method
+    sig: async () -> Promise<boolean>
+    start_line: 203
+    end_line: 214
+    does: is available
+  - name: OllamaProvider.chat
+    kind: method
+    sig: 'async (messages: LLMMessage[], config?) -> Promise<LLMResponse>'
+    start_line: 216
+    end_line: 250
+    does: chat
+  - name: LiteLLMProvider.isAvailable
+    kind: method
+    sig: async () -> Promise<boolean>
+    start_line: 261
+    end_line: 272
+    does: is available
+  - name: LiteLLMProvider.chat
+    kind: method
+    sig: 'async (messages: LLMMessage[], config?) -> Promise<LLMResponse>'
+    start_line: 274
+    end_line: 319
+    does: chat
+  - name: OpenRouterProvider.isAvailable
+    kind: method
+    sig: async () -> Promise<boolean>
+    start_line: 336
+    end_line: 338
+    does: is available
+  - name: OpenRouterProvider.chat
+    kind: method
+    sig: 'async (messages: LLMMessage[], config?) -> Promise<LLMResponse>'
+    start_line: 340
+    end_line: 382
+    does: chat
+  - name: WindsurfProvider.isAvailable
+    kind: method
+    sig: async () -> Promise<boolean>
+    start_line: 393
+    end_line: 396
+    does: is available
+  - name: WindsurfProvider.chat
+    kind: method
+    sig: 'async (messages: LLMMessage[], config?) -> Promise<LLMResponse>'
+    start_line: 398
+    end_line: 443
+    does: chat
+- path: core/contract-ai/llm/pydantic-validator.ts
+  language: typescript
+  functions:
+  - name: createPydanticValidator
+    kind: function
+    sig: async (schemasDir?) -> Promise<PydanticValidator>
+    start_line: 426
+    end_line: 432
+    does: creates pydantic validator
+  - name: PydanticValidator.constructor
+    kind: method
+    sig: (schemasDir?) -> None
+    start_line: 61
+    end_line: 63
+    does: constructor
+  - name: PydanticValidator.normalizeSchemaName
+    kind: method
+    sig: '(name: string) -> string'
+    start_line: 65
+    end_line: 72
+    does: normalize schema name
+  - name: PydanticValidator.loadSchemas
+    kind: method
+    sig: async () -> Promise<void>
+    start_line: 77
+    end_line: 84
+    does: retrieves schemas
+  - name: PydanticValidator.loadSchemasFromDir
+    kind: method
+    sig: 'async (dir: string) -> Promise<void>'
+    start_line: 89
+    end_line: 109
+    does: retrieves schemas from dir
+  - name: PydanticValidator.getSchema
+    kind: method
+    sig: '(name: string) -> JSONSchema | undefined'
+    start_line: 114
+    end_line: 116
+    does: retrieves schema
+  - name: PydanticValidator.resolveJsonPointer
+    kind: method
+    sig: '(root: any, pointer: string) -> JSONSchema | undefined'
+    start_line: 118
+    end_line: 131
+    does: resolve json pointer
+  - name: PydanticValidator.resolveRef
+    kind: method
+    sig: '(ref: string, rootSchema: JSONSchema) -> JSONSchema | undefined'
+    start_line: 133
+    end_line: 147
+    does: resolve ref
+  - name: PydanticValidator.validate
+    kind: method
+    sig: '(schemaName: string, data: unknown) -> SchemaValidationResult'
+    start_line: 152
+    end_line: 170
+    does: validates
+  - name: PydanticValidator.validateValue
+    kind: method
+    sig: '(value: unknown, schema: JSONSchema, path: string, rootSchema: JSONSchema) -> ValidationError[]'
+    start_line: 175
+    end_line: 362
+    does: validates value
+  - name: PydanticValidator.getType
+    kind: method
+    sig: '(value: unknown) -> string'
+    start_line: 367
+    end_line: 371
+    does: retrieves type
+  - name: PydanticValidator.validateFormat
+    kind: method
+    sig: '(value: string, format: string, path: string) -> ValidationError | null'
+    start_line: 376
+    end_line: 412
+    does: validates format
+  - name: PydanticValidator.getLoadedSchemas
+    kind: method
+    sig: () -> string[]
+    start_line: 417
+    end_line: 419
+    does: retrieves loaded schemas
+- path: core/contract-ai/llm/ollama-client.ts
+  language: typescript
+  functions:
+  - name: createOllamaClient
+    kind: function
+    sig: (config?) -> OllamaClient
+    start_line: 238
+    end_line: 240
+    does: creates ollama client
+  - name: checkOllamaAvailable
+    kind: function
+    sig: async (host?) -> Promise<boolean>
+    start_line: 245
+    end_line: 248
+    does: checks ollama available
+  - name: OllamaClient.constructor
+    kind: method
+    sig: (config?) -> None
+    start_line: 61
+    end_line: 68
+    does: constructor
+  - name: OllamaClient.isAvailable
+    kind: method
+    sig: async () -> Promise<boolean>
+    start_line: 73
+    end_line: 80
+    does: is available
+  - name: OllamaClient.hasModel
+    kind: method
+    sig: async (modelName?) -> Promise<boolean>
+    start_line: 85
+    end_line: 108
+    does: has model
+  - name: OllamaClient.generate
+    kind: method
+    sig: 'async (opts: GenerateOptions) -> Promise<string>'
+    start_line: 113
+    end_line: 163
+    does: creates
+  - name: OllamaClient.httpGet
+    kind: method
+    sig: '(path: string) -> Promise<{ statusCode: number; body: string }>'
+    start_line: 168
+    end_line: 185
+    does: http get
+  - name: OllamaClient.httpPost
+    kind: method
+    sig: '(path: string, data: any) -> Promise<{ statusCode: number; body: string }>'
+    start_line: 190
+    end_line: 220
+    does: http post
+  - name: OllamaClient.sleep
+    kind: method
+    sig: '(ms: number) -> Promise<void>'
+    start_line: 222
+    end_line: 224
+    does: sleep
+  - name: OllamaClient.getConfig
+    kind: method
+    sig: () -> OllamaConfig
+    start_line: 229
+    end_line: 231
+    does: retrieves config
+- path: core/contract-ai/llm/context-generator.ts
+  language: typescript
+  functions:
+  - name: ContextGenerator.constructor
+    kind: method
+    sig: '(llmManager: LLMManager, context: ContextInfo) -> None'
+    start_line: 111
+    end_line: 114
+    does: constructor
+  - name: ContextGenerator.createPlan
+    kind: method
+    sig: 'async (prompt: string) -> Promise<GenerationPlan>'
+    start_line: 119
+    end_line: 166
+    does: creates plan
+  - name: ContextGenerator.executeStep
+    kind: method
+    sig: 'async (step: GenerationStep) -> Promise<GeneratedFile[]>'
+    start_line: 171
+    end_line: 201
+    does: starts step
+  - name: ContextGenerator.executePlan
+    kind: method
+    sig: 'async (plan: GenerationPlan, onProgress?) -> Promise<Map<string, GeneratedFile[]>>'
+    start_line: 206
+    end_line: 226
+    does: starts plan
+  - name: ContextGenerator.generateContract
+    kind: method
+    sig: 'async (prompt: string) -> Promise<ContractAI | null>'
+    start_line: 231
+    end_line: 294
+    does: creates contract
+  - name: ContextGenerator.generateCodeFile
+    kind: method
+    sig: 'async (fileType: ''api'' | ''service'' | ''test'' | ''frontend'', contract: ContractAI, entityName: string) -> Promise<GeneratedFile
+      | null>'
+    start_line: 299
+    end_line: 341
+    does: creates code file
+  - name: ContextGenerator.refactorCode
+    kind: method
+    sig: 'async (code: string, instructions: string, context: string) -> Promise<string>'
+    start_line: 346
+    end_line: 383
+    does: refactor code
+  - name: ContextGenerator.buildUserPrompt
+    kind: method
+    sig: '(step: GenerationStep) -> string'
+    start_line: 389
+    end_line: 410
+    does: creates user prompt
+  - name: ContextGenerator.buildCodePrompt
+    kind: method
+    sig: '(fileType: string, entity: any, contract: ContractAI) -> string'
+    start_line: 412
+    end_line: 433
+    does: creates code prompt
+  - name: ContextGenerator.parseResponse
+    kind: method
+    sig: '(response: LLMResponse, step: GenerationStep) -> GeneratedFile[]'
+    start_line: 435
+    end_line: 466
+    does: parses response
+  - name: ContextGenerator.extractCode
+    kind: method
+    sig: '(content: string) -> string'
+    start_line: 468
+    end_line: 475
+    does: parses code
+  - name: ContextGenerator.getDefaultFilePath
+    kind: method
+    sig: '(step: GenerationStep) -> string'
+    start_line: 477
+    end_line: 487
+    does: retrieves default file path
+  - name: ContextGenerator.getFilePath
+    kind: method
+    sig: '(fileType: string, entityName: string) -> string'
+    start_line: 489
+    end_line: 498
+    does: retrieves file path
+  - name: ContextGenerator.determineComplexity
+    kind: method
+    sig: '(step: GenerationStep) -> ''low'' | ''medium'' | ''high'''
+    start_line: 500
+    end_line: 504
+    does: determine complexity
+  - name: ContextGenerator.estimateTokens
+    kind: method
+    sig: '(prompt: string) -> number'
+    start_line: 506
+    end_line: 511
+    does: estimate tokens
+- path: core/contract-ai/parser/markdown-parser.ts
+  language: typescript
+  functions:
+  - name: parseContractMarkdown
+    kind: function
+    sig: '(content: string) -> ContractMarkdown'
+    start_line: 25
+    end_line: 38
+    does: parses contract markdown
+  - name: extractFrontmatter
+    kind: function
+    sig: "(content: string) -> { \n  frontmatter: ContractFrontmatter; \n  body: string \n}"
+    start_line: 44
+    end_line: 69
+    does: parses frontmatter
+  - name: parseAppSection
+    kind: function
+    sig: '(body: string) -> ContractMarkdown[''app'']'
+    start_line: 75
+    end_line: 84
+    does: parses app section
+  - name: parseEntitiesSection
+    kind: function
+    sig: '(body: string) -> MarkdownEntityDefinition[]'
+    start_line: 86
+    end_line: 100
+    does: parses entities section
+  - name: parseEntityContent
+    kind: function
+    sig: '(name: string, content: string) -> MarkdownEntityDefinition'
+    start_line: 102
+    end_line: 126
+    does: parses entity content
+  - name: parseMarkdownTable
+    kind: function
+    sig: '(content: string) -> EntityField[]'
+    start_line: 128
+    end_line: 155
+    does: parses markdown table
+  - name: parseFieldType
+    kind: function
+    sig: '(typeStr: string) -> FieldType'
+    start_line: 157
+    end_line: 176
+    does: parses field type
+  - name: parseApiSection
+    kind: function
+    sig: '(body: string) -> ContractMarkdown[''api'']'
+    start_line: 178
+    end_line: 189
+    does: parses api section
+  - name: parseEndpointTables
+    kind: function
+    sig: '(section: string) -> ApiEndpoint[]'
+    start_line: 191
+    end_line: 216
+    does: parses endpoint tables
+  - name: parseRulesSection
+    kind: function
+    sig: '(body: string) -> ContractMarkdown[''rules'']'
+    start_line: 218
+    end_line: 235
+    does: parses rules section
+  - name: parseTechSection
+    kind: function
+    sig: '(body: string, frontmatter: ContractFrontmatter) -> ContractMarkdown[''tech'']'
+    start_line: 237
+    end_line: 300
+    does: parses tech section
+  - name: parseTestsSection
+    kind: function
+    sig: '(body: string) -> ContractMarkdown[''tests'']'
+    start_line: 302
+    end_line: 325
+    does: parses tests section
+  - name: parseGherkin
+    kind: function
+    sig: '(content: string) -> AcceptanceTest[]'
+    start_line: 327
+    end_line: 351
+    does: parses gherkin
+  - name: extractSection
+    kind: function
+    sig: '(body: string, header: string) -> string'
+    start_line: 357
+    end_line: 362
+    does: parses section
+  - name: extractField
+    kind: function
+    sig: '(section: string, label: string) -> string'
+    start_line: 364
+    end_line: 368
+    does: parses field
+  - name: extractListFromField
+    kind: function
+    sig: '(section: string, label: string) -> string[]'
+    start_line: 370
+    end_line: 374
+    does: parses list from field
+  - name: extractCheckboxList
+    kind: function
+    sig: '(section: string) -> string[]'
+    start_line: 376
+    end_line: 386
+    does: parses checkbox list
+  - name: validateContract
+    kind: function
+    sig: '(contract: ContractMarkdown) -> ContractValidationResult'
+    start_line: 392
+    end_line: 430
+    does: validates contract
+- path: core/contract-ai/evolution/evolution-manager.ts
+  language: typescript
+  functions:
+  - name: createEvolutionManager
+    kind: function
+    sig: (options?) -> EvolutionManager
+    start_line: 4616
+    end_line: 4618
+    does: creates evolution manager
+  - name: EvolutionManager.constructor
+    kind: method
+    sig: '(options: Partial<EvolutionOptions>) -> None'
+    start_line: 139
+    end_line: 146
+    does: constructor
+  - name: EvolutionManager.initCodeRAG
+    kind: method
+    sig: 'async () -> Promise<{ files: number; chunks: number }>'
+    start_line: 155
+    end_line: 179
+    does: creates code rag
+  - name: EvolutionManager.askCode
+    kind: method
+    sig: 'async (question: string) -> Promise<{ answer: string; sources: SearchResult[] }>'
+    start_line: 184
+    end_line: 211
+    does: ask code
+  - name: EvolutionManager.findSymbolUsages
+    kind: method
+    sig: '(symbol: string) -> CodeChunk[]'
+    start_line: 216
+    end_line: 221
+    does: retrieves symbol usages
+  - name: EvolutionManager.getCodeStructure
+    kind: method
+    sig: '() -> { level: number; name: string; count: number }[]'
+    start_line: 226
+    end_line: 235
+    does: retrieves code structure
+  - name: EvolutionManager.buildRAGContext
+    kind: method
+    sig: 'async (query: string, maxChunks: number) -> Promise<string>'
+    start_line: 240
+    end_line: 259
+    does: creates rag context
+  - name: EvolutionManager.buildContractDrivenPrompt
+    kind: method
+    sig: '(task: string) -> string'
+    start_line: 269
+    end_line: 310
+    does: creates contract driven prompt
+  - name: EvolutionManager.getTechStackFromContract
+    kind: method
+    sig: '() -> { language: string; framework: string; database?: string }'
+    start_line: 315
+    end_line: 323
+    does: retrieves tech stack from contract
+  - name: EvolutionManager.analyzeState
+    kind: method
+    sig: async () -> Promise<MultiLevelState>
+    start_line: 328
+    end_line: 439
+    does: processes state
+  - name: EvolutionManager.reconcileState
+    kind: method
+    sig: 'async () -> Promise<{ fixed: number; remaining: number }>'
+    start_line: 444
+    end_line: 472
+    does: reconcile state
+  - name: EvolutionManager.importFromGit
+    kind: method
+    sig: async (targetDir?) -> Promise<ContractAI | null>
+    start_line: 477
+    end_line: 519
+    does: import from git
+  - name: EvolutionManager.getGitState
+    kind: method
+    sig: () -> GitState | null
+    start_line: 524
+    end_line: 527
+    does: retrieves git state
+  - name: EvolutionManager.setLLMClient
+    kind: method
+    sig: '(client: LLMClient) -> void'
+    start_line: 532
+    end_line: 534
+    does: updates llm client
+  - name: EvolutionManager.initParallelLLM
+    kind: method
+    sig: 'async () -> Promise<{ providers: number; available: number }>'
+    start_line: 539
+    end_line: 567
+    does: creates parallel llm
+  - name: EvolutionManager.generateEntitiesParallel
+    kind: method
+    sig: async () -> Promise<GeneratedFile[]>
+    start_line: 572
+    end_line: 631
+    does: creates entities parallel
+  - name: EvolutionManager.generateContractFromPrompt
+    kind: method
+    sig: 'async (prompt: string) -> Promise<ContractAI | null>'
+    start_line: 636
+    end_line: 650
+    does: creates contract from prompt
+  - name: EvolutionManager.extractCode
+    kind: method
+    sig: '(content: string) -> string'
+    start_line: 655
+    end_line: 661
+    does: parses code
+  - name: EvolutionManager.setContract
+    kind: method
+    sig: '(contract: ContractAI) -> void'
+    start_line: 666
+    end_line: 668
+    does: updates contract
+  - name: EvolutionManager.printTasks
+    kind: method
+    sig: () -> void
+    start_line: 670
+    end_line: 672
+    does: logs tasks
+  - name: EvolutionManager.getTasks
+    kind: method
+    sig: () -> Task[]
+    start_line: 674
+    end_line: 676
+    does: retrieves tasks
+  - name: EvolutionManager.buildStateContext
+    kind: method
+    sig: () -> string
+    start_line: 681
+    end_line: 725
+    does: creates state context
+  - name: EvolutionManager.writeStateSnapshot
+    kind: method
+    sig: (forceLog) -> void
+    start_line: 734
+    end_line: 793
+    does: logs state snapshot
+  - name: EvolutionManager.readOutputFileSnippet
+    kind: method
+    sig: '(relPath: string, maxChars: number) -> string'
+    start_line: 795
+    end_line: 805
+    does: retrieves output file snippet
+  - name: EvolutionManager.validateApiOutput
+    kind: method
+    sig: '() -> { required: string[]; missing: string[] }'
+    start_line: 807
+    end_line: 811
+    does: validates api output
+  - name: EvolutionManager.getMustNonApiTargets
+    kind: method
+    sig: () -> string[]
+    start_line: 813
+    end_line: 822
+    does: retrieves must non api targets
+  - name: EvolutionManager.validateLayer2Output
+    kind: method
+    sig: '() -> { mustTargets: string[]; missingTargets: string[] }'
+    start_line: 824
+    end_line: 854
+    does: validates layer2 output
+  - name: EvolutionManager.getTargetPriority
+    kind: method
+    sig: '(target: string) -> ''must'' | ''should'' | ''may'' | null'
+    start_line: 856
+    end_line: 866
+    does: retrieves target priority
+  - name: EvolutionManager.withTimeout
+    kind: method
+    sig: 'async (promise: Promise<T>, ms: number) -> Promise<T>'
+    start_line: 868
+    end_line: 893
+    does: with timeout
+  - name: EvolutionManager.withRetries
+    kind: method
+    sig: 'async (fn: () => Promise<T>, attempts: number, delayMs: number, shouldRetry?) -> Promise<T>'
+    start_line: 895
+    end_line: 920
+    does: with retries
+  - name: EvolutionManager.yamlEscape
+    kind: method
+    sig: '(value: string) -> string'
+    start_line: 922
+    end_line: 924
+    does: yaml escape
+  - name: EvolutionManager.getErrorHints
+    kind: method
+    sig: '(errorMsg: string) -> { type: string; hints: string[] }'
+    start_line: 926
+    end_line: 1002
+    does: retrieves error hints
+  - name: EvolutionManager.logErrorHints
+    kind: method
+    sig: '(scope: string, taskId: string, errorMsg: string) -> void'
+    start_line: 1004
+    end_line: 1020
+    does: logs error hints
+  - name: EvolutionManager.attemptRecovery
+    kind: method
+    sig: 'async (taskId: string, error: string, context: string) -> Promise<{ fixed: boolean; strategy: string; action?: string
+      }>'
+    start_line: 1035
+    end_line: 1080
+    does: attempt recovery
+  - name: EvolutionManager.tryHeuristicFix
+    kind: method
+    sig: '(taskId: string, error: string) -> { fixed: boolean; pattern?: string; action?: string }'
+    start_line: 1085
+    end_line: 1174
+    does: try heuristic fix
+  - name: EvolutionManager.hashError
+    kind: method
+    sig: '(error: string) -> string'
+    start_line: 1176
+    end_line: 1181
+    does: hash error
+  - name: EvolutionManager.generateDynamicServerCode
+    kind: method
+    sig: async () -> Promise<string>
+    start_line: 1183
+    end_line: 1228
+    does: creates dynamic server code
+  - name: EvolutionManager.generateDynamicPackageJson
+    kind: method
+    sig: async () -> Promise<string>
+    start_line: 1230
+    end_line: 1248
+    does: creates dynamic package json
+  - name: EvolutionManager.tryRegistryFix
+    kind: method
+    sig: '(taskId: string, error: string) -> { fixed: boolean; fixId?: string; action?: string }'
+    start_line: 1253
+    end_line: 1269
+    does: try registry fix
+  - name: EvolutionManager.tryFallbackFix
+    kind: method
+    sig: 'async (taskId: string, error: string) -> Promise<{ fixed: boolean; generator?: string; action?: string }>'
+    start_line: 1274
+    end_line: 1368
+    does: try fallback fix
+  - name: EvolutionManager.tryLLMFix
+    kind: method
+    sig: 'async (taskId: string, error: string, context: string) -> Promise<{ fixed: boolean; confidence?: number; action?:
+      string; reusableFix?: string }>'
+    start_line: 1373
+    end_line: 1442
+    does: try llm fix
+  - name: EvolutionManager.orchestrateTestsLayer
+    kind: method
+    sig: async () -> Promise<boolean>
+    start_line: 1447
+    end_line: 1451
+    does: orchestrate tests layer
+  - name: EvolutionManager.orchestrateFrontendLayer
+    kind: method
+    sig: async () -> Promise<boolean>
+    start_line: 1456
+    end_line: 1497
+    does: orchestrate frontend layer
+  - name: EvolutionManager.orchestrateCustomLayer
+    kind: method
+    sig: 'async (layerName: string) -> Promise<boolean>'
+    start_line: 1502
+    end_line: 1529
+    does: orchestrate custom layer
+  - name: EvolutionManager.buildLayer2Context
+    kind: method
+    sig: '(stateContext: string, missingTargets: string[]) -> string'
+    start_line: 1535
+    end_line: 1561
+    does: creates layer2 context
+  - name: EvolutionManager.narrate
+    kind: method
+    sig: '(action: string, details?) -> void'
+    start_line: 1566
+    end_line: 1571
+    does: narrate
+  - name: EvolutionManager.logReasoning
+    kind: method
+    sig: '(task: string, problem?, approach?) -> void'
+    start_line: 1576
+    end_line: 1584
+    does: logs reasoning
+  - name: EvolutionManager.logLLMRequest
+    kind: method
+    sig: '(purpose: string, prompt: string) -> void'
+    start_line: 1589
+    end_line: 1604
+    does: logs llm request
+  - name: EvolutionManager.logLLMResponse
+    kind: method
+    sig: '(success: boolean, chars: number, source: ''llm'' | ''fallback'') -> void'
+    start_line: 1609
+    end_line: 1619
+    does: logs llm response
+  - name: EvolutionManager.validatePlanAgainstContract
+    kind: method
+    sig: '() -> { valid: boolean; issues: string[]; suggestions: string[] }'
+    start_line: 1624
+    end_line: 1668
+    does: validates plan against contract
+  - name: EvolutionManager.evolveIteratively
+    kind: method
+    sig: 'async (prompt: string, maxIterations) -> Promise<void>'
+    start_line: 1674
+    end_line: 2160
+    does: evolve iteratively
+  - name: EvolutionManager.generateTestFiles
+    kind: method
+    sig: async () -> Promise<void>
+    start_line: 2165
+    end_line: 2172
+    does: creates test files
+  - name: EvolutionManager.generateReadme
+    kind: method
+    sig: async () -> Promise<void>
+    start_line: 2178
+    end_line: 2287
+    does: creates readme
+  - name: EvolutionManager.generateApiDocs
+    kind: method
+    sig: async () -> Promise<void>
+    start_line: 2289
+    end_line: 2361
+    does: creates api docs
+  - name: EvolutionManager.generatePrismaSchema
+    kind: method
+    sig: async () -> Promise<void>
+    start_line: 2366
+    end_line: 2452
+    does: creates prisma schema
+  - name: EvolutionManager.generateApiEnv
+    kind: method
+    sig: async () -> Promise<void>
+    start_line: 2457
+    end_line: 2480
+    does: creates api env
+  - name: EvolutionManager.saveMultiLevelStateSnapshot
+    kind: method
+    sig: async () -> Promise<void>
+    start_line: 2485
+    end_line: 2525
+    does: caches multi level state snapshot
+  - name: EvolutionManager.generateDatabaseArtifacts
+    kind: method
+    sig: async () -> Promise<boolean>
+    start_line: 2527
+    end_line: 2673
+    does: creates database artifacts
+  - name: EvolutionManager.generateCicdArtifacts
+    kind: method
+    sig: async () -> Promise<boolean>
+    start_line: 2675
+    end_line: 2748
+    does: creates cicd artifacts
+  - name: EvolutionManager.generateDockerArtifacts
+    kind: method
+    sig: async () -> Promise<boolean>
+    start_line: 2750
+    end_line: 2907
+    does: creates docker artifacts
+  - name: EvolutionManager.getFallbackReadme
+    kind: method
+    sig: () -> string
+    start_line: 2912
+    end_line: 3041
+    does: retrieves fallback readme
+  - name: EvolutionManager.detectApiEndpoints
+    kind: method
+    sig: '(pluralName: string) -> { basePath: string; endpoints: Record<string, string> }'
+    start_line: 3046
+    end_line: 3076
+    does: detect api endpoints
+  - name: EvolutionManager.runTests
+    kind: method
+    sig: 'async () -> Promise<{ passed: boolean; error?: string }>'
+    start_line: 3082
+    end_line: 3153
+    does: starts tests
+  - name: EvolutionManager.writeContractSnapshot
+    kind: method
+    sig: () -> void
+    start_line: 3155
+    end_line: 3171
+    does: logs contract snapshot
+  - name: EvolutionManager.startFromPrompt
+    kind: method
+    sig: 'async (prompt: string) -> Promise<void>'
+    start_line: 3176
+    end_line: 3258
+    does: starts from prompt
+  - name: EvolutionManager.createMinimalContract
+    kind: method
+    sig: '(prompt: string) -> ContractAI'
+    start_line: 3263
+    end_line: 3403
+    does: creates minimal contract
+  - name: EvolutionManager.extractEntitiesFromPrompt
+    kind: method
+    sig: '(prompt: string) -> Array<{name: string; fields: any[]; relations: any[]}>'
+    start_line: 3408
+    end_line: 3493
+    does: parses entities from prompt
+  - name: EvolutionManager.getEntityFields
+    kind: method
+    sig: '(entityName: string, prompt: string) -> any[]'
+    start_line: 3498
+    end_line: 3602
+    does: retrieves entity fields
+  - name: EvolutionManager.getEntityRelations
+    kind: method
+    sig: '(entityName: string, allEntities: Set<string>) -> any[]'
+    start_line: 3607
+    end_line: 3632
+    does: retrieves entity relations
+  - name: EvolutionManager.capitalize
+    kind: method
+    sig: '(str: string) -> string'
+    start_line: 3637
+    end_line: 3639
+    does: capitalize
+  - name: EvolutionManager.singularize
+    kind: method
+    sig: '(str: string) -> string'
+    start_line: 3644
+    end_line: 3649
+    does: singularize
+  - name: EvolutionManager.isValidEntityName
+    kind: method
+    sig: '(name: string) -> boolean'
+    start_line: 3654
+    end_line: 3657
+    does: is valid entity name
+  - name: EvolutionManager.start
+    kind: method
+    sig: 'async (contract: ContractAI, initialCode?) -> Promise<void>'
+    start_line: 3662
+    end_line: 3700
+    does: starts
+  - name: EvolutionManager.generateCode
+    kind: method
+    sig: 'async (trigger: EvolutionCycle[''trigger''], context?) -> Promise<GeneratedCode>'
+    start_line: 3705
+    end_line: 3790
+    does: creates code
+  - name: EvolutionManager.buildSystemPrompt
+    kind: method
+    sig: () -> string
+    start_line: 3795
+    end_line: 3797
+    does: creates system prompt
+  - name: EvolutionManager.buildUserPrompt
+    kind: method
+    sig: '(trigger: EvolutionCycle[''trigger''], context?) -> string'
+    start_line: 3802
+    end_line: 3809
+    does: creates user prompt
+  - name: EvolutionManager.parseFilesFromResponse
+    kind: method
+    sig: '(response: string) -> GeneratedFile[]'
+    start_line: 3814
+    end_line: 3832
+    does: parses files from response
+  - name: EvolutionManager.writeFiles
+    kind: method
+    sig: 'async (files: GeneratedFile[]) -> Promise<void>'
+    start_line: 3837
+    end_line: 3876
+    does: logs files
+  - name: EvolutionManager.startService
+    kind: method
+    sig: async () -> Promise<void>
+    start_line: 3881
+    end_line: 4027
+    does: starts service
+  - name: EvolutionManager.stopService
+    kind: method
+    sig: async () -> Promise<void>
+    start_line: 4032
+    end_line: 4041
+    does: stops service
+  - name: EvolutionManager.restartService
+    kind: method
+    sig: async () -> Promise<void>
+    start_line: 4046
+    end_line: 4053
+    does: restart service
+  - name: EvolutionManager.waitForHealth
+    kind: method
+    sig: async (maxAttempts) -> Promise<boolean>
+    start_line: 4058
+    end_line: 4073
+    does: wait for health
+  - name: EvolutionManager.startMonitoring
+    kind: method
+    sig: () -> void
+    start_line: 4078
+    end_line: 4094
+    does: starts monitoring
+  - name: EvolutionManager.stopMonitoring
+    kind: method
+    sig: () -> void
+    start_line: 4099
+    end_line: 4108
+    does: stops monitoring
+  - name: EvolutionManager.killProcessOnPort
+    kind: method
+    sig: 'async (port: number) -> Promise<void>'
+    start_line: 4113
+    end_line: 4125
+    does: kill process on port
+  - name: EvolutionManager.checkHealth
+    kind: method
+    sig: async () -> Promise<boolean>
+    start_line: 4130
+    end_line: 4150
+    does: checks health
+  - name: EvolutionManager.isPortAvailable
+    kind: method
+    sig: 'async (port: number) -> Promise<boolean>'
+    start_line: 4152
+    end_line: 4161
+    does: is port available
+  - name: EvolutionManager.findAvailablePort
+    kind: method
+    sig: 'async (startPort: number, tries: number) -> Promise<number | null>'
+    start_line: 4163
+    end_line: 4169
+    does: retrieves available port
+  - name: EvolutionManager.handleHealthFailure
+    kind: method
+    sig: async () -> Promise<void>
+    start_line: 4174
+    end_line: 4206
+    does: handles health failure
+  - name: EvolutionManager.analyzeRecentLogs
+    kind: method
+    sig: () -> string[]
+    start_line: 4211
+    end_line: 4229
+    does: processes recent logs
+  - name: EvolutionManager.evolveWithFeedback
+    kind: method
+    sig: 'async (issueDescription: string) -> Promise<void>'
+    start_line: 4235
+    end_line: 4277
+    does: evolve with feedback
+  - name: EvolutionManager.handleLogIssues
+    kind: method
+    sig: 'async (issues: string[]) -> Promise<void>'
+    start_line: 4282
+    end_line: 4348
+    does: handles log issues
+  - name: EvolutionManager.addLog
+    kind: method
+    sig: '(level: LogEntry[''level''], message: string, source: string) -> void'
+    start_line: 4353
+    end_line: 4365
+    does: creates log
+  - name: EvolutionManager.getRecentErrors
+    kind: method
+    sig: () -> LogEntry[]
+    start_line: 4370
+    end_line: 4375
+    does: retrieves recent errors
+  - name: EvolutionManager.logEvolutionCycle
+    kind: method
+    sig: '(cycle: EvolutionCycle) -> void'
+    start_line: 4380
+    end_line: 4383
+    does: logs evolution cycle
+  - name: EvolutionManager.writeEvolutionLog
+    kind: method
+    sig: () -> void
+    start_line: 4388
+    end_line: 4403
+    does: logs evolution log
+  - name: EvolutionManager.generateEvolutionLogContent
+    kind: method
+    sig: () -> string
+    start_line: 4408
+    end_line: 4463
+    does: creates evolution log content
+  - name: EvolutionManager.generateFallbackCode
+    kind: method
+    sig: () -> string
+    start_line: 4468
+    end_line: 4471
+    does: creates fallback code
+  - name: EvolutionManager.getNodeEnv
+    kind: method
+    sig: () -> NodeJS.ProcessEnv
+    start_line: 4476
+    end_line: 4491
+    does: retrieves node env
+  - name: EvolutionManager.runCommand
+    kind: method
+    sig: '(cmd: string, args: string[], cwd: string) -> Promise<string>'
+    start_line: 4496
+    end_line: 4516
+    does: starts command
+  - name: EvolutionManager.sleep
+    kind: method
+    sig: '(ms: number) -> Promise<void>'
+    start_line: 4521
+    end_line: 4523
+    does: sleep
+  - name: EvolutionManager.getStatus
+    kind: method
+    sig: () -> ServiceStatus
+    start_line: 4528
+    end_line: 4538
+    does: retrieves status
+  - name: EvolutionManager.getHistory
+    kind: method
+    sig: () -> EvolutionCycle[]
+    start_line: 4543
+    end_line: 4545
+    does: retrieves history
+  - name: EvolutionManager.evolve
+    kind: method
+    sig: 'async (reason: string) -> Promise<void>'
+    start_line: 4550
+    end_line: 4572
+    does: evolve
+  - name: EvolutionManager.shutdown
+    kind: method
+    sig: async () -> Promise<void>
+    start_line: 4577
+    end_line: 4609
+    does: stops
+- path: core/contract-ai/evolution/shell-renderer.ts
+  language: typescript
+  functions:
+  - name: getRenderer
+    kind: function
+    sig: () -> ShellRenderer
+    start_line: 453
+    end_line: 458
+    does: retrieves renderer
+  - name: renderMarkdown
+    kind: function
+    sig: '(text: string) -> void'
+    start_line: 473
+    end_line: 512
+    does: formats markdown
+  - name: ShellRenderer.constructor
+    kind: method
+    sig: (useColors) -> None
+    start_line: 62
+    end_line: 64
+    does: constructor
+  - name: ShellRenderer.enableLog
+    kind: method
+    sig: () -> void
+    start_line: 69
+    end_line: 72
+    does: enable log
+  - name: ShellRenderer.getLog
+    kind: method
+    sig: () -> string
+    start_line: 77
+    end_line: 79
+    does: retrieves log
+  - name: ShellRenderer.clearLog
+    kind: method
+    sig: () -> void
+    start_line: 84
+    end_line: 86
+    does: deletes log
+  - name: ShellRenderer.log
+    kind: method
+    sig: '(text: string) -> void'
+    start_line: 91
+    end_line: 98
+    does: logs
+  - name: ShellRenderer.c
+    kind: method
+    sig: '(color: keyof typeof COLORS, text: string) -> string'
+    start_line: 101
+    end_line: 104
+    does: c
+  - name: ShellRenderer.heading
+    kind: method
+    sig: '(level: number, text: string) -> void'
+    start_line: 107
+    end_line: 110
+    does: heading
+  - name: ShellRenderer.codeblock
+    kind: method
+    sig: '(lang: string, content: string) -> void'
+    start_line: 113
+    end_line: 127
+    does: codeblock
+  - name: ShellRenderer.renderMarkdownWithFences
+    kind: method
+    sig: '(markdownText: string, textLang: string) -> void'
+    start_line: 129
+    end_line: 168
+    does: formats markdown with fences
+  - name: ShellRenderer.highlightLine
+    kind: method
+    sig: '(lang: string, line: string) -> string'
+    start_line: 171
+    end_line: 197
+    does: highlight line
+  - name: ShellRenderer.highlightLog
+    kind: method
+    sig: '(line: string) -> string'
+    start_line: 199
+    end_line: 241
+    does: highlight log
+  - name: ShellRenderer.highlightJs
+    kind: method
+    sig: '(line: string) -> string'
+    start_line: 244
+    end_line: 264
+    does: highlight js
+  - name: ShellRenderer.highlightMarkdown
+    kind: method
+    sig: '(line: string) -> string'
+    start_line: 267
+    end_line: 281
+    does: highlight markdown
+  - name: ShellRenderer.highlightYaml
+    kind: method
+    sig: '(line: string) -> string'
+    start_line: 284
+    end_line: 325
+    does: highlight yaml
+  - name: ShellRenderer.highlightJson
+    kind: method
+    sig: '(line: string) -> string'
+    start_line: 328
+    end_line: 356
+    does: highlight json
+  - name: ShellRenderer.highlightBash
+    kind: method
+    sig: '(line: string) -> string'
+    start_line: 359
+    end_line: 374
+    does: highlight bash
+  - name: ShellRenderer.status
+    kind: method
+    sig: '(icon: string, message: string, type: ''info'' | ''success'' | ''warning'' | ''error'') -> void'
+    start_line: 377
+    end_line: 385
+    does: status
+  - name: ShellRenderer.kv
+    kind: method
+    sig: '(key: string, value: string | number | boolean) -> void'
+    start_line: 388
+    end_line: 390
+    does: kv
+  - name: ShellRenderer.progress
+    kind: method
+    sig: '(done: number, total: number, label?) -> void'
+    start_line: 393
+    end_line: 398
+    does: progress
+  - name: ShellRenderer.separator
+    kind: method
+    sig: () -> void
+    start_line: 401
+    end_line: 403
+    does: separator
+  - name: ShellRenderer.inline
+    kind: method
+    sig: '(text: string) -> string'
+    start_line: 406
+    end_line: 408
+    does: inline
+  - name: ShellRenderer.task
+    kind: method
+    sig: '(name: string, status: ''pending'' | ''running'' | ''done'' | ''failed'', duration?) -> void'
+    start_line: 411
+    end_line: 427
+    does: task
+  - name: ShellRenderer.saveLog
+    kind: method
+    sig: '(filePath: string) -> void'
+    start_line: 432
+    end_line: 440
+    does: caches log
+  - name: ShellRenderer.print
+    kind: method
+    sig: '(text: string, color?) -> void'
+    start_line: 445
+    end_line: 447
+    does: logs
+- path: core/contract-ai/evolution/llm-orchestrator.ts
+  language: typescript
+  functions:
+  - name: LLMOrchestrator.constructor
+    kind: method
+    sig: '(options: LLMOrchestratorOptions, renderer: ShellRenderer) -> None'
+    start_line: 44
+    end_line: 47
+    does: constructor
+  - name: LLMOrchestrator.setClient
+    kind: method
+    sig: '(client: LLMClient) -> void'
+    start_line: 52
+    end_line: 54
+    does: updates client
+  - name: LLMOrchestrator.getClient
+    kind: method
+    sig: () -> LLMClient | null
+    start_line: 59
+    end_line: 61
+    does: retrieves client
+  - name: LLMOrchestrator.isAvailable
+    kind: method
+    sig: () -> boolean
+    start_line: 66
+    end_line: 68
+    does: is available
+  - name: LLMOrchestrator.withTimeout
+    kind: method
+    sig: 'async (promise: Promise<T>, ms: number) -> Promise<T>'
+    start_line: 73
+    end_line: 98
+    does: with timeout
+  - name: LLMOrchestrator.withRetries
+    kind: method
+    sig: 'async (fn: () => Promise<T>, maxRetries: number, delayMs: number) -> Promise<T>'
+    start_line: 103
+    end_line: 122
+    does: with retries
+  - name: LLMOrchestrator.orchestrateFrontend
+    kind: method
+    sig: 'async (contract: ContractAI) -> Promise<GenerationResult>'
+    start_line: 127
+    end_line: 166
+    does: orchestrate frontend
+  - name: LLMOrchestrator.orchestrateCustomLayer
+    kind: method
+    sig: 'async (contract: ContractAI, layerName: string) -> Promise<GenerationResult>'
+    start_line: 171
+    end_line: 200
+    does: orchestrate custom layer
+  - name: LLMOrchestrator.generateReadme
+    kind: method
+    sig: 'async (contract: ContractAI) -> Promise<{ content: string; source: ''llm'' | ''fallback'' }>'
+    start_line: 205
+    end_line: 253
+    does: creates readme
+  - name: LLMOrchestrator.parseFilesFromResponse
+    kind: method
+    sig: '(response: string, target: string) -> GeneratedFile[]'
+    start_line: 258
+    end_line: 270
+    does: parses files from response
+  - name: LLMOrchestrator.getFallbackReadme
+    kind: method
+    sig: '(contract: ContractAI) -> string'
+    start_line: 275
+    end_line: 311
+    does: retrieves fallback readme
+- path: core/contract-ai/evolution/git-analyzer.ts
+  language: typescript
+  functions:
+  - name: GitAnalyzer.constructor
+    kind: method
+    sig: '(cwd: string) -> None'
+    start_line: 37
+    end_line: 39
+    does: constructor
+  - name: GitAnalyzer.isGitRepo
+    kind: method
+    sig: () -> boolean
+    start_line: 41
+    end_line: 48
+    does: is git repo
+  - name: GitAnalyzer.getBranch
+    kind: method
+    sig: () -> string
+    start_line: 50
+    end_line: 56
+    does: retrieves branch
+  - name: GitAnalyzer.getLastCommit
+    kind: method
+    sig: '() -> { hash: string; message: string; date: string } | null'
+    start_line: 58
+    end_line: 66
+    does: retrieves last commit
+  - name: GitAnalyzer.getRecentCommits
+    kind: method
+    sig: '(count) -> Array<{ hash: string; message: string; date: string }>'
+    start_line: 68
+    end_line: 78
+    does: retrieves recent commits
+  - name: GitAnalyzer.getStatus
+    kind: method
+    sig: '() -> { modified: string[]; untracked: string[]; staged: string[] }'
+    start_line: 80
+    end_line: 99
+    does: retrieves status
+  - name: GitAnalyzer.getRemotes
+    kind: method
+    sig: () -> string[]
+    start_line: 101
+    end_line: 113
+    does: retrieves remotes
+  - name: GitAnalyzer.getFileStructure
+    kind: method
+    sig: '() -> { path: string; type: ''file'' | ''dir'' }[]'
+    start_line: 115
+    end_line: 137
+    does: retrieves file structure
+  - name: GitAnalyzer.detectStack
+    kind: method
+    sig: '() -> { language: string; framework: string; dependencies: string[] }'
+    start_line: 139
+    end_line: 178
+    does: detect stack
+  - name: GitAnalyzer.getFullState
+    kind: method
+    sig: () -> GitState
+    start_line: 180
+    end_line: 191
+    does: retrieves full state
+  - name: GitAnalyzer.generateContractFromCode
+    kind: method
+    sig: async (llmClient?) -> Promise<ContractAI | null>
+    start_line: 193
+    end_line: 306
+    does: creates contract from code
+- path: core/contract-ai/evolution/task-handlers.ts
+  language: typescript
+  functions:
+  - name: handleFolders
+    kind: function
+    sig: 'async (ctx: TaskContext) -> Promise<TaskResult>'
+    start_line: 43
+    end_line: 58
+    does: handles folders
+  - name: handleStateFile
+    kind: function
+    sig: 'async (ctx: TaskContext, writeSnapshot: () => void) -> Promise<TaskResult>'
+    start_line: 60
+    end_line: 63
+    does: handles state file
+  - name: handleContractSave
+    kind: function
+    sig: 'async (ctx: TaskContext, writeSnapshot: () => void) -> Promise<TaskResult>'
+    start_line: 65
+    end_line: 68
+    does: handles contract save
+  - name: handleValidatePlan
+    kind: function
+    sig: 'async (ctx: TaskContext, validate: () => PlanValidation) -> Promise<TaskResult>'
+    start_line: 80
+    end_line: 105
+    does: handles validate plan
+  - name: handleValidateApi
+    kind: function
+    sig: 'async (ctx: TaskContext) -> Promise<TaskResult>'
+    start_line: 111
+    end_line: 138
+    does: handles validate api
+  - name: handleLayer2Validation
+    kind: function
+    sig: 'async (ctx: TaskContext, validate: () => Layer2Result) -> Promise<TaskResult>'
+    start_line: 149
+    end_line: 182
+    does: handles layer2 validation
+  - name: handleMultiLevelAnalysis
+    kind: function
+    sig: 'async (ctx: TaskContext, analyze: () => Promise<MultiLevelAnalysis>) -> Promise<TaskResult>'
+    start_line: 202
+    end_line: 251
+    does: handles multi level analysis
+  - name: handleInstallAndStart
+    kind: function
+    sig: 'async (ctx: TaskContext, startService: () => Promise<void>) -> Promise<TaskResult>'
+    start_line: 257
+    end_line: 263
+    does: handles install and start
+  - name: handleRunTests
+    kind: function
+    sig: 'async (ctx: TaskContext, runTests: () => Promise<{ passed: boolean; error?: string }>) -> Promise<TaskResult>'
+    start_line: 269
+    end_line: 280
+    does: handles run tests
+  - name: handleGenerateFrontend
+    kind: function
+    sig: 'async (ctx: TaskContext, orchestrate: () => Promise<boolean>, generateFallback: () => Record<string, string>) ->
+      Promise<TaskResult>'
+    start_line: 286
+    end_line: 319
+    does: handles generate frontend
+- path: core/contract-ai/evolution/llm-prompts.ts
+  language: typescript
+  functions:
+  - name: PromptBuilder.buildSystemPrompt
+    kind: method
+    sig: () -> string
+    start_line: 32
+    end_line: 73
+    does: creates system prompt
+  - name: PromptBuilder.buildUserPrompt
+    kind: method
+    sig: '(contract: ContractAI, ctx: PromptContext) -> string'
+    start_line: 78
+    end_line: 135
+    does: creates user prompt
+  - name: PromptBuilder.buildContractDrivenPrompt
+    kind: method
+    sig: '(contract: ContractAI, task: string, port: number) -> string'
+    start_line: 140
+    end_line: 175
+    does: creates contract driven prompt
+  - name: PromptBuilder.buildFixPrompt
+    kind: method
+    sig: '(error: string, codeContext?) -> string'
+    start_line: 180
+    end_line: 200
+    does: creates fix prompt
+- path: core/contract-ai/evolution/task-queue.ts
+  language: typescript
+  functions:
+  - name: TaskQueue.constructor
+    kind: method
+    sig: (verbose) -> None
+    start_line: 37
+    end_line: 40
+    does: constructor
+  - name: TaskQueue.add
+    kind: method
+    sig: '(name: string, id?) -> Task'
+    start_line: 42
+    end_line: 50
+    does: creates
+  - name: TaskQueue.start
+    kind: method
+    sig: '(id: string) -> void'
+    start_line: 52
+    end_line: 59
+    does: starts
+  - name: TaskQueue.done
+    kind: method
+    sig: '(id: string) -> void'
+    start_line: 61
+    end_line: 71
+    does: done
+  - name: TaskQueue.fail
+    kind: method
+    sig: '(id: string, error: string) -> void'
+    start_line: 73
+    end_line: 81
+    does: fail
+  - name: TaskQueue.skip
+    kind: method
+    sig: '(id: string) -> void'
+    start_line: 83
+    end_line: 89
+    does: skip
+  - name: TaskQueue.printTodoList
+    kind: method
+    sig: (force) -> void
+    start_line: 91
+    end_line: 140
+    does: logs todo list
+  - name: TaskQueue.print
+    kind: method
+    sig: () -> void
+    start_line: 142
+    end_line: 144
+    does: logs
+  - name: TaskQueue.getIcon
+    kind: method
+    sig: '(status: TaskStatus) -> string'
+    start_line: 146
+    end_line: 155
+    does: retrieves icon
+  - name: TaskQueue.getTasks
+    kind: method
+    sig: () -> Task[]
+    start_line: 157
+    end_line: 159
+    does: retrieves tasks
+  - name: TaskQueue.clear
+    kind: method
+    sig: () -> void
+    start_line: 161
+    end_line: 163
+    does: deletes
+- path: core/contract-ai/evolution/state-analyzer.ts
+  language: typescript
+  functions:
+  - name: StateAnalyzer.constructor
+    kind: method
+    sig: '(outputDir: string, port: number) -> None'
+    start_line: 61
+    end_line: 64
+    does: constructor
+  - name: StateAnalyzer.setPort
+    kind: method
+    sig: '(port: number) -> void'
+    start_line: 66
+    end_line: 68
+    does: updates port
+  - name: StateAnalyzer.analyzeContract
+    kind: method
+    sig: '() -> { entities: string[]; endpoints: string[]; targets: string[] }'
+    start_line: 70
+    end_line: 115
+    does: processes contract
+  - name: StateAnalyzer.analyzeSourceCode
+    kind: method
+    sig: '() -> { files: string[]; detectedEndpoints: string[]; detectedEntities: string[] }'
+    start_line: 117
+    end_line: 157
+    does: processes source code
+  - name: StateAnalyzer.scanDir
+    kind: method
+    sig: '(dir: string, files: string[]) -> void'
+    start_line: 159
+    end_line: 173
+    does: scan dir
+  - name: StateAnalyzer.analyzeService
+    kind: method
+    sig: 'async (endpointsToProbe: string[]) -> Promise<{ running: boolean; healthEndpoint: boolean; respondingEndpoints:
+      string[]; probes: Array<{ endpoint: string; ok: boolean; status?: number; error?: string }>; port: number }>'
+    start_line: 175
+    end_line: 222
+    does: processes service
+  - name: StateAnalyzer.analyzeLogs
+    kind: method
+    sig: '() -> { errors: string[]; warnings: string[]; lastActivity: string | null }'
+    start_line: 224
+    end_line: 270
+    does: processes logs
+  - name: StateAnalyzer.findDiscrepancies
+    kind: method
+    sig: '(contract: ReturnType<typeof this.analyzeContract>, sourceCode: ReturnType<typeof this.analyzeSourceCode>, service:
+      Awaited<ReturnType<typeof this.analyzeService>>, logs: ReturnType<typeof this.analyzeLogs>) -> StateDiscrepancy[]'
+    start_line: 272
+    end_line: 397
+    does: retrieves discrepancies
+  - name: StateAnalyzer.analyze
+    kind: method
+    sig: async () -> Promise<MultiLevelState>
+    start_line: 399
+    end_line: 414
+    does: processes
+  - name: StateAnalyzer.generateReconciliationPlan
+    kind: method
+    sig: '(state: MultiLevelState) -> string[]'
+    start_line: 416
+    end_line: 449
+    does: creates reconciliation plan
+- path: core/contract-ai/evolution/fallback-templates.ts
+  language: typescript
+  functions:
+  - name: FallbackTemplates.generate
+    kind: method
+    sig: '(contract: ContractAI, options: FallbackOptions) -> string'
+    start_line: 43
+    end_line: 157
+    does: creates
+  - name: FallbackTemplates.generateServer
+    kind: method
+    sig: '(contract: ContractAI, port: number) -> string'
+    start_line: 162
+    end_line: 214
+    does: creates server
+  - name: FallbackTemplates.generatePackageJson
+    kind: method
+    sig: () -> string
+    start_line: 219
+    end_line: 239
+    does: creates package json
+  - name: FallbackTemplates.generateTsConfig
+    kind: method
+    sig: () -> string
+    start_line: 244
+    end_line: 258
+    does: creates ts config
+  - name: FallbackTemplates.parseFiles
+    kind: method
+    sig: '(response: string) -> GeneratedFile[]'
+    start_line: 263
+    end_line: 283
+    does: parses files
+  - name: FallbackTemplates.stripJsonComments
+    kind: method
+    sig: '(json: string) -> string'
+    start_line: 288
+    end_line: 293
+    does: strip json comments
+  - name: FallbackTemplates.generateE2ETests
+    kind: method
+    sig: '(port: number, entityName: string, basePath: string, entityFields?) -> string'
+    start_line: 298
+    end_line: 309
+    does: creates e2 e tests
+  - name: FallbackTemplates.generateTestPayload
+    kind: method
+    sig: '(entityName: string, fields?) -> string'
+    start_line: 314
+    end_line: 336
+    does: creates test payload
+  - name: FallbackTemplates.generateUpdatePayload
+    kind: method
+    sig: '(entityName: string, fields?) -> string'
+    start_line: 341
+    end_line: 362
+    does: creates update payload
+  - name: FallbackTemplates.generateFrontend
+    kind: method
+    sig: '(port: number, entityName: string) -> Record<string, string>'
+    start_line: 367
+    end_line: 384
+    does: creates frontend
+  - name: FallbackTemplates.generateWithFrontend
+    kind: method
+    sig: '(contract: ContractAI, options: FallbackOptions) -> string'
+    start_line: 389
+    end_line: 408
+    does: creates with frontend
+- path: core/contract-ai/evolution/doc-generator.ts
+  language: typescript
+  functions:
+  - name: DocGenerator.constructor
+    kind: method
+    sig: '(options: DocGeneratorOptions, llmClient: LLMClient | null) -> None'
+    start_line: 36
+    end_line: 40
+    does: constructor
+  - name: DocGenerator.generateReadme
+    kind: method
+    sig: 'async (contract: ContractAI) -> Promise<void>'
+    start_line: 45
+    end_line: 129
+    does: creates readme
+  - name: DocGenerator.getFallbackReadme
+    kind: method
+    sig: '(contract: ContractAI) -> string'
+    start_line: 134
+    end_line: 265
+    does: retrieves fallback readme
+- path: core/contract-ai/evolution/task-executor.ts
+  language: typescript
+  functions:
+  - name: createTaskExecutor
+    kind: function
+    sig: (options?) -> TaskExecutor
+    start_line: 401
+    end_line: 403
+    does: creates task executor
+  - name: RingBuffer.constructor
+    kind: method
+    sig: '(size: number) -> None'
+    start_line: 52
+    end_line: 54
+    does: constructor
+  - name: RingBuffer.append
+    kind: method
+    sig: '(item: T) -> void'
+    start_line: 56
+    end_line: 61
+    does: append
+  - name: RingBuffer.getAll
+    kind: method
+    sig: () -> T[]
+    start_line: 63
+    end_line: 65
+    does: retrieves all
+  - name: RingBuffer.clear
+    kind: method
+    sig: () -> void
+    start_line: 67
+    end_line: 69
+    does: deletes
+  - name: TaskExecutor.constructor
+    kind: method
+    sig: '(options: Partial<TaskExecutorOptions>) -> None'
+    start_line: 86
+    end_line: 96
+    does: constructor
+  - name: TaskExecutor.addTask
+    kind: method
+    sig: '(command: string, options: Partial<ExecutorTask>) -> ExecutorTask'
+    start_line: 102
+    end_line: 125
+    does: creates task
+  - name: TaskExecutor.addTasksFromFile
+    kind: method
+    sig: '(filePath: string) -> void'
+    start_line: 127
+    end_line: 148
+    does: creates tasks from file
+  - name: TaskExecutor.processQueue
+    kind: method
+    sig: async () -> Promise<void>
+    start_line: 154
+    end_line: 161
+    does: processes queue
+  - name: TaskExecutor.executeTask
+    kind: method
+    sig: 'async (taskId: string) -> Promise<void>'
+    start_line: 163
+    end_line: 246
+    does: starts task
+  - name: TaskExecutor.startWatching
+    kind: method
+    sig: '(filePath: string) -> void'
+    start_line: 252
+    end_line: 267
+    does: starts watching
+  - name: TaskExecutor.stopWatching
+    kind: method
+    sig: () -> void
+    start_line: 269
+    end_line: 274
+    does: stops watching
+  - name: TaskExecutor.checkFileChanges
+    kind: method
+    sig: () -> void
+    start_line: 276
+    end_line: 285
+    does: checks file changes
+  - name: TaskExecutor.log
+    kind: method
+    sig: '(message: string) -> void'
+    start_line: 291
+    end_line: 301
+    does: logs
+  - name: TaskExecutor.printMarkdown
+    kind: method
+    sig: () -> void
+    start_line: 303
+    end_line: 334
+    does: logs markdown
+  - name: TaskExecutor.getIcon
+    kind: method
+    sig: '(state: TaskState) -> string'
+    start_line: 336
+    end_line: 345
+    does: retrieves icon
+  - name: TaskExecutor.renderMarkdown
+    kind: method
+    sig: () -> string
+    start_line: 347
+    end_line: 362
+    does: formats markdown
+  - name: TaskExecutor.getStatus
+    kind: method
+    sig: '() -> { tasks: ExecutorTask[]; logs: string[] }'
+    start_line: 368
+    end_line: 373
+    does: retrieves status
+  - name: TaskExecutor.waitForAll
+    kind: method
+    sig: async () -> Promise<void>
+    start_line: 375
+    end_line: 386
+    does: wait for all
+  - name: TaskExecutor.clear
+    kind: method
+    sig: () -> void
+    start_line: 388
+    end_line: 394
+    does: deletes
+- path: core/contract-ai/evolution/service-manager.ts
+  language: typescript
+  functions:
+  - name: ServiceManager.constructor
+    kind: method
+    sig: '(options: ServiceManagerOptions) -> None'
+    start_line: 45
+    end_line: 47
+    does: constructor
+  - name: ServiceManager.setLogCallback
+    kind: method
+    sig: '(callback: LogCallback) -> void'
+    start_line: 52
+    end_line: 54
+    does: updates log callback
+  - name: ServiceManager.getStatus
+    kind: method
+    sig: () -> ServiceStatus
+    start_line: 59
+    end_line: 67
+    does: retrieves status
+  - name: ServiceManager.start
+    kind: method
+    sig: async () -> Promise<boolean>
+    start_line: 72
+    end_line: 137
+    does: starts
+  - name: ServiceManager.stop
+    kind: method
+    sig: async () -> Promise<void>
+    start_line: 142
+    end_line: 151
+    does: stops
+  - name: ServiceManager.restart
+    kind: method
+    sig: async () -> Promise<boolean>
+    start_line: 156
+    end_line: 163
+    does: restart
+  - name: ServiceManager.checkHealth
+    kind: method
+    sig: async () -> Promise<boolean>
+    start_line: 168
+    end_line: 175
+    does: checks health
+  - name: ServiceManager.waitForHealth
+    kind: method
+    sig: async (maxAttempts) -> Promise<boolean>
+    start_line: 180
+    end_line: 192
+    does: wait for health
+  - name: ServiceManager.startMonitoring
+    kind: method
+    sig: (onUnhealthy?) -> void
+    start_line: 197
+    end_line: 204
+    does: starts monitoring
+  - name: ServiceManager.stopMonitoring
+    kind: method
+    sig: () -> void
+    start_line: 209
+    end_line: 214
+    does: stops monitoring
+  - name: ServiceManager.runCommand
+    kind: method
+    sig: 'async (command: string, args: string[], cwd: string) -> Promise<{ stdout: string; stderr: string }>'
+    start_line: 219
+    end_line: 238
+    does: starts command
+  - name: ServiceManager.killProcessOnPort
+    kind: method
+    sig: 'async (port: number) -> Promise<void>'
+    start_line: 243
+    end_line: 249
+    does: kill process on port
+  - name: ServiceManager.getNodeEnv
+    kind: method
+    sig: () -> NodeJS.ProcessEnv
+    start_line: 254
+    end_line: 256
+    does: retrieves node env
+  - name: ServiceManager.sleep
+    kind: method
+    sig: '(ms: number) -> Promise<void>'
+    start_line: 261
+    end_line: 263
+    does: sleep
+- path: core/contract-ai/evolution/code-rag.ts
+  language: typescript
+  functions:
+  - name: SemanticChunker.constructor
+    kind: method
+    sig: '(language: string) -> None'
+    start_line: 67
+    end_line: 69
+    does: constructor
+  - name: SemanticChunker.parseFile
+    kind: method
+    sig: '(filePath: string, content: string) -> CodeChunk[]'
+    start_line: 74
+    end_line: 108
+    does: parses file
+  - name: SemanticChunker.parseTypeScript
+    kind: method
+    sig: '(filePath: string, content: string, parentId: string) -> CodeChunk[]'
+    start_line: 113
+    end_line: 225
+    does: parses type script
+  - name: SemanticChunker.parsePython
+    kind: method
+    sig: '(filePath: string, content: string, parentId: string) -> CodeChunk[]'
+    start_line: 230
+    end_line: 323
+    does: parses python
+  - name: SemanticChunker.detectLanguage
+    kind: method
+    sig: '(ext: string) -> string'
+    start_line: 325
+    end_line: 342
+    does: detect language
+  - name: SemanticChunker.generateId
+    kind: method
+    sig: '(filePath: string, type: string, line: number) -> string'
+    start_line: 344
+    end_line: 347
+    does: creates id
+  - name: SemanticChunker.extractImports
+    kind: method
+    sig: '(content: string, lang: string) -> string[]'
+    start_line: 349
+    end_line: 369
+    does: parses imports
+  - name: SemanticChunker.extractExports
+    kind: method
+    sig: '(content: string, lang: string) -> string[]'
+    start_line: 371
+    end_line: 382
+    does: parses exports
+  - name: SemanticChunker.extractSignature
+    kind: method
+    sig: '(code: string, type: string) -> string'
+    start_line: 384
+    end_line: 395
+    does: parses signature
+  - name: SemanticChunker.extractLocalDependencies
+    kind: method
+    sig: '(code: string) -> string[]'
+    start_line: 397
+    end_line: 407
+    does: parses local dependencies
+  - name: CodeIndexer.constructor
+    kind: method
+    sig: (llmClient?) -> None
+    start_line: 419
+    end_line: 429
+    does: constructor
+  - name: CodeIndexer.indexDirectory
+    kind: method
+    sig: 'async (dir: string, excludePatterns: string[]) -> Promise<void>'
+    start_line: 434
+    end_line: 475
+    does: index directory
+  - name: CodeIndexer.generateSummary
+    kind: method
+    sig: 'async (chunk: CodeChunk) -> Promise<string>'
+    start_line: 480
+    end_line: 494
+    does: creates summary
+  - name: CodeIndexer.scanDirectory
+    kind: method
+    sig: '(dir: string, excludePatterns: string[]) -> string[]'
+    start_line: 496
+    end_line: 521
+    does: scan directory
+  - name: CodeIndexer.getIndex
+    kind: method
+    sig: () -> CodeIndex
+    start_line: 523
+    end_line: 525
+    does: retrieves index
+  - name: CodeIndexer.getChunk
+    kind: method
+    sig: '(id: string) -> CodeChunk | undefined'
+    start_line: 527
+    end_line: 529
+    does: retrieves chunk
+  - name: CodeIndexer.getChunksByFile
+    kind: method
+    sig: '(filePath: string) -> CodeChunk[]'
+    start_line: 531
+    end_line: 534
+    does: retrieves chunks by file
+  - name: CodeIndexer.getChunksBySymbol
+    kind: method
+    sig: '(name: string) -> CodeChunk[]'
+    start_line: 536
+    end_line: 539
+    does: retrieves chunks by symbol
+  - name: CodeIndexer.getCallers
+    kind: method
+    sig: '(chunkId: string) -> CodeChunk[]'
+    start_line: 541
+    end_line: 550
+    does: retrieves callers
+  - name: CodeIndexer.getCallees
+    kind: method
+    sig: '(chunkId: string) -> CodeChunk[]'
+    start_line: 552
+    end_line: 555
+    does: retrieves callees
+  - name: HierarchicalRetriever.constructor
+    kind: method
+    sig: '(indexer: CodeIndexer, llmClient?) -> None'
+    start_line: 566
+    end_line: 569
+    does: constructor
+  - name: HierarchicalRetriever.search
+    kind: method
+    sig: 'async (query: string, topK: number) -> Promise<SearchResult[]>'
+    start_line: 576
+    end_line: 599
+    does: filters
+  - name: HierarchicalRetriever.searchFiles
+    kind: method
+    sig: '(query: string, index: CodeIndex) -> string[]'
+    start_line: 604
+    end_line: 644
+    does: filters files
+  - name: HierarchicalRetriever.scoreChunk
+    kind: method
+    sig: '(chunk: CodeChunk, query: string) -> number'
+    start_line: 649
+    end_line: 683
+    does: score chunk
+  - name: HierarchicalRetriever.traceCallPath
+    kind: method
+    sig: '(fromId: string, toId: string, maxDepth: number) -> string[][]'
+    start_line: 688
+    end_line: 710
+    does: trace call path
+  - name: HierarchicalRetriever.getHierarchy
+    kind: method
+    sig: () -> HierarchicalLevel[]
+    start_line: 715
+    end_line: 765
+    does: retrieves hierarchy
+  - name: CodeRAG.constructor
+    kind: method
+    sig: (llmClient?) -> None
+    start_line: 778
+    end_line: 782
+    does: constructor
+  - name: CodeRAG.index
+    kind: method
+    sig: 'async (dir: string) -> Promise<{ files: number; chunks: number }>'
+    start_line: 787
+    end_line: 796
+    does: index
+  - name: CodeRAG.ask
+    kind: method
+    sig: 'async (question: string) -> Promise<{ answer: string; sources: SearchResult[] }>'
+    start_line: 801
+    end_line: 849
+    does: ask
+  - name: CodeRAG.findUsages
+    kind: method
+    sig: '(symbolName: string) -> CodeChunk[]'
+    start_line: 854
+    end_line: 863
+    does: retrieves usages
+  - name: CodeRAG.getStructure
+    kind: method
+    sig: () -> HierarchicalLevel[]
+    start_line: 868
+    end_line: 870
+    does: retrieves structure
+  - name: CodeRAG.exportIndex
+    kind: method
+    sig: () -> string
+    start_line: 875
+    end_line: 884
+    does: export index
+- path: core/contract-ai/evolution/test-generator.ts
+  language: typescript
+  functions:
+  - name: TestGenerator.constructor
+    kind: method
+    sig: '(options: TestGeneratorOptions, llmClient: LLMClient | null) -> None'
+    start_line: 43
+    end_line: 47
+    does: constructor
+  - name: TestGenerator.generateTestFiles
+    kind: method
+    sig: 'async (contract: ContractAI) -> Promise<void>'
+    start_line: 52
+    end_line: 75
+    does: creates test files
+  - name: TestGenerator.generateTestConfig
+    kind: method
+    sig: 'async (testDir: string) -> Promise<void>'
+    start_line: 80
+    end_line: 121
+    does: creates test config
+  - name: TestGenerator.getFallbackTestConfig
+    kind: method
+    sig: () -> string
+    start_line: 123
+    end_line: 145
+    does: retrieves fallback test config
+  - name: TestGenerator.generateApiE2ETests
+    kind: method
+    sig: 'async (e2eDir: string, entityName: string, pluralName: string) -> Promise<void>'
+    start_line: 150
+    end_line: 220
+    does: creates api e2 e tests
+  - name: TestGenerator.detectApiBasePath
+    kind: method
+    sig: '(pluralName: string) -> string'
+    start_line: 225
+    end_line: 246
+    does: detect api base path
+  - name: TestGenerator.generateFixtures
+    kind: method
+    sig: 'async (fixturesDir: string, entityName: string) -> Promise<void>'
+    start_line: 252
+    end_line: 292
+    does: creates fixtures
+  - name: TestGenerator.getFallbackFixtures
+    kind: method
+    sig: '(entityName: string, lowerName: string) -> Record<string, any>'
+    start_line: 294
+    end_line: 308
+    does: retrieves fallback fixtures
+- path: core/contract-ai/validation/index.ts
+  language: typescript
+  functions:
+  - name: createDefaultValidationPipeline
+    kind: function
+    sig: '(options: Partial<PipelineOptions>) -> ValidationPipelineOrchestrator'
+    start_line: 35
+    end_line: 53
+    does: creates default validation pipeline
+- path: core/contract-ai/validation/pipeline-orchestrator.ts
+  language: typescript
+  functions:
+  - name: createValidationPipeline
+    kind: function
+    sig: (options?) -> ValidationPipelineOrchestrator
+    start_line: 264
+    end_line: 268
+    does: creates validation pipeline
+  - name: ValidationPipelineOrchestrator.constructor
+    kind: method
+    sig: '(options: Partial<PipelineOptions>) -> None'
+    start_line: 94
+    end_line: 96
+    does: constructor
+  - name: ValidationPipelineOrchestrator.registerStage
+    kind: method
+    sig: '(stage: ValidationStage) -> void'
+    start_line: 101
+    end_line: 103
+    does: registers stage
+  - name: ValidationPipelineOrchestrator.registerStages
+    kind: method
+    sig: '(stages: ValidationStage[]) -> void'
+    start_line: 108
+    end_line: 110
+    does: registers stages
+  - name: ValidationPipelineOrchestrator.validate
+    kind: method
+    sig: 'async (contract: ContractAI, code: GeneratedCode) -> Promise<PipelineResult>'
+    start_line: 115
+    end_line: 179
+    does: validates
+  - name: ValidationPipelineOrchestrator.runStage
+    kind: method
+    sig: 'async (stage: ValidationStage, context: ValidationContext) -> Promise<StageResult>'
+    start_line: 184
+    end_line: 222
+    does: starts stage
+  - name: ValidationPipelineOrchestrator.shouldContinue
+    kind: method
+    sig: '(stageOrName: ValidationStage | string, result: StageResult) -> boolean'
+    start_line: 227
+    end_line: 243
+    does: checks continue
+  - name: ValidationPipelineOrchestrator.getStages
+    kind: method
+    sig: () -> ValidationStage[]
+    start_line: 248
+    end_line: 250
+    does: retrieves stages
+  - name: ValidationPipelineOrchestrator.clearStages
+    kind: method
+    sig: () -> void
+    start_line: 255
+    end_line: 257
+    does: deletes stages
+- path: core/contract-ai/feedback/code-corrector.ts
+  language: typescript
+  functions:
+  - name: createCodeCorrector
+    kind: function
+    sig: (options?) -> CodeCorrector
+    start_line: 375
+    end_line: 377
+    does: creates code corrector
+  - name: CodeCorrector.constructor
+    kind: method
+    sig: '(options: Partial<CorrectorOptions>) -> None'
+    start_line: 64
+    end_line: 66
+    does: constructor
+  - name: CodeCorrector.setLLMClient
+    kind: method
+    sig: '(client: LLMClient) -> void'
+    start_line: 71
+    end_line: 73
+    does: updates llm client
+  - name: CodeCorrector.correct
+    kind: method
+    sig: 'async (code: GeneratedCode, feedback: ValidationFeedback, contract: ContractAI) -> Promise<GeneratedCode>'
+    start_line: 78
+    end_line: 134
+    does: correct
+  - name: CodeCorrector.inferTargetFromPath
+    kind: method
+    sig: '(path: string) -> string | undefined'
+    start_line: 136
+    end_line: 141
+    does: infer target from path
+  - name: CodeCorrector.correctFile
+    kind: method
+    sig: 'async (file: GeneratedFile, issues: ValidationIssue[], hints: ContractHint[], contract: ContractAI) -> Promise<GeneratedFile>'
+    start_line: 146
+    end_line: 175
+    does: correct file
+  - name: CodeCorrector.groupIssuesByFile
+    kind: method
+    sig: '(issues: ValidationIssue[]) -> Map<string, ValidationIssue[]>'
+    start_line: 180
+    end_line: 192
+    does: group issues by file
+  - name: CodeCorrector.buildCorrectionPrompt
+    kind: method
+    sig: '(file: GeneratedFile, issues: ValidationIssue[], hints: ContractHint[], contract: ContractAI) -> string'
+    start_line: 197
+    end_line: 253
+    does: creates correction prompt
+  - name: CodeCorrector.getSystemPrompt
+    kind: method
+    sig: () -> string
+    start_line: 258
+    end_line: 272
+    does: retrieves system prompt
+  - name: CodeCorrector.extractCodeFromResponse
+    kind: method
+    sig: '(response: string) -> string'
+    start_line: 277
+    end_line: 289
+    does: parses code from response
+  - name: CodeCorrector.simulateCorrection
+    kind: method
+    sig: '(content: string, issues: ValidationIssue[]) -> string'
+    start_line: 294
+    end_line: 317
+    does: simulate correction
+  - name: CodeCorrector.addTryCatch
+    kind: method
+    sig: '(content: string) -> string'
+    start_line: 322
+    end_line: 338
+    does: creates try catch
+  - name: CodeCorrector.addEmailValidation
+    kind: method
+    sig: '(content: string) -> string'
+    start_line: 343
+    end_line: 368
+    does: creates email validation
+- path: core/contract-ai/feedback/iteration-manager.ts
+  language: typescript
+  functions:
+  - name: createIterationManager
+    kind: function
+    sig: (options?) -> IterationManager
+    start_line: 243
+    end_line: 247
+    does: creates iteration manager
+  - name: IterationManager.constructor
+    kind: method
+    sig: '(options: Partial<IterationManagerOptions>) -> None'
+    start_line: 83
+    end_line: 87
+    does: constructor
+  - name: IterationManager.validateAndCorrect
+    kind: method
+    sig: 'async (contract: ContractAI, initialCode: GeneratedCode, pipeline: ValidationPipelineOrchestrator, codeGenerator:
+      LLMCodeGenerator) -> Promise<IterationResult>'
+    start_line: 92
+    end_line: 201
+    does: validates and correct
+  - name: IterationManager.meetsAcceptanceCriteria
+    kind: method
+    sig: '(contract: ContractAI, result: PipelineResult) -> boolean'
+    start_line: 206
+    end_line: 223
+    does: meets acceptance criteria
+  - name: IterationManager.correctCode
+    kind: method
+    sig: 'async (contract: ContractAI, currentCode: GeneratedCode, feedback: ValidationFeedback, codeGenerator: LLMCodeGenerator)
+      -> Promise<GeneratedCode>'
+    start_line: 228
+    end_line: 236
+    does: correct code
+- path: core/contract-ai/feedback/feedback-generator.ts
+  language: typescript
+  functions:
+  - name: createFeedbackGenerator
+    kind: function
+    sig: () -> FeedbackGenerator
+    start_line: 321
+    end_line: 323
+    does: creates feedback generator
+  - name: FeedbackGenerator.generateFeedback
+    kind: method
+    sig: '(contract: ContractAI, result: PipelineResult) -> ValidationFeedback'
+    start_line: 62
+    end_line: 77
+    does: creates feedback
+  - name: FeedbackGenerator.buildCorrectionPrompt
+    kind: method
+    sig: '(contract: ContractAI, currentCode: { path: string; content: string }[], feedback: ValidationFeedback) -> string'
+    start_line: 82
+    end_line: 161
+    does: creates correction prompt
+  - name: FeedbackGenerator.extractIssues
+    kind: method
+    sig: '(result: PipelineResult) -> ValidationIssue[]'
+    start_line: 166
+    end_line: 196
+    does: parses issues
+  - name: FeedbackGenerator.generateSummary
+    kind: method
+    sig: '(issues: ValidationIssue[]) -> string'
+    start_line: 201
+    end_line: 220
+    does: creates summary
+  - name: FeedbackGenerator.extractContractHints
+    kind: method
+    sig: '(contract: ContractAI, issues: ValidationIssue[]) -> string[]'
+    start_line: 225
+    end_line: 246
+    does: parses contract hints
+  - name: FeedbackGenerator.getFilesToFix
+    kind: method
+    sig: '(issues: ValidationIssue[]) -> string[]'
+    start_line: 251
+    end_line: 261
+    does: retrieves files to fix
+  - name: FeedbackGenerator.groupIssuesByFile
+    kind: method
+    sig: '(issues: ValidationIssue[]) -> Record<string, ValidationIssue[]>'
+    start_line: 266
+    end_line: 279
+    does: group issues by file
+  - name: FeedbackGenerator.getSuggestionForError
+    kind: method
+    sig: (code?, message?) -> string | undefined
+    start_line: 284
+    end_line: 314
+    does: retrieves suggestion for error
+- path: core/contract-ai/feedback/generation-log.ts
+  language: typescript
+  functions:
+  - name: createGenerationLogWriter
+    kind: function
+    sig: '(options: LogWriterOptions) -> GenerationLogWriter'
+    start_line: 411
+    end_line: 413
+    does: creates generation log writer
+  - name: GenerationLogWriter.constructor
+    kind: method
+    sig: '(options: LogWriterOptions) -> None'
+    start_line: 107
+    end_line: 110
+    does: constructor
+  - name: GenerationLogWriter.writeLog
+    kind: method
+    sig: '(entry: GenerationLogEntry) -> string'
+    start_line: 115
+    end_line: 145
+    does: logs log
+  - name: GenerationLogWriter.buildHeader
+    kind: method
+    sig: '(appName: string, version: string) -> string'
+    start_line: 147
+    end_line: 153
+    does: creates header
+  - name: GenerationLogWriter.buildMetadata
+    kind: method
+    sig: '(entry: GenerationLogEntry, dateStr: string, timeStr: string, entityCount: number) -> string'
+    start_line: 155
+    end_line: 179
+    does: creates metadata
+  - name: GenerationLogWriter.buildRunSection
+    kind: method
+    sig: '(entry: GenerationLogEntry) -> string'
+    start_line: 181
+    end_line: 217
+    does: creates run section
+  - name: GenerationLogWriter.buildIterationSection
+    kind: method
+    sig: '(entry: GenerationLogEntry) -> string'
+    start_line: 219
+    end_line: 232
+    does: creates iteration section
+  - name: GenerationLogWriter.buildNextStepsSection
+    kind: method
+    sig: '(entry: GenerationLogEntry) -> string'
+    start_line: 234
+    end_line: 253
+    does: creates next steps section
+  - name: GenerationLogWriter.buildGenerationSection
+    kind: method
+    sig: '(generatedCode: GeneratedCode) -> string'
+    start_line: 255
+    end_line: 275
+    does: creates generation section
+  - name: GenerationLogWriter.buildStageIssues
+    kind: method
+    sig: '(stage: StageResult) -> string'
+    start_line: 277
+    end_line: 300
+    does: creates stage issues
+  - name: GenerationLogWriter.escapeTableCell
+    kind: method
+    sig: '(value: string) -> string'
+    start_line: 302
+    end_line: 304
+    does: escape table cell
+  - name: GenerationLogWriter.buildValidationSection
+    kind: method
+    sig: '(pipelineResult: PipelineResult) -> string'
+    start_line: 306
+    end_line: 337
+    does: creates validation section
+  - name: GenerationLogWriter.buildContractSection
+    kind: method
+    sig: '(contract: ContractAI) -> string'
+    start_line: 339
+    end_line: 361
+    does: creates contract section
+  - name: GenerationLogWriter.buildActionsSection
+    kind: method
+    sig: '(entry: GenerationLogEntry, now: Date) -> string'
+    start_line: 363
+    end_line: 380
+    does: creates actions section
+  - name: GenerationLogWriter.buildFooter
+    kind: method
+    sig: () -> string
+    start_line: 382
+    end_line: 385
+    does: creates footer
+  - name: GenerationLogWriter.generateFilename
+    kind: method
+    sig: '(appName: string, now: Date) -> string'
+    start_line: 387
+    end_line: 394
+    does: creates filename
+  - name: GenerationLogWriter.getLanguageFromPath
+    kind: method
+    sig: '(filePath: string) -> string'
+    start_line: 396
+    end_line: 404
+    does: retrieves language from path
+- path: core/contract-ai/setup/dependency-checker.ts
+  language: typescript
+  functions:
+  - name: checkEnvironment
+    kind: function
+    sig: async () -> Promise<EnvironmentReport>
+    start_line: 623
+    end_line: 626
+    does: checks environment
+  - name: printEnvironmentStatus
+    kind: function
+    sig: async () -> Promise<void>
+    start_line: 628
+    end_line: 632
+    does: logs environment status
+  - name: DependencyChecker.constructor
+    kind: method
+    sig: () -> None
+    start_line: 314
+    end_line: 316
+    does: constructor
+  - name: DependencyChecker.checkDependency
+    kind: method
+    sig: 'async (dep: Dependency) -> Promise<DependencyCheck>'
+    start_line: 321
+    end_line: 356
+    does: checks dependency
+  - name: DependencyChecker.checkAll
+    kind: method
+    sig: async () -> Promise<DependencyCheck[]>
+    start_line: 361
+    end_line: 370
+    does: checks all
+  - name: DependencyChecker.generateReport
+    kind: method
+    sig: async () -> Promise<EnvironmentReport>
+    start_line: 375
+    end_line: 399
+    does: creates report
+  - name: DependencyChecker.generateSetupTasks
+    kind: method
+    sig: '(checks: DependencyCheck[]) -> SetupTask[]'
+    start_line: 404
+    end_line: 444
+    does: creates setup tasks
+  - name: DependencyChecker.saveSetupTasks
+    kind: method
+    sig: '(outputDir: string, tasks: SetupTask[]) -> string'
+    start_line: 449
+    end_line: 463
+    does: caches setup tasks
+  - name: DependencyChecker.generateSetupMarkdown
+    kind: method
+    sig: '(tasks: SetupTask[]) -> string'
+    start_line: 468
+    end_line: 535
+    does: creates setup markdown
+  - name: DependencyChecker.printStatus
+    kind: method
+    sig: '(report: EnvironmentReport) -> void'
+    start_line: 540
+    end_line: 583
+    does: logs status
+  - name: DependencyChecker.getInstallCommand
+    kind: method
+    sig: '(dep: Dependency) -> string'
+    start_line: 589
+    end_line: 595
+    does: retrieves install command
+  - name: DependencyChecker.getNpmVersion
+    kind: method
+    sig: () -> string | undefined
+    start_line: 597
+    end_line: 603
+    does: retrieves npm version
+  - name: DependencyChecker.compareVersions
+    kind: method
+    sig: '(v1: string, v2: string) -> number'
+    start_line: 605
+    end_line: 616
+    does: compare versions
+- path: core/contract-ai/sdk/sdk-generator.ts
+  language: typescript
+  functions:
+  - name: createSDKGenerator
+    kind: function
+    sig: (options?) -> SDKGenerator
+    start_line: 680
+    end_line: 682
+    does: creates sdk generator
+  - name: SDKGenerator.constructor
+    kind: method
+    sig: '(options: SDKGeneratorOptions) -> None'
+    start_line: 49
+    end_line: 57
+    does: constructor
+  - name: SDKGenerator.generate
+    kind: method
+    sig: '(contract: ContractAI) -> GeneratedSDK'
+    start_line: 62
+    end_line: 101
+    does: creates
+  - name: SDKGenerator.generateTypes
+    kind: method
+    sig: '(contract: ContractAI) -> string'
+    start_line: 106
+    end_line: 133
+    does: creates types
+  - name: SDKGenerator.generateEntityType
+    kind: method
+    sig: '(entity: EntityDefinition) -> string[]'
+    start_line: 138
+    end_line: 160
+    does: creates entity type
+  - name: SDKGenerator.generateInputTypes
+    kind: method
+    sig: '(entity: EntityDefinition) -> string[]'
+    start_line: 165
+    end_line: 198
+    does: creates input types
+  - name: SDKGenerator.generateApiResponseTypes
+    kind: method
+    sig: '(contract: ContractAI) -> string[]'
+    start_line: 203
+    end_line: 229
+    does: creates api response types
+  - name: SDKGenerator.generateZodSchemas
+    kind: method
+    sig: '(contract: ContractAI) -> string'
+    start_line: 234
+    end_line: 251
+    does: creates zod schemas
+  - name: SDKGenerator.generateEntitySchema
+    kind: method
+    sig: '(entity: EntityDefinition) -> string[]'
+    start_line: 256
+    end_line: 286
+    does: creates entity schema
+  - name: SDKGenerator.generateClient
+    kind: method
+    sig: '(contract: ContractAI) -> string'
+    start_line: 291
+    end_line: 349
+    does: creates client
+  - name: SDKGenerator.generateEntityClientMethods
+    kind: method
+    sig: '(entity: EntityDefinition) -> string[]'
+    start_line: 354
+    end_line: 408
+    does: creates entity client methods
+  - name: SDKGenerator.generateHooks
+    kind: method
+    sig: '(contract: ContractAI) -> string'
+    start_line: 413
+    end_line: 439
+    does: creates hooks
+  - name: SDKGenerator.generateEntityHooks
+    kind: method
+    sig: '(entity: EntityDefinition) -> string[]'
+    start_line: 444
+    end_line: 542
+    does: creates entity hooks
+  - name: SDKGenerator.generateIndex
+    kind: method
+    sig: '(contract: ContractAI) -> string'
+    start_line: 547
+    end_line: 570
+    does: creates index
+  - name: SDKGenerator.fieldTypeToTS
+    kind: method
+    sig: '(field: FieldDefinition) -> string'
+    start_line: 579
+    end_line: 601
+    does: field type to ts
+  - name: SDKGenerator.fieldTypeToZod
+    kind: method
+    sig: '(field: FieldDefinition) -> string'
+    start_line: 606
+    end_line: 620
+    does: field type to zod
+  - name: SDKGenerator.getZodBase
+    kind: method
+    sig: '(type: string) -> string'
+    start_line: 625
+    end_line: 647
+    does: retrieves zod base
+  - name: SDKGenerator.formatFieldComment
+    kind: method
+    sig: '(field: FieldDefinition) -> string'
+    start_line: 652
+    end_line: 660
+    does: formats field comment
+  - name: SDKGenerator.pluralize
+    kind: method
+    sig: '(word: string) -> string'
+    start_line: 665
+    end_line: 673
+    does: pluralize
+- path: core/contract-ai/converter/to-contract-ai.ts
+  language: typescript
+  functions:
+  - name: convertToContractAI
+    kind: function
+    sig: '(contract: ContractMarkdown) -> ContractAI & { app: any; entities: any[] }'
+    start_line: 10
+    end_line: 83
+    does: converts to contract ai
+  - name: convertEntity
+    kind: function
+    sig: '(entity: MarkdownEntityDefinition) -> ContractAI[''definition''][''entities''][0]'
+    start_line: 85
+    end_line: 100
+    does: converts entity
+  - name: mapFieldType
+    kind: function
+    sig: '(type: string) -> string'
+    start_line: 102
+    end_line: 115
+    does: converts field type
+  - name: mapDatabaseType
+    kind: function
+    sig: '(type: string) -> ''sqlite'' | ''postgresql'' | ''mysql'' | ''mongodb'' | ''in-memory'''
+    start_line: 117
+    end_line: 128
+    does: converts database type
+  - name: extractResources
+    kind: function
+    sig: '(contract: ContractMarkdown) -> any[]'
+    start_line: 130
+    end_line: 160
+    does: parses resources
+  - name: extractInstructions
+    kind: function
+    sig: '(contract: ContractMarkdown) -> any[]'
+    start_line: 162
+    end_line: 192
+    does: parses instructions
+  - name: capitalize
+    kind: function
+    sig: '(str: string) -> string'
+    start_line: 194
+    end_line: 196
+    does: capitalize
+- path: core/contract-ai/validation/stages/schema-validator.ts
+  language: typescript
+  functions:
+  - name: createSchemaValidator
+    kind: function
+    sig: () -> SchemaValidator
+    start_line: 101
+    end_line: 103
+    does: creates schema validator
+  - name: SchemaValidator.extractFileFromSchemaPath
+    kind: method
+    sig: '(schemaPath: string, files: Array<{ path: string }>) -> string | undefined'
+    start_line: 10
+    end_line: 20
+    does: parses file from schema path
+  - name: SchemaValidator.validator
+    kind: method
+    sig: 'async (context: ValidationContext) -> Promise<StageResult>'
+    start_line: 22
+    end_line: 98
+    does: validator
+- path: core/contract-ai/validation/stages/test-runner.ts
+  language: typescript
+  functions:
+  - name: createTestRunner
+    kind: function
+    sig: () -> TestRunner
+    start_line: 372
+    end_line: 374
+    does: creates test runner
+  - name: TestRunner.validator
+    kind: method
+    sig: 'async (context: ValidationContext) -> Promise<StageResult>'
+    start_line: 54
+    end_line: 132
+    does: validator
+  - name: TestRunner.generateTestFiles
+    kind: method
+    sig: '(specs: TestSpecification[], contract: ContractAI) -> Map<string, string>'
+    start_line: 137
+    end_line: 147
+    does: creates test files
+  - name: TestRunner.generateTestFile
+    kind: method
+    sig: '(spec: TestSpecification, contract: ContractAI) -> string'
+    start_line: 152
+    end_line: 178
+    does: creates test file
+  - name: TestRunner.generateTestCase
+    kind: method
+    sig: '(scenario: TestScenario, endpoint: string, type: string) -> string'
+    start_line: 183
+    end_line: 224
+    does: creates test case
+  - name: TestRunner.parseMethod
+    kind: method
+    sig: '(when: string) -> string'
+    start_line: 229
+    end_line: 235
+    does: parses method
+  - name: TestRunner.parsePath
+    kind: method
+    sig: '(when: string, defaultEndpoint: string) -> string'
+    start_line: 240
+    end_line: 245
+    does: parses path
+  - name: TestRunner.writeTestFiles
+    kind: method
+    sig: '(workDir: string, testFiles: Map<string, string>) -> string[]'
+    start_line: 250
+    end_line: 270
+    does: logs test files
+  - name: TestRunner.runJest
+    kind: method
+    sig: 'async (workDir: string, testFiles: Map<string, string>) -> Promise<JestResult>'
+    start_line: 275
+    end_line: 289
+    does: starts jest
+  - name: TestRunner.canRunRealJest
+    kind: method
+    sig: '(workDir: string) -> boolean'
+    start_line: 294
+    end_line: 306
+    does: checks run real jest
+  - name: TestRunner.runRealJest
+    kind: method
+    sig: '(workDir: string) -> JestResult'
+    start_line: 311
+    end_line: 344
+    does: starts real jest
+  - name: TestRunner.simulateJest
+    kind: method
+    sig: '(testFiles: Map<string, string>) -> JestResult'
+    start_line: 349
+    end_line: 365
+    does: simulate jest
+- path: core/contract-ai/validation/stages/quality-checker.ts
+  language: typescript
+  functions:
+  - name: createQualityChecker
+    kind: function
+    sig: () -> QualityChecker
+    start_line: 242
+    end_line: 244
+    does: creates quality checker
+  - name: QualityChecker.validator
+    kind: method
+    sig: 'async (context: ValidationContext) -> Promise<StageResult>'
+    start_line: 24
+    end_line: 68
+    does: validator
+  - name: QualityChecker.checkThreshold
+    kind: method
+    sig: '(value: number, threshold: number, operator: string) -> boolean'
+    start_line: 73
+    end_line: 86
+    does: checks threshold
+  - name: QualityChecker.calculateLinesOfCode
+    kind: method
+    sig: '(files: GeneratedFile[]) -> number'
+    start_line: 91
+    end_line: 107
+    does: processes lines of code
+  - name: QualityChecker.calculateAverageComplexity
+    kind: method
+    sig: '(files: GeneratedFile[]) -> number'
+    start_line: 112
+    end_line: 153
+    does: processes average complexity
+  - name: QualityChecker.calculateDuplicationRatio
+    kind: method
+    sig: '(files: GeneratedFile[]) -> number'
+    start_line: 158
+    end_line: 188
+    does: processes duplication ratio
+  - name: QualityChecker.calculateTypeCoverage
+    kind: method
+    sig: '(files: GeneratedFile[]) -> number'
+    start_line: 193
+    end_line: 235
+    does: processes type coverage
+- path: core/contract-ai/validation/stages/assertion-validator.ts
+  language: typescript
+  functions:
+  - name: createAssertionValidator
+    kind: function
+    sig: () -> AssertionValidator
+    start_line: 317
+    end_line: 319
+    does: creates assertion validator
+  - name: AssertionValidator.getFileForAssertion
+    kind: method
+    sig: '(assertion: CodeAssertion) -> string | undefined'
+    start_line: 24
+    end_line: 38
+    does: retrieves file for assertion
+  - name: AssertionValidator.validator
+    kind: method
+    sig: 'async (context: ValidationContext) -> Promise<StageResult>'
+    start_line: 40
+    end_line: 71
+    does: validator
+  - name: AssertionValidator.checkAssertion
+    kind: method
+    sig: '(assertion: CodeAssertion, files: GeneratedFile[]) -> { passed: boolean; details?: string }'
+    start_line: 76
+    end_line: 107
+    does: checks assertion
+  - name: AssertionValidator.checkFileExists
+    kind: method
+    sig: '(path: string, files: GeneratedFile[]) -> { passed: boolean }'
+    start_line: 112
+    end_line: 116
+    does: checks file exists
+  - name: AssertionValidator.checkFileContains
+    kind: method
+    sig: '(path: string, pattern: string, files: GeneratedFile[]) -> { passed: boolean }'
+    start_line: 121
+    end_line: 131
+    does: checks file contains
+  - name: AssertionValidator.checkFileNotContains
+    kind: method
+    sig: '(path: string, pattern: string, files: GeneratedFile[]) -> { passed: boolean }'
+    start_line: 136
+    end_line: 146
+    does: checks file not contains
+  - name: AssertionValidator.checkExportsFunction
+    kind: method
+    sig: '(path: string, functionName: string, files: GeneratedFile[]) -> { passed: boolean }'
+    start_line: 151
+    end_line: 169
+    does: checks exports function
+  - name: AssertionValidator.checkExportsClass
+    kind: method
+    sig: '(path: string, className: string, files: GeneratedFile[]) -> { passed: boolean }'
+    start_line: 174
+    end_line: 190
+    does: checks exports class
+  - name: AssertionValidator.checkHasErrorHandling
+    kind: method
+    sig: '(path: string, files: GeneratedFile[]) -> { passed: boolean }'
+    start_line: 195
+    end_line: 207
+    does: checks has error handling
+  - name: AssertionValidator.checkHasValidation
+    kind: method
+    sig: '(entityName: string, fieldName: string, files: GeneratedFile[]) -> { passed: boolean }'
+    start_line: 212
+    end_line: 234
+    does: checks has validation
+  - name: AssertionValidator.hasFieldValidation
+    kind: method
+    sig: '(content: string, fieldName: string) -> boolean'
+    start_line: 239
+    end_line: 252
+    does: has field validation
+  - name: AssertionValidator.findFile
+    kind: method
+    sig: '(path: string, files: GeneratedFile[]) -> GeneratedFile | undefined'
+    start_line: 257
+    end_line: 284
+    does: retrieves file
+  - name: AssertionValidator.generateNameVariants
+    kind: method
+    sig: '(name: string) -> string[]'
+    start_line: 289
+    end_line: 310
+    does: creates name variants
+- path: core/contract-ai/validation/stages/static-analyzer.ts
+  language: typescript
+  functions:
+  - name: createStaticAnalyzer
+    kind: function
+    sig: () -> StaticAnalyzer
+    start_line: 203
+    end_line: 205
+    does: creates static analyzer
+  - name: StaticAnalyzer.validator
+    kind: method
+    sig: 'async (context: ValidationContext) -> Promise<StageResult>'
+    start_line: 24
+    end_line: 73
+    does: validator
+  - name: StaticAnalyzer.checkRule
+    kind: method
+    sig: '(ruleName: string, file: GeneratedFile) -> Array<{ message: string; line?: number }>'
+    start_line: 78
+    end_line: 156
+    does: checks rule
+  - name: StaticAnalyzer.runBuiltInRules
+    kind: method
+    sig: '(file: GeneratedFile) -> StageResult[''warnings'']'
+    start_line: 161
+    end_line: 196
+    does: starts built in rules
+- path: core/contract-ai/validation/stages/security-scanner.ts
+  language: typescript
+  functions:
+  - name: createSecurityScanner
+    kind: function
+    sig: () -> SecurityScanner
+    start_line: 300
+    end_line: 302
+    does: creates security scanner
+  - name: SecurityScanner.validator
+    kind: method
+    sig: 'async (context: ValidationContext) -> Promise<StageResult>'
+    start_line: 24
+    end_line: 71
+    does: validator
+  - name: SecurityScanner.runSecurityCheck
+    kind: method
+    sig: '(check: SecurityCheck, file: GeneratedFile) -> Array<{ message: string; line?: number }>'
+    start_line: 76
+    end_line: 106
+    does: starts security check
+  - name: SecurityScanner.checkHardcodedSecrets
+    kind: method
+    sig: '(lines: string[], filePath: string) -> Array<{ message: string; line?: number }>'
+    start_line: 111
+    end_line: 149
+    does: checks hardcoded secrets
+  - name: SecurityScanner.checkSqlInjection
+    kind: method
+    sig: '(lines: string[]) -> Array<{ message: string; line?: number }>'
+    start_line: 154
+    end_line: 178
+    does: checks sql injection
+  - name: SecurityScanner.checkXss
+    kind: method
+    sig: '(lines: string[]) -> Array<{ message: string; line?: number }>'
+    start_line: 183
+    end_line: 214
+    does: checks xss
+  - name: SecurityScanner.checkInputValidation
+    kind: method
+    sig: '(file: GeneratedFile) -> Array<{ message: string; line?: number }>'
+    start_line: 219
+    end_line: 240
+    does: checks input validation
+  - name: SecurityScanner.checkHttpsOnly
+    kind: method
+    sig: '(lines: string[]) -> Array<{ message: string; line?: number }>'
+    start_line: 245
+    end_line: 261
+    does: checks https only
+  - name: SecurityScanner.runBuiltInChecks
+    kind: method
+    sig: '(file: GeneratedFile) -> StageResult[''errors'']'
+    start_line: 266
+    end_line: 293
+    does: starts built in checks
+- path: core/contract-ai/validation/stages/runtime-validator.ts
+  language: typescript
+  functions:
+  - name: createRuntimeValidator
+    kind: function
+    sig: () -> RuntimeValidator
+    start_line: 414
+    end_line: 416
+    does: creates runtime validator
+  - name: RuntimeValidator.validator
+    kind: method
+    sig: 'async (context: ValidationContext) -> Promise<StageResult>'
+    start_line: 52
+    end_line: 146
+    does: validator
+  - name: RuntimeValidator.isDockerAvailable
+    kind: method
+    sig: () -> boolean
+    start_line: 151
+    end_line: 158
+    does: is docker available
+  - name: RuntimeValidator.hasDockerfile
+    kind: method
+    sig: '(workDir: string) -> boolean'
+    start_line: 163
+    end_line: 170
+    does: has dockerfile
+  - name: RuntimeValidator.buildAndRun
+    kind: method
+    sig: 'async (workDir: string) -> Promise<ContainerInfo>'
+    start_line: 175
+    end_line: 205
+    does: creates and run
+  - name: RuntimeValidator.waitForHealthy
+    kind: method
+    sig: 'async (port: number) -> Promise<boolean>'
+    start_line: 210
+    end_line: 227
+    does: wait for healthy
+  - name: RuntimeValidator.testEndpoints
+    kind: method
+    sig: 'async (port: number, entities: EntityDefinition[]) -> Promise<EndpointTestResult[]>'
+    start_line: 232
+    end_line: 277
+    does: checks endpoints
+  - name: RuntimeValidator.testEndpoint
+    kind: method
+    sig: 'async (baseUrl: string, method: string, path: string, expectedStatus: number, body?) -> Promise<EndpointTestResult>'
+    start_line: 282
+    end_line: 313
+    does: checks endpoint
+  - name: RuntimeValidator.httpRequest
+    kind: method
+    sig: '(method: string, url: string, body?) -> Promise<{ status: number; data: any }>'
+    start_line: 318
+    end_line: 364
+    does: http request
+  - name: RuntimeValidator.cleanup
+    kind: method
+    sig: 'async (containerId: string) -> Promise<void>'
+    start_line: 369
+    end_line: 376
+    does: cleanup
+  - name: RuntimeValidator.getRandomPort
+    kind: method
+    sig: () -> number
+    start_line: 381
+    end_line: 383
+    does: retrieves random port
+  - name: RuntimeValidator.sleep
+    kind: method
+    sig: '(ms: number) -> Promise<void>'
+    start_line: 388
+    end_line: 390
+    does: sleep
+  - name: RuntimeValidator.createResult
+    kind: method
+    sig: '(errors: StageResult[''errors''], warnings: StageResult[''warnings''], startTime: number) -> StageResult'
+    start_line: 395
+    end_line: 407
+    does: creates result
+- path: core/contract-ai/validation/stages/syntax-validator.ts
+  language: typescript
+  functions:
+  - name: createSyntaxValidator
+    kind: function
+    sig: () -> SyntaxValidator
+    start_line: 263
+    end_line: 265
+    does: creates syntax validator
+  - name: SyntaxValidator.validator
+    kind: method
+    sig: 'async (context: ValidationContext) -> Promise<StageResult>'
+    start_line: 24
+    end_line: 57
+    does: validator
+  - name: SyntaxValidator.checkBasicSyntax
+    kind: method
+    sig: '(filePath: string, content: string) -> StageResult[''errors'']'
+    start_line: 62
+    end_line: 159
+    does: checks basic syntax
+  - name: SyntaxValidator.checkRequiredFiles
+    kind: method
+    sig: '(context: ValidationContext) -> StageResult[''errors'']'
+    start_line: 164
+    end_line: 187
+    does: checks required files
+  - name: SyntaxValidator.fileExists
+    kind: method
+    sig: '(requiredPath: string, existingPaths: string[]) -> boolean'
+    start_line: 192
+    end_line: 230
+    does: file exists
+  - name: SyntaxValidator.generateNameVariants
+    kind: method
+    sig: '(name: string) -> string[]'
+    start_line: 235
+    end_line: 256
+    does: creates name variants
+- path: core/contract-ai/code-generator/prompt-templates/tests.ts
+  language: typescript
+  functions:
+  - name: createTestsPromptTemplate
+    kind: function
+    sig: () -> TestsPromptTemplate
+    start_line: 107
+    end_line: 109
+    does: creates tests prompt template
+  - name: TestsPromptTemplate.buildPrompt
+    kind: method
+    sig: '(contract: ContractAI) -> string'
+    start_line: 31
+    end_line: 66
+    does: creates prompt
+  - name: TestsPromptTemplate.getRequiredFiles
+    kind: method
+    sig: '(contract: ContractAI) -> string[]'
+    start_line: 71
+    end_line: 78
+    does: retrieves required files
+  - name: TestsPromptTemplate.getSystemPrompt
+    kind: method
+    sig: () -> string
+    start_line: 83
+    end_line: 100
+    does: retrieves system prompt
+- path: core/contract-ai/code-generator/prompt-templates/api.ts
+  language: typescript
+  functions:
+  - name: createApiPromptTemplate
+    kind: function
+    sig: () -> ApiPromptTemplate
+    start_line: 277
+    end_line: 279
+    does: creates api prompt template
+  - name: ApiPromptTemplate.buildPrompt
+    kind: method
+    sig: '(contract: ContractAI) -> string'
+    start_line: 34
+    end_line: 96
+    does: creates prompt
+  - name: ApiPromptTemplate.getRequiredFiles
+    kind: method
+    sig: '(contract: ContractAI) -> string[]'
+    start_line: 101
+    end_line: 117
+    does: retrieves required files
+  - name: ApiPromptTemplate.getSystemPrompt
+    kind: method
+    sig: () -> string
+    start_line: 122
+    end_line: 160
+    does: retrieves system prompt
+  - name: ApiPromptTemplate.formatTechStack
+    kind: method
+    sig: '(techStack: ContractAI[''generation''][''techStack'']) -> string'
+    start_line: 166
+    end_line: 178
+    does: formats tech stack
+  - name: ApiPromptTemplate.formatEntities
+    kind: method
+    sig: '(entities: EntityDefinition[]) -> string'
+    start_line: 180
+    end_line: 198
+    does: formats entities
+  - name: ApiPromptTemplate.formatApi
+    kind: method
+    sig: (api?) -> string
+    start_line: 200
+    end_line: 210
+    does: formats api
+  - name: ApiPromptTemplate.formatInstructions
+    kind: method
+    sig: '(instructions: ContractAI[''generation''][''instructions''], target: string) -> string'
+    start_line: 212
+    end_line: 223
+    does: formats instructions
+  - name: ApiPromptTemplate.formatPatterns
+    kind: method
+    sig: '(patterns: ContractAI[''generation''][''patterns''], target: string) -> string'
+    start_line: 225
+    end_line: 248
+    does: formats patterns
+  - name: ApiPromptTemplate.formatConstraints
+    kind: method
+    sig: '(constraints: ContractAI[''generation''][''constraints'']) -> string'
+    start_line: 250
+    end_line: 254
+    does: formats constraints
+  - name: ApiPromptTemplate.formatTestScenarios
+    kind: method
+    sig: '(tests: ContractAI[''validation''][''tests'']) -> string'
+    start_line: 256
+    end_line: 263
+    does: formats test scenarios
+  - name: ApiPromptTemplate.toKebabCase
+    kind: method
+    sig: '(str: string) -> string'
+    start_line: 265
+    end_line: 270
+    does: converts kebab case
+- path: core/contract-ai/code-generator/prompt-templates/frontend.ts
+  language: typescript
+  functions:
+  - name: createFrontendPromptTemplate
+    kind: function
+    sig: () -> FrontendPromptTemplate
+    start_line: 323
+    end_line: 325
+    does: creates frontend prompt template
+  - name: FrontendPromptTemplate.buildPrompt
+    kind: method
+    sig: '(contract: ContractAI) -> string'
+    start_line: 25
+    end_line: 71
+    does: creates prompt
+  - name: FrontendPromptTemplate.getRequiredFiles
+    kind: method
+    sig: '(contract: ContractAI) -> string[]'
+    start_line: 76
+    end_line: 97
+    does: retrieves required files
+  - name: FrontendPromptTemplate.getSystemPrompt
+    kind: method
+    sig: () -> string
+    start_line: 102
+    end_line: 137
+    does: retrieves system prompt
+  - name: FrontendPromptTemplate.formatTechStack
+    kind: method
+    sig: '(techStack: ContractAI[''generation''][''techStack'']) -> string'
+    start_line: 143
+    end_line: 160
+    does: formats tech stack
+  - name: FrontendPromptTemplate.formatEntitiesWithComponents
+    kind: method
+    sig: '(entities: EntityDefinition[]) -> string'
+    start_line: 162
+    end_line: 190
+    does: formats entities with components
+  - name: FrontendPromptTemplate.formatInstructions
+    kind: method
+    sig: '(instructions: ContractAI[''generation''][''instructions''], target: string) -> string'
+    start_line: 192
+    end_line: 213
+    does: formats instructions
+  - name: FrontendPromptTemplate.formatPatterns
+    kind: method
+    sig: '(patterns: ContractAI[''generation''][''patterns''], target: string) -> string'
+    start_line: 215
+    end_line: 285
+    does: formats patterns
+  - name: FrontendPromptTemplate.formatConstraints
+    kind: method
+    sig: '(constraints: ContractAI[''generation''][''constraints'']) -> string'
+    start_line: 287
+    end_line: 299
+    does: formats constraints
+  - name: FrontendPromptTemplate.getInputType
+    kind: method
+    sig: '(fieldType: string) -> string'
+    start_line: 301
+    end_line: 316
+    does: retrieves input type
+- path: core/contract-ai/templates/contracts/index.ts
+  language: typescript
+  functions:
+  - name: loadStageContract
+    kind: function
+    sig: '(stage: string) -> StageContract | null'
+    start_line: 20
+    end_line: 39
+    does: retrieves stage contract
+  - name: getStageRequirements
+    kind: function
+    sig: '(stage: string) -> string'
+    start_line: 41
+    end_line: 69
+    does: retrieves stage requirements

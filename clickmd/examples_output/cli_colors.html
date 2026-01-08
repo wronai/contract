@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>cli_colors.py</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 24px; max-width: 980px; margin: 0 auto; }
+    h1, h2, h3, h4, h5, h6 { margin: 24px 0 12px; }
+    p { line-height: 1.5; margin: 10px 0; }
+    pre { background: #0b1020; color: #e6edf3; padding: 14px; border-radius: 10px; overflow-x: auto; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; }
+    a { color: #2563eb; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+    th { background: #f3f4f6; }
+  </style>
+</head>
+<body>
+<p>=== Tradycyjny print() ===</p>
+<p>Starting application...</p>
+<p>Loading configuration...</p>
+<p>Warning: Config file not found, using defaults</p>
+<p>Error: Database connection failed</p>
+<p>Success: Application started</p>
+<h2>Z clickmd - te same komunikaty, ale ładniejsze</h2>
+<p>ℹ️  Starting application...</p>
+<p>ℹ️  Loading configuration...</p>
+<p>⚠️  Config file not found, using defaults</p>
+<p>🛑 Database connection failed</p>
+<p>✅ Application started</p>
+<h2>Logowanie akcji</h2>
+<pre><code class="language-log">→ Pobieranie pliku config.yaml</code></pre>
+<pre><code class="language-log">✅ Plik pobrany (2.3 KB)</code></pre>
+<pre><code class="language-log">→ Parsowanie konfiguracji</code></pre>
+<pre><code class="language-log">⚠️ Brak klucza &#x27;timeout&#x27;, używam domyślnej wartości</code></pre>
+<pre><code class="language-log">→ Łączenie z bazą danych</code></pre>
+<pre><code class="language-log">🛑 Timeout po 30s</code></pre>
+<h2>Markdown w komunikatach</h2>
+<h3>Podsumowanie instalacji</h3>
+<p>Zainstalowano 3 pakiety:</p>
+<ul>
+<li><code>clickmd</code> - renderowanie markdown</li>
+<li><code>click</code> - CLI framework</li>
+<li><code>rich</code> - opcjonalny backend</li>
+</ul>
+<p>Uruchom <code>clickmd --help</code> aby rozpocząć.</p>
+<h2>Porównanie kodu</h2>
+<h3>Bez clickmd (ANSI escape codes):</h3>
+<pre><code class="language-python">print(&quot;\033[92m✅ Success\033[0m&quot;)
+print(&quot;\033[93m⚠️  Warning\033[0m&quot;)
+print(&quot;\033[91m🛑 Error\033[0m&quot;)</code></pre>
+<h3>Z clickmd:</h3>
+<pre><code class="language-python">clickmd.success(&quot;Success&quot;)
+clickmd.warning(&quot;Warning&quot;)
+clickmd.error(&quot;Error&quot;)</code></pre>
+<p>Rezultat: Ten sam efekt, 3x mniej kodu, 10x czytelniej!</p>
+</body>
+</html>
