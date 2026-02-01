@@ -17,7 +17,8 @@ from .openai import OpenAIClient, OpenAIConfig
 from .anthropic import AnthropicClient, AnthropicConfig
 from .groq import GroqClient, GroqConfig
 from .together import TogetherClient, TogetherConfig
-from .litellm import LiteLLMClient, LiteLLMConfig, LITELLM_AVAILABLE
+from .litellm import LITELLM_AVAILABLE, LiteLLMClient, LiteLLMConfig
+from .windsurf import WindsurfClient, WindsurfConfig
 
 
 class ProviderInfo:
