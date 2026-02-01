@@ -9,6 +9,7 @@ export interface WriteOptions {
   includeConversation?: boolean;
   includeTimestamp?: boolean;
   language?: 'pl' | 'en';
+  prettyTitles?: boolean;
 }
 
 const LABELS = {
@@ -61,7 +62,7 @@ export function writeMarkdownContract(
   conversation: Message[] = [],
   options: WriteOptions = {}
 ): string {
-  const { includeConversation = true, includeTimestamp = true, language = 'pl' } = options;
+  const { includeConversation = true, includeTimestamp = true, language = 'pl', prettyTitles = false } = options;
   const L = LABELS[language];
   const lines: string[] = [];
 
@@ -123,15 +124,15 @@ export function writeMarkdownContract(
       for (const field of entity.fields) {
         const modifiers: string[] = [];
         if (field.unique) modifiers.push('@unique');
-        if (field.required) modifiers.push('@required');
+        if (field.explicitRequired) modifiers.push('@required');
         if (field.auto) modifiers.push('@auto');
 
         const modStr = modifiers.join(' ');
-        const defaultStr = field.defaultValue ? ` = ${field.defaultValue}` : '';
-        const descStr = field.description ? ` - ${field.description}` : '';
-
-        let comment = modStr || defaultStr || descStr ? `# ${modStr}${defaultStr}${descStr}`.trim() : '';
-        if (comment === '#') comment = '';
+        const commentParts: string[] = [];
+        if (modStr) commentParts.push(modStr);
+        if (field.defaultValue) commentParts.push(`= ${field.defaultValue}`);
+        if (field.description) commentParts.push(`- ${field.description}`);
+        const comment = commentParts.length > 0 ? `# ${commentParts.join(' ')}` : '';
 
         const typeStr = field.type + (field.nullable && !field.type.endsWith('?') ? '?' : '');
         lines.push(`${field.name.padEnd(16)}: ${typeStr.padEnd(20)} ${comment}`.trimEnd());
@@ -196,7 +197,7 @@ export function writeMarkdownContract(
     lines.push('');
 
     for (const alert of ir.alerts) {
-      lines.push(`### ${alert.name}`);
+      lines.push(`### ${prettyTitles ? humanizeTitle(alert.name) : alert.name}`);
       lines.push('');
       lines.push('```yaml');
       lines.push(`# alert: ${alert.name}`);
@@ -249,7 +250,7 @@ export function writeMarkdownContract(
     lines.push('');
 
     for (const dashboard of ir.dashboards) {
-      lines.push(`### ${dashboard.name}`);
+      lines.push(`### ${prettyTitles ? humanizeTitle(dashboard.name) : dashboard.name}`);
       lines.push('');
       lines.push('```yaml');
       lines.push(`# dashboard: ${dashboard.name}`);
@@ -277,7 +278,7 @@ export function writeMarkdownContract(
     lines.push('');
 
     for (const source of ir.sources) {
-      lines.push(`### ${source.name}`);
+      lines.push(`### ${prettyTitles ? humanizeTitle(source.name) : source.name}`);
       lines.push('');
       lines.push('```yaml');
       lines.push(`# source: ${source.name}`);
@@ -305,7 +306,7 @@ export function writeMarkdownContract(
     lines.push('');
 
     for (const workflow of ir.workflows) {
-      lines.push(`### ${workflow.name}`);
+      lines.push(`### ${prettyTitles ? humanizeTitle(workflow.name) : workflow.name}`);
       lines.push('');
       lines.push('```yaml');
       lines.push(`# workflow: ${workflow.name}`);
@@ -411,8 +412,9 @@ export function contractToIR(contract: any): IR {
       name: e.name,
       fields: (e.fields || []).map((f: any) => ({
         name: f.name,
-        type: f.rclType || mapTypeToRcl(f.type),
+        type: f.rclType || mapTypeToRcl(f.type, f.name),
         required: f.required,
+        explicitRequired: !!f.explicitRequired,
         unique: f.unique,
         auto: f.auto,
         nullable: typeof f.rclType === 'string' ? f.rclType.trim().endsWith('?') : false,
@@ -435,7 +437,7 @@ export function contractToIR(contract: any): IR {
   };
 }
 
-function mapTypeToRcl(type: string): string {
+function mapTypeToRcl(type: string, fieldName?: string): string {
   const typeMap: Record<string, string> = {
     String: 'text',
     Int: 'int',
@@ -446,13 +448,15 @@ function mapTypeToRcl(type: string): string {
     Json: 'json',
   };
 
-  const mapped = typeMap[type];
-  if (mapped) return mapped;
+  const mapped = typeMap[type] || type.toLowerCase();
+  const n = (fieldName || '').toLowerCase();
 
-  // Preserve casing for relationships and potential custom types/enums
-  if (type.startsWith('->')) return type;
-  
-  // If it looks like a custom type (starts with uppercase), keep it as is
+  if (mapped === 'text') {
+    if (n === 'id' || n.endsWith('id')) return 'uuid';
+    if (n.includes('email')) return 'email';
+    if (n.includes('phone')) return 'phone';
+    if (n === 'url' || n.endsWith('url')) return 'url';
+  }
   if (type.length > 0 && type[0] === type[0].toUpperCase()) return type;
 
   return type.toLowerCase();
