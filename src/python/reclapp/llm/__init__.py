@@ -13,28 +13,21 @@ Mirrors: src/core/contract-ai/llm/
 
 from .provider import LLMProvider, LLMResponse, GenerateOptions, LLMProviderStatus, LLMModelInfo
 from .ollama import OllamaClient, OllamaConfig
-from .openrouter import OpenRouterClient
+from .openrouter import OpenRouterClient, OpenRouterConfig
+from .openai import OpenAIClient, OpenAIConfig
+from .anthropic import AnthropicClient, AnthropicConfig
+from .groq import GroqClient, GroqConfig
+from .together import TogetherClient, TogetherConfig
+from .litellm import LiteLLMClient, LiteLLMConfig, LITELLM_AVAILABLE
 from .windsurf import WindsurfClient, WindsurfConfig
 from .manager import LLMManager, ProviderInfo
 
 # Re-export reclapp_llm if available
 try:
     import reclapp_llm as llm
-    LLMConfig = getattr(llm, "LLMConfig", None)
-    get_client = getattr(llm, "get_client", None)
-    list_available_providers = getattr(llm, "list_available_providers", None)
-    RECOMMENDED_MODELS = getattr(llm, "RECOMMENDED_MODELS", {})
-    ProviderManager = getattr(llm, "ProviderManager", None)
-    reclapp_llm_generate = getattr(llm, "generate", None)
     RECLAPP_LLM_AVAILABLE = True
 except ImportError:
     RECLAPP_LLM_AVAILABLE = False
-    LLMConfig = None
-    get_client = None
-    list_available_providers = None
-    RECOMMENDED_MODELS = {}
-    ProviderManager = None
-    reclapp_llm_generate = None
 
 __all__ = [
     # Core types
@@ -47,17 +40,23 @@ __all__ = [
     "OllamaClient",
     "OllamaConfig",
     "OpenRouterClient",
+    "OpenRouterConfig",
+    "OpenAIClient",
+    "OpenAIConfig",
+    "AnthropicClient",
+    "AnthropicConfig",
+    "GroqClient",
+    "GroqConfig",
+    "TogetherClient",
+    "TogetherConfig",
+    "LiteLLMClient",
+    "LiteLLMConfig",
+    "LITELLM_AVAILABLE",
     "WindsurfClient",
     "WindsurfConfig",
     # Manager
     "LLMManager",
     "ProviderInfo",
-    # reclapp-llm re-exports
+    # Package availability
     "RECLAPP_LLM_AVAILABLE",
-    "LLMConfig",
-    "get_client",
-    "list_available_providers",
-    "RECOMMENDED_MODELS",
-    "ProviderManager",
-    "reclapp_llm_generate",
 ]

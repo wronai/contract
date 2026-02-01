@@ -19,8 +19,118 @@ from reclapp.llm import (
     OllamaConfig,
     LLMManager,
     OpenRouterClient,
+    OpenRouterConfig,
+    OpenAIClient,
+    OpenAIConfig,
+    AnthropicClient,
+    AnthropicConfig,
+    GroqClient,
+    GroqConfig,
+    TogetherClient,
+    TogetherConfig,
+    LiteLLMClient,
+    LiteLLMConfig,
+    LITELLM_AVAILABLE,
+    WindsurfClient,
+    WindsurfConfig,
 )
 from reclapp.llm.provider import LLMProviderStatus, LLMModelInfo
+
+
+# ============================================================================
+# CLIENT INITIALIZATION TESTS
+# ============================================================================
+
+class TestClientInitialization:
+    def test_openai_init(self):
+        with patch.dict('os.environ', {'OPENAI_API_KEY': 'sk-test'}):
+            client = OpenAIClient()
+            assert client.config.api_key == 'sk-test'
+            assert client.name == 'openai'
+
+    def test_anthropic_init(self):
+        with patch.dict('os.environ', {'ANTHROPIC_API_KEY': 'sk-test'}):
+            client = AnthropicClient()
+            assert client.config.api_key == 'sk-test'
+            assert client.name == 'anthropic'
+
+    def test_groq_init(self):
+        with patch.dict('os.environ', {'GROQ_API_KEY': 'gsk-test'}):
+            client = GroqClient()
+            assert client.config.api_key == 'gsk-test'
+            assert client.name == 'groq'
+
+    def test_together_init(self):
+        with patch.dict('os.environ', {'TOGETHER_API_KEY': 'tk-test'}):
+            client = TogetherClient()
+            assert client.config.api_key == 'tk-test'
+            assert client.name == 'together'
+
+    def test_litellm_init(self):
+        with patch.dict('os.environ', {'LITELLM_MODEL': 'gpt-4o'}):
+            client = LiteLLMClient()
+            assert client.config.model == 'gpt-4o'
+            assert client.name == 'litellm'
+
+
+# ============================================================================
+# LLM MANAGER ADVANCED TESTS (MOCKED)
+# ============================================================================
+
+class TestLLMManagerAdvanced:
+    @pytest.mark.asyncio
+    async def test_priority_selection(self):
+        manager = LLMManager()
+        
+        # Mock providers
+        ollama_mock = AsyncMock(spec=OllamaClient)
+        ollama_mock.is_available.return_value = True
+        ollama_mock.list_models.return_value = [LLMModelInfo(name="test")]
+        
+        openrouter_mock = AsyncMock(spec=OpenRouterClient)
+        openrouter_mock.is_available.return_value = True
+        openrouter_mock.list_models.return_value = [LLMModelInfo(name="test")]
+        
+        with patch('reclapp.llm.manager.OllamaClient', return_value=ollama_mock), \
+             patch('reclapp.llm.manager.OpenRouterClient', return_value=openrouter_mock), \
+             patch.dict('os.environ', {'OPENROUTER_API_KEY': 'test'}):
+            
+            await manager.initialize()
+            
+            # Ollama has priority 10, OpenRouter has 40. Ollama should be primary.
+            assert manager._primary_provider == 'ollama'
+
+    @pytest.mark.asyncio
+    async def test_fallback_logic(self):
+        manager = LLMManager()
+        
+        # Provider 1 fails, Provider 2 succeeds
+        p1 = AsyncMock(spec=LLMProvider)
+        p1.generate.side_effect = RuntimeError("Failed")
+        
+        p2 = AsyncMock(spec=LLMProvider)
+        p2.generate.return_value = LLMResponse(content="Success", model="m2", provider="p2")
+        
+        manager.add_provider("p1", p1)
+        manager.add_provider("p2", p2)
+        
+        opts = GenerateOptions(system="s", user="u")
+        response = await manager.generate_with_fallback(opts, providers=["p1", "p2"])
+        
+        assert response.content == "Success"
+        assert p1.generate.called
+        assert p2.generate.called
+
+    @pytest.mark.asyncio
+    async def test_preferred_provider_env(self):
+        with patch.dict('os.environ', {'LLM_PROVIDER': 'groq', 'GROQ_API_KEY': 'test'}):
+            groq_mock = AsyncMock(spec=GroqClient)
+            groq_mock.is_available.return_value = True
+            
+            manager = LLMManager()
+            with patch('reclapp.llm.manager.GroqClient', return_value=groq_mock):
+                await manager.initialize()
+                assert manager._primary_provider == 'groq'
 
 
 # ============================================================================
