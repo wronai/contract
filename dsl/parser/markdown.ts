@@ -671,6 +671,7 @@ export function irToContract(ir: IR): any {
     sources: ir.sources,
     workflows: ir.workflows,
     config: ir.config,
+    aiPlan: ir.aiPlan,
   };
 }
 

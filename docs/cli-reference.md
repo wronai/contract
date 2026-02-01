@@ -514,6 +514,35 @@ reclapp analyze <directory> [options]
 
 ---
 
+### `reclapp reverse`
+
+Reverse-engineer a `.rcl.md` contract from an existing application.
+
+```bash
+reclapp reverse <directory> [options]
+
+# Aliases: rev
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--output, -o <path>` | Path to save the generated contract (default: `./reverse-engineered.rcl.md`) |
+| `--verbose, -v` | Show detailed analysis output |
+
+**What it does:**
+1. Analyzes source files to extract entities and API endpoints
+2. Searches for an existing `contract.ai.json` (AI Plan) to embed
+3. Generates a human-readable `.rcl.md` contract
+
+**Example:**
+```bash
+reclapp reverse ./my-app --output ./contracts/my-app.rcl.md
+```
+
+---
+
 ### `reclapp refactor`
 
 Clone repository (if URL) and generate refactoring contract.

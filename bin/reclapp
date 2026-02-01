@@ -136,6 +136,7 @@ Usage:
   reclapp generate-ai <contract|--prompt>    Generate code with Contract AI 2.2
   reclapp evolve --prompt "..." [-k] [--no-menu] [--log-file <path>]  Evolution mode with auto-healing
   reclapp analyze <dir>                      Analyze codebase, find duplicates
+  reclapp reverse <dir>                      Generate .rcl.md contract from existing code
   reclapp refactor <git-url|dir>             Clone repo, analyze, generate contract
   reclapp tasks <file.tasks>                 Run tasks from file (Dockerfile-style)
   reclapp setup                              Check environment and create setup tasks
@@ -155,6 +156,7 @@ Commands:
   studio      Interactive examples browser with tests
   generate-ai Generate code using Contract AI 2.2 (LLM-driven)
   evolve      Evolution mode - dynamic code gen, monitoring, auto-fix
+  reverse     Reverse-engineer a contract from an existing application
   tasks       Run tasks from file (parallel, with live markdown output)
   setup       Check environment, detect missing dependencies, create setup tasks
   stop        Stop all running Docker containers
@@ -307,6 +309,11 @@ async function cmdGenerate(contractPath, options) {
     const files = generator.generate();
     const written = generator.writeFiles(options.verbose);
     console.log(`\n✅ Generated ${written} files to ${outputDir}`);
+
+    // Save contract for reverse engineering
+    const contractSaveDir = path.join(outputDir, 'contract');
+    if (!fs.existsSync(contractSaveDir)) fs.mkdirSync(contractSaveDir, { recursive: true });
+    fs.writeFileSync(path.join(contractSaveDir, 'contract.ai.json'), JSON.stringify(contract, null, 2));
   } else {
     // Fallback inline generator (simplified)
     console.log(`\n🚀 Generating ${contract.app.name} v${contract.app.version}...`);
@@ -316,6 +323,11 @@ async function cmdGenerate(contractPath, options) {
     const files = gen.generate();
     const written = gen.writeFiles(options.verbose);
     console.log(`\n✅ Generated ${written} files to ${outputDir}`);
+
+    // Save contract for reverse engineering
+    const contractSaveDir = path.join(outputDir, 'contract');
+    if (!fs.existsSync(contractSaveDir)) fs.mkdirSync(contractSaveDir, { recursive: true });
+    fs.writeFileSync(path.join(contractSaveDir, 'contract.ai.json'), JSON.stringify(contract, null, 2));
   }
 
   // Auto-start Docker if --docker flag is set
@@ -1283,6 +1295,64 @@ async function cmdAnalyze(args, options) {
     console.log(`\n📝 Report saved: ${reportPath}`);
   } catch (e) {
     console.error(`❌ Analysis failed: ${e.message}`);
+    process.exit(1);
+  }
+}
+
+async function cmdReverse(args, options) {
+  const targetDir = args[0] || '.';
+  const outPath = options.output || path.join(process.cwd(), 'reverse-engineered.rcl.md');
+
+  console.log(`\n🔄 Reverse engineering from: ${path.resolve(targetDir)}`);
+
+  try {
+    const { CodeAnalyzer } = require('../src/core/contract-ai/analysis/code-analyzer');
+    const { writeMarkdownContract, contractToIR } = require('../dsl/writer/markdown');
+    
+    const analyzer = new CodeAnalyzer(targetDir);
+    const report = await analyzer.analyze();
+    const contract = analyzer.toContract(report);
+
+    // Look for contract.ai.json in the target directory or its parent/contract subfolder
+    const aiPlanPaths = [
+      path.join(targetDir, 'contract.ai.json'),
+      path.join(targetDir, 'contract', 'contract.ai.json'),
+      path.join(path.dirname(targetDir), 'contract', 'contract.ai.json')
+    ];
+    
+    let aiPlan = null;
+    for (const p of aiPlanPaths) {
+      if (fs.existsSync(p)) {
+        try {
+          aiPlan = JSON.parse(fs.readFileSync(p, 'utf-8'));
+          console.log(`ℹ️  Found AI Plan: ${p}`);
+          break;
+        } catch (e) {
+          console.warn(`⚠️  Failed to parse AI Plan at ${p}: ${e.message}`);
+        }
+      }
+    }
+
+    if (aiPlan) {
+      contract.aiPlan = aiPlan;
+    }
+
+    // Convert contract to IR and then to Markdown
+    const ir = contractToIR(contract);
+    const markdown = writeMarkdownContract(ir, [], { includeConversation: false });
+
+    // Ensure directory exists
+    const outDir = path.dirname(outPath);
+    if (!fs.existsSync(outDir)) {
+      fs.mkdirSync(outDir, { recursive: true });
+    }
+
+    fs.writeFileSync(outPath, markdown, 'utf-8');
+    console.log(`\n✅ Contract generated: ${outPath}`);
+
+  } catch (e) {
+    console.error(`❌ Reverse engineering failed: ${e.message}`);
+    if (options.verbose) console.error(e.stack);
     process.exit(1);
   }
 }
@@ -2580,6 +2650,9 @@ async function main() {
 
     case 'analyze': case 'analyse':
       await cmdAnalyze(args.slice(1), options); break;
+
+    case 'reverse': case 'rev':
+      await cmdReverse(args.slice(1), options); break;
 
     case 'refactor': case 'refac':
       await cmdRefactor(args.slice(1), options); break;

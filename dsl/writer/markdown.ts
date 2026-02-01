@@ -380,6 +380,17 @@ export function writeMarkdownContract(
   }
 
   // Footer
+  if (ir.aiPlan) {
+    lines.push('---');
+    lines.push('');
+    lines.push('## 🤖 Plan AI');
+    lines.push('');
+    lines.push('```json:contract.ai.json');
+    lines.push(JSON.stringify(ir.aiPlan, null, 2));
+    lines.push('```');
+    lines.push('');
+  }
+
   lines.push(`*${L.generatedBy}*`);
 
   return lines.join('\n');
@@ -418,6 +429,7 @@ export function contractToIR(contract: any): IR {
     deployment: contract.deployment,
     env: contract.env || [],
     config: contract.config || {},
+    aiPlan: contract.aiPlan,
   };
 }
 

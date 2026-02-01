@@ -18,6 +18,7 @@
 ### Contract Formats
 
 - **[Contract Markdown 3.0](32-contract-markdown.md)** - LLM-optimized `.contract.md` format (NEW)
+- **[Reverse Engineering](34-reverse-engineering.md)** - Generating contracts from existing code (NEW)
 - **[DSL Reference](dsl-reference.md)** - Mini-DSL syntax guide
 - **[TypeScript DSL](dsl-typescript-reference.md)** - Full TypeScript contracts
 - **[CLI Reference](cli-reference.md)** - Command line interface

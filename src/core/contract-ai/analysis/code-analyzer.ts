@@ -46,6 +46,11 @@ export interface EntityInfo {
   comment?: string;
 }
 
+export interface EnumInfo {
+  name: string;
+  values: Array<{ name: string; description?: string }>;
+}
+
 export interface FileInfo {
   path: string;
   relativePath: string;
@@ -57,6 +62,8 @@ export interface FileInfo {
   exports: string[];
   classes: string[];
   entities: EntityInfo[];
+  enums: EnumInfo[];
+  endpoints: Array<{ method: string; path: string }>;
 }
 
 export interface DuplicateGroup {
@@ -205,7 +212,9 @@ export class CodeAnalyzer {
       imports: [],
       exports: [],
       classes: [],
-      entities: []
+      entities: [],
+      enums: [],
+      endpoints: []
     };
 
     // Parse based on language
@@ -401,6 +410,34 @@ export class CodeAnalyzer {
       }
       
       info.entities.push({ name, fields });
+    }
+
+    // Extract Express.js routes
+    const routeRegex = /(?:router|app)\.(get|post|put|delete|patch)\s*\(\s*['"]([^'"]+)['"]/g;
+    while ((match = routeRegex.exec(content)) !== null) {
+      info.endpoints.push({
+        method: match[1].toUpperCase(),
+        path: match[2]
+      });
+    }
+
+    // Extract enums
+    const enumRegex = /(?:export\s+)?enum\s+(\w+)\s*{([^}]*)}/g;
+    while ((match = enumRegex.exec(content)) !== null) {
+      const name = match[1];
+      const body = match[2];
+      const values = body.split(',')
+        .map(v => v.trim())
+        .filter(v => v && !v.startsWith('//'))
+        .map(v => {
+          const parts = v.split('=');
+          const valueName = parts[0].trim().replace(/['"]/g, '');
+          const description = parts[1] ? parts[1].trim() : undefined;
+          return { name: valueName, description };
+        });
+      
+      info.enums.push({ name, values });
+      info.exports.push(name);
     }
 
     // Extract functions
@@ -748,19 +785,103 @@ export class CodeAnalyzer {
    * Generate contract from analysis
    */
   toContract(report: AnalysisReport): any {
+    // Try to get metadata from package.json
+    let appName = path.basename(report.rootDir);
+    let version = '1.0.0';
+    let description = `Generated from ${report.summary.totalFiles} files`;
+    let author = undefined;
+    let license = undefined;
+
+    const pkgPath = path.join(report.rootDir, 'api', 'package.json');
+    if (fs.existsSync(pkgPath)) {
+      try {
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+        if (pkg.name) appName = pkg.name;
+        if (pkg.version) version = pkg.version;
+        if (pkg.description) description = pkg.description;
+        if (pkg.author) author = typeof pkg.author === 'string' ? pkg.author : pkg.author.name;
+        if (pkg.license) license = pkg.license;
+      } catch (e) {}
+    }
+
     // Extract entities from collected entity info
     const entities = report.files.flatMap(f => f.entities).map(e => ({
       name: e.name,
       fields: e.fields.map(f => ({
         name: f.name,
-        type: this.mapTypeToDSL(f.type),
+        type: this.mapTypeToDSL(f.type, f.name),
         required: f.required,
         annotations: f.comment ? { comment: f.comment } : {}
       }))
     }));
 
-    // Extract endpoints from function names and routes
-    const endpoints = report.files
+    // Extract enums
+    const enums = report.files.flatMap(f => f.enums).map(e => ({
+      name: e.name,
+      values: e.values.map(v => ({ name: v.name, description: v.description }))
+    }));
+
+    // Extract potential events (interfaces ending in Event or having certain names)
+    const events = report.files.flatMap(f => {
+      // Look for classes/interfaces that look like events
+      return f.entities
+        .filter(e => e.name.endsWith('Event') || e.name.match(/Registered|Started|Completed|Verified|Rejected|Changed|Uploaded$/))
+        .map(e => ({
+          name: e.name,
+          fields: e.fields.map(f => ({ name: f.name, type: this.mapTypeToDSL(f.type, f.name) }))
+        }));
+    });
+
+    // Remove event-like entities from entities list if they are in events
+    const eventNames = new Set(events.map(e => e.name));
+    const enumNames = new Set(enums.map(e => e.name));
+    
+    const processedEntities = entities
+      .filter(e => !eventNames.has(e.name))
+      .map(e => ({
+        ...e,
+        fields: e.fields.map(f => {
+          // Detect relationships: if type is 'uuid' and name matches entity
+          let type = f.type;
+          const nameLower = f.name.toLowerCase();
+          
+          for (const otherEntity of entities) {
+            if (nameLower === otherEntity.name.toLowerCase() || nameLower === otherEntity.name.toLowerCase() + 'id') {
+              type = `-> ${otherEntity.name}`;
+              break;
+            }
+          }
+          
+          // Detect enums
+          if (type === 'text' || type === 'any') {
+            for (const en of enums) {
+              if (nameLower === en.name.toLowerCase() || f.name.endsWith(en.name)) {
+                type = en.name;
+                break;
+              }
+            }
+          }
+
+          return { ...f, type };
+        })
+      }));
+
+    // Extract endpoints
+    const collectedEndpoints = report.files.flatMap(f => {
+      const baseName = f.relativePath.split('/').pop()?.replace(/\.(ts|js|tsx|jsx)$/, '') || '';
+      const entityName = baseName.charAt(0).toUpperCase() + baseName.slice(1);
+      
+      if (f.endpoints && f.endpoints.length > 0) {
+        return f.endpoints.map(e => ({
+          method: e.method,
+          path: e.path,
+          handler: `${e.method.toLowerCase()}${entityName}`
+        }));
+      }
+      return [];
+    });
+
+    const endpoints = collectedEndpoints.length > 0 ? collectedEndpoints : report.files
       .flatMap(f => f.functions)
       .filter(fn => fn.name.match(/^(get|post|put|delete|patch|handle)/i))
       .map(fn => ({
@@ -769,19 +890,32 @@ export class CodeAnalyzer {
         handler: fn.name
       }));
 
+    // Try to find API config from .env or server.ts
+    let apiPrefix = '/api';
+    let apiPort = 8080;
+
+    const envPath = path.join(report.rootDir, 'api', '.env');
+    if (fs.existsSync(envPath)) {
+      const env = fs.readFileSync(envPath, 'utf-8');
+      const portMatch = env.match(/PORT=(\d+)/);
+      if (portMatch) apiPort = parseInt(portMatch[1]);
+    }
+
     return {
       app: {
-        name: path.basename(report.rootDir),
-        version: '1.0.0',
-        description: `Generated from ${report.summary.totalFiles} files`
+        name: appName,
+        version,
+        description,
+        author,
+        license
       },
-      entities,
+      entities: processedEntities,
+      enums,
+      events,
       endpoints,
-      config: {
-        api: {
-          prefix: '/api',
-          port: 8080
-        }
+      api: {
+        prefix: apiPrefix,
+        port: apiPort
       }
     };
   }
@@ -789,12 +923,21 @@ export class CodeAnalyzer {
   /**
    * Map implementation types to DSL types
    */
-  private mapTypeToDSL(type: string): string {
+  private mapTypeToDSL(type: string, fieldName?: string): string {
     const t = type.toLowerCase().trim();
+    const n = fieldName?.toLowerCase() || '';
+
+    if (n === 'id' || n.endsWith('id')) return 'uuid';
+    if (n === 'email' || t.includes('email')) return 'email';
+    if (n === 'phone' || n.includes('tel')) return 'phone';
+    if (n === 'url' || n.includes('website')) return 'url';
+    
     if (t === 'string') return 'text';
-    if (t === 'number') return 'int';
-    if (t === 'boolean') return 'bool';
-    if (t === 'date' || t === 'datetime') return 'datetime';
+    if (t === 'number' || t === 'int' || t === 'integer') return 'int';
+    if (t === 'boolean' || t === 'bool') return 'bool';
+    if (t === 'date' || t === 'datetime' || t === 'timestamp') return 'datetime';
+    if (t === 'json' || t === 'object' || t === 'any') return 'json';
+    
     return type; // Keep as is if unknown (e.g. enum or another entity)
   }
 }
