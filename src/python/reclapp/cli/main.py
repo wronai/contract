@@ -590,7 +590,7 @@ async def cmd_validate(args: argparse.Namespace) -> int:
 
 async def cmd_setup(args: argparse.Namespace) -> int:
     """Execute the setup command - check environment and API keys"""
-    from reclapp.cli.runner import CLIRunner, CLITaskResult
+    from .runner import CLIRunner, CLITaskResult
     import os
     import shutil
     import subprocess
@@ -655,8 +655,8 @@ async def cmd_setup(args: argparse.Namespace) -> int:
 
 async def cmd_tasks(args: argparse.Namespace) -> int:
     """Execute the tasks command - parallel command execution from file"""
-    from reclapp.cli.executor import TaskExecutor
-    from reclapp.cli.runner import ShellRenderer
+    from .executor import TaskExecutor
+    from .runner import ShellRenderer
     
     renderer = ShellRenderer(verbose=args.verbose)
     renderer.heading(2, f"Reclapp Task Executor v{__version__}")
@@ -684,8 +684,8 @@ async def cmd_tasks(args: argparse.Namespace) -> int:
 
 async def cmd_status(args: argparse.Namespace) -> int:
     """Execute the status command"""
-    from reclapp.llm import LLMManager
-    from reclapp.cli.runner import ShellRenderer
+    from ..llm import LLMManager
+    from .runner import ShellRenderer
     
     # Always show status output regardless of verbose flag
     renderer = ShellRenderer(verbose=True)
@@ -708,7 +708,7 @@ async def cmd_list(args: argparse.Namespace) -> int:
     """Execute the list command - find and display contracts"""
     import json
     from datetime import datetime
-    from reclapp.cli.runner import ShellRenderer
+    from .runner import ShellRenderer
     
     # Always show list output
     renderer = ShellRenderer(verbose=True)
@@ -797,7 +797,7 @@ async def cmd_list(args: argparse.Namespace) -> int:
 
 async def cmd_prompts(args: argparse.Namespace) -> int:
     """Execute the prompts command - manage prompt templates"""
-    from reclapp.cli.runner import ShellRenderer
+    from .runner import ShellRenderer
     # Always show prompts output
     renderer = ShellRenderer(verbose=True)
     renderer.heading(2, f"Reclapp Prompts v{__version__}")
@@ -874,7 +874,7 @@ async def cmd_prompts(args: argparse.Namespace) -> int:
 
 async def cmd_analyze(args: argparse.Namespace) -> int:
     """Execute the analyze command - extract contract from codebase"""
-    from reclapp.cli.runner import CLIRunner, CLITaskResult
+    from .runner import CLIRunner, CLITaskResult
     
     runner = CLIRunner(
         name="Reclapp Analyze",
@@ -959,7 +959,7 @@ async def cmd_analyze(args: argparse.Namespace) -> int:
 
 async def cmd_refactor(args: argparse.Namespace) -> int:
     """Execute the refactor command - apply contract changes to code"""
-    from reclapp.cli.runner import CLIRunner, CLITaskResult
+    from .runner import CLIRunner, CLITaskResult
     import json
     
     runner = CLIRunner(

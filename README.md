@@ -229,9 +229,9 @@ reclapp/
 
 ```
 ┌───────────────────────────────────────────────────────────┐
-│  Layer 1: DEFINITION     │  app, entities, api           │
-│  Layer 2: GENERATION     │  instructions, techStack      │
-│  Layer 3: VALIDATION     │  assertions, tests, acceptance│
+│  Layer 1: DEFINITION     │  app, entities, api            │
+│  Layer 2: GENERATION     │  instructions, techStack       │
+│  Layer 3: VALIDATION     │  assertions, tests, acceptance │
 └───────────────────────────────────────────────────────────┘
 ```
 
@@ -310,25 +310,25 @@ reclapp --prompt "Create a todo app with tasks"
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    RECLAPP 2.2.0                             │
+│                    RECLAPP 2.2.0                            │
 ├─────────────────────────────────────────────────────────────┤
-│  INPUT                                                       │
+│  INPUT                                                      │
 │  ├── Prompt ("Create a CRM system")                         │
 │  ├── TypeScript Contract (*.ts)                             │
 │  └── Pydantic Contract (Python)                             │
 ├─────────────────────────────────────────────────────────────┤
-│  CONTRACT AI (3 Layers)                                      │
+│  CONTRACT AI (3 Layers)                                     │
 │  ├── Definition (app, entities, api)                        │
 │  ├── Generation (instructions, techStack)                   │
 │  └── Validation (assertions, tests, acceptance)             │
 ├─────────────────────────────────────────────────────────────┤
-│  VALIDATION PIPELINE (8 Stages)                              │
+│  VALIDATION PIPELINE (8 Stages)                             │
 │  ├── 1. Syntax      5. Tests                                │
 │  ├── 2. Schema      6. Quality                              │
 │  ├── 3. Assertions  7. Security                             │
 │  └── 4. Static      8. Runtime                              │
 ├─────────────────────────────────────────────────────────────┤
-│  OUTPUT                                                      │
+│  OUTPUT                                                     │
 │  ├── Generated API (Express.js + TypeScript)                │
 │  ├── Health Check (/health)                                 │
 │  └── CRUD Endpoints (/api/v1/items)                         │

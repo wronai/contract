@@ -37,7 +37,24 @@ class OpenRouterClient(LLMProvider):
         return bool(self.config.api_key)
 
     async def list_models(self) -> list[LLMModelInfo]:
-        return []
+        """List available models from OpenRouter"""
+        try:
+            url = self.config.base_url.rstrip("/") + "/models"
+            resp = await self._client.get(url)
+            resp.raise_for_status()
+            data = resp.json()
+            
+            models = []
+            for m in data.get("data", []):
+                models.append(LLMModelInfo(
+                    name=m.get("id", "unknown"),
+                    size=None,
+                    modified=None,
+                    is_code_model="coder" in m.get("id", "").lower()
+                ))
+            return models
+        except Exception:
+            return []
 
     async def generate(self, options: GenerateOptions) -> LLMResponse:
         if not self.config.api_key:

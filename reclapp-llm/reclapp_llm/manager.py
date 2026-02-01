@@ -13,6 +13,7 @@ from typing import Optional
 from .provider import LLMProvider, LLMResponse, GenerateOptions, LLMProviderStatus, LLMModelInfo
 from .ollama import OllamaClient, OllamaConfig
 from .openrouter import OpenRouterClient
+from .windsurf import WindsurfClient, WindsurfConfig
 
 
 class ProviderInfo:
@@ -90,6 +91,9 @@ class LLMManager:
         
         # Initialize OpenRouter if configured
         await self._init_openrouter()
+        
+        # Initialize Windsurf
+        await self._init_windsurf()
 
         preferred = os.getenv("LLM_PROVIDER", "auto").strip().lower() or "auto"
 
@@ -185,6 +189,26 @@ class LLMManager:
 
         self._provider_info["openrouter"] = info
     
+    async def _init_windsurf(self) -> None:
+        """Initialize Windsurf provider"""
+        client = WindsurfClient()
+        info = ProviderInfo("windsurf", LLMProviderStatus.UNAVAILABLE)
+        
+        try:
+            if await client.is_available():
+                models = await client.list_models()
+                info.status = LLMProviderStatus.AVAILABLE
+                info.provider = client
+                info.models = models
+                self._providers["windsurf"] = client
+            else:
+                info.error = "Windsurf server not running"
+        except Exception as e:
+            info.status = LLMProviderStatus.ERROR
+            info.error = str(e)
+        
+        self._provider_info["windsurf"] = info
+
     def add_provider(self, name: str, provider: LLMProvider) -> None:
         """Add a custom provider"""
         self._providers[name] = provider

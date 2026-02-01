@@ -7,6 +7,7 @@ Run: pytest tests/python/test_cli.py -v
 
 import pytest
 import sys
+import asyncio
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 from click.testing import CliRunner
@@ -246,6 +247,15 @@ class TestNewCommands:
         assert result.exit_code == 0
         assert "analyze" in result.output.lower()
 
+    @patch("reclapp.cli._get_core_main")
+    def test_analyze_execution(self, mock_get_main, runner, tmp_path):
+        mock_main = MagicMock()
+        mock_main.cmd_analyze = MagicMock(side_effect=lambda *args, **kwargs: asyncio.sleep(0))
+        mock_get_main.return_value = mock_main
+        
+        result = runner.invoke(main, ["analyze", "-d", str(tmp_path)])
+        assert result.exit_code == 0
+
     def test_refactor_help(self, runner):
         result = runner.invoke(main, ["refactor", "--help"])
         assert result.exit_code == 0
@@ -260,3 +270,27 @@ class TestNewCommands:
         result = runner.invoke(main, ["status", "--help"])
         assert result.exit_code == 0
         assert "status" in result.output.lower()
+
+    @patch("reclapp.cli._get_core_main")
+    def test_parse_markdown(self, mock_get_main, runner, tmp_path):
+        mock_main = MagicMock()
+        mock_main.cmd_parse = MagicMock(side_effect=lambda *args, **kwargs: asyncio.sleep(0))
+        mock_get_main.return_value = mock_main
+        
+        contract_file = tmp_path / "app.rcl.md"
+        contract_file.write_text("# App")
+        
+        result = runner.invoke(main, ["parse", str(contract_file)])
+        assert result.exit_code == 0
+
+    @patch("reclapp.cli._get_core_main")
+    def test_validate_json(self, mock_get_main, runner, tmp_path):
+        mock_main = MagicMock()
+        mock_main.cmd_validate = MagicMock(side_effect=lambda *args, **kwargs: asyncio.sleep(0))
+        mock_get_main.return_value = mock_main
+        
+        contract_file = tmp_path / "contract.json"
+        contract_file.write_text("{}")
+        
+        result = runner.invoke(main, ["validate", str(contract_file)])
+        assert result.exit_code == 0
