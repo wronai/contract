@@ -1039,9 +1039,15 @@ export class CodeAnalyzer {
       }
     };
 
-    // If derived app name is generic, always use AI plan name
-    if (merged.app.name.toLowerCase() === 'app' || merged.app.name.toLowerCase() === 'api') {
-      if (aiPlan.app?.name) merged.app.name = aiPlan.app.name;
+    // If derived app name is generic, try to recover from AI plan or raw content
+    if (merged.app.name.toLowerCase() === 'app' || merged.app.name.toLowerCase() === 'api' || merged.app.name.toLowerCase() === 'unnamed') {
+      if (aiPlan.app?.name && aiPlan.app.name.toLowerCase() !== 'app') {
+        merged.app.name = aiPlan.app.name;
+      } else if (aiPlanSource.raw) {
+        // Look for Markdown title
+        const titleMatch = aiPlanSource.raw.match(/^#\s+(.+)$/m);
+        if (titleMatch) merged.app.name = titleMatch[1].trim();
+      }
     }
 
     // Merge entities
@@ -1056,55 +1062,62 @@ export class CodeAnalyzer {
         const existingFields = mergedEntities[existingIdx].fields || [];
         const mergedFields = [...existingFields];
 
+        for (const field of mergedFields) {
+          if (field.description) {
+            const desc = field.description;
+            if (desc.includes('@unique')) field.unique = true;
+            if (desc.includes('@auto')) field.auto = true;
+            if (desc.includes('@required')) {
+              field.required = true;
+              field.explicitRequired = true;
+            }
+            
+            // Final clean up of description
+            field.description = desc
+              .replace(/@(unique|auto|required)/g, '')
+              .replace(/^[\s\-\:\.\,]+/, '')
+              .replace(/[\s\-\:\.\,]+$/, '')
+              .replace(/\s+/g, ' ')
+              .trim();
+            
+            if (!field.description || field.description === '-' || field.description === '') {
+              delete field.description;
+            }
+          }
+        }
+
         for (const df of de.fields) {
           const fieldIdx = mergedFields.findIndex(f => f.name === df.name);
           if (fieldIdx >= 0) {
             // Field exists, update type if it's more specific in code, but keep aiPlan specificity like int(0..100)
             const aiType = mergedFields[fieldIdx].type;
             const aiTypeLower = (aiType || '').toLowerCase();
-            const genericTypes = ['string', 'number', 'boolean', 'any', 'json', 'text', 'object', 'date', 'datetime', 'uuid', ''];
+            const genericTypes = ['string', 'number', 'boolean', 'any', 'json', 'text', 'object', 'date', 'datetime', 'uuid', 'email', 'url', 'phone', ''];
             
-            if (genericTypes.includes(aiTypeLower)) {
+            // If code has relationship but AI plan has string/uuid, prefer relationship
+            if (df.type.startsWith('->') && !mergedFields[fieldIdx].type.startsWith('->')) {
               mergedFields[fieldIdx].type = df.type;
             }
-            mergedFields[fieldIdx].required = df.required;
-            // Sync unique/auto/required from description text if present (common in AI generated contracts)
-            if (mergedFields[fieldIdx].description) {
-              const desc = mergedFields[fieldIdx].description;
-              if (desc.includes('@unique')) mergedFields[fieldIdx].unique = true;
-              if (desc.includes('@auto')) mergedFields[fieldIdx].auto = true;
-              if (desc.includes('@required')) mergedFields[fieldIdx].required = true;
+
+            // Sync required status
+            if (df.required) {
+              mergedFields[fieldIdx].required = true;
+              mergedFields[fieldIdx].explicitRequired = true;
             }
 
             if (df.unique) mergedFields[fieldIdx].unique = true;
             if (df.auto) mergedFields[fieldIdx].auto = true;
             
+            // Ensure ID fields are unique and auto if name matches
+            const nameLower = df.name.toLowerCase();
+            if (nameLower === 'id' || nameLower === de.name.toLowerCase() + 'id' || nameLower === de.name.toLowerCase() + 'uuid') {
+              mergedFields[fieldIdx].unique = true;
+              mergedFields[fieldIdx].auto = true;
+            }
+
             // Explicitly sync unique/auto from derived if not set in AI plan but detected in code
             if (df.unique && !mergedFields[fieldIdx].unique) mergedFields[fieldIdx].unique = true;
             if (df.auto && !mergedFields[fieldIdx].auto) mergedFields[fieldIdx].auto = true;
-
-            // Clean up description if it contains annotations that are now boolean flags
-            if (mergedFields[fieldIdx].description) {
-              // Remove annotations and common AI separators/garbage
-              mergedFields[fieldIdx].description = mergedFields[fieldIdx].description
-                .replace(/@(unique|auto|required)/g, '')
-                .replace(/^[\s\-\:\.\,]+/, '')
-                .replace(/[\s\-\:\.\,]+$/, '')
-                .replace(/\s+/g, ' ')
-                .trim();
-
-              if (!mergedFields[fieldIdx].description || mergedFields[fieldIdx].description === '-') {
-                delete mergedFields[fieldIdx].description;
-              }
-            }
-            
-            // Merge annotations
-            if (df.annotations) {
-              mergedFields[fieldIdx].annotations = {
-                ...mergedFields[fieldIdx].annotations,
-                ...df.annotations
-              };
-            }
           } else {
             // New field found in code
             mergedFields.push(df);
@@ -1117,16 +1130,54 @@ export class CodeAnalyzer {
       }
     }
     // Filter out technical entities that don't belong in a business contract
-    const technicalEntities = new Set(['Request', 'Response', 'Item', 'JWTPayload', 'Token', 'Payload']);
+    const technicalEntities = new Set(['Request', 'Response', 'Item', 'JWTPayload', 'Token', 'Payload', 'AuthRequest', 'AuthResponse']);
     const finalEntities = mergedEntities.filter(e => {
+      const name = e.name.trim();
+      // Filter out if technical, even if it was in the AI plan (some plans contain technical notes)
+      if (technicalEntities.has(name)) return false;
       // Keep it if it was in the AI plan (domain entity)
-      if (aiEntities.some(ae => ae.name.toLowerCase() === e.name.toLowerCase())) return true;
-      // Filter out if technical
-      if (technicalEntities.has(e.name)) return false;
+      if (aiEntities.some(ae => ae.name.toLowerCase() === name.toLowerCase())) return true;
+      // Keep if not technical
       return true;
     });
 
     merged.entities = finalEntities;
+
+    // Final cleanup pass for ALL fields in ALL entities
+    // ensures annotations are synced from description and descriptions are cleaned up
+    for (const entity of merged.entities) {
+      for (const field of entity.fields) {
+        if (field.description) {
+          const desc = field.description;
+          // Sync flags from description if they are there
+          if (desc.includes('@unique')) field.unique = true;
+          if (desc.includes('@auto')) field.auto = true;
+          if (desc.includes('@required')) {
+            field.required = true;
+            field.explicitRequired = true;
+          }
+
+          // Clean up the description string
+          field.description = desc
+            .replace(/@(unique|auto|required)/g, '')
+            .replace(/^[\s\-\:\.\,]+/, '')
+            .replace(/[\s\-\:\.\,]+$/, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          if (!field.description || field.description === '-' || field.description === '') {
+            delete field.description;
+          }
+        }
+
+        // Ensure ID fields are always unique/auto
+        const nameLower = field.name.toLowerCase();
+        if (nameLower === 'id' || nameLower === entity.name.toLowerCase() + 'id' || nameLower === entity.name.toLowerCase() + 'uuid') {
+          field.unique = true;
+          field.auto = true;
+        }
+      }
+    }
 
     // Restore sections that code analysis usually misses
     if (!merged.events || merged.events.length === 0) merged.events = derivedContract.events || aiPlan.events || [];

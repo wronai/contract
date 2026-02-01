@@ -478,6 +478,8 @@ async def cmd_generate(args: argparse.Namespace) -> int:
             # or update CodeGenerator to handle the parsed model.
             # For now, let's dump to dict.
             contract = contract_md.model_dump(by_alias=True)
+            # Add raw content for better reverse engineering later
+            contract["raw"] = content
         else:
             with open(contract_path) as f:
                 contract = json.load(f)

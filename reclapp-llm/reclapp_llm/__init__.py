@@ -8,7 +8,7 @@ Multi-provider LLM support with:
 Unified with pycontracts.llm for consistent provider support.
 
 Mirrors: src/core/contract-ai/llm/
-@version 3.1.0 - Unified with pycontracts.llm
+@version 2.4.1 - Unified with reclapp-llm
 """
 
 from .provider import LLMProvider, LLMResponse, GenerateOptions, LLMProviderStatus, LLMModelInfo

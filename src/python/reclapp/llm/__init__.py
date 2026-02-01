@@ -5,10 +5,10 @@ Multi-provider LLM support with:
 - Local: Ollama
 - Remote: OpenRouter, OpenAI, Anthropic, Groq, Together, LiteLLM
 
-Unified with pycontracts.llm for consistent provider support.
+Unified with reclapp-llm for consistent provider support.
 
 Mirrors: src/core/contract-ai/llm/
-@version 3.1.0 - Unified with pycontracts.llm
+@version 2.4.1 - Unified with reclapp-llm
 """
 
 from .provider import LLMProvider, LLMResponse, GenerateOptions, LLMProviderStatus, LLMModelInfo
@@ -17,24 +17,24 @@ from .openrouter import OpenRouterClient
 from .windsurf import WindsurfClient, WindsurfConfig
 from .manager import LLMManager, ProviderInfo
 
-# Re-export pycontracts.llm if available
+# Re-export reclapp_llm if available
 try:
-    from pycontracts import llm
-    LLMConfig = llm.LLMConfig
-    get_client = llm.get_client
-    list_available_providers = llm.list_available_providers
-    RECOMMENDED_MODELS = llm.RECOMMENDED_MODELS
-    ProviderManager = llm.ProviderManager
-    pycontracts_generate = llm.generate
-    PYCONTRACTS_AVAILABLE = True
+    import reclapp_llm as llm
+    LLMConfig = getattr(llm, "LLMConfig", None)
+    get_client = getattr(llm, "get_client", None)
+    list_available_providers = getattr(llm, "list_available_providers", None)
+    RECOMMENDED_MODELS = getattr(llm, "RECOMMENDED_MODELS", {})
+    ProviderManager = getattr(llm, "ProviderManager", None)
+    reclapp_llm_generate = getattr(llm, "generate", None)
+    RECLAPP_LLM_AVAILABLE = True
 except ImportError:
-    PYCONTRACTS_AVAILABLE = False
+    RECLAPP_LLM_AVAILABLE = False
     LLMConfig = None
     get_client = None
     list_available_providers = None
     RECOMMENDED_MODELS = {}
     ProviderManager = None
-    pycontracts_generate = None
+    reclapp_llm_generate = None
 
 __all__ = [
     # Core types
@@ -52,12 +52,12 @@ __all__ = [
     # Manager
     "LLMManager",
     "ProviderInfo",
-    # pycontracts.llm re-exports
-    "PYCONTRACTS_AVAILABLE",
+    # reclapp-llm re-exports
+    "RECLAPP_LLM_AVAILABLE",
     "LLMConfig",
     "get_client",
     "list_available_providers",
     "RECOMMENDED_MODELS",
     "ProviderManager",
-    "pycontracts_generate",
+    "reclapp_llm_generate",
 ]
