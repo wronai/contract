@@ -1,0 +1,349 @@
+{
+  "$defs": {
+    "AcceptanceCriteria": {
+      "description": "Acceptance criteria for generated code\n\nExample:\n    acceptance = AcceptanceCriteria(\n        testsPass=True,\n        minCoverage=70,\n        noErrors=True,\n        lintClean=True\n    )",
+      "properties": {
+        "tests_pass": {
+          "default": true,
+          "title": "Tests Pass",
+          "type": "boolean"
+        },
+        "min_coverage": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Coverage"
+        },
+        "no_errors": {
+          "default": true,
+          "title": "No Errors",
+          "type": "boolean"
+        },
+        "no_warnings": {
+          "default": false,
+          "title": "No Warnings",
+          "type": "boolean"
+        },
+        "lint_clean": {
+          "default": false,
+          "title": "Lint Clean",
+          "type": "boolean"
+        },
+        "max_complexity": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Complexity"
+        }
+      },
+      "title": "AcceptanceCriteria",
+      "type": "object"
+    },
+    "Assertion": {
+      "description": "Validation assertion\n\nExample:\n    assertion = Assertion(\n        type=AssertionType.ENDPOINT_STATUS,\n        target=\"/api/v1/contacts\",\n        expected=200,\n        description=\"Contacts endpoint should return 200\"\n    )",
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/AssertionType"
+        },
+        "target": {
+          "title": "Target",
+          "type": "string"
+        },
+        "expected": {
+          "title": "Expected"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "severity": {
+          "default": "error",
+          "enum": [
+            "error",
+            "warning",
+            "info"
+          ],
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "target",
+        "expected"
+      ],
+      "title": "Assertion",
+      "type": "object"
+    },
+    "AssertionType": {
+      "description": "Assertion types for validation",
+      "enum": [
+        "file-exists",
+        "file-contains",
+        "endpoint-returns",
+        "endpoint-status",
+        "schema-valid",
+        "type-check",
+        "lint-pass",
+        "test-pass"
+      ],
+      "title": "AssertionType",
+      "type": "string"
+    },
+    "QualityGate": {
+      "description": "Quality gate definition\n\nExample:\n    gate = QualityGate(\n        name=\"Code Coverage\",\n        metric=\"coverage\",\n        threshold=70,\n        operator=\"gte\"\n    )",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "metric": {
+          "title": "Metric",
+          "type": "string"
+        },
+        "threshold": {
+          "title": "Threshold",
+          "type": "number"
+        },
+        "operator": {
+          "default": "gte",
+          "enum": [
+            "eq",
+            "gt",
+            "gte",
+            "lt",
+            "lte"
+          ],
+          "title": "Operator",
+          "type": "string"
+        },
+        "blocking": {
+          "default": true,
+          "title": "Blocking",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "metric",
+        "threshold"
+      ],
+      "title": "QualityGate",
+      "type": "object"
+    },
+    "StaticRule": {
+      "description": "Static analysis rule\n\nExample:\n    rule = StaticRule(\n        id=\"no-any\",\n        name=\"No any type\",\n        description=\"Disallow usage of 'any' type\",\n        severity=\"warning\",\n        pattern=\":\\\\s*any\\\\b\"\n    )",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "severity": {
+          "default": "warning",
+          "enum": [
+            "error",
+            "warning",
+            "info"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pattern"
+        },
+        "fix": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fix"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "title": "StaticRule",
+      "type": "object"
+    },
+    "TestDefinition": {
+      "description": "Test definition\n\nExample:\n    test = TestDefinition(\n        name=\"Contact CRUD\",\n        type=TestType.API,\n        description=\"Test Contact CRUD operations\",\n        steps=[\n            {\"action\": \"POST\", \"endpoint\": \"/api/v1/contacts\", \"body\": {\"email\": \"test@example.com\"}},\n            {\"action\": \"GET\", \"endpoint\": \"/api/v1/contacts\", \"expect\": {\"status\": 200}},\n        ]\n    )",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/TestType"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "entity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Entity"
+        },
+        "steps": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Steps"
+        },
+        "setup": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Setup"
+        },
+        "teardown": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Teardown"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "title": "TestDefinition",
+      "type": "object"
+    },
+    "TestType": {
+      "description": "Test types",
+      "enum": [
+        "unit",
+        "integration",
+        "e2e",
+        "api",
+        "contract"
+      ],
+      "title": "TestType",
+      "type": "string"
+    }
+  },
+  "description": "Layer 3: Validation - defines HOW to verify and WHEN ready\n\nExample:\n    validation = ValidationLayer(\n        assertions=[\n            Assertion(type=AssertionType.ENDPOINT_STATUS, target=\"/api/v1/contacts\", expected=200),\n        ],\n        tests=[\n            TestDefinition(name=\"Contact CRUD\", type=TestType.API),\n        ],\n        staticRules=[\n            StaticRule(id=\"no-any\", name=\"No any type\", severity=\"warning\"),\n        ],\n        qualityGates=[\n            QualityGate(name=\"Coverage\", metric=\"coverage\", threshold=70),\n        ],\n        acceptance=AcceptanceCriteria(testsPass=True, minCoverage=70)\n    )",
+  "properties": {
+    "assertions": {
+      "items": {
+        "$ref": "#/$defs/Assertion"
+      },
+      "title": "Assertions",
+      "type": "array"
+    },
+    "tests": {
+      "items": {
+        "$ref": "#/$defs/TestDefinition"
+      },
+      "title": "Tests",
+      "type": "array"
+    },
+    "static_rules": {
+      "items": {
+        "$ref": "#/$defs/StaticRule"
+      },
+      "title": "Static Rules",
+      "type": "array"
+    },
+    "quality_gates": {
+      "items": {
+        "$ref": "#/$defs/QualityGate"
+      },
+      "title": "Quality Gates",
+      "type": "array"
+    },
+    "acceptance": {
+      "$ref": "#/$defs/AcceptanceCriteria"
+    }
+  },
+  "title": "ValidationLayer",
+  "type": "object"
+}

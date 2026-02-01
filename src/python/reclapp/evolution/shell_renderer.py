@@ -5,7 +5,7 @@ Renders colorized markdown output in terminal.
 Uses clickmd.MarkdownRenderer as rendering backend.
 
 Mirrors: src/core/contract-ai/evolution/shell-renderer.ts
-@version 2.0.0 - Unified with clickmd
+@version 2.4.1 - Unified with clickmd
 """
 
 import re

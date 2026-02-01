@@ -4,7 +4,7 @@ Evolution Manager
 Manages the evolution pipeline with auto-healing code generation.
 
 Mirrors: src/core/contract-ai/evolution/evolution-manager.ts
-@version 2.0.0 - Full pipeline with E2E tests, npm install, service start
+@version 2.4.1 - Full pipeline with E2E tests, npm install, service start
 """
 
 import asyncio
@@ -96,7 +96,7 @@ class EvolutionManager:
         self.options = options or EvolutionOptions()
         self.runner = CLIRunner(
             name="Reclapp Evolution",
-            version="2.0.0",
+            version="2.4.1",
             verbose=self.options.verbose,
             show_progress=True
         )

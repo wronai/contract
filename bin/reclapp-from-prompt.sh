@@ -6,7 +6,7 @@
 #   ./bin/reclapp-from-prompt.sh examples/prompts/01-notes-app.txt
 #   ./bin/reclapp-from-prompt.sh examples/prompts/02-todo-app.txt -o ./my-app
 #
-# @version 2.3.1
+# @version 2.4.1
 #
 
 set -e

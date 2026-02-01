@@ -547,7 +547,7 @@ def llm():
 @llm.command("status")
 def llm_status():
     """Show LLM providers status and configuration."""
-    # Use unified reclapp.llm which re-exports pycontracts.llm
+    # Use unified reclapp.llm which provides multi-provider support
     import sys
     sys.path.insert(0, str(PROJECT_ROOT / "src" / "python"))
     

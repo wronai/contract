@@ -14,7 +14,7 @@
 #   reclapp-full-lifecycle.sh --prompt "Create a notes app"
 #   reclapp-full-lifecycle.sh examples/contract-ai/crm-contract.ts
 #
-# @version 2.3.1
+# @version 2.4.1
 #
 
 set -e

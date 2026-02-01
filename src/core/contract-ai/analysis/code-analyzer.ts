@@ -1040,8 +1040,9 @@ export class CodeAnalyzer {
     };
 
     // If derived app name is generic, try to recover from AI plan or raw content
-    if (merged.app.name.toLowerCase() === 'app' || merged.app.name.toLowerCase() === 'api' || merged.app.name.toLowerCase() === 'unnamed') {
-      if (aiPlan.app?.name && aiPlan.app.name.toLowerCase() !== 'app') {
+    const genericAppNames = ['app', 'api', 'unnamed', 'target', 'generated'];
+    if (genericAppNames.includes(merged.app.name.toLowerCase())) {
+      if (aiPlan.app?.name && !genericAppNames.includes(aiPlan.app.name.toLowerCase())) {
         merged.app.name = aiPlan.app.name;
       } else if (aiPlanSource.raw) {
         // Look for Markdown title

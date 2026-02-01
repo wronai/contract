@@ -28,16 +28,16 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r pycontracts/requirements.txt
-          pip install -r pycontracts/requirements-dev.txt
+          pip install -e reclapp-contracts/
+          pip install pydantic
 
-      - name: Generate contracts (JSON Schema + TypeScript)
+      - name: Generate contracts (JSON Schema)
         run: |
-          python -m pycontracts.generate --output ./contracts/json --typescript --ts-output ./frontend-sdk
+          PYTHONPATH=reclapp-contracts:. python3 scripts/generate_schemas.py --output ./contracts/json
 
-      - name: Run Pydantic contract tests
+      - name: Run Contract models tests
         run: |
-          pytest -q tests/contracts
+          PYTHONPATH=src/python:reclapp-contracts:. pytest -q tests/python/test_models.py
 
       - name: Ensure generated artifacts are committed
         run: |

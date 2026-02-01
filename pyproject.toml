@@ -29,8 +29,8 @@ dependencies = [
     "pydantic>=2.5.0",
     "httpx>=0.25.0",
     "clickmd>=1.0.0",
-    "reclapp-llm>=0.1.0",
-    "reclapp-contracts>=0.1.0",
+    "reclapp-llm>=2.4.1",
+    "reclapp-contracts>=2.4.1",
 ]
 
 [project.optional-dependencies]

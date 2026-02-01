@@ -1,0 +1,360 @@
+{
+  "$defs": {
+    "BackendTechStack": {
+      "description": "Backend technology stack configuration",
+      "properties": {
+        "runtime": {
+          "default": "node",
+          "title": "Runtime",
+          "type": "string"
+        },
+        "language": {
+          "default": "typescript",
+          "title": "Language",
+          "type": "string"
+        },
+        "framework": {
+          "default": "express",
+          "title": "Framework",
+          "type": "string"
+        },
+        "port": {
+          "default": 3000,
+          "title": "Port",
+          "type": "integer"
+        },
+        "orm": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Orm"
+        }
+      },
+      "title": "BackendTechStack",
+      "type": "object"
+    },
+    "Constraint": {
+      "description": "Generation constraint\n\nExample:\n    constraint = Constraint(\n        type=ConstraintType.SECURITY,\n        name=\"Input Validation\",\n        description=\"All user inputs must be validated\",\n        enforcement=\"required\"\n    )",
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/ConstraintType"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "enforcement": {
+          "default": "required",
+          "enum": [
+            "required",
+            "recommended",
+            "optional"
+          ],
+          "title": "Enforcement",
+          "type": "string"
+        },
+        "check": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Check"
+        }
+      },
+      "required": [
+        "type",
+        "name"
+      ],
+      "title": "Constraint",
+      "type": "object"
+    },
+    "ConstraintType": {
+      "description": "Constraint types",
+      "enum": [
+        "security",
+        "performance",
+        "compatibility",
+        "style",
+        "architecture"
+      ],
+      "title": "ConstraintType",
+      "type": "string"
+    },
+    "DatabaseTechStack": {
+      "description": "Database technology stack configuration",
+      "properties": {
+        "type": {
+          "default": "in-memory",
+          "enum": [
+            "postgresql",
+            "mysql",
+            "sqlite",
+            "mongodb",
+            "in-memory"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "host": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Host"
+        },
+        "port": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Port"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        }
+      },
+      "title": "DatabaseTechStack",
+      "type": "object"
+    },
+    "FrontendTechStack": {
+      "description": "Frontend technology stack configuration",
+      "properties": {
+        "framework": {
+          "default": "react",
+          "title": "Framework",
+          "type": "string"
+        },
+        "language": {
+          "default": "typescript",
+          "title": "Language",
+          "type": "string"
+        },
+        "styling": {
+          "default": "tailwind",
+          "title": "Styling",
+          "type": "string"
+        },
+        "port": {
+          "default": 5173,
+          "title": "Port",
+          "type": "integer"
+        }
+      },
+      "title": "FrontendTechStack",
+      "type": "object"
+    },
+    "Instruction": {
+      "description": "Generation instruction for LLM\n\nExample:\n    instruction = Instruction(\n        target=\"api\",\n        priority=InstructionPriority.MUST,\n        instruction=\"Use Express.js with TypeScript\"\n    )",
+      "properties": {
+        "target": {
+          "title": "Target",
+          "type": "string"
+        },
+        "priority": {
+          "$ref": "#/$defs/InstructionPriority"
+        },
+        "instruction": {
+          "title": "Instruction",
+          "type": "string"
+        },
+        "rationale": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rationale"
+        }
+      },
+      "required": [
+        "target",
+        "priority",
+        "instruction"
+      ],
+      "title": "Instruction",
+      "type": "object"
+    },
+    "InstructionPriority": {
+      "description": "Instruction priority levels",
+      "enum": [
+        "must",
+        "should",
+        "may",
+        "must-not"
+      ],
+      "title": "InstructionPriority",
+      "type": "string"
+    },
+    "Pattern": {
+      "description": "Design pattern specification\n\nExample:\n    pattern = Pattern(\n        name=\"Repository Pattern\",\n        type=PatternType.REPOSITORY,\n        description=\"Data access abstraction layer\",\n        applies_to=[\"entity\"]\n    )",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/PatternType"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "applies_to": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Applies To"
+        },
+        "template": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Template"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "title": "Pattern",
+      "type": "object"
+    },
+    "PatternType": {
+      "description": "Design pattern types",
+      "enum": [
+        "repository",
+        "service",
+        "controller",
+        "factory",
+        "singleton",
+        "observer",
+        "strategy",
+        "decorator"
+      ],
+      "title": "PatternType",
+      "type": "string"
+    },
+    "TechStack": {
+      "description": "Complete technology stack configuration\n\nExample:\n    tech_stack = TechStack(\n        backend=BackendTechStack(runtime=\"node\", language=\"typescript\", framework=\"express\", port=3000),\n        frontend=FrontendTechStack(framework=\"react\", language=\"typescript\"),\n        database=DatabaseTechStack(type=\"postgresql\")\n    )",
+      "properties": {
+        "backend": {
+          "$ref": "#/$defs/BackendTechStack"
+        },
+        "frontend": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FrontendTechStack"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "database": {
+          "$ref": "#/$defs/DatabaseTechStack"
+        }
+      },
+      "title": "TechStack",
+      "type": "object"
+    }
+  },
+  "description": "Layer 2: Generation - defines HOW LLM should generate code\n\nExample:\n    generation = GenerationLayer(\n        instructions=[\n            Instruction(target=\"api\", priority=InstructionPriority.MUST, instruction=\"Use Express.js with TypeScript\"),\n        ],\n        patterns=[\n            Pattern(name=\"Repository\", type=PatternType.REPOSITORY, applies_to=[\"entity\"]),\n        ],\n        constraints=[\n            Constraint(type=ConstraintType.SECURITY, name=\"Input Validation\", description=\"Validate all inputs\"),\n        ],\n        techStack=TechStack(backend=BackendTechStack(port=3000))\n    )",
+  "properties": {
+    "instructions": {
+      "items": {
+        "$ref": "#/$defs/Instruction"
+      },
+      "title": "Instructions",
+      "type": "array"
+    },
+    "patterns": {
+      "items": {
+        "$ref": "#/$defs/Pattern"
+      },
+      "title": "Patterns",
+      "type": "array"
+    },
+    "constraints": {
+      "items": {
+        "$ref": "#/$defs/Constraint"
+      },
+      "title": "Constraints",
+      "type": "array"
+    },
+    "tech_stack": {
+      "$ref": "#/$defs/TechStack"
+    }
+  },
+  "title": "GenerationLayer",
+  "type": "object"
+}

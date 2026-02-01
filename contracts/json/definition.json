@@ -1,0 +1,882 @@
+{
+  "$defs": {
+    "ApiAuthentication": {
+      "description": "API authentication configuration",
+      "properties": {
+        "type": {
+          "enum": [
+            "jwt",
+            "api-key",
+            "oauth2",
+            "none"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "config": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Config"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "ApiAuthentication",
+      "type": "object"
+    },
+    "ApiDefinition": {
+      "description": "API definition\n\nExample:\n    api = ApiDefinition(\n        version=\"v1\",\n        prefix=\"/api/v1\",\n        resources=[\n            ApiResourceDefinition(name=\"contacts\", entity=\"Contact\", operations=[\"list\", \"get\", \"create\", \"update\", \"delete\"]),\n        ]\n    )",
+      "properties": {
+        "version": {
+          "title": "Version",
+          "type": "string"
+        },
+        "prefix": {
+          "title": "Prefix",
+          "type": "string"
+        },
+        "resources": {
+          "items": {
+            "$ref": "#/$defs/ApiResourceDefinition"
+          },
+          "title": "Resources",
+          "type": "array"
+        },
+        "authentication": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ApiAuthentication"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "version",
+        "prefix",
+        "resources"
+      ],
+      "title": "ApiDefinition",
+      "type": "object"
+    },
+    "ApiEndpointDefinition": {
+      "description": "Custom endpoint definition",
+      "properties": {
+        "method": {
+          "enum": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE"
+          ],
+          "title": "Method",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "request_body": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Request Body"
+        },
+        "response": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Response"
+        }
+      },
+      "required": [
+        "method",
+        "path"
+      ],
+      "title": "ApiEndpointDefinition",
+      "type": "object"
+    },
+    "ApiResourceDefinition": {
+      "description": "API resource definition",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "entity": {
+          "title": "Entity",
+          "type": "string"
+        },
+        "operations": {
+          "items": {
+            "enum": [
+              "list",
+              "get",
+              "create",
+              "update",
+              "delete"
+            ],
+            "type": "string"
+          },
+          "title": "Operations",
+          "type": "array"
+        },
+        "custom_endpoints": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ApiEndpointDefinition"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Custom Endpoints"
+        }
+      },
+      "required": [
+        "name",
+        "entity",
+        "operations"
+      ],
+      "title": "ApiResourceDefinition",
+      "type": "object"
+    },
+    "AppDefinition": {
+      "description": "Application definition\n\nExample:\n    app = AppDefinition(\n        name=\"CRM System\",\n        version=\"1.0.0\",\n        description=\"Customer Relationship Management System\"\n    )",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "author": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Author"
+        },
+        "license": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "License"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "AppDefinition",
+      "type": "object"
+    },
+    "EntityDefinition": {
+      "description": "Domain entity definition\n\nExample:\n    entity = EntityDefinition(\n        name=\"Contact\",\n        description=\"Customer contact information\",\n        fields=[\n            FieldDefinition(name=\"id\", type=\"UUID\", annotations=FieldAnnotations(generated=True)),\n            FieldDefinition(name=\"email\", type=\"Email\", annotations=FieldAnnotations(required=True, unique=True)),\n        ],\n        relations=[\n            RelationDefinition(name=\"company\", type=RelationType.MANY_TO_ONE, target=\"Company\")\n        ]\n    )",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/FieldDefinition"
+          },
+          "title": "Fields",
+          "type": "array"
+        },
+        "relations": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/RelationDefinition"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Relations"
+        },
+        "indexes": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/IndexDefinition"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Indexes"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tags"
+        }
+      },
+      "required": [
+        "name",
+        "fields"
+      ],
+      "title": "EntityDefinition",
+      "type": "object"
+    },
+    "EventDefinition": {
+      "description": "Domain event definition\n\nExample:\n    event = EventDefinition(\n        name=\"ContactCreated\",\n        description=\"Emitted when a new contact is created\",\n        fields=[\n            FieldDefinition(name=\"contactId\", type=\"UUID\", annotations=FieldAnnotations(required=True)),\n        ],\n        triggers=[\"api.contact.create\", \"import.contact\"]\n    )",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/FieldDefinition"
+          },
+          "title": "Fields",
+          "type": "array"
+        },
+        "triggers": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Triggers"
+        },
+        "source_entity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Entity"
+        }
+      },
+      "required": [
+        "name",
+        "fields"
+      ],
+      "title": "EventDefinition",
+      "type": "object"
+    },
+    "FieldAnnotations": {
+      "description": "Field annotations defining validation and behavior\n\nExample:\n    annotations = FieldAnnotations(\n        required=True,\n        unique=True,\n        pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'\n    )",
+      "properties": {
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Required"
+        },
+        "unique": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unique"
+        },
+        "generated": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Generated"
+        },
+        "default": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Default"
+        },
+        "min": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min"
+        },
+        "max": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pattern"
+        },
+        "enum": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Enum"
+        },
+        "relation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Relation"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        }
+      },
+      "title": "FieldAnnotations",
+      "type": "object"
+    },
+    "FieldDefinition": {
+      "description": "Entity field definition\n\nExample:\n    field = FieldDefinition(\n        name=\"email\",\n        type=\"Email\",\n        annotations=FieldAnnotations(required=True, unique=True)\n    )",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "annotations": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FieldAnnotations"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "title": "FieldDefinition",
+      "type": "object"
+    },
+    "IndexDefinition": {
+      "description": "Database index definition",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "fields": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Fields",
+          "type": "array"
+        },
+        "unique": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unique"
+        }
+      },
+      "required": [
+        "name",
+        "fields"
+      ],
+      "title": "IndexDefinition",
+      "type": "object"
+    },
+    "RelationDefinition": {
+      "description": "Relation definition between entities\n\nExample:\n    relation = RelationDefinition(\n        name=\"company\",\n        type=RelationType.MANY_TO_ONE,\n        target=\"Company\",\n        foreignKey=\"companyId\",\n        onDelete=\"SET NULL\"\n    )",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/RelationType"
+        },
+        "target": {
+          "title": "Target",
+          "type": "string"
+        },
+        "foreign_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Foreign Key"
+        },
+        "on_delete": {
+          "anyOf": [
+            {
+              "enum": [
+                "CASCADE",
+                "SET NULL",
+                "RESTRICT",
+                "NO ACTION"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "On Delete"
+        },
+        "on_update": {
+          "anyOf": [
+            {
+              "enum": [
+                "CASCADE",
+                "SET NULL",
+                "RESTRICT",
+                "NO ACTION"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "On Update"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "target"
+      ],
+      "title": "RelationDefinition",
+      "type": "object"
+    },
+    "RelationType": {
+      "description": "Relation types between entities",
+      "enum": [
+        "OneToOne",
+        "OneToMany",
+        "ManyToOne",
+        "ManyToMany"
+      ],
+      "title": "RelationType",
+      "type": "string"
+    },
+    "WorkflowDefinition": {
+      "description": "Workflow definition\n\nExample:\n    workflow = WorkflowDefinition(\n        name=\"CustomerOnboarding\",\n        description=\"New customer onboarding process\",\n        trigger=\"ContactCreated\",\n        steps=[\n            WorkflowStepDefinition(id=\"verify\", type=WorkflowStepType.ACTION, name=\"Verify Email\", next=\"welcome\"),\n            WorkflowStepDefinition(id=\"welcome\", type=WorkflowStepType.NOTIFY, name=\"Send Welcome Email\"),\n        ]\n    )",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Version"
+        },
+        "trigger": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Trigger"
+        },
+        "schedule": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Schedule"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/$defs/WorkflowStepDefinition"
+          },
+          "title": "Steps",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "steps"
+      ],
+      "title": "WorkflowDefinition",
+      "type": "object"
+    },
+    "WorkflowStepDefinition": {
+      "description": "Workflow step definition",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/WorkflowStepType"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "config": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Config"
+        },
+        "next": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Next"
+        },
+        "on_error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "On Error"
+        },
+        "condition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Condition"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "name"
+      ],
+      "title": "WorkflowStepDefinition",
+      "type": "object"
+    },
+    "WorkflowStepType": {
+      "description": "Workflow step types",
+      "enum": [
+        "action",
+        "condition",
+        "parallel",
+        "loop",
+        "wait",
+        "notify",
+        "transform",
+        "validate"
+      ],
+      "title": "WorkflowStepType",
+      "type": "string"
+    }
+  },
+  "description": "Layer 1: Definition - defines WHAT to implement\n\nExample:\n    definition = DefinitionLayer(\n        app=AppDefinition(name=\"CRM System\", version=\"1.0.0\"),\n        entities=[\n            EntityDefinition(name=\"Contact\", fields=[...]),\n        ],\n        api=ApiDefinition(version=\"v1\", prefix=\"/api/v1\", resources=[...])\n    )",
+  "properties": {
+    "app": {
+      "$ref": "#/$defs/AppDefinition"
+    },
+    "entities": {
+      "items": {
+        "$ref": "#/$defs/EntityDefinition"
+      },
+      "title": "Entities",
+      "type": "array"
+    },
+    "events": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/EventDefinition"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Events"
+    },
+    "workflows": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/WorkflowDefinition"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Workflows"
+    },
+    "api": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ApiDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "app",
+    "entities"
+  ],
+  "title": "DefinitionLayer",
+  "type": "object"
+}

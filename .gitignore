@@ -31,12 +31,11 @@ target
 .idea
 venv
 contracts/venv
-pycontracts/venv
+# Legacy pycontracts removed
 __pycache__/
 *.pyc
 generated/
 reclapp.egg-info/
-pycontracts.egg-info/
 package-lock.json
 # Logs
 logs
