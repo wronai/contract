@@ -7,7 +7,6 @@
 | Wersja | 2.0.0 |
 | Autor | Reclapp Team |
 | Licencja | MIT |
-| Utworzono | 2026-02-01 |
 
 ---
 
@@ -17,73 +16,52 @@
 
 ```yaml
 # entity: Customer
-id              : uuid                 # @unique @required @auto
+id              : text                 # @unique @auto
 name            : text                 # @required
 taxId           : text                 # @unique @required
-regon           : text?
-krsNumber       : text?
-email           : email                # @required
-phone           : phone?
-address         : text?
-city            : text?
-postalCode      : text?
-country         : text?                #  = PL
-status          : CustomerStatus?      #  = pending
-riskScore       : int(0..100)?         #  = 50
-verifiedAt      : datetime?
-createdAt       : datetime             # @required @auto
-updatedAt       : datetime             # @required @auto
+regon           : text
+krsNumber       : text
+email           : text                 # @required
+phone           : text
+address         : text
+city            : text
+postalCode      : text
+country         : text                 #  = PL
+status          : CustomerStatus       #  = pending
+riskScore       : int(0..100)          #  = 50
+verifiedAt      : datetime
+createdAt       : datetime             # @auto
+updatedAt       : datetime             # @auto
 ```
 
 ### Verification
 
 ```yaml
 # entity: Verification
-id              : uuid                 # @unique @required @auto
+id              : text                 # @unique @auto
 customer        : -> Customer          # @required
 type            : VerificationType     # @required
 source          : text                 # @required
-status          : VerificationStatus?  #  = pending
-result          : json?
-score           : int(0..100)?
-errorMessage    : text?
-requestedAt     : datetime?            # @auto
-completedAt     : datetime?
-createdAt       : datetime             # @required
-updatedAt       : datetime             # @required
+status          : VerificationStatus   #  = pending
+result          : json
+score           : int(0..100)
+errorMessage    : text
+requestedAt     : datetime             # @auto
+completedAt     : datetime
 ```
 
 ### Document
 
 ```yaml
 # entity: Document
-id              : uuid                 # @unique @required @auto
+id              : text                 # @unique @auto
 customer        : -> Customer          # @required
 type            : DocumentType         # @required
 filename        : text                 # @required
-url             : url                  # @required
-status          : DocumentStatus?      #  = pending
-verifiedAt      : datetime?
-uploadedAt      : datetime?            # @auto
-createdAt       : datetime             # @required
-updatedAt       : datetime             # @required
-```
-
-### OnboardingDocument
-
-```yaml
-# entity: OnboardingDocument
-id              : uuid                 # @required
-customerId      : -> Customer          # @required
-documentType    : text                 # @required
-fileName        : text                 # @required
-fileUrl         : text?
-status          : text                 # @required
-reviewedBy      : text?
-reviewedAt      : datetime?
-notes           : text?
-createdAt       : datetime             # @required
-updatedAt       : datetime?
+url             : text                 # @required
+status          : DocumentStatus       #  = pending
+verifiedAt      : datetime
+uploadedAt      : datetime             # @auto
 ```
 
 ---
@@ -270,16 +248,6 @@ steps: [verifyKRS, verifyCEIDG, calculateRisk, approveOrReject]
 # workflow: RiskRecalculation
 trigger: VerificationCompleted
 steps: [aggregateScores, updateRiskScore, checkThresholds]
-```
-
----
-
-## 🌐 Konfiguracja API
-
-```yaml
-# api:
-prefix: undefined
-auth: undefined
 ```
 
 ---

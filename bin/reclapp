@@ -1332,16 +1332,14 @@ async function cmdReverse(args, options) {
     const report = await analyzer.analyze();
     const derived = analyzer.toContract(report);
 
-    // If we found the saved contract, use it as source of truth and only merge in
-    // potentially useful details from analysis (e.g. api prefix/port differences).
-    let contract = baseContract || derived;
-    if (baseContract) {
-      contract = analyzer.mergeWithAIPlan(derived, baseContract);
-    }
+    // If we found the saved contract, use it as the single source of truth.
+    // Merging in CodeAnalyzer output can introduce extra entities/fields and change
+    // required/nullable semantics due to TypeScript differences.
+    const contract = baseContract || derived;
 
     // Convert contract to IR and then to Markdown
     const ir = contractToIR(contract);
-    const markdown = writeMarkdownContract(ir, [], { includeConversation: false });
+    const markdown = writeMarkdownContract(ir, [], { includeConversation: false, includeTimestamp: false });
 
     // Ensure directory exists
     const outDir = path.dirname(outPath);
