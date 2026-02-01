@@ -1,10 +1,11 @@
 # b2-b-onboarding-api
 
-> Generated from 19 files
+> B2B customer onboarding with automatic registry verification
 
 | Właściwość | Wartość |
 |------------|---------|
 | Wersja | 2.0.0 |
+| Autor | Reclapp Team |
 | Utworzono | 2026-02-01 |
 
 ---
@@ -15,9 +16,9 @@
 
 ```yaml
 # entity: Customer
-id              : uuid                 # @required
+id              : uuid                 # @unique @required @auto
 name            : text                 # @required
-taxId           : uuid                 # @required
+taxId           : text                 # @unique @required
 regon           : text?
 krsNumber       : text?
 email           : email                # @required
@@ -25,28 +26,28 @@ phone           : phone?
 address         : text?
 city            : text?
 postalCode      : text?
-country         : text?
-status          : json?
-riskScore       : json?
-verifiedAt      : text?
-createdAt       : text                 # @required
-updatedAt       : text                 # @required
+country         : text?                #  = PL
+status          : customerstatus?      #  = pending
+riskScore       : int(0..100)?         #  = 50
+verifiedAt      : datetime?
+createdAt       : datetime             # @required @auto
+updatedAt       : datetime             # @required @auto
 ```
 
 ### Verification
 
 ```yaml
 # entity: Verification
-id              : uuid                 # @required
+id              : uuid                 # @unique @required @auto
 customer        : -> customer          # @required
-type            : json                 # @required
+type            : verificationtype     # @required
 source          : text                 # @required
-status          : json?
+status          : verificationstatus?  #  = pending
 result          : json?
-score           : json?
+score           : int(0..100)?
 errorMessage    : text?
-requestedAt     : text?
-completedAt     : text?
+requestedAt     : datetime?            # @auto
+completedAt     : datetime?
 createdAt       : text                 # @required
 updatedAt       : text                 # @required
 ```
@@ -55,14 +56,14 @@ updatedAt       : text                 # @required
 
 ```yaml
 # entity: Document
-id              : uuid                 # @required
+id              : uuid                 # @unique @required @auto
 customer        : -> customer          # @required
-type            : json                 # @required
+type            : documenttype         # @required
 filename        : text                 # @required
 url             : url                  # @required
-status          : json?
-verifiedAt      : text?
-uploadedAt      : text?
+status          : documentstatus?      #  = pending
+verifiedAt      : datetime?
+uploadedAt      : datetime?            # @auto
 createdAt       : text                 # @required
 updatedAt       : text                 # @required
 ```
@@ -86,12 +87,188 @@ updatedAt       : text?
 
 ---
 
-## 🌐 Konfiguracja API
+## 📡 Zdarzenia
+
+### CustomerRegistered
 
 ```yaml
-# api:
-prefix: /api
-auth: undefined
+# event: CustomerRegistered
+customerId      : uuid
+taxId           : text
+email           : text
+source          : text
+```
+
+### VerificationStarted
+
+```yaml
+# event: VerificationStarted
+verificationId  : uuid
+customerId      : uuid
+type            : text
+source          : text
+```
+
+### VerificationCompleted
+
+```yaml
+# event: VerificationCompleted
+verificationId  : uuid
+customerId      : uuid
+type            : text
+status          : text
+score           : int
+```
+
+### CustomerVerified
+
+```yaml
+# event: CustomerVerified
+customerId      : uuid
+riskScore       : int
+verifiedBy      : text
+```
+
+### CustomerRejected
+
+```yaml
+# event: CustomerRejected
+customerId      : uuid
+reason          : text
+rejectedBy      : text
+```
+
+### RiskScoreChanged
+
+```yaml
+# event: RiskScoreChanged
+customerId      : uuid
+previousScore   : int
+newScore        : int
+reason          : text
+```
+
+### DocumentUploaded
+
+```yaml
+# event: DocumentUploaded
+documentId      : uuid
+customerId      : uuid
+type            : text
+filename        : text
+```
+
+---
+
+## 🚨 Alerty
+
+### HighRiskCustomer
+
+```yaml
+# alert: HighRiskCustomer
+entity: Customer
+when: riskScore > 80
+notify: [email, slack]
+severity: high
+message: "Klient wysokiego ryzyka: {{name}} (score: {{riskScore}})"
+```
+
+### VerificationFailed
+
+```yaml
+# alert: VerificationFailed
+entity: Verification
+when: status = 'failed'
+notify: [email]
+severity: medium
+message: "Weryfikacja nieudana dla klienta"
+```
+
+### PendingTooLong
+
+```yaml
+# alert: PendingTooLong
+entity: Customer
+when: status = 'pending' AND createdAt < now() - 7d
+notify: [email]
+severity: low
+message: "Klient {{name}} oczekuje na weryfikację ponad 7 dni"
+```
+
+---
+
+## 📊 Panele
+
+### OnboardingDashboard
+
+```yaml
+# dashboard: OnboardingDashboard
+entity: Customer
+metrics: [count, avg.riskScore]
+layout: grid
+```
+
+### VerificationStatus
+
+```yaml
+# dashboard: VerificationStatus
+entity: Verification
+metrics: [count]
+layout: grid
+```
+
+---
+
+## 🔌 Źródła danych
+
+### KRSRegistry
+
+```yaml
+# source: KRSRegistry
+type: rest
+url: "https://api-krs.ms.gov.pl/api/krs/OdsychPodstawowe"
+auth: none
+cache: "1h"
+```
+
+### CEIDGRegistry
+
+```yaml
+# source: CEIDGRegistry
+type: rest
+url: "https://dane.biznes.gov.pl/api/ceidg/v2/firma"
+auth: apiKey
+cache: "1h"
+```
+
+### VIESVAT
+
+```yaml
+# source: VIESVAT
+type: soap
+url: "https://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl"
+auth: none
+cache: "24h"
+```
+
+---
+
+## ⚙️ Przepływy pracy
+
+### CustomerOnboarding
+
+```yaml
+# workflow: CustomerOnboarding
+trigger: CustomerRegistered
+steps: [verifyKRS, verifyCEIDG, calculateRisk, approveOrReject]
+```
+
+### RiskRecalculation
+
+```yaml
+# workflow: RiskRecalculation
+trigger: VerificationCompleted
+steps: [aggregateScores, updateRiskScore, checkThresholds]
 ```
 
 ---
@@ -115,77 +292,77 @@ auth: undefined
       "fields": [
         {
           "name": "id",
-          "type": "String",
-          "required": false,
+          "type": "uuid",
+          "required": true,
           "unique": true,
           "auto": true
         },
         {
           "name": "name",
-          "type": "String",
+          "type": "text",
           "required": true,
           "unique": false,
           "auto": false
         },
         {
           "name": "taxId",
-          "type": "String",
+          "type": "text",
           "required": true,
           "unique": true,
           "auto": false
         },
         {
           "name": "regon",
-          "type": "String",
+          "type": "text",
           "required": false,
           "unique": false,
           "auto": false
         },
         {
           "name": "krsNumber",
-          "type": "String",
+          "type": "text",
           "required": false,
           "unique": false,
           "auto": false
         },
         {
           "name": "email",
-          "type": "String",
+          "type": "email",
           "required": true,
           "unique": false,
           "auto": false
         },
         {
           "name": "phone",
-          "type": "String",
+          "type": "phone",
           "required": false,
           "unique": false,
           "auto": false
         },
         {
           "name": "address",
-          "type": "String",
+          "type": "text",
           "required": false,
           "unique": false,
           "auto": false
         },
         {
           "name": "city",
-          "type": "String",
+          "type": "text",
           "required": false,
           "unique": false,
           "auto": false
         },
         {
           "name": "postalCode",
-          "type": "String",
+          "type": "text",
           "required": false,
           "unique": false,
           "auto": false
         },
         {
           "name": "country",
-          "type": "String",
+          "type": "text",
           "required": false,
           "unique": false,
           "auto": false,
@@ -217,14 +394,14 @@ auth: undefined
         {
           "name": "createdAt",
           "type": "DateTime",
-          "required": false,
+          "required": true,
           "unique": false,
           "auto": true
         },
         {
           "name": "updatedAt",
           "type": "DateTime",
-          "required": false,
+          "required": true,
           "unique": false,
           "auto": true
         }
@@ -235,8 +412,8 @@ auth: undefined
       "fields": [
         {
           "name": "id",
-          "type": "String",
-          "required": false,
+          "type": "uuid",
+          "required": true,
           "unique": true,
           "auto": true
         },
@@ -256,7 +433,7 @@ auth: undefined
         },
         {
           "name": "source",
-          "type": "String",
+          "type": "text",
           "required": true,
           "unique": false,
           "auto": false
@@ -271,7 +448,7 @@ auth: undefined
         },
         {
           "name": "result",
-          "type": "Json",
+          "type": "json",
           "required": false,
           "unique": false,
           "auto": false
@@ -285,7 +462,7 @@ auth: undefined
         },
         {
           "name": "errorMessage",
-          "type": "String",
+          "type": "text",
           "required": false,
           "unique": false,
           "auto": false
@@ -303,6 +480,18 @@ auth: undefined
           "required": false,
           "unique": false,
           "auto": false
+        },
+        {
+          "name": "createdAt",
+          "type": "text",
+          "required": true,
+          "annotations": {}
+        },
+        {
+          "name": "updatedAt",
+          "type": "text",
+          "required": true,
+          "annotations": {}
         }
       ]
     },
@@ -311,8 +500,8 @@ auth: undefined
       "fields": [
         {
           "name": "id",
-          "type": "String",
-          "required": false,
+          "type": "uuid",
+          "required": true,
           "unique": true,
           "auto": true
         },
@@ -332,14 +521,14 @@ auth: undefined
         },
         {
           "name": "filename",
-          "type": "String",
+          "type": "text",
           "required": true,
           "unique": false,
           "auto": false
         },
         {
           "name": "url",
-          "type": "String",
+          "type": "url",
           "required": true,
           "unique": false,
           "auto": false
@@ -365,6 +554,18 @@ auth: undefined
           "required": false,
           "unique": false,
           "auto": true
+        },
+        {
+          "name": "createdAt",
+          "type": "text",
+          "required": true,
+          "annotations": {}
+        },
+        {
+          "name": "updatedAt",
+          "type": "text",
+          "required": true,
+          "annotations": {}
         }
       ]
     }

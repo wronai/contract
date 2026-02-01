@@ -1311,7 +1311,7 @@ async function cmdReverse(args, options) {
     
     const analyzer = new CodeAnalyzer(targetDir);
     const report = await analyzer.analyze();
-    const contract = analyzer.toContract(report);
+    let contract = analyzer.toContract(report);
 
     // Look for contract.ai.json in the target directory or its parent/contract subfolder
     const aiPlanPaths = [
@@ -1334,7 +1334,7 @@ async function cmdReverse(args, options) {
     }
 
     if (aiPlan) {
-      contract.aiPlan = aiPlan;
+      contract = analyzer.mergeWithAIPlan(contract, aiPlan);
     }
 
     // Convert contract to IR and then to Markdown

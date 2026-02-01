@@ -444,5 +444,14 @@ function mapTypeToRcl(type: string): string {
     Json: 'json',
   };
 
-  return typeMap[type] || type.toLowerCase();
+  const mapped = typeMap[type];
+  if (mapped) return mapped;
+
+  // Preserve casing for relationships and potential custom types/enums
+  if (type.startsWith('->')) return type;
+  
+  // If it looks like a custom type (starts with uppercase), keep it as is
+  if (type.length > 0 && type[0] === type[0].toUpperCase()) return type;
+
+  return type.toLowerCase();
 }

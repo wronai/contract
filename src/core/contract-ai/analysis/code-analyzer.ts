@@ -841,12 +841,14 @@ export class CodeAnalyzer {
       .map(e => ({
         ...e,
         fields: e.fields.map(f => {
-          // Detect relationships: if type is 'uuid' and name matches entity
+          // Detect relationships: if name matches an entity name
           let type = f.type;
           const nameLower = f.name.toLowerCase();
           
           for (const otherEntity of entities) {
-            if (nameLower === otherEntity.name.toLowerCase() || nameLower === otherEntity.name.toLowerCase() + 'id') {
+            const otherLower = otherEntity.name.toLowerCase();
+            if (nameLower === otherLower || nameLower === otherLower + 'id') {
+              // Preserve original casing from otherEntity.name
               type = `-> ${otherEntity.name}`;
               break;
             }
@@ -869,7 +871,8 @@ export class CodeAnalyzer {
     // Extract endpoints
     const collectedEndpoints = report.files.flatMap(f => {
       const baseName = f.relativePath.split('/').pop()?.replace(/\.(ts|js|tsx|jsx)$/, '') || '';
-      const entityName = baseName.charAt(0).toUpperCase() + baseName.slice(1);
+      // Map common route file names to entity names
+      const entityName = baseName.charAt(0).toUpperCase() + baseName.slice(1).replace(/s$/, ''); 
       
       if (f.endpoints && f.endpoints.length > 0) {
         return f.endpoints.map(e => ({
@@ -893,6 +896,15 @@ export class CodeAnalyzer {
     // Try to find API config from .env or server.ts
     let apiPrefix = '/api';
     let apiPort = 8080;
+
+    const apiFiles = report.files.filter(f => f.relativePath.includes('server.ts') || f.relativePath.includes('app.ts'));
+    for (const f of apiFiles) {
+      const content = fs.readFileSync(f.path, 'utf-8');
+      const prefixMatch = content.match(/prefix[:\s]+['"]([^'"]+)['"]/i) || content.match(/app\.use\(['"]([^'"]+)['"]/);
+      if (prefixMatch && prefixMatch[1] !== '/') {
+        apiPrefix = prefixMatch[1];
+      }
+    }
 
     const envPath = path.join(report.rootDir, 'api', '.env');
     if (fs.existsSync(envPath)) {
@@ -921,18 +933,85 @@ export class CodeAnalyzer {
   }
 
   /**
-   * Map implementation types to DSL types
+   * Merge findings from code analysis with an existing AI Plan (contract.ai.json)
    */
+  mergeWithAIPlan(derivedContract: any, aiPlan: any): any {
+    if (!aiPlan) return derivedContract;
+
+    const merged = {
+      ...aiPlan,
+      app: {
+        ...derivedContract.app,
+        ...aiPlan.app, // Prefer original AI plan app info (name, version, description)
+      },
+      config: {
+        ...aiPlan.config,
+        ...derivedContract.api // Merge detected API config (override with code reality if different)
+      }
+    };
+
+    // Merge entities
+    const aiEntities = aiPlan.entities || [];
+    const derivedEntities = derivedContract.entities || [];
+    const mergedEntities = [...aiEntities];
+
+    for (const de of derivedEntities) {
+      const existingIdx = mergedEntities.findIndex(e => e.name.toLowerCase() === de.name.toLowerCase());
+      if (existingIdx >= 0) {
+        // Update existing entity with potentially new fields from code
+        const existingFields = mergedEntities[existingIdx].fields || [];
+        const mergedFields = [...existingFields];
+
+        for (const df of de.fields) {
+          const fieldIdx = mergedFields.findIndex(f => f.name === df.name);
+          if (fieldIdx >= 0) {
+            // Field exists, update type if it's more specific in code, but keep aiPlan specificity like int(0..100)
+            const aiType = mergedFields[fieldIdx].type;
+            if (aiType === 'String' || aiType === 'Number' || aiType === 'Boolean' || aiType === 'Any' || aiType === 'Json') {
+              mergedFields[fieldIdx].type = df.type;
+            }
+            mergedFields[fieldIdx].required = df.required;
+          } else {
+            // New field found in code
+            mergedFields.push(df);
+          }
+        }
+        mergedEntities[existingIdx].fields = mergedFields;
+      } else {
+        // Entirely new entity found in code
+        mergedEntities.push(de);
+      }
+    }
+    merged.entities = mergedEntities;
+
+    // Restore sections that code analysis usually misses
+    if (!merged.events || merged.events.length === 0) merged.events = derivedContract.events || aiPlan.events || [];
+    if (!merged.alerts) merged.alerts = aiPlan.alerts || [];
+    if (!merged.sources) merged.sources = aiPlan.sources || [];
+    if (!merged.pipelines) merged.pipelines = aiPlan.pipelines || [];
+    if (!merged.dashboards) merged.dashboards = aiPlan.dashboards || [];
+    if (!merged.workflows) merged.workflows = aiPlan.workflows || [];
+
+    // Attach aiPlan itself for reference
+    merged.aiPlan = aiPlan;
+
+    return merged;
+  }
   private mapTypeToDSL(type: string, fieldName?: string): string {
     const t = type.toLowerCase().trim();
     const n = fieldName?.toLowerCase() || '';
 
-    if (n === 'id' || n.endsWith('id')) return 'uuid';
+    // Specific field name matching
+    if (n === 'id' || n === 'uuid' || n === 'guid') return 'uuid';
     if (n === 'email' || t.includes('email')) return 'email';
-    if (n === 'phone' || n.includes('tel')) return 'phone';
-    if (n === 'url' || n.includes('website')) return 'url';
+    if (n === 'phone' || n === 'tel' || n.includes('mobile')) return 'phone';
+    if (n === 'url' || n === 'uri' || n === 'website' || n === 'link') return 'url';
+    if (n === 'createdat' || n === 'updatedat' || n.endsWith('at') || n === 'timestamp') return 'datetime';
     
-    if (t === 'string') return 'text';
+    // Fallback to suffix matching for IDs, but avoid common business IDs like taxId
+    if (n.endsWith('id') && !n.match(/tax|vat|national|citizen|business/)) return 'uuid';
+    
+    if (t === 'string' || t === 'text') return 'text';
     if (t === 'number' || t === 'int' || t === 'integer') return 'int';
     if (t === 'boolean' || t === 'bool') return 'bool';
     if (t === 'date' || t === 'datetime' || t === 'timestamp') return 'datetime';
