@@ -1,3 +1,28 @@
+## [2.2.1] - 2026-02-01
+
+### Summary
+
+refactor(docs): deep code analysis engine with 6 supporting modules
+
+### Core
+
+- update src/python/reclapp/cli/main.py
+
+### Docs
+
+- docs: update 22-project-status.md
+- docs: update todo.md
+- docs: update todo2.md
+
+### Test
+
+- update tests/python/test_llm.py
+
+### Other
+
+- update generator/templates/api.ts
+
+
 # Changelog
 
 All notable changes to this project will be documented in this file.

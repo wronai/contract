@@ -462,8 +462,14 @@ function fieldToZod(field: any, mode: 'create' | 'update'): string {
   }
 
   if (mode === 'create') {
-    const def = fieldDefaultValue(field);
+    let def = fieldDefaultValue(field);
     if (def !== undefined) {
+      if (fieldType === 'Boolean' && typeof def === 'string') {
+        def = def.toLowerCase() === 'true';
+      } else if (['Int', 'Float', 'Decimal', 'Money'].includes(fieldType) && typeof def === 'string') {
+        const num = Number(def);
+        if (!isNaN(num)) def = num;
+      }
       zodType += `.default(${JSON.stringify(def)})`;
     } else if (field?.nullable || !isFieldRequired(field)) {
       zodType += '.optional()';

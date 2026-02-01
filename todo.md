@@ -95,17 +95,22 @@ src/core/contract-ai/setup/
 
 ## ⏳ Następne kroki
 
-### Priorytet 1: Inne komendy z CLIRunner
-- [ ] `reclapp analyze` z TaskQueue
-- [ ] `reclapp refactor` z TaskQueue
+### Priorytet 1: Dokończenie CLI (Python) i TaskQueue
+- [ ] Implementacja komendy `reclapp list` (wyświetlanie dostępnych kontraktów/projektów w YAML/Markdown)
+- [ ] Implementacja komendy `reclapp prompts` (zarządzanie promptami)
+- [ ] Implementacja `reclapp analyze` z wykorzystaniem `TaskQueue`
+- [ ] Implementacja `reclapp refactor` z wykorzystaniem `TaskQueue`
+- [ ] Stworzenie wspólnego mechanizmu `TaskQueue` dla wszystkich komend (unifikacja z `CLIRunner`)
 
-### Priorytet 2: PyPI packaging
-- [ ] `setup.py` dla instalacji z pip
-- [ ] `reclapp` jako entry point
+### Priorytet 2: Publikacja i Architektura (PyPI)
+- [ ] Przygotowanie `clickmd` do wydania jako osobna paczka (czyszczenie zależności od `click`)
+- [ ] Wyodrębnienie `reclapp-llm` jako niezależnego modułu komunikacji z modelami
+- [ ] Wyodrębnienie `reclapp-contracts` (modele danych i walidacja)
+- [ ] Pełna konfiguracja `pyproject.toml` dla wszystkich sub-paczek
 
-### Priorytet 3: Windsurf integration
-- [ ] Test free models
-- [ ] `WINDSURF_API_KEY` configuration
+### Priorytet 3: Rozszerzona Integracja LLM
+- [ ] Testy darmowych modeli w `WindsurfClient`
+- [ ] Uproszczona konfiguracja kluczy API (automatyczne wykrywanie w `reclapp setup`)
 
 
 

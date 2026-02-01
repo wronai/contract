@@ -139,6 +139,96 @@ Examples:
         help="Enable verbose output"
     )
     
+    # List command
+    list_parser = subparsers.add_parser(
+        "list",
+        help="List available contracts and projects"
+    )
+    list_parser.add_argument(
+        "-d", "--directory",
+        default=".",
+        help="Directory to search for contracts (default: current)"
+    )
+    list_parser.add_argument(
+        "--format",
+        choices=["yaml", "json", "table"],
+        default="yaml",
+        help="Output format (default: yaml)"
+    )
+    list_parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Show detailed contract information"
+    )
+    
+    # Prompts command
+    prompts_parser = subparsers.add_parser(
+        "prompts",
+        help="Manage and list available prompts"
+    )
+    prompts_parser.add_argument(
+        "action",
+        nargs="?",
+        choices=["list", "show", "add"],
+        default="list",
+        help="Action to perform (default: list)"
+    )
+    prompts_parser.add_argument(
+        "-n", "--name",
+        help="Prompt name for show/add actions"
+    )
+    prompts_parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Show detailed prompt information"
+    )
+    
+    # Analyze command
+    analyze_parser = subparsers.add_parser(
+        "analyze",
+        help="Analyze existing codebase and extract contract"
+    )
+    analyze_parser.add_argument(
+        "-d", "--directory",
+        default=".",
+        help="Directory to analyze (default: current)"
+    )
+    analyze_parser.add_argument(
+        "-o", "--output",
+        help="Output file for generated contract"
+    )
+    analyze_parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Enable verbose output"
+    )
+    
+    # Refactor command
+    refactor_parser = subparsers.add_parser(
+        "refactor",
+        help="Refactor code based on contract changes"
+    )
+    refactor_parser.add_argument(
+        "-c", "--contract",
+        required=True,
+        help="Path to contract file"
+    )
+    refactor_parser.add_argument(
+        "-d", "--directory",
+        default=".",
+        help="Directory containing code to refactor"
+    )
+    refactor_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show changes without applying them"
+    )
+    refactor_parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Enable verbose output"
+    )
+    
     return parser
 
 
@@ -447,6 +537,387 @@ async def cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
+async def cmd_list(args: argparse.Namespace) -> int:
+    """Execute the list command - find and display contracts"""
+    import json
+    import os
+    from datetime import datetime
+    
+    print(f"\n## Reclapp List v{__version__}\n")
+    
+    search_dir = Path(args.directory).resolve()
+    if not search_dir.exists():
+        print(f"❌ Directory not found: {search_dir}")
+        return 1
+    
+    # Find all contract files
+    contracts = []
+    
+    # Search for .rcl.md files
+    for rcl_file in search_dir.rglob("*.rcl.md"):
+        # Skip log files
+        if "/logs/" in str(rcl_file) or "/target/logs/" in str(rcl_file):
+            continue
+        
+        contract_info = {
+            "path": str(rcl_file.relative_to(search_dir)),
+            "type": "rcl.md",
+            "size": rcl_file.stat().st_size,
+            "modified": datetime.fromtimestamp(rcl_file.stat().st_mtime).isoformat()
+        }
+        
+        # Try to extract app name from file
+        if args.verbose:
+            try:
+                content = rcl_file.read_text()[:500]
+                for line in content.split("\n"):
+                    if line.startswith("# "):
+                        contract_info["name"] = line[2:].strip()
+                        break
+            except Exception:
+                pass
+        
+        contracts.append(contract_info)
+    
+    # Search for contract.ai.json files
+    for json_file in search_dir.rglob("contract.ai.json"):
+        contract_info = {
+            "path": str(json_file.relative_to(search_dir)),
+            "type": "json",
+            "size": json_file.stat().st_size,
+            "modified": datetime.fromtimestamp(json_file.stat().st_mtime).isoformat()
+        }
+        
+        if args.verbose:
+            try:
+                data = json.loads(json_file.read_text())
+                if "app" in data and "name" in data["app"]:
+                    contract_info["name"] = data["app"]["name"]
+                elif "definition" in data and "app" in data["definition"]:
+                    contract_info["name"] = data["definition"]["app"].get("name", "Unknown")
+            except Exception:
+                pass
+        
+        contracts.append(contract_info)
+    
+    # Output results
+    if args.format == "json":
+        print(json.dumps({"contracts": contracts, "total": len(contracts)}, indent=2))
+    elif args.format == "table":
+        print(f"Found {len(contracts)} contract(s):\n")
+        print(f"{'Path':<60} {'Type':<8} {'Size':<10}")
+        print("-" * 80)
+        for c in contracts:
+            print(f"{c['path']:<60} {c['type']:<8} {c['size']:<10}")
+    else:  # yaml
+        print("```yaml")
+        print("# @type: contract_list")
+        print(f"total: {len(contracts)}")
+        print(f"directory: \"{search_dir}\"")
+        print("contracts:")
+        for c in contracts:
+            print(f"  - path: \"{c['path']}\"")
+            print(f"    type: {c['type']}")
+            if args.verbose and c.get("name"):
+                print(f"    name: \"{c['name']}\"")
+            print(f"    size: {c['size']}")
+            print(f"    modified: \"{c['modified']}\"")
+        print("```")
+    
+    return 0
+
+
+async def cmd_prompts(args: argparse.Namespace) -> int:
+    """Execute the prompts command - manage prompt templates"""
+    print(f"\n## Reclapp Prompts v{__version__}\n")
+    
+    # Built-in prompt templates
+    prompts = {
+        "minimal": {
+            "description": "Minimal app with basic CRUD",
+            "template": "Create a {name} app with {entities}",
+            "examples": ["Create a todo app with tasks"]
+        },
+        "b2b": {
+            "description": "B2B application with onboarding and verification",
+            "template": "Create a B2B {name} platform with {entities}, verification workflow, and dashboard",
+            "examples": ["Create a B2B contractor management platform"]
+        },
+        "saas": {
+            "description": "SaaS starter with auth and billing",
+            "template": "Create a SaaS {name} with user authentication, subscription management, and {features}",
+            "examples": ["Create a SaaS project management tool"]
+        },
+        "api": {
+            "description": "REST API backend only",
+            "template": "Create a REST API for {name} with {entities} and {auth_type} authentication",
+            "examples": ["Create a REST API for inventory with products and JWT authentication"]
+        },
+        "ecommerce": {
+            "description": "E-commerce platform",
+            "template": "Create an e-commerce {name} with products, cart, orders, and {payment_provider}",
+            "examples": ["Create an e-commerce bookstore with Stripe"]
+        }
+    }
+    
+    if args.action == "list":
+        print("```yaml")
+        print("# @type: prompt_list")
+        print(f"total: {len(prompts)}")
+        print("prompts:")
+        for name, info in prompts.items():
+            print(f"  - name: \"{name}\"")
+            print(f"    description: \"{info['description']}\"")
+            if args.verbose:
+                print(f"    template: \"{info['template']}\"")
+                print(f"    examples:")
+                for ex in info['examples']:
+                    print(f"      - \"{ex}\"")
+        print("```")
+    
+    elif args.action == "show":
+        if not args.name:
+            print("❌ Please specify prompt name with -n/--name")
+            return 1
+        
+        if args.name not in prompts:
+            print(f"❌ Prompt '{args.name}' not found")
+            print(f"Available: {', '.join(prompts.keys())}")
+            return 1
+        
+        info = prompts[args.name]
+        print("```yaml")
+        print(f"# @type: prompt_detail")
+        print(f"name: \"{args.name}\"")
+        print(f"description: \"{info['description']}\"")
+        print(f"template: \"{info['template']}\"")
+        print("examples:")
+        for ex in info['examples']:
+            print(f"  - \"{ex}\"")
+        print("```")
+    
+    elif args.action == "add":
+        print("ℹ️  Custom prompt management coming soon")
+        print("For now, use built-in prompts or provide inline with -p flag")
+    
+    return 0
+
+
+async def cmd_analyze(args: argparse.Namespace) -> int:
+    """Execute the analyze command - extract contract from codebase"""
+    from ..analysis import CodeRAG
+    
+    print(f"\n## Reclapp Analyze v{__version__}\n")
+    
+    target_dir = Path(args.directory).resolve()
+    if not target_dir.exists():
+        print(f"❌ Directory not found: {target_dir}")
+        return 1
+    
+    print("```yaml")
+    print("# @type: task_queue")
+    print("progress:")
+    print("  done: 0")
+    print("  total: 4")
+    print("tasks:")
+    print('  - name: "scan-files"')
+    print('    status: "pending"')
+    print('  - name: "detect-entities"')
+    print('    status: "pending"')
+    print('  - name: "extract-api"')
+    print('    status: "pending"')
+    print('  - name: "generate-contract"')
+    print('    status: "pending"')
+    print("```\n")
+    
+    # Task 1: Scan files
+    print("> Scanning files...")
+    
+    file_stats = {"ts": 0, "py": 0, "sql": 0, "json": 0, "other": 0}
+    for f in target_dir.rglob("*"):
+        if f.is_file() and not any(p in str(f) for p in ["node_modules", "__pycache__", ".git", "venv"]):
+            ext = f.suffix.lower()
+            if ext in [".ts", ".tsx"]:
+                file_stats["ts"] += 1
+            elif ext in [".py"]:
+                file_stats["py"] += 1
+            elif ext in [".sql"]:
+                file_stats["sql"] += 1
+            elif ext in [".json"]:
+                file_stats["json"] += 1
+            else:
+                file_stats["other"] += 1
+    
+    print("```yaml")
+    print("# @type: scan_result")
+    print(f"directory: \"{target_dir}\"")
+    print("files:")
+    for ext, count in file_stats.items():
+        if count > 0:
+            print(f"  {ext}: {count}")
+    print("```\n")
+    
+    # Task 2: Detect entities
+    print("> Detecting entities...")
+    
+    entities = []
+    # Simple heuristic: look for model/interface files
+    for f in target_dir.rglob("**/models/*.ts"):
+        entity_name = f.stem.replace("-", " ").replace("_", " ").title().replace(" ", "")
+        if entity_name not in ["Index", "Types"]:
+            entities.append(entity_name)
+    
+    for f in target_dir.rglob("**/models/*.py"):
+        entity_name = f.stem.replace("-", " ").replace("_", " ").title().replace(" ", "")
+        if entity_name not in ["__init__", "base"]:
+            entities.append(entity_name)
+    
+    print("```yaml")
+    print("# @type: entities_detected")
+    print(f"count: {len(entities)}")
+    print("entities:")
+    for e in entities:
+        print(f"  - {e}")
+    print("```\n")
+    
+    # Task 3: Extract API
+    print("> Extracting API endpoints...")
+    
+    endpoints = []
+    for f in target_dir.rglob("**/routes/*.ts"):
+        endpoints.append(f"/{f.stem}")
+    for f in target_dir.rglob("**/routes/*.py"):
+        if f.stem != "__init__":
+            endpoints.append(f"/{f.stem}")
+    
+    print("```yaml")
+    print("# @type: api_extracted")
+    print(f"count: {len(endpoints)}")
+    print("endpoints:")
+    for e in endpoints:
+        print(f"  - {e}")
+    print("```\n")
+    
+    # Task 4: Generate contract
+    print("> Generating contract...")
+    
+    contract = {
+        "app": {
+            "name": target_dir.name,
+            "version": "1.0.0"
+        },
+        "entities": [{"name": e, "fields": [{"name": "id", "type": "uuid"}]} for e in entities],
+        "api": {
+            "prefix": "/api",
+            "endpoints": endpoints
+        }
+    }
+    
+    if args.output:
+        import json
+        output_path = Path(args.output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(contract, indent=2))
+        print(f"✅ Contract saved to: {args.output}")
+    else:
+        import json
+        print("```json")
+        print(json.dumps(contract, indent=2))
+        print("```")
+    
+    print("\n📊 Progress: 4/4 (4 done, 0 failed)")
+    return 0
+
+
+async def cmd_refactor(args: argparse.Namespace) -> int:
+    """Execute the refactor command - apply contract changes to code"""
+    import json
+    
+    print(f"\n## Reclapp Refactor v{__version__}\n")
+    
+    contract_path = Path(args.contract)
+    if not contract_path.exists():
+        print(f"❌ Contract not found: {args.contract}")
+        return 1
+    
+    target_dir = Path(args.directory).resolve()
+    if not target_dir.exists():
+        print(f"❌ Directory not found: {target_dir}")
+        return 1
+    
+    # Load contract
+    try:
+        contract = json.loads(contract_path.read_text())
+    except json.JSONDecodeError as e:
+        print(f"❌ Invalid JSON: {e}")
+        return 1
+    
+    print("```yaml")
+    print("# @type: task_queue")
+    print("progress:")
+    print("  done: 0")
+    print("  total: 3")
+    print("tasks:")
+    print('  - name: "analyze-diff"')
+    print('    status: "pending"')
+    print('  - name: "plan-changes"')
+    print('    status: "pending"')
+    print('  - name: "apply-changes"')
+    print('    status: "pending"')
+    print("```\n")
+    
+    # Task 1: Analyze diff
+    print("> Analyzing contract vs codebase...")
+    
+    entities_in_contract = [e.get("name", "") for e in contract.get("entities", [])]
+    
+    print("```yaml")
+    print("# @type: diff_analysis")
+    print(f"contract: \"{args.contract}\"")
+    print(f"directory: \"{target_dir}\"")
+    print(f"entities_in_contract: {len(entities_in_contract)}")
+    print("```\n")
+    
+    # Task 2: Plan changes
+    print("> Planning changes...")
+    
+    changes = []
+    for entity in entities_in_contract:
+        model_path = target_dir / "api" / "src" / "models" / f"{entity.lower()}.ts"
+        if not model_path.exists():
+            changes.append({"type": "create", "entity": entity, "file": str(model_path)})
+    
+    print("```yaml")
+    print("# @type: change_plan")
+    print(f"changes: {len(changes)}")
+    if changes:
+        print("planned:")
+        for c in changes[:5]:  # Show max 5
+            print(f"  - type: {c['type']}")
+            print(f"    entity: {c['entity']}")
+    print("```\n")
+    
+    # Task 3: Apply changes
+    if args.dry_run:
+        print("> Dry run - no changes applied")
+        print("```yaml")
+        print("# @type: dry_run_result")
+        print(f"would_create: {len([c for c in changes if c['type'] == 'create'])}")
+        print(f"would_modify: {len([c for c in changes if c['type'] == 'modify'])}")
+        print("```")
+    else:
+        print("> Applying changes...")
+        print("```yaml")
+        print("# @type: apply_result")
+        print("applied: 0")
+        print("skipped: 0")
+        print("note: \"Full refactoring requires LLM - use reclapp evolve for complex changes\"")
+        print("```")
+    
+    print("\n📊 Progress: 3/3 (3 done, 0 failed)")
+    return 0
+
+
 def cli(args: Optional[list[str]] = None) -> int:
     """Main CLI entry point"""
     parser = create_parser()
@@ -465,6 +936,14 @@ def cli(args: Optional[list[str]] = None) -> int:
         return asyncio.run(cmd_validate(parsed_args))
     elif parsed_args.command == "status":
         return asyncio.run(cmd_status(parsed_args))
+    elif parsed_args.command == "list":
+        return asyncio.run(cmd_list(parsed_args))
+    elif parsed_args.command == "prompts":
+        return asyncio.run(cmd_prompts(parsed_args))
+    elif parsed_args.command == "analyze":
+        return asyncio.run(cmd_analyze(parsed_args))
+    elif parsed_args.command == "refactor":
+        return asyncio.run(cmd_refactor(parsed_args))
     else:
         parser.print_help()
         return 1

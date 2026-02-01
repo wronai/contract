@@ -18,6 +18,7 @@ from reclapp.llm import (
     OllamaClient,
     OllamaConfig,
     LLMManager,
+    OpenRouterClient,
 )
 from reclapp.llm.provider import LLMProviderStatus, LLMModelInfo
 

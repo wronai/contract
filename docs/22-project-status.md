@@ -1,13 +1,19 @@
-
 # Reclapp - Status Projektu
 
-**Data:** 2 Stycznia 2026  
-**Wersja:** 2.2.0  
-**Status:** ✅ PRODUCTION READY
+**Data:** 1 Lutego 2026  
+**Wersja:** 2.5.1  
+**Status:** ✅ PRODUCTION READY (with recent hotfixes)
 
 ## Podsumowanie
 
 Reclapp to kompletna platforma do generowania aplikacji B2B z kontraktów AI. System obsługuje pełny cykl życia od promptu/kontraktu do działającej usługi z **LLM-powered code generation**, **multi-level state verification**, i **CodeRAG navigation**.
+
+### Ostatnie Poprawki (Luty 2026)
+- ✅ **Naprawa Testów Python**: Rozwiązano problemy z importami w `pydantic-contracts` oraz `shell_interaction`.
+- ✅ **Stabilizacja Evolution Mode**: Zsynchronizowano rozszerzenia plików E2E (`.ts`) między generatorem a testami.
+- ✅ **Poprawka Generatora API**: Wyeliminowano błąd cudzysłowów w domyślnych wartościach `boolean` w schematach Zod.
+- ✅ **LLM Test Robustness**: Poprawiono mockowanie providerów w testach jednostkowych.
+- ✅ **Clickmd Fix**: Rozwiązano problem z kolekcją testów w narzędziach pomocniczych.
 
 ## Architektura
 
