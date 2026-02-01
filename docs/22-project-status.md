@@ -1,7 +1,7 @@
 # Reclapp - Status Projektu
 
 **Data:** 1 Lutego 2026  
-**Wersja:** 2.5.1  
+**Wersja:** 2.4.1  
 **Status:** ✅ PRODUCTION READY (with recent hotfixes)
 
 ## Podsumowanie
@@ -365,4 +365,4 @@ analysis:
 
 ---
 
-**Reclapp 2.5.0 | 2 Stycznia 2026 | PRODUCTION READY**
+**Reclapp 2.4.1 | 1 Lutego 2026 | PRODUCTION READY**

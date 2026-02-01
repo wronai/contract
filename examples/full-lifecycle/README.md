@@ -72,7 +72,7 @@ done
 
 ```
 ╔══════════════════════════════════════════════════════════════╗
-║           RECLAPP FULL LIFECYCLE RUNNER v2.3.0               ║
+║           RECLAPP FULL LIFECYCLE RUNNER v2.4.1               ║
 ╚══════════════════════════════════════════════════════════════╝
 
 📋 Iteration 1/3
@@ -102,4 +102,4 @@ done
 
 ---
 
-**Reclapp 2.3.0 | Full Lifecycle Examples**
+**Reclapp 2.4.1 | Full Lifecycle Examples**

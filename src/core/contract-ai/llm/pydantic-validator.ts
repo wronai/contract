@@ -4,7 +4,7 @@
  * Validates LLM outputs against JSON Schemas generated from Pydantic contracts.
  * Ensures type safety between Python contracts and TypeScript code.
  * 
- * @version 2.3.0
+ * @version 2.4.1
  */
 
 import * as fs from 'fs';

@@ -3,7 +3,7 @@ Entity Contract Tests
 
 Tests for Pydantic entity contracts.
 
-@version 2.3.0
+@version 2.4.1
 """
 
 import pytest

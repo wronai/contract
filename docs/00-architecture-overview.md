@@ -261,9 +261,10 @@ reclapp/
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 2.4.1 | 2026-02 | Python CLI Unification, Modular Packages |
 | 2.4.0 | 2026-01 | Contract Markdown 3.0 parser |
 | 2.3.2 | 2026-01 | Evolution mode, 3-layer generation |
 | 2.3.1 | 2026-01 | Full lifecycle, Python CLI |
-| 2.4.1 | 2025-12 | Contract AI, LLM integration |
+| 2.3.0 | 2025-12 | Contract AI, LLM integration |
 
 📚 **See:** [Project Status](22-project-status.md) for full changelog

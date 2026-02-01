@@ -12,8 +12,12 @@ from typing import Optional
 
 from .provider import LLMProvider, LLMResponse, GenerateOptions, LLMProviderStatus, LLMModelInfo
 from .ollama import OllamaClient, OllamaConfig
-from .openrouter import OpenRouterClient
-from .windsurf import WindsurfClient, WindsurfConfig
+from .openrouter import OpenRouterClient, OpenRouterConfig
+from .openai import OpenAIClient, OpenAIConfig
+from .anthropic import AnthropicClient, AnthropicConfig
+from .groq import GroqClient, GroqConfig
+from .together import TogetherClient, TogetherConfig
+from .litellm import LiteLLMClient, LiteLLMConfig, LITELLM_AVAILABLE
 
 
 class ProviderInfo:
@@ -24,6 +28,7 @@ class ProviderInfo:
         self.provider = provider
         self.models: list[LLMModelInfo] = []
         self.error: Optional[str] = None
+        self.priority: int = 100
 
 
 class LLMManager:
@@ -31,19 +36,29 @@ class LLMManager:
     LLM Manager with multi-provider support.
     
     Manages multiple LLM providers and provides fallback logic.
-    
-    Example:
-        manager = LLMManager()
-        await manager.initialize()
-        
-        if manager.is_available:
-            response = await manager.generate(GenerateOptions(
-                system="You are a code generator",
-                user="Create a function to add two numbers"
-            ))
-            print(response.content)
     """
     
+    DEFAULT_MODELS = {
+        "openrouter": "qwen/qwen-2.5-coder-32b-instruct",
+        "openai": "gpt-4-turbo",
+        "anthropic": "claude-3-sonnet-20240229",
+        "groq": "llama-3.1-70b-versatile",
+        "together": "Qwen/Qwen2.5-Coder-32B-Instruct",
+        "ollama": "qwen2.5-coder:14b",
+        "litellm": "gpt-4",
+    }
+
+    DEFAULT_PRIORITIES = {
+        "ollama": 10,      # Local first
+        "groq": 20,        # Fast cloud
+        "together": 30,    # Good for code
+        "openrouter": 40,  # Multi-model
+        "openai": 50,      # Reliable
+        "anthropic": 60,   # High quality
+        "litellm": 70,     # Proxy fallback
+        "windsurf": 5,     # IDE internal (highest priority if available)
+    }
+
     def __init__(self, verbose: bool = False):
         self._providers: dict[str, LLMProvider] = {}
         self._provider_info: dict[str, ProviderInfo] = {}
@@ -86,15 +101,17 @@ class LLMManager:
 
         self._load_env_file()
         
-        # Initialize Ollama
-        await self._init_ollama()
-        
-        # Initialize OpenRouter if configured
-        await self._init_openrouter()
-        
-        # Initialize Windsurf
+        # Initialize all known providers
         await self._init_windsurf()
+        await self._init_ollama()
+        await self._init_groq()
+        await self._init_together()
+        await self._init_openrouter()
+        await self._init_openai()
+        await self._init_anthropic()
+        await self._init_litellm()
 
+        # Determine primary provider based on priority and availability
         preferred = os.getenv("LLM_PROVIDER", "auto").strip().lower() or "auto"
 
         if preferred not in ("", "auto"):
@@ -103,23 +120,22 @@ class LLMManager:
                 self._primary_provider = preferred
 
         if not self._primary_provider:
-            if preferred == "auto":
-                info = self._provider_info.get("openrouter")
-                if info is not None and info.status == LLMProviderStatus.AVAILABLE:
-                    self._primary_provider = "openrouter"
-
-        if not self._primary_provider:
-            for name, info in self._provider_info.items():
-                if info.status == LLMProviderStatus.AVAILABLE:
-                    self._primary_provider = name
-                    break
+            # Sort available providers by priority
+            available = [
+                name for name, info in self._provider_info.items() 
+                if info.status == LLMProviderStatus.AVAILABLE
+            ]
+            if available:
+                available.sort(key=lambda x: self.DEFAULT_PRIORITIES.get(x, 100))
+                self._primary_provider = available[0]
         
         self._initialized = True
 
     def _load_env_file(self) -> None:
         candidates = [
             Path.cwd() / ".env",
-            Path(__file__).resolve().parents[4] / ".env",
+            Path(__file__).resolve().parents[2] / ".env",  # reclapp-llm root
+            Path(__file__).resolve().parents[4] / ".env",  # project root
             Path.home() / ".reclapp" / ".env",
         ]
 
@@ -145,8 +161,12 @@ class LLMManager:
     
     async def _init_ollama(self) -> None:
         """Initialize Ollama provider"""
-        ollama = OllamaClient()
+        model = os.getenv("OLLAMA_MODEL", self.DEFAULT_MODELS["ollama"])
+        host = os.getenv("OLLAMA_HOST", os.getenv("OLLAMA_URL", "http://localhost:11434"))
+        
+        ollama = OllamaClient(OllamaConfig(host=host, model=model))
         info = ProviderInfo("ollama", LLMProviderStatus.UNAVAILABLE)
+        info.priority = self.DEFAULT_PRIORITIES["ollama"]
         
         try:
             if await ollama.is_available():
@@ -166,8 +186,11 @@ class LLMManager:
     async def _init_openrouter(self) -> None:
         """Initialize OpenRouter provider if API key is set"""
         api_key = os.getenv("OPENROUTER_API_KEY")
+        model = os.getenv("OPENROUTER_MODEL", self.DEFAULT_MODELS["openrouter"])
+        base_url = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 
         info = ProviderInfo("openrouter", LLMProviderStatus.NOT_CONFIGURED)
+        info.priority = self.DEFAULT_PRIORITIES["openrouter"]
 
         if not api_key:
             info.error = "Set OPENROUTER_API_KEY"
@@ -175,7 +198,7 @@ class LLMManager:
             return
 
         try:
-            client = OpenRouterClient()
+            client = OpenRouterClient(OpenRouterConfig(api_key=api_key, model=model, base_url=base_url))
             if await client.is_available():
                 info.status = LLMProviderStatus.AVAILABLE
                 info.provider = client
@@ -188,11 +211,132 @@ class LLMManager:
             info.error = str(e)
 
         self._provider_info["openrouter"] = info
+
+    async def _init_openai(self) -> None:
+        """Initialize OpenAI provider"""
+        api_key = os.getenv("OPENAI_API_KEY")
+        model = os.getenv("OPENAI_MODEL", self.DEFAULT_MODELS["openai"])
+        
+        info = ProviderInfo("openai", LLMProviderStatus.NOT_CONFIGURED)
+        info.priority = self.DEFAULT_PRIORITIES["openai"]
+        
+        if not api_key:
+            info.error = "Set OPENAI_API_KEY"
+            self._provider_info["openai"] = info
+            return
+
+        try:
+            client = OpenAIClient(OpenAIConfig(api_key=api_key, model=model))
+            if await client.is_available():
+                info.status = LLMProviderStatus.AVAILABLE
+                info.provider = client
+                self._providers["openai"] = client
+            else:
+                info.status = LLMProviderStatus.UNAVAILABLE
+        except Exception as e:
+            info.status = LLMProviderStatus.ERROR
+            info.error = str(e)
+        self._provider_info["openai"] = info
+
+    async def _init_anthropic(self) -> None:
+        """Initialize Anthropic provider"""
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        model = os.getenv("ANTHROPIC_MODEL", self.DEFAULT_MODELS["anthropic"])
+        
+        info = ProviderInfo("anthropic", LLMProviderStatus.NOT_CONFIGURED)
+        info.priority = self.DEFAULT_PRIORITIES["anthropic"]
+        
+        if not api_key:
+            info.error = "Set ANTHROPIC_API_KEY"
+            self._provider_info["anthropic"] = info
+            return
+
+        try:
+            client = AnthropicClient(AnthropicConfig(api_key=api_key, model=model))
+            if await client.is_available():
+                info.status = LLMProviderStatus.AVAILABLE
+                info.provider = client
+                self._providers["anthropic"] = client
+            else:
+                info.status = LLMProviderStatus.UNAVAILABLE
+        except Exception as e:
+            info.status = LLMProviderStatus.ERROR
+            info.error = str(e)
+        self._provider_info["anthropic"] = info
+
+    async def _init_groq(self) -> None:
+        """Initialize Groq provider"""
+        api_key = os.getenv("GROQ_API_KEY")
+        model = os.getenv("GROQ_MODEL", self.DEFAULT_MODELS["groq"])
+        
+        info = ProviderInfo("groq", LLMProviderStatus.NOT_CONFIGURED)
+        info.priority = self.DEFAULT_PRIORITIES["groq"]
+        
+        if not api_key:
+            info.error = "Set GROQ_API_KEY"
+            self._provider_info["groq"] = info
+            return
+
+        try:
+            client = GroqClient(GroqConfig(api_key=api_key, model=model))
+            if await client.is_available():
+                info.status = LLMProviderStatus.AVAILABLE
+                info.provider = client
+                self._providers["groq"] = client
+            else:
+                info.status = LLMProviderStatus.UNAVAILABLE
+        except Exception as e:
+            info.status = LLMProviderStatus.ERROR
+            info.error = str(e)
+        self._provider_info["groq"] = info
+
+    async def _init_together(self) -> None:
+        """Initialize Together AI provider"""
+        api_key = os.getenv("TOGETHER_API_KEY")
+        model = os.getenv("TOGETHER_MODEL", self.DEFAULT_MODELS["together"])
+        
+        info = ProviderInfo("together", LLMProviderStatus.NOT_CONFIGURED)
+        info.priority = self.DEFAULT_PRIORITIES["together"]
+        
+        if not api_key:
+            info.error = "Set TOGETHER_API_KEY"
+            self._provider_info["together"] = info
+            return
+
+        try:
+            client = TogetherClient(TogetherConfig(api_key=api_key, model=model))
+            if await client.is_available():
+                info.status = LLMProviderStatus.AVAILABLE
+                info.provider = client
+                self._providers["together"] = client
+            else:
+                info.status = LLMProviderStatus.UNAVAILABLE
+        except Exception as e:
+            info.status = LLMProviderStatus.ERROR
+            info.error = str(e)
+        self._provider_info["together"] = info
+
+    async def _init_litellm(self) -> None:
+        """Initialize LiteLLM provider"""
+        if not LITELLM_AVAILABLE:
+            self._provider_info["litellm"] = ProviderInfo("litellm", LLMProviderStatus.UNAVAILABLE)
+            return
+
+        model = os.getenv("LITELLM_MODEL", self.DEFAULT_MODELS["litellm"])
+        api_base = os.getenv("LITELLM_URL")
+        
+        info = ProviderInfo("litellm", LLMProviderStatus.AVAILABLE)
+        info.priority = self.DEFAULT_PRIORITIES["litellm"]
+        client = LiteLLMClient(LiteLLMConfig(model=model, api_base=api_base))
+        info.provider = client
+        self._providers["litellm"] = client
+        self._provider_info["litellm"] = info
     
     async def _init_windsurf(self) -> None:
         """Initialize Windsurf provider"""
         client = WindsurfClient()
         info = ProviderInfo("windsurf", LLMProviderStatus.UNAVAILABLE)
+        info.priority = self.DEFAULT_PRIORITIES["windsurf"]
         
         try:
             if await client.is_available():

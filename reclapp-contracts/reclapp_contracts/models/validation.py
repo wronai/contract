@@ -89,7 +89,7 @@ class TestDefinition(BaseModel):
 # ============================================================================
 
 class StaticRule(BaseModel):
-    """
+    r"""
     Static analysis rule
     
     Example:

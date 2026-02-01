@@ -70,7 +70,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     -h|--help)
-      echo "Reclapp Full Lifecycle Runner v2.3.0"
+      echo "Reclapp Full Lifecycle Runner v2.4.1"
       echo ""
       echo "Usage:"
       echo "  reclapp-full-lifecycle.sh [options] [contract-file]"
@@ -105,7 +105,7 @@ fi
 # Header
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║           RECLAPP FULL LIFECYCLE RUNNER v2.3.0               ║"
+echo "║           RECLAPP FULL LIFECYCLE RUNNER v2.4.1               ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 

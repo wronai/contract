@@ -1130,14 +1130,28 @@ export class CodeAnalyzer {
       }
     }
     // Filter out technical entities that don't belong in a business contract
-    const technicalEntities = new Set(['Request', 'Response', 'Item', 'JWTPayload', 'Token', 'Payload', 'AuthRequest', 'AuthResponse']);
+    const technicalEntities = new Set(['Request', 'Response', 'Item', 'JWTPayload', 'Token', 'Payload', 'AuthRequest', 'AuthResponse', 'Error', 'Exception', 'Health', 'Metadata']);
     const finalEntities = mergedEntities.filter(e => {
       const name = e.name.trim();
-      // Filter out if technical, even if it was in the AI plan (some plans contain technical notes)
+      // Filter out if technical, even if it was in the AI plan
       if (technicalEntities.has(name)) return false;
+      // STRICKLY filter out entities with spaces in names (usually misparsed markdown headers or alerts)
+      // Even if they are in the AI plan, as they are likely parsing errors from earlier stages
+      if (name.includes(' ')) return false;
+      
+      // Filter out common technical suffixes/prefixes if they don't match AI plan
+      const isDomainEntity = aiEntities.some(ae => ae.name.toLowerCase() === name.toLowerCase());
+      if (!isDomainEntity) {
+        if (name.endsWith('Request') || name.endsWith('Response') || name.endsWith('Schema') || name.endsWith('Dto') || name.endsWith('Model') || name.endsWith('Base')) {
+          return false;
+        }
+      }
       // Keep it if it was in the AI plan (domain entity)
-      if (aiEntities.some(ae => ae.name.toLowerCase() === name.toLowerCase())) return true;
-      // Keep if not technical
+      if (isDomainEntity) return true;
+      // If it has fields that look like domain data (e.g. name, email, title), keep it
+      const hasDomainFields = e.fields && e.fields.some(f => ['name', 'email', 'title', 'subject', 'firstName', 'lastName'].includes(f.name));
+      if (!hasDomainFields && !isDomainEntity) return false;
+
       return true;
     });
 
@@ -1147,6 +1161,19 @@ export class CodeAnalyzer {
     // ensures annotations are synced from description and descriptions are cleaned up
     for (const entity of merged.entities) {
       for (const field of entity.fields) {
+        // Ensure ID fields are always unique/auto before syncing from description
+        const nameLower = field.name.toLowerCase();
+        const isId = nameLower === 'id' || nameLower === entity.name.toLowerCase() + 'id' || nameLower === entity.name.toLowerCase() + 'uuid';
+        if (isId) {
+          field.unique = true;
+          field.auto = true;
+        }
+
+        // Normalize basic types
+        if (field.type === 'string') {
+          field.type = this.mapTypeToDSL('string', field.name);
+        }
+
         if (field.description) {
           const desc = field.description;
           // Sync flags from description if they are there
@@ -1157,9 +1184,16 @@ export class CodeAnalyzer {
             field.explicitRequired = true;
           }
 
-          // Clean up the description string
+          // Parse default value if present (= value)
+          const defaultMatch = desc.match(/=\s*([^@\-\s]+)/);
+          if (defaultMatch && !field.defaultValue) {
+            field.defaultValue = defaultMatch[1].trim();
+          }
+
+          // Clean up the description string - remove all @annotations, = defaults and junk
           field.description = desc
             .replace(/@(unique|auto|required)/g, '')
+            .replace(/=\s*[^@\-\s]+/, '')
             .replace(/^[\s\-\:\.\,]+/, '')
             .replace(/[\s\-\:\.\,]+$/, '')
             .replace(/\s+/g, ' ')
@@ -1168,13 +1202,6 @@ export class CodeAnalyzer {
           if (!field.description || field.description === '-' || field.description === '') {
             delete field.description;
           }
-        }
-
-        // Ensure ID fields are always unique/auto
-        const nameLower = field.name.toLowerCase();
-        if (nameLower === 'id' || nameLower === entity.name.toLowerCase() + 'id' || nameLower === entity.name.toLowerCase() + 'uuid') {
-          field.unique = true;
-          field.auto = true;
         }
       }
     }

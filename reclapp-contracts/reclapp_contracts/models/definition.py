@@ -53,7 +53,7 @@ class RelationType(str, Enum):
 # ============================================================================
 
 class FieldAnnotations(BaseModel):
-    """
+    r"""
     Field annotations defining validation and behavior
     
     Example:
