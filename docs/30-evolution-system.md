@@ -290,7 +290,7 @@ Check that npm is in PATH. The evolution manager looks for npm in:
 
 ---
 
-## Task Queue (v2.5.0)
+## Task Queue (v2.4.1)
 
 The evolution system shows granular LLM-centric tasks with human-readable narration:
 
