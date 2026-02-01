@@ -1,16 +1,14 @@
 import sys
 from io import StringIO
 
-from click.testing import CliRunner
-
 import clickmd
+from click.testing import CliRunner
 from clickmd.renderer import get_renderer
 
 sys.path.insert(0, "src/python")
 sys.path.insert(0, ".")
 
 import reclapp.cli as c
-import reclapp.evolve_command as ec
 
 
 class _TTYStringIO(StringIO):
@@ -41,10 +39,19 @@ def test_clickmd_echo_detects_markdown_and_renders_to_file():
 
 
 def test_reclapp_prompt_starts_with_markdown_header(monkeypatch):
-    def fake_evolve_sync(**kwargs):
-        return 0
+    # Mock the core implementation instead of the legacy evolve_command
+    class MockCoreMain:
+        @staticmethod
+        async def cmd_evolve(args):
+            import clickmd
+            clickmd.echo("## RECLAPP FULL LIFECYCLE")
+            clickmd.echo("```log\nStarting evolution...\n```")
+            return 0
 
-    monkeypatch.setattr(ec, "evolve_sync", fake_evolve_sync)
+    def mock_get_core_main():
+        return MockCoreMain()
+
+    monkeypatch.setattr(c, "_get_core_main", mock_get_core_main)
 
     res = CliRunner().invoke(
         c.main,

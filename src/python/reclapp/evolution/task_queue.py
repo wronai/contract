@@ -4,7 +4,7 @@ Task Queue
 Manages task execution pipeline with status tracking.
 
 Mirrors: src/core/contract-ai/evolution/task-queue.ts
-@version 1.0.0
+@version 2.4.1
 """
 
 from datetime import datetime

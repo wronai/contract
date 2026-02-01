@@ -53,6 +53,7 @@ class Assertion(BaseModel):
 
 class TestType(str, Enum):
     """Test types"""
+    __test__ = False
     UNIT = "unit"
     INTEGRATION = "integration"
     E2E = "e2e"
@@ -75,6 +76,7 @@ class TestDefinition(BaseModel):
             ]
         )
     """
+    __test__ = False
     name: str
     type: TestType
     description: Optional[str] = None

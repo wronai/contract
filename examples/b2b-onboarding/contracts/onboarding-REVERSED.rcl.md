@@ -16,7 +16,7 @@
 # entity: Customer
 id              : uuid                 # @unique @auto
 name            : text                 # @required
-taxId           : uuid                 # @unique @required - NIP
+taxId           : text                 # @unique @required - NIP
 regon           : text
 krsNumber       : text
 email           : email                # @required

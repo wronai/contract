@@ -1229,7 +1229,8 @@ export class CodeAnalyzer {
     if (n === 'createdat' || n === 'updatedat' || n.endsWith('at') || n === 'timestamp') return 'datetime';
     
     // Fallback to suffix matching for IDs, but avoid common business IDs like taxId or regon
-    if (n.endsWith('id') && !n.match(/tax|vat|national|citizen|business|regon|krs/i)) return 'uuid';
+    const businessIdRegex = /tax|vat|national|citizen|business|regon|krs|nip|pesel/i;
+    if (n.endsWith('id') && !businessIdRegex.test(n)) return 'uuid';
     
     if (t === 'string' || t === 'text') return 'text';
     if (t === 'number' || t === 'int' || t === 'integer') return 'int';

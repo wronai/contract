@@ -4,7 +4,7 @@ Reclapp CLI Module
 Command-line interface for Reclapp contract-driven code generation.
 
 Mirrors: src/cli/
-@version 1.0.0
+@version 2.4.1
 """
 
 from .main import main, cli

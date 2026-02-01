@@ -4,7 +4,7 @@ Reclapp Evolution Module
 Auto-healing code generation with task queue and shell rendering.
 
 Mirrors: src/core/contract-ai/evolution/
-@version 1.0.0
+@version 2.4.1
 """
 
 from .task_queue import TaskQueue, Task, TaskStatus

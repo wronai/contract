@@ -44,7 +44,7 @@ revenue         : text
 address         : text
 city            : text
 country         : text
-taxId           : uuid                 # @unique - NIP
+taxId           : text                 # @unique - NIP
 contacts        : text
 deals           : text
 createdAt       : datetime             # @auto

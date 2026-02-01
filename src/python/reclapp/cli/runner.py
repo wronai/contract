@@ -5,7 +5,7 @@ Standardized CLI execution with TaskQueue, markdown logs, and consistent output.
 Unifies TaskQueue and ShellRenderer for all reclapp commands.
 
 Mirrors: src/core/contract-ai/cli/cli-runner.ts
-@version 1.0.0
+@version 2.4.1
 """
 
 import asyncio

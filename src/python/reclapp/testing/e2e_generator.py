@@ -10,7 +10,7 @@ Features:
 - UI component tests
 - Health check tests
 
-@version 1.0.0
+@version 2.4.1
 """
 
 from pathlib import Path

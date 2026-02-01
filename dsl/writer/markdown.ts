@@ -464,7 +464,8 @@ function mapTypeToRcl(type: string, fieldName?: string): string {
   if (typeMap[type]) return mapped;
 
   if (mapped === 'text') {
-    if ((n === 'id' || n.endsWith('id')) && !n.match(/tax|vat|national|citizen|business|regon|krs/i)) return 'uuid';
+    const businessIdRegex = /tax|vat|national|citizen|business|regon|krs|nip|pesel/i;
+    if ((n === 'id' || n.endsWith('id')) && !businessIdRegex.test(n)) return 'uuid';
     if (n.includes('email')) return 'email';
     if (n.includes('phone')) return 'phone';
     if (n === 'url' || n.endsWith('url')) return 'url';

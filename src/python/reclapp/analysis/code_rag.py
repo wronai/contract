@@ -9,7 +9,7 @@ Features:
 - Hierarchical indexing (repo → module → function)
 - Call graph / dependency analysis
 
-@version 1.0.0
+@version 2.4.1
 """
 
 import base64

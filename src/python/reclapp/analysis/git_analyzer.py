@@ -3,7 +3,7 @@ Git Analyzer - Analyzes Git repositories for state, tech stack detection, and co
 
 Port of: src/core/contract-ai/evolution/git-analyzer.ts
 
-@version 1.0.0
+@version 2.4.1
 """
 
 import json
