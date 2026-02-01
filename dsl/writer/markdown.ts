@@ -439,7 +439,7 @@ export function contractToIR(contract: any): IR {
     deployment: contract.deployment,
     env: contract.env || [],
     config: contract.config || {},
-    aiPlan: contract.aiPlan || contract.generation ? contract : undefined,
+    aiPlan: contract.aiPlan || contract.generation || contract.definition || contract.frontmatter ? contract : undefined,
   };
 }
 

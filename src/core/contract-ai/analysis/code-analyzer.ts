@@ -822,12 +822,15 @@ export class CodeAnalyzer {
         const isId = nameLower === 'id' || nameLower === e.name.toLowerCase() + 'id' || nameLower === e.name.toLowerCase() + 'uuid';
         const isTimestamp = nameLower === 'createdat' || nameLower === 'updatedat' || nameLower === 'timestamp';
 
+        const isUnique = (type === 'uuid' && isId) || (type === 'email' && nameLower === 'email') || (f.type === 'string' && isId);
+        const isAuto = (type === 'uuid' && isId) || isTimestamp || (f.type === 'string' && isId);
+
         return {
           name: f.name,
           type: type,
           required: f.required,
-          unique: (type === 'uuid' && isId) || (type === 'email' && nameLower === 'email'),
-          auto: (type === 'uuid' && isId) || isTimestamp,
+          unique: isUnique,
+          auto: isAuto,
           annotations: f.comment ? { comment: f.comment } : {}
         };
       })
@@ -843,7 +846,7 @@ export class CodeAnalyzer {
     const events = report.files.flatMap(f => {
       // Look for classes/interfaces that look like events
       return f.entities
-        .filter(e => e.name.endsWith('Event') || e.name.match(/Registered|Started|Completed|Verified|Rejected|Changed|Uploaded$/))
+        .filter(e => e.name.endsWith('Event') || e.name.match(/Registered|Started|Completed|Verified|Rejected|Changed|Uploaded|Created|Deleted|Updated|Updated$/))
         .map(e => ({
           name: e.name.charAt(0).toUpperCase() + e.name.slice(1),
           fields: e.fields.map(f => ({ name: f.name, type: this.mapTypeToDSL(f.type, f.name) }))
@@ -1054,14 +1057,44 @@ export class CodeAnalyzer {
             // Field exists, update type if it's more specific in code, but keep aiPlan specificity like int(0..100)
             const aiType = mergedFields[fieldIdx].type;
             const aiTypeLower = (aiType || '').toLowerCase();
-            const genericTypes = ['string', 'number', 'boolean', 'any', 'json', 'text', 'object', 'date', 'datetime', ''];
+            const genericTypes = ['string', 'number', 'boolean', 'any', 'json', 'text', 'object', 'date', 'datetime', 'uuid', ''];
             
             if (genericTypes.includes(aiTypeLower)) {
               mergedFields[fieldIdx].type = df.type;
             }
             mergedFields[fieldIdx].required = df.required;
+            // Sync unique/auto/required from description text if present (common in AI generated contracts)
+            if (mergedFields[fieldIdx].description) {
+              const desc = mergedFields[fieldIdx].description;
+              if (desc.includes('@unique')) mergedFields[fieldIdx].unique = true;
+              if (desc.includes('@auto')) mergedFields[fieldIdx].auto = true;
+              if (desc.includes('@required')) mergedFields[fieldIdx].required = true;
+            }
+
             if (df.unique) mergedFields[fieldIdx].unique = true;
             if (df.auto) mergedFields[fieldIdx].auto = true;
+            
+            // Explicitly sync unique/auto from derived if not set in AI plan but detected in code
+            if (df.unique && !mergedFields[fieldIdx].unique) mergedFields[fieldIdx].unique = true;
+            if (df.auto && !mergedFields[fieldIdx].auto) mergedFields[fieldIdx].auto = true;
+
+            // Clean up description if it contains annotations that are now boolean flags
+            if (mergedFields[fieldIdx].description) {
+              mergedFields[fieldIdx].description = mergedFields[fieldIdx].description
+                .replace(/@(unique|auto|required)/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+              
+              // Remove leading/trailing dashes or symbols often used in AI descriptions
+              mergedFields[fieldIdx].description = mergedFields[fieldIdx].description
+                .replace(/^[\s\-\:]+/, '')
+                .replace(/[\s\-\:]+$/, '')
+                .trim();
+
+              if (!mergedFields[fieldIdx].description) {
+                delete mergedFields[fieldIdx].description;
+              }
+            }
             
             // Merge annotations
             if (df.annotations) {

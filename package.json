@@ -1,6 +1,6 @@
 {
   "name": "reclapp",
-  "version": "2.4.2",
+  "version": "2.4.1",
   "description": "AI-Native Declarative Platform for B2B Applications with Causal Verification",
   "main": "dist/api/src/server.js",
   "bin": {

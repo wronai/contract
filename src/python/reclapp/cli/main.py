@@ -507,6 +507,16 @@ async def cmd_generate(args: argparse.Namespace) -> int:
     try:
         result = await generator.generate(contract, args.output)
         
+        # Save contract for reverse engineering (mirroring bin/reclapp behavior)
+        try:
+            contract_save_dir = Path(args.output) / "contract"
+            contract_save_dir.mkdir(parents=True, exist_ok=True)
+            with open(contract_save_dir / "contract.ai.json", "w") as f:
+                json.dump(contract, f, indent=2)
+        except Exception as e:
+            if args.verbose:
+                print(f"⚠️ Warning: Failed to save contract.ai.json: {e}")
+
         print(f"\n✅ Generated {len(result.files)} files")
         for f in result.files:
             print(f"   📄 {f.path}")
