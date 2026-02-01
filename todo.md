@@ -1,97 +1,128 @@
 # Reclapp – TODO
 
-Aktualny stan po refaktoryzacji (2026-01-02).
+Stan projektu po sesji (2026-01-02 20:15).
 
 ---
 
-## ✅ SUKCES - Wszystkie testy przechodzą!
+## ✅ CLIRunner - Ustandaryzowany output dla wszystkich komend
 
-### Wyniki testów z examples/prompts/
-| Prompt | E2E Tests | Status |
-|--------|-----------|--------|
-| 01-notes-app | 6/6 | ✅ |
-| 02-todo-app | 6/6 | ✅ |
-| 03-contacts-crm | 6/6 | ✅ |
-| 04-inventory | 6/6 | ✅ |
-| 08-invoices | 6/6 | ✅ |
-| 09-support-tickets | 6/6 | ✅ |
-| 10-events | 6/6 | ✅ |
+### Nowy moduł: `cli/cli-runner.ts`
 
-**Razem: 42/42 testów (100%)**
+Klasa `CLIRunner` zapewnia spójny output dla wszystkich komend reclapp:
 
----
+```typescript
+const runner = new CLIRunner({
+  name: 'Reclapp Environment Setup',
+  version: '1.0',
+  verbose: true,
+  showProgress: true
+});
 
-## ✅ Naprawione w tej sesji
+runner.addTask({
+  id: 'check-llm',
+  name: 'Check LLM providers',
+  description: 'Testing Ollama, Windsurf, OpenRouter',
+  run: async () => ({
+    success: true,
+    data: { providers: [...] }
+  })
+});
 
-| Problem | Fix | Status |
-|---------|-----|--------|
-| Frontend priority | `should` → `must` | ✅ |
-| E2E @playwright | Walidacja odrzuca | ✅ |
-| E2E scope issues | Walidacja `createdId` | ✅ |
-| UPDATE HTTP 400 | Dodano `description` | ✅ |
-| bin/reclapp syntax | Git restore | ✅ |
-| Frontend fallback | Dodano w layer2 | ✅ |
-
----
-
-## 📁 Nowa struktura templates/
-
-```
-src/core/contract-ai/templates/
-├── api/
-│   ├── server.template.ts
-│   ├── package.template.json
-│   └── tsconfig.template.json
-├── contracts/
-│   ├── stage-api.contract.json
-│   ├── stage-tests.contract.json
-│   ├── stage-frontend.contract.json
-│   └── stage-docs.contract.json
-├── frontend/
-│   └── react-app.template.ts
-└── tests/
-    └── e2e-native.template.ts
+await runner.run();
 ```
 
+### Funkcje CLIRunner
+
+| Metoda | Opis |
+|--------|------|
+| `addTask()` | Dodaj zadanie do kolejki |
+| `run()` | Uruchom wszystkie zadania |
+| `log()` | Zaloguj wiadomość (codeblock log) |
+| `yaml()` | Zaloguj dane YAML (koloryzowane) |
+| `printTodo()` | Wyświetl aktualną listę TODO |
+
 ---
 
-## 📊 Metryki refaktoryzacji
+## ✅ Setup z TaskQueue
 
-| Plik | LOC | Zmiana |
-|------|-----|--------|
-| evolution-manager.ts | 3155 | -37% |
-| test-generator.ts | 305 | nowy |
-| fallback-templates.ts | 356 | nowy |
-| templates/*.ts | ~600 | nowy |
+`reclapp setup` teraz używa TaskQueue jak `reclapp evolve`:
 
----
+```
+## Reclapp Environment Setup v1.0
 
-## 🎯 Użycie
+```yaml
+# @type: task_queue
+progress:
+  done: 0
+  total: 5
+tasks:
+  - name: "check-llm"
+    status: "pending"
+  - name: "check-deps"
+    status: "pending"
+  ...
+```
 
-```bash
-# Generuj z promptu
-./bin/reclapp evolve -p "Create a todo app" -o ./output
+→ Check LLM providers: Testing Ollama, Windsurf, OpenRouter
 
-# Sprawdź wyniki
-ls output/api/src/
-ls output/frontend/src/
-cat output/tests/e2e/api.e2e.ts
+```yaml
+# @type: check-llm_result
+llm_providers:
+  - name: "ollama"
+    status: "available"
+    models: 44
+    code_models: 18
+```
 
-# Uruchom frontend
-cd output/frontend && npm install && npm run dev
+📊 Progress: 1/5 (1 done, 0 failed)
 ```
 
 ---
 
-## ⏳ Opcjonalne ulepszenia
+## 📁 Nowe pliki
 
-- [ ] Timeout handling dla LLM
-- [ ] Unit tests dla modułów
-- [ ] Dokumentacja API
-- [ ] Database integration
-- [ ] Docker generation
+```
+src/core/contract-ai/cli/
+├── cli-runner.ts     # 300 LOC - Standardowy runner
+└── index.ts
+
+src/core/contract-ai/setup/
+├── dependency-checker.ts  # 450 LOC
+└── index.ts
+```
+
+---
+
+## ⏳ Następne kroki
+
+### Priorytet 1: Inne komendy z CLIRunner
+- [ ] `reclapp analyze` z TaskQueue
+- [ ] `reclapp refactor` z TaskQueue
+
+### Priorytet 2: PyPI packaging
+- [ ] `setup.py` dla instalacji z pip
+- [ ] `reclapp` jako entry point
+
+### Priorytet 3: Windsurf integration
+- [ ] Test free models
+- [ ] `WINDSURF_API_KEY` configuration
 
 
 
-sparwdz czy projekt jest spojny, czy sa w nim duplikaty, posusuwaj duplikaty plikow i funkcji, przygotuj skrypt do analizy wszystkich plikow projektu, aby poronwac wielkosc funkcji, plikow, dane wejsciowe i wysjciowe  i porownaj miedzy soba aby wyciagnac wnioski , zaimplementuj to rozwiaznaiae rowniez zzw systemie w kodzie zrodlowym  src/ aby mozliwe bylo refaktoryzowanie projektow zastanych, gdzie contract zostal stworzony na bazie istniejacego kodu, gdzie mozna realizowac  refaktoryzacje, 
-pobierz gotowe projekty z github poprze zgit clone przez system reclapp i sproobuj prztetsowac działanie w praktyce, od sklonownaia poprzez realizacje contractu poprzez refactoryzacje na podsatwie roznicy z zastanym kodem, sporządz odpowiednia liste todo, sparwdz czy projekt reclapp tworzy poprawna liste todo dla refactoryzacji projektow, czy poprawnie wyodrebnia ze zrodel prawdy wszystkie dane do stwworzenia contract
+w  reclapp --prompt "Create a CRM with contacts and deals"
+dostajemy wynik w shell std output jako text, a powinien być markdown colorized jak w ./bin/reclappale jako implementacja python
+Wyodrebnij osobny projekt python, ktory będzie odpowiedzialny za komunikacje shell z colorized markdown
+tak jak robi to bibliteka python click decoratorami, aby ta nowa biblitoeka python, nazwij ją np clickmd
+i używaj zamiast click, aby realizowała te same funkcjonalnosci jak click, ale generowała output jako markdown
+na takich zasadach jak aktualnie jest zaimplementowane w ./bin/reclapp
+
+
+@main.command()
+@click.argument("contract_path")
+@click.option("--output", "-o", default="./generated", help="Output directory")
+@click.option("--verbose", "-v", is_flag=True, help="Verbose output")
+@click.option("--engine", type=click.Choice(["python", "node"]), default="python", help="Execution engine")
+
+
+i zaimplementuj ją jako pierwsze przy uruchamianiu w reclapp --prompt "Create a CRM with contacts and deals"
+
