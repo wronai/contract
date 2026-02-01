@@ -8,7 +8,7 @@ import * as path from 'path';
 
 const CWD = path.resolve(__dirname, '../..');
 const CLI = path.join(CWD, 'bin/reclapp');
-const TEST_CONTRACT = 'examples/crm/contracts/main.reclapp.ts';
+const TEST_CONTRACT = 'examples/crm/contracts/crm-typescript-validation.reclapp.ts';
 const TEST_OUTPUT = 'examples/crm/target';
 
 function run(args: string): string {

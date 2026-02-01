@@ -436,9 +436,18 @@ def setup(output: str, verbose: bool):
 
 
 @main.command()
-def stop():
+@click.option("-v", "--verbose", is_flag=True, help="Enable verbose output")
+def stop(verbose: bool):
     """Stop all running containers"""
-    click.md("```log\nℹ️ Stop command not implemented in Python yet. Use docker-compose down manually.\n```\n")
+    core_main = _get_core_main()
+    import asyncio
+    
+    class Args:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+            
+    args = Args(verbose=verbose)
+    asyncio.run(core_main.cmd_stop(args))
 
 
 @main.command()

@@ -1020,6 +1020,40 @@ async def cmd_refactor(args: argparse.Namespace) -> int:
     return 0 if result["success"] else 1
 
 
+async def cmd_stop(args: argparse.Namespace) -> int:
+    """Execute the stop command - stop all running containers/processes"""
+    from .runner import ShellRenderer
+    import subprocess
+    import shutil
+    
+    renderer = ShellRenderer(verbose=args.verbose)
+    renderer.heading(2, "🛑 Stopping Reclapp Containers")
+    
+    docker_path = shutil.which("docker")
+    if not docker_path:
+        renderer.warning("Docker not found, skipping container stop")
+        return 0
+        
+    try:
+        # Stop containers on common ports (3000, 8080, 5432) or named 'target'
+        # Mirroring bin/reclapp logic
+        commands = [
+            'docker ps -q --filter "publish=8080" | xargs -r docker stop',
+            'docker ps -q --filter "publish=3000" | xargs -r docker stop',
+            'docker ps -q --filter "publish=5432" | xargs -r docker stop',
+            'docker ps -q --filter "name=target" | xargs -r docker stop'
+        ]
+        
+        for cmd in commands:
+            subprocess.run(cmd, shell=True, capture_output=True, text=True)
+            
+        renderer.success("All containers stopped (if they were running)")
+        return 0
+    except Exception as e:
+        renderer.error(f"Failed to stop containers: {e}")
+        return 1
+
+
 def cli(args: Optional[list[str]] = None) -> int:
     """Main CLI entry point"""
     parser = create_parser()
@@ -1048,11 +1082,10 @@ def cli(args: Optional[list[str]] = None) -> int:
         return asyncio.run(cmd_refactor(parsed_args))
     elif parsed_args.command == "tasks":
         return asyncio.run(cmd_tasks(parsed_args))
+    elif parsed_args.command == "stop":
+        return asyncio.run(cmd_stop(parsed_args))
     elif parsed_args.command == "setup":
         return asyncio.run(cmd_setup(parsed_args))
-    elif parsed_args.command == "stop":
-        print("ℹ️ Stop command not implemented in Python yet. Use docker-compose down manually.")
-        return 0
     else:
         parser.print_help()
         return 1

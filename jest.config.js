@@ -16,7 +16,12 @@ module.exports = {
     '<rootDir>/output_final/',
     '<rootDir>/generated/',
     '<rootDir>/.test-output/',
-    '<rootDir>/.test-output-e2e/'
+    '<rootDir>/.test-output-e2e/',
+    '<rootDir>/my-app/',
+    '<rootDir>/my-crm/',
+    '<rootDir>/target/',
+    '<rootDir>/examples/target/',
+    '<rootDir>/studio/projects/'
   ],
   moduleNameMapper: {
     '^@dsl/(.*)$': '<rootDir>/dsl/$1',
