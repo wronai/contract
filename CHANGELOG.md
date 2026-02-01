@@ -1,3 +1,18 @@
+## [2.2.3] - 2026-02-01
+
+### Summary
+
+feat(goal): multi-language support with 3 supporting modules
+
+### Core
+
+- update src/python/reclapp/cli/main.py
+
+### Test
+
+- update tests/python/test_reverse_integrity.py
+
+
 ## [2.2.2] - 2026-02-01
 
 ### Summary

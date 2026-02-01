@@ -512,8 +512,8 @@ async def cmd_generate(args: argparse.Namespace) -> int:
 
 async def cmd_parse(args: argparse.Namespace) -> int:
     """Execute the parse command - parse contract and print JSON"""
-    from reclapp_contracts.parser.markdown_parser import parse_contract_markdown
-    from reclapp.cli.runner import ShellRenderer
+    from ..parser.markdown_parser import parse_contract_markdown
+    from .runner import ShellRenderer
     import json
     
     renderer = ShellRenderer(verbose=args.verbose)
@@ -543,8 +543,8 @@ async def cmd_parse(args: argparse.Namespace) -> int:
 
 async def cmd_validate(args: argparse.Namespace) -> int:
     """Execute the validate command"""
-    from reclapp_contracts.parser.markdown_parser import parse_contract_markdown, validate_contract
-    from reclapp.cli.runner import ShellRenderer
+    from ..parser.markdown_parser import parse_contract_markdown, validate_contract
+    from .runner import ShellRenderer
     
     renderer = ShellRenderer(verbose=args.verbose)
     renderer.heading(2, f"Reclapp Contract Validator v{__version__}")
