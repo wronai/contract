@@ -1291,47 +1291,79 @@ runTests().then(results => {{
             self.renderer.warning("node not found, skipping E2E tests")
             return 0, 0, ""  # Skip tests gracefully
         
+        api_dir = Path(target_dir) / "api"
+        if not api_dir.exists():
+            # If api dir doesn't exist, try target_dir directly (some models might skip the 'api' prefix)
+            if (Path(target_dir) / "package.json").exists():
+                api_dir = Path(target_dir)
+            else:
+                return 0, 1, f"Error: API directory not found at {api_dir}"
+        
         try:
-            # Run with node
-            result = subprocess.run(
-                [node_path, str(test_file)],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                cwd=str(Path(target_dir) / "api")
+            # Use async subprocess
+            proc = await asyncio.create_subprocess_exec(
+                node_path, str(test_file),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=str(api_dir)
             )
             
-            output = result.stdout + "\n" + result.stderr
-            
-            # Parse JSON output
             try:
-                # The test script might print other things before JSON, try to find JSON block
-                stdout_lines = result.stdout.strip().split('\n')
-                json_str = stdout_lines[-1] if stdout_lines else ""
-                results = json.loads(json_str)
-                passed = sum(1 for r in results if r.get("passed"))
-                failed = sum(1 for r in results if not r.get("passed"))
+                stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
+                stdout_str = stdout.decode(errors="replace")
+                stderr_str = stderr.decode(errors="replace")
+                output = stdout_str + "\n" + stderr_str
                 
-                # Print results
-                for r in results:
-                    if r.get("passed"):
-                        self.renderer.success(f"✅ {r['name']}")
-                    else:
-                        self.renderer.error(f"❌ {r['name']}: {r.get('error', 'Failed')}")
+                # Parse JSON output
+                try:
+                    # The test script might print other things before JSON, try to find JSON block
+                    lines = [l.strip() for l in stdout_str.strip().split('\n') if l.strip()]
+                    json_str = ""
+                    for line in reversed(lines):
+                        if line.startswith('[') and line.endswith(']'):
+                            json_str = line
+                            break
+                    
+                    if not json_str:
+                        # Try to find anything that looks like JSON array
+                        import re
+                        match = re.search(r'\[\s*\{.*\}\s*\]', stdout_str, re.DOTALL)
+                        if match:
+                            json_str = match.group(0)
+
+                    if json_str:
+                        results = json.loads(json_str)
+                        passed = sum(1 for r in results if r.get("passed"))
+                        failed = sum(1 for r in results if not r.get("passed"))
+                        
+                        # Print results
+                        for r in results:
+                            if r.get("passed"):
+                                self.renderer.success(f"✅ {r['name']}")
+                            else:
+                                self.renderer.error(f"❌ {r['name']}: {r.get('error', 'Failed')}")
+                        
+                        return passed, failed, output
+                except Exception as e:
+                    # Fallback: check exit code
+                    if proc.returncode == 0:
+                        return 1, 0, output
+                    return 0, 1, output
+                    
+            except asyncio.TimeoutError:
+                if proc:
+                    try:
+                        proc.kill()
+                    except:
+                        pass
+                self.renderer.error("Tests timed out")
+                return 0, 1, "Timeout"
                 
-                return passed, failed, output
-            except:
-                # Fallback: check exit code
-                if result.returncode == 0:
-                    return 1, 0, output
-                return 0, 1, output
-                
-        except subprocess.TimeoutExpired:
-            self.renderer.error("Tests timed out")
-            return 0, 1, "Timeout"
         except Exception as e:
             self.renderer.error(f"Test error: {e}")
             return 0, 1, str(e)
+        
+        return 0, 1, "Unknown error in test execution"
     
     async def _auto_fix_code(self, target_dir: str, failed_count: int, test_output: str = ""):
         """Try to fix failing code with LLM - mirrors TypeScript recovery logic"""
