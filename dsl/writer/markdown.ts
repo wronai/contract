@@ -319,14 +319,15 @@ export function writeMarkdownContract(
     lines.push('');
   }
 
-  // API
-  if (ir.api) {
+    if (ir.api) {
     lines.push(`## 🌐 ${L.api}`);
     lines.push('');
     lines.push('```yaml');
     lines.push('# api:');
-    lines.push(`prefix: ${ir.api.prefix}`);
-    lines.push(`auth: ${ir.api.auth}`);
+    lines.push(`prefix: ${ir.api.prefix || '/api'}`);
+    if (ir.api.auth) {
+      lines.push(`auth: ${ir.api.auth}`);
+    }
     if (ir.api.rateLimit) {
       lines.push(`rateLimit: ${ir.api.rateLimit}`);
     }
