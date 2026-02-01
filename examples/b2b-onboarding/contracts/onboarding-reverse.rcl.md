@@ -277,7 +277,7 @@ steps: [aggregateScores, updateRiskScore, checkThresholds]
 
 ```yaml
 # api:
-prefix: /api/customers
+prefix: undefined
 auth: undefined
 ```
 

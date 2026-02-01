@@ -404,6 +404,7 @@ export function contractToIR(contract: any): IR {
       version: contract.app?.version || contract.version || '1.0.0',
       description: contract.app?.description || contract.description,
       author: contract.app?.author,
+      license: contract.app?.license,
     },
     entities: (contract.entities || []).map((e: any) => ({
       name: e.name,
