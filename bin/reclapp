@@ -1308,33 +1308,35 @@ async function cmdReverse(args, options) {
   try {
     const { CodeAnalyzer } = require('../src/core/contract-ai/analysis/code-analyzer');
     const { writeMarkdownContract, contractToIR } = require('../dsl/writer/markdown');
-    
-    const analyzer = new CodeAnalyzer(targetDir);
-    const report = await analyzer.analyze();
-    let contract = analyzer.toContract(report);
 
-    // Look for contract.ai.json in the target directory or its parent/contract subfolder
-    const aiPlanPaths = [
-      path.join(targetDir, 'contract.ai.json'),
+    // Prefer the saved original contract (generated during `reclapp generate/run`)
+    const contractPaths = [
       path.join(targetDir, 'contract', 'contract.ai.json'),
+      path.join(targetDir, 'contract.ai.json'),
       path.join(path.dirname(targetDir), 'contract', 'contract.ai.json')
     ];
-    
-    let aiPlan = null;
-    for (const p of aiPlanPaths) {
-      if (fs.existsSync(p)) {
-        try {
-          aiPlan = JSON.parse(fs.readFileSync(p, 'utf-8'));
-          console.log(`ℹ️  Found AI Plan: ${p}`);
-          break;
-        } catch (e) {
-          console.warn(`⚠️  Failed to parse AI Plan at ${p}: ${e.message}`);
-        }
+
+    let baseContract = null;
+    for (const p of contractPaths) {
+      if (!fs.existsSync(p)) continue;
+      try {
+        baseContract = JSON.parse(fs.readFileSync(p, 'utf-8'));
+        console.log(`ℹ️  Found saved contract: ${p}`);
+        break;
+      } catch (e) {
+        console.warn(`⚠️  Failed to parse saved contract at ${p}: ${e.message}`);
       }
     }
 
-    if (aiPlan) {
-      contract = analyzer.mergeWithAIPlan(contract, aiPlan);
+    const analyzer = new CodeAnalyzer(targetDir);
+    const report = await analyzer.analyze();
+    const derived = analyzer.toContract(report);
+
+    // If we found the saved contract, use it as source of truth and only merge in
+    // potentially useful details from analysis (e.g. api prefix/port differences).
+    let contract = baseContract || derived;
+    if (baseContract) {
+      contract = analyzer.mergeWithAIPlan(derived, baseContract);
     }
 
     // Convert contract to IR and then to Markdown
