@@ -1,3 +1,58 @@
+## [2.2.2] - 2026-02-01
+
+### Summary
+
+refactor(goal): code analysis engine
+
+### Core
+
+- update src/python/reclapp/cli/executor.py
+- update src/python/reclapp/cli/main.py
+- update src/python/reclapp/cli/runner.py
+- update src/python/reclapp/evolution/evolution_manager.py
+- update src/python/reclapp/evolution/shell_renderer.py
+- update src/python/reclapp/evolution/task_queue.py
+- update src/python/reclapp/llm/manager.py
+- update src/python/reclapp/llm/openrouter.py
+
+### Docs
+
+- docs: update onboarding-reverse.rcl.md
+- docs: update README
+- docs: update README
+- docs: update reverse-engineered.rcl.md
+- docs: update todo.md
+
+### Test
+
+- update test.tasks
+- update tests/python/test_cli.py
+- update tests/python/test_openrouter_models.py
+- update tests/python/test_windsurf_client.py
+
+### Build
+
+- update pyproject.toml
+
+### Config
+
+- config: update goal.yaml
+
+### Other
+
+- update bin/reclapp
+- update dsl/writer/markdown.ts
+- update reclapp-contracts/pyproject.toml
+- update reclapp-contracts/reclapp_contracts/__init__.py
+- update reclapp-contracts/reclapp_contracts/models/__init__.py
+- update reclapp-contracts/reclapp_contracts/models/contract.py
+- update reclapp-contracts/reclapp_contracts/models/definition.py
+- update reclapp-contracts/reclapp_contracts/models/generation.py
+- update reclapp-contracts/reclapp_contracts/models/validation.py
+- update reclapp-contracts/reclapp_contracts/parser/__init__.py
+- ... and 16 more
+
+
 ## [2.2.1] - 2026-02-01
 
 ### Summary

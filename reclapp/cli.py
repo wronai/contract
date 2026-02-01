@@ -130,7 +130,10 @@ def main(ctx, prompt: Optional[str], output: str, port: int, verbose: bool, keep
         reclapp generate examples/contract-ai/crm-contract.ts
     """
     if version:
-        from . import __version__
+        try:
+            from reclapp import __version__
+        except ImportError:
+            __version__ = "2.4.1" # Fallback
         click.md(f"```log\n📦 Reclapp v{__version__}\n```\n")
         return
     
@@ -228,70 +231,157 @@ def generate(contract_path: str, output: str, verbose: bool, engine: str):
             sys.exit(1)
 
 
-@main.command()
-def list():
-    """List available contracts"""
-
-    click.md("## 📋 Available Contracts\n")
-    click.md("```log\n→ Scanning for contracts...\n```\n")
-
-    examples_dir = PROJECT_ROOT / "examples"
-    contracts_found = []
-    if examples_dir.exists():
-        for pattern in ["**/*.reclapp.ts", "**/contract*.ts", "**/*.rcl.md", "**/*.rcl"]:
-            for f in examples_dir.glob(pattern):
-                rel_path = f.relative_to(PROJECT_ROOT)
-                contracts_found.append(str(rel_path))
+def _get_core_main():
+    """Dynamically load core main module from src/python"""
+    import sys
+    import importlib.util
+    from pathlib import Path
     
-    if contracts_found:
-        yaml_lines = [f'  - "{c}"' for c in sorted(set(contracts_found))[:20]]
-        click.md("```yaml\n# @type: contracts_list\ncontracts:\n" + "\n".join(yaml_lines) + "\n```\n")
-        click.md(f"```log\n✅ Found {len(contracts_found)} contract(s)\n```\n")
-    else:
-        click.md("```log\n⚠️ No contracts found in examples/\n```\n")
+    core_path = PROJECT_ROOT / "src" / "python"
+    
+    # Add core path to the front to prioritize it
+    if str(core_path) not in sys.path:
+        sys.path.insert(0, str(core_path))
+    
+    # To fix 'reclapp.cli is not a package' when running this file as a module:
+    # If sys.modules['reclapp.cli'] is this file, we need to make it look like a package
+    # or load the core main under a different name that IS a package.
+    
+    main_file = core_path / "reclapp" / "cli" / "main.py"
+    if not main_file.exists():
+        raise ImportError(f"Core main not found at {main_file}")
+
+    # Load as a unique module name to avoid collision with the wrapper
+    module_name = "reclapp_core_main_impl"
+    if module_name in sys.modules:
+        return sys.modules[module_name]
+
+    spec = importlib.util.spec_from_file_location(module_name, str(main_file))
+    module = importlib.util.module_from_spec(spec)
+    
+    # This is the key: we need to make sure it can find other modules in the same directory
+    # by pretending it's part of the real reclapp.cli package
+    module.__package__ = "reclapp.cli"
+    
+    # We also need to ensure 'reclapp.cli' in sys.modules is treated as a package
+    # if we are currently in it.
+    if "reclapp.cli" in sys.modules:
+        m = sys.modules["reclapp.cli"]
+        if not hasattr(m, "__path__"):
+            # Force it to be a package so 'from .runner import ...' works
+            m.__path__ = [str(main_file.parent)]
+    
+    spec.loader.exec_module(module)
+    sys.modules[module_name] = module
+    return module
+
+@main.command()
+@click.option("-d", "--directory", default=".", help="Directory to search for contracts")
+@click.option("--format", type=click.Choice(["yaml", "json", "table"]), default="yaml", help="Output format")
+@click.option("-v", "--verbose", is_flag=True, help="Show detailed contract information")
+def list(directory: str, format: str, verbose: bool):
+    """List available contracts and projects"""
+    core_main = _get_core_main()
+    import asyncio
+    
+    # Create a dummy args object for the handler
+    class Args:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+    
+    args = Args(directory=directory, format=format, verbose=verbose)
+    asyncio.run(core_main.cmd_list(args))
 
 
 @main.command()
-def validate():
-    """Validate Pydantic contracts"""
-    click.md("## 🔎 Contract Validation\n")
-    click.md("```log\n→ Validating Pydantic contracts...\n```\n")
+@click.argument("action", type=click.Choice(["list", "show", "add"]), default="list")
+@click.option("-n", "--name", help="Prompt name for show/add actions")
+@click.option("-v", "--verbose", is_flag=True, help="Show detailed prompt information")
+def prompts(action: str, name: Optional[str], verbose: bool):
+    """Manage and list available prompts"""
+    core_main = _get_core_main()
+    import asyncio
     
-    try:
-        from examples.pydantic_contracts.contracts import (
-            NotesContract, TodoContract, CRMContract,
-            InventoryContract, BookingContract
-        )
-        
-        contracts = [
-            ("Notes", NotesContract),
-            ("Todo", TodoContract),
-            ("CRM", CRMContract),
-            ("Inventory", InventoryContract),
-            ("Booking", BookingContract),
-        ]
-        
-        results = []
-        for name, contract_cls in contracts:
-            try:
-                contract = contract_cls.create()
-                entities = [e.name for e in contract.definition.entities]
-                port = contract.generation.techStack.backend.port
-                results.append(f'  - name: "{name}"\n    status: "valid"\n    entities: {entities}\n    port: {port}')
-            except Exception as e:
-                results.append(f'  - name: "{name}"\n    status: "invalid"\n    error: "{str(e)[:100]}"')
-        
-        click.md("```yaml\n# @type: validation_results\ncontracts:\n" + "\n".join(results) + "\n```\n")
-        click.md("```log\n✅ All contracts valid!\n```\n")
-    except ImportError as e:
-        click.md(f"```log\n❌ Error: {e}\n```\n")
-        sys.exit(1)
+    class Args:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+            
+    args = Args(action=action, name=name, verbose=verbose)
+    asyncio.run(core_main.cmd_prompts(args))
+
+
+@main.command()
+@click.option("-d", "--directory", default=".", help="Directory to analyze")
+@click.option("-o", "--output", help="Output file for generated contract")
+@click.option("-v", "--verbose", is_flag=True, help="Enable verbose output")
+def analyze(directory: str, output: Optional[str], verbose: bool):
+    """Analyze existing codebase and extract contract"""
+    core_main = _get_core_main()
+    import asyncio
+    
+    class Args:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+            
+    args = Args(directory=directory, output=output, verbose=verbose)
+    asyncio.run(core_main.cmd_analyze(args))
+
+
+@main.command()
+@click.option("-c", "--contract", required=True, help="Path to contract file")
+@click.option("-d", "--directory", default=".", help="Directory containing code to refactor")
+@click.option("--dry-run", is_flag=True, help="Show changes without applying them")
+@click.option("-v", "--verbose", is_flag=True, help="Enable verbose output")
+def refactor(contract: str, directory: str, dry_run: bool, verbose: bool):
+    """Refactor code based on contract changes"""
+    core_main = _get_core_main()
+    import asyncio
+    
+    class Args:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+            
+    args = Args(contract=contract, directory=directory, dry_run=dry_run, verbose=verbose)
+    asyncio.run(core_main.cmd_refactor(args))
+
+
+@main.command()
+@click.argument("contract")
+@click.option("-v", "--verbose", is_flag=True, help="Enable verbose output")
+def parse(contract: str, verbose: bool):
+    """Parse contract and print JSON"""
+    core_main = _get_core_main()
+    import asyncio
+    
+    class Args:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+            
+    args = Args(contract=contract, verbose=verbose)
+    asyncio.run(core_main.cmd_parse(args))
+
+
+@main.command()
+@click.argument("contract")
+@click.option("-v", "--verbose", is_flag=True, help="Enable verbose output")
+def validate(contract: str, verbose: bool):
+    """Validate contract (markdown or JSON)"""
+    core_main = _get_core_main()
+    import asyncio
+    
+    class Args:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+            
+    args = Args(contract=contract, verbose=verbose)
+    asyncio.run(core_main.cmd_validate(args))
 
 
 @main.command()
 @click.option("--level", type=click.Choice(["simple", "medium", "complex", "all"]), default="simple")
-def prompts(level: str):
-    """Show example prompts"""
+@click.option("-v", "--verbose", is_flag=True, help="Show detailed prompt information")
+def prompts_old(level: str, verbose: bool):
+    """Show example prompts (legacy)"""
     click.md(f"## 💬 Example Prompts ({level})\n")
     
     try:
@@ -313,39 +403,42 @@ def prompts(level: str):
 
 
 @main.command()
+@click.argument("file")
+@click.option("--workers", "-w", type=int, default=3, help="Number of parallel workers")
+@click.option("-v", "--verbose", is_flag=True, help="Enable verbose output")
+def tasks(file: str, workers: int, verbose: bool):
+    """Run tasks from file (parallel execution)"""
+    core_main = _get_core_main()
+    import asyncio
+    
+    class Args:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+            
+    args = Args(file=file, workers=workers, verbose=verbose)
+    asyncio.run(core_main.cmd_tasks(args))
+
+
+@main.command()
 @click.option("--output", "-o", default=".", help="Output directory for setup files")
-@click.option("--install", "-i", is_flag=True, help="Install missing dependencies")
-@click.option("--yes", "-y", is_flag=True, help="Skip confirmations")
-@click.option("--dry-run", is_flag=True, help="Simulate installations without executing")
-@click.option("--skip-optional", is_flag=True, help="Skip optional dependencies")
-def setup(output: str, install: bool, yes: bool, dry_run: bool, skip_optional: bool):
-    """Check environment and install dependencies"""
+@click.option("-v", "--verbose", is_flag=True, help="Enable verbose output")
+def setup(output: str, verbose: bool):
+    """Check environment and setup API keys"""
+    core_main = _get_core_main()
+    import asyncio
     
-    # Try Python native setup first
-    setup_script = PROJECT_ROOT / "tools" / "reclapp-setup" / "setup.py"
-    venv_python = PROJECT_ROOT / "tools" / "reclapp-setup" / "venv" / "bin" / "python"
-    
-    if setup_script.exists():
-        # Use venv python if available, else system python
-        python_path = str(venv_python) if venv_python.exists() else sys.executable
-        
-        cmd = [python_path, str(setup_script)]
-        if output != ".":
-            cmd.extend(["-o", output])
-        if install or dry_run:
-            cmd.append("--install")
-        if yes or dry_run:
-            cmd.append("-y")
-        if dry_run:
-            cmd.append("--dry-run")
-        if skip_optional:
-            cmd.append("--skip-optional")
-        
-        result = subprocess.run(cmd, cwd=str(PROJECT_ROOT))
-        sys.exit(result.returncode)
-    else:
-        click.md("```log\n❌ Error: Setup module not found\n```\n")
-        sys.exit(1)
+    class Args:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+            
+    args = Args(output=output, verbose=verbose)
+    asyncio.run(core_main.cmd_setup(args))
+
+
+@main.command()
+def stop():
+    """Stop all running containers"""
+    click.md("```log\nℹ️ Stop command not implemented in Python yet. Use docker-compose down manually.\n```\n")
 
 
 @main.command()
@@ -431,6 +524,21 @@ def reverse(target_dir: str, output: Optional[str], verbose: bool):
 # ============================================================================
 # LLM MANAGEMENT COMMANDS
 # ============================================================================
+
+@main.command()
+@click.option("-v", "--verbose", is_flag=True, help="Enable verbose output")
+def status(verbose: bool):
+    """Check LLM provider status (alias for llm status)"""
+    core_main = _get_core_main()
+    import asyncio
+    
+    class Args:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+            
+    args = Args(verbose=verbose)
+    asyncio.run(core_main.cmd_status(args))
+
 
 @main.group()
 def llm():

@@ -50,6 +50,8 @@ score           : int(0..100)?
 errorMessage    : text?
 requestedAt     : datetime             # @auto
 completedAt     : datetime?
+createdAt       : datetime
+updatedAt       : datetime
 ```
 
 ---
@@ -66,6 +68,27 @@ url             : url                  # @required
 status          : DocumentStatus       # = pending
 verifiedAt      : datetime?
 uploadedAt      : datetime             # @auto
+createdAt       : datetime
+updatedAt       : datetime
+```
+
+---
+
+### OnboardingDocument
+
+```yaml
+# entity: OnboardingDocument
+id              : uuid                 # @unique @auto
+customerId      : -> Customer
+documentType    : text
+fileName        : text
+fileUrl         : url
+status          : text
+reviewedBy      : text
+reviewedAt      : datetime
+notes           : text
+createdAt       : datetime
+updatedAt       : datetime
 ```
 
 ---
@@ -309,7 +332,6 @@ layout: grid
 # api:
 prefix: /api/v1
 auth: jwt
-rateLimit: 100
 ```
 
 ---

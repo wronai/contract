@@ -69,6 +69,11 @@ class ShellRenderer:
         if CLICKMD_AVAILABLE and _ClickmdRenderer is not None:
             self._clickmd_renderer = _ClickmdRenderer(use_colors=True, stream=sys.stdout)
 
+    @property
+    def renderer(self) -> Optional["_ClickmdRenderer"]:
+        """Expose underlying clickmd renderer"""
+        return self._clickmd_renderer
+
     def enable_log(self) -> None:
         """Enable log buffering for markdown export"""
         self._log_enabled = True

@@ -1,0 +1,6 @@
+# Test tasks file
+echo "Task 1: Simple echo"
+sleep 2
+echo "Task 2: Parallel execution" # timeout: 5
+sleep 1
+ls -la # timeout: 10

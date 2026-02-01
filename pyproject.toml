@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "reclapp"
-version = "2.2.1"
+version = "2.2.2"
 description = "AI-Native Declarative Platform for B2B Applications"
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -27,9 +27,10 @@ classifiers = [
 keywords = ["ai", "code-generation", "contracts", "b2b", "llm"]
 dependencies = [
     "pydantic>=2.5.0",
-    "click>=8.0.0",
-    "rich>=13.0.0",
     "httpx>=0.25.0",
+    "clickmd>=1.0.0",
+    "reclapp-llm>=0.1.0",
+    "reclapp-contracts>=0.1.0",
 ]
 
 [project.optional-dependencies]
@@ -38,28 +39,20 @@ dev = [
     "pytest-asyncio>=0.21.0",
     "black>=23.0.0",
     "ruff>=0.1.0",
-]
-llm = [
-    "litellm>=1.0.0",
-    "python-dotenv>=1.0.0",
-    "pyyaml>=6.0.0",
+    "build",
+    "twine",
 ]
 all = [
-    "reclapp[dev,llm]",
+    "reclapp[dev]",
 ]
 
 [project.scripts]
 reclapp = "reclapp.cli:main"
 reclapp-lifecycle = "reclapp.cli:lifecycle"
 
-[project.urls]
-Homepage = "https://github.com/wronai/contract"
-Documentation = "https://github.com/wronai/contract/docs"
-Repository = "https://github.com/wronai/contract"
-
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["reclapp*", "pycontracts*", "clickmd*"]
+where = ["src/python"]
+include = ["reclapp*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.json", "*.md"]

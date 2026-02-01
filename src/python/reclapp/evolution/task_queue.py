@@ -126,9 +126,9 @@ class TaskQueue:
             "total": len(self.tasks),
         }
     
-    def print(self) -> None:
+    def print(self, force: bool = True) -> None:
         """Print current task list"""
-        self._print_todo_list()
+        self._print_todo_list(force=force)
     
     def _find_task(self, task_id: str) -> Optional[Task]:
         """Find task by ID"""

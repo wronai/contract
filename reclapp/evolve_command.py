@@ -215,8 +215,22 @@ commands:
                         click.md("```log\n⚠️ No log files found\n```\n")
                 else:
                     click.md("```log\n⚠️ Logs directory not found\n```\n")
-            elif cmd == 's':
+            elif cmd == 'S':
                 evolution.task_queue.print()
+            elif cmd == 'r':
+                click.md("```log\n🔄 Restarting evolution...\n```\n")
+                # Call run_evolve recursively or handle via a loop in run_evolve
+                # For now, let's just re-run the core logic
+                await run_evolve(prompt, output, port, keep_running, verbose, log_file=log_file)
+                return
+            elif cmd == 'f':
+                click.md("```log\n💬 What needs to be fixed? (Enter description):\n```\n")
+                fix_prompt = sys.stdin.readline().strip()
+                if fix_prompt:
+                    click.md(f"```log\n🔧 Applying fix: {fix_prompt}\n```\n")
+                    new_prompt = f"{prompt}\n\nFIX REQUEST: {fix_prompt}"
+                    await run_evolve(new_prompt, output, port, keep_running, verbose, log_file=log_file)
+                    return
             elif cmd == 'k':
                 click.md("```log\n👀 Monitoring... Press 'q' to quit\n```\n")
             else:

@@ -86,7 +86,11 @@ class CLIRunner:
         
     def log(self, message: str) -> None:
         """Log message"""
-        self.renderer.codeblock("log", message)
+        if "Progress:" in message:
+            # Simple print for progress to avoid excessive codeblocks
+            self.renderer.text(f"→ {message}")
+        else:
+            self.renderer.codeblock("log", message)
         
     def yaml(self, type_name: str, description: str, data: Dict[str, Any]) -> None:
         """Log YAML data"""

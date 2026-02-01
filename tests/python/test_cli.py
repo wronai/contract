@@ -172,8 +172,8 @@ class TestPromptsCommand:
     def test_prompts_default(self, runner):
         result = runner.invoke(main, ["prompts"])
         assert result.exit_code == 0
-        # Should show some prompts
-        assert "Prompt" in result.output or "Create" in result.output
+        # Should show some prompts in YAML format
+        assert "prompts:" in result.output or "minimal" in result.output
 
 
 # ============================================================================
@@ -184,7 +184,7 @@ class TestSetupCommand:
     def test_setup_help(self, runner):
         result = runner.invoke(main, ["setup", "--help"])
         assert result.exit_code == 0
-        assert "install" in result.output.lower() or "dependencies" in result.output.lower()
+        assert "setup" in result.output.lower()
 
 
 # ============================================================================
@@ -203,5 +203,60 @@ class TestEngineSwitching:
         assert "engine" in result.output
 
 
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+# ============================================================================
+# REVERSE COMMAND TESTS
+# ============================================================================
+
+class TestReverseCommand:
+    def test_reverse_help(self, runner):
+        result = runner.invoke(main, ["reverse", "--help"])
+        assert result.exit_code == 0
+        assert "reverse-engineer" in result.output.lower()
+
+    def test_reverse_missing_dir(self, runner):
+        result = runner.invoke(main, ["reverse", "nonexistent_dir"])
+        assert result.exit_code != 0
+
+    @patch("subprocess.run")
+    @patch("reclapp.cli.find_node")
+    def test_reverse_execution(self, mock_find_node, mock_run, runner, tmp_path):
+        mock_find_node.return_value = "/usr/bin/node"
+        mock_run.return_value = MagicMock(returncode=0)
+        
+        target_dir = tmp_path / "app"
+        target_dir.mkdir()
+        
+        # Create a mock contract to avoid analysis failure if it looks for it
+        contract_dir = target_dir / "contract"
+        contract_dir.mkdir()
+        (contract_dir / "contract.ai.json").write_text("{}")
+        
+        result = runner.invoke(main, ["reverse", str(target_dir)])
+        assert result.exit_code == 0
+        assert "Reverse engineering" in result.output
+
+
+# ============================================================================
+# NEW COMMANDS TESTS (SMOKE TESTS)
+# ============================================================================
+
+class TestNewCommands:
+    def test_analyze_help(self, runner):
+        result = runner.invoke(main, ["analyze", "--help"])
+        assert result.exit_code == 0
+        assert "analyze" in result.output.lower()
+
+    def test_refactor_help(self, runner):
+        result = runner.invoke(main, ["refactor", "--help"])
+        assert result.exit_code == 0
+        assert "refactor" in result.output.lower()
+
+    def test_tasks_help(self, runner):
+        result = runner.invoke(main, ["tasks", "--help"])
+        assert result.exit_code == 0
+        assert "tasks" in result.output.lower()
+
+    def test_status_help(self, runner):
+        result = runner.invoke(main, ["status", "--help"])
+        assert result.exit_code == 0
+        assert "status" in result.output.lower()

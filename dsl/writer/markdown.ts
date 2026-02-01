@@ -439,7 +439,7 @@ export function contractToIR(contract: any): IR {
     deployment: contract.deployment,
     env: contract.env || [],
     config: contract.config || {},
-    aiPlan: contract.aiPlan,
+    aiPlan: contract.aiPlan || contract.generation ? contract : undefined,
   };
 }
 
@@ -460,13 +460,24 @@ function mapTypeToRcl(type: string, fieldName?: string): string {
   const mapped = typeMap[type] || type.toLowerCase();
   const n = (fieldName || '').toLowerCase();
 
+  // If it's a known system type but capitalized, normalize it
+  if (typeMap[type]) return mapped;
+
   if (mapped === 'text') {
     if (n === 'id' || n.endsWith('id')) return 'uuid';
     if (n.includes('email')) return 'email';
     if (n.includes('phone')) return 'phone';
     if (n === 'url' || n.endsWith('url')) return 'url';
   }
-  if (type.length > 0 && type[0] === type[0].toUpperCase()) return type;
+  
+  // Custom types (Entities, Enums) are capitalized
+  if (type.length > 0 && type[0] === type[0].toUpperCase()) {
+    // Check if it's not a primitive type that just happened to be capitalized
+    const primitives = ['String', 'Number', 'Boolean', 'Date', 'DateTime', 'Json', 'Array', 'Object'];
+    if (!primitives.includes(type)) {
+      return type;
+    }
+  }
 
   return mapped;
 }

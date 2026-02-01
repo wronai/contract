@@ -816,12 +816,21 @@ export class CodeAnalyzer {
     // Extract entities from collected entity info
     const entities = report.files.flatMap(f => f.entities).map(e => ({
       name: e.name.charAt(0).toUpperCase() + e.name.slice(1), // Normalize to Uppercase
-      fields: e.fields.map(f => ({
-        name: f.name,
-        type: this.mapTypeToDSL(f.type, f.name),
-        required: f.required,
-        annotations: f.comment ? { comment: f.comment } : {}
-      }))
+      fields: e.fields.map(f => {
+        const type = this.mapTypeToDSL(f.type, f.name);
+        const nameLower = f.name.toLowerCase();
+        const isId = nameLower === 'id' || nameLower === e.name.toLowerCase() + 'id' || nameLower === e.name.toLowerCase() + 'uuid';
+        const isTimestamp = nameLower === 'createdat' || nameLower === 'updatedat' || nameLower === 'timestamp';
+
+        return {
+          name: f.name,
+          type: type,
+          required: f.required,
+          unique: (type === 'uuid' && isId) || (type === 'email' && nameLower === 'email'),
+          auto: (type === 'uuid' && isId) || isTimestamp,
+          annotations: f.comment ? { comment: f.comment } : {}
+        };
+      })
     }));
 
     // Extract enums
@@ -1003,14 +1012,18 @@ export class CodeAnalyzer {
   /**
    * Merge findings from code analysis with an existing AI Plan (contract.ai.json)
    */
-  mergeWithAIPlan(derivedContract: any, aiPlan: any): any {
-    if (!aiPlan) return derivedContract;
+  mergeWithAIPlan(derivedContract: any, aiPlanSource: any): any {
+    if (!aiPlanSource) return derivedContract;
+
+    // Handle nested format if aiPlanSource is a full AI Plan (contract.ai.json)
+    const aiPlan = aiPlanSource.definition || aiPlanSource;
 
     const merged = {
-      ...aiPlan,
+      ...aiPlanSource, // Keep original structure (generation, validation, etc.)
+      ...aiPlan,       // Ensure definition fields are at the top level for processing
       app: {
         ...derivedContract.app,
-        ...aiPlan.app, // Prefer original AI plan app info (name, version, description)
+        ...aiPlan.app, // Prefer original AI plan app info
       },
       api: {
         prefix: aiPlan.api?.prefix || derivedContract.api?.prefix || '/api',
@@ -1041,12 +1054,22 @@ export class CodeAnalyzer {
             // Field exists, update type if it's more specific in code, but keep aiPlan specificity like int(0..100)
             const aiType = mergedFields[fieldIdx].type;
             const aiTypeLower = (aiType || '').toLowerCase();
-            const genericTypes = ['string', 'number', 'boolean', 'any', 'json', 'text', 'object', ''];
+            const genericTypes = ['string', 'number', 'boolean', 'any', 'json', 'text', 'object', 'date', 'datetime', ''];
             
             if (genericTypes.includes(aiTypeLower)) {
               mergedFields[fieldIdx].type = df.type;
             }
             mergedFields[fieldIdx].required = df.required;
+            if (df.unique) mergedFields[fieldIdx].unique = true;
+            if (df.auto) mergedFields[fieldIdx].auto = true;
+            
+            // Merge annotations
+            if (df.annotations) {
+              mergedFields[fieldIdx].annotations = {
+                ...mergedFields[fieldIdx].annotations,
+                ...df.annotations
+              };
+            }
           } else {
             // New field found in code
             mergedFields.push(df);

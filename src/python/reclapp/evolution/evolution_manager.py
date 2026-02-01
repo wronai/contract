@@ -81,15 +81,27 @@ class EvolutionManager:
     14. Auto-heal on failure (up to max_iterations)
     
     Example:
-        manager = EvolutionManager(verbose=True)
-        manager.set_llm_client(ollama_client)
-        result = await manager.evolve("Create a todo app")
+    15. Generate database
+    16. Generate Docker
+    17. Generate CI/CD templates
+    18. Generate frontend
+    19. Generate documentation
+    20. Validate additional targets
+    21. Verify contract ↔ code ↔ service
+    22. Reconcile discrepancies
     """
     
     def __init__(self, options: Optional[EvolutionOptions] = None):
+        from ..cli.runner import CLIRunner
         self.options = options or EvolutionOptions()
-        self.task_queue = TaskQueue(verbose=self.options.verbose)
-        self.renderer = ShellRenderer(verbose=self.options.verbose)
+        self.runner = CLIRunner(
+            name="Reclapp Evolution",
+            version="2.0.0",
+            verbose=self.options.verbose,
+            show_progress=True
+        )
+        self.task_queue = self.runner.task_queue
+        self.renderer = self.runner.renderer
         self._llm_client: Optional[Any] = None
         self._service_process: Optional[subprocess.Popen] = None
         self._contract: Optional[dict] = None

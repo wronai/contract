@@ -96,21 +96,22 @@ src/core/contract-ai/setup/
 ## ⏳ Następne kroki
 
 ### Priorytet 1: Dokończenie CLI (Python) i TaskQueue
-- [ ] Implementacja komendy `reclapp list` (wyświetlanie dostępnych kontraktów/projektów w YAML/Markdown)
-- [ ] Implementacja komendy `reclapp prompts` (zarządzanie promptami)
-- [ ] Implementacja `reclapp analyze` z wykorzystaniem `TaskQueue`
-- [ ] Implementacja `reclapp refactor` z wykorzystaniem `TaskQueue`
-- [ ] Stworzenie wspólnego mechanizmu `TaskQueue` dla wszystkich komend (unifikacja z `CLIRunner`)
+- [x] Implementacja komendy `reclapp list` (wyświetlanie dostępnych kontraktów/projektów w YAML/Markdown)
+- [x] Implementacja komendy `reclapp prompts` (zarządzanie promptami)
+- [x] Implementacja `reclapp analyze` z wykorzystaniem `TaskQueue`
+- [x] Implementacja `reclapp refactor` z wykorzystaniem `TaskQueue`
+- [x] Stworzenie wspólnego mechanizmu `TaskQueue` dla wszystkich komend (unifikacja z `CLIRunner`)
+- [x] Implementacja komendy `reclapp tasks` (parallel execution)
 
 ### Priorytet 2: Publikacja i Architektura (PyPI)
-- [ ] Przygotowanie `clickmd` do wydania jako osobna paczka (czyszczenie zależności od `click`)
-- [ ] Wyodrębnienie `reclapp-llm` jako niezależnego modułu komunikacji z modelami
-- [ ] Wyodrębnienie `reclapp-contracts` (modele danych i walidacja)
-- [ ] Pełna konfiguracja `pyproject.toml` dla wszystkich sub-paczek
+- [x] Przygotowanie `clickmd` do wydania jako osobna paczka (czyszczenie zależności od `click`)
+- [x] Wyodrębnienie `reclapp-llm` jako niezależnego modułu komunikacji z modelami
+- [x] Wyodrębnienie `reclapp-contracts` (modele danych i walidacja)
+- [x] Pełna konfiguracja `pyproject.toml` dla wszystkich sub-paczek
 
 ### Priorytet 3: Rozszerzona Integracja LLM
 - [ ] Testy darmowych modeli w `WindsurfClient`
-- [ ] Uproszczona konfiguracja kluczy API (automatyczne wykrywanie w `reclapp setup`)
+- [x] Uproszczona konfiguracja kluczy API (automatyczne wykrywanie w `reclapp setup`)
 
 
 
