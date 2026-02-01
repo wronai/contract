@@ -169,77 +169,38 @@ cat ./generated/logs/*.rcl.md | head -100
 
 ## 🔧 Testowanie Poszczególnych Komponentów
 
-### Test 1: Pydantic Contracts
-
+### Test 1: Reclapp Contracts
+    
 ```bash
-# Generuj JSON Schema z Pydantic
-python3 -m pycontracts.generate --typescript
+# Generuj JSON Schema z Contract AI modeli
+PYTHONPATH=reclapp-contracts:. python3 scripts/generate_schemas.py --output ./contracts/json
 
 # Sprawdź wygenerowane pliki
-ls contracts/json/entities/
-# contact.json  company.json  deal.json  user.json  task.json  project.json
-
-ls frontend-sdk/types/
-# entities.ts  llm.ts  index.ts
+ls contracts/json/
+# contract-ai.json  definition.json  generation.json  validation.json
 ```
 
 **Oczekiwany output:**
 ```
-════════════════════════════════════════════════════════════
-  Reclapp Contract Generator v2.4.1
-════════════════════════════════════════════════════════════
-
-📋 Generating JSON Schemas...
-  ✓ contracts/json/entities/contact.json
-  ✓ contracts/json/entities/company.json
-  ✓ contracts/json/entities/deal.json
-  ✓ contracts/json/entities/user.json
-  ✓ contracts/json/entities/task.json
-  ✓ contracts/json/entities/project.json
-  ✓ contracts/json/llm/generatedfile.json
-  ✓ contracts/json/llm/llmcodeoutput.json
-  ✓ contracts/json/llm/pipelineresult.json
-  ✓ contracts/json/llm/validationresult.json
-  ✓ contracts/json/contracts/entityfield.json
-  ✓ contracts/json/contracts/entitydefinition.json
-  ✓ contracts/json/contracts/codeassertion.json
-  ✓ contracts/json/contracts/contractai.json
-
-  Generated 14 schemas
-
-📝 Generating TypeScript types...
-  ✓ frontend-sdk/types/entities.ts
-  ✓ frontend-sdk/types/llm.ts
-  ✓ frontend-sdk/types/index.ts
-
-  Generated 3 TypeScript files
-
-════════════════════════════════════════════════════════════
-  ✅ Generation complete!
-════════════════════════════════════════════════════════════
+Generating schemas to contracts/json...
+  ✓ contracts/json/contract-ai.json
+  ✓ contracts/json/definition.json
+  ✓ contracts/json/generation.json
+  ✓ contracts/json/validation.json
+Done!
 ```
 
-### Test 2: Walidacja Python Contracts
+### Test 2: Walidacja Python Models
 
 ```bash
 python3 -c "
-from pycontracts.entities import Contact, Deal
-from pycontracts.llm import LLMCodeOutput, GeneratedFile
+from reclapp.models import ContactAI, DefinitionLayer
+from reclapp.llm import LLMResponse
 
-# Test Contact
-c = Contact(id='1', email='test@example.com', firstName='John', lastName='Doe')
-print('✓ Contact:', c.full_name)
+# Test LLMResponse
+resp = LLMResponse(content='test', model='gpt-4', provider='openai')
+print('✓ LLMResponse:', resp.provider)
 
-# Test Deal
-d = Deal(id='1', title='Big Deal', value=100000, probability=25)
-print('✓ Deal weighted_value:', d.weighted_value)
-
-# Test LLMCodeOutput
-output = LLMCodeOutput(files=[
-    GeneratedFile(path='server.ts', content='test')
-])
-print('✓ LLMCodeOutput files:', len(output.files))
-print()
 print('All tests passed!')
 "
 ```
@@ -465,10 +426,8 @@ cat ./generated/logs/crm-system_*.rcl.md
 
 ```bash
 # Zainstaluj zależności
-pip install -r pycontracts/requirements.txt
-
-# Lub bezpośrednio
-pip install pydantic[email]>=2.5
+pip install -e reclapp-contracts/
+pip install -e reclapp-llm/
 ```
 
 ### Problem: Ollama nie odpowiada
@@ -497,7 +456,7 @@ grep -A5 "FAILED" debug.log
 ## ✅ Checklist Testowania
 
 - [ ] Ollama działa (`curl localhost:11434/api/tags`)
-- [ ] Python contracts generują JSON (`python3 -m pycontracts.generate`)
+- [ ] Python models i parsery przechodzą testy (`pytest tests/python/`)
 - [ ] Unit testy przechodzą (`npx jest tests/unit/`)
 - [ ] Integration testy przechodzą (`npx jest tests/integration/`)
 - [ ] CLI generuje kod (`./bin/reclapp generate-ai --prompt "..."`)
