@@ -1039,6 +1039,11 @@ export class CodeAnalyzer {
       }
     };
 
+    // If derived app name is generic, always use AI plan name
+    if (merged.app.name.toLowerCase() === 'app' || merged.app.name.toLowerCase() === 'api') {
+      if (aiPlan.app?.name) merged.app.name = aiPlan.app.name;
+    }
+
     // Merge entities
     const aiEntities = aiPlan.entities || [];
     const derivedEntities = derivedContract.entities || [];
@@ -1080,18 +1085,15 @@ export class CodeAnalyzer {
 
             // Clean up description if it contains annotations that are now boolean flags
             if (mergedFields[fieldIdx].description) {
+              // Remove annotations and common AI separators/garbage
               mergedFields[fieldIdx].description = mergedFields[fieldIdx].description
                 .replace(/@(unique|auto|required)/g, '')
+                .replace(/^[\s\-\:\.\,]+/, '')
+                .replace(/[\s\-\:\.\,]+$/, '')
                 .replace(/\s+/g, ' ')
                 .trim();
-              
-              // Remove leading/trailing dashes or symbols often used in AI descriptions
-              mergedFields[fieldIdx].description = mergedFields[fieldIdx].description
-                .replace(/^[\s\-\:]+/, '')
-                .replace(/[\s\-\:]+$/, '')
-                .trim();
 
-              if (!mergedFields[fieldIdx].description) {
+              if (!mergedFields[fieldIdx].description || mergedFields[fieldIdx].description === '-') {
                 delete mergedFields[fieldIdx].description;
               }
             }
@@ -1114,7 +1116,17 @@ export class CodeAnalyzer {
         mergedEntities.push(de);
       }
     }
-    merged.entities = mergedEntities;
+    // Filter out technical entities that don't belong in a business contract
+    const technicalEntities = new Set(['Request', 'Response', 'Item', 'JWTPayload', 'Token', 'Payload']);
+    const finalEntities = mergedEntities.filter(e => {
+      // Keep it if it was in the AI plan (domain entity)
+      if (aiEntities.some(ae => ae.name.toLowerCase() === e.name.toLowerCase())) return true;
+      // Filter out if technical
+      if (technicalEntities.has(e.name)) return false;
+      return true;
+    });
+
+    merged.entities = finalEntities;
 
     // Restore sections that code analysis usually misses
     if (!merged.events || merged.events.length === 0) merged.events = derivedContract.events || aiPlan.events || [];
