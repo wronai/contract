@@ -154,33 +154,24 @@ def main(ctx, prompt: Optional[str], output: str, port: int, verbose: bool, keep
 @click.option("--log-file", default=None, help="Path to save markdown log")
 def lifecycle(prompt: str, output: str, port: int, verbose: bool, keep_running: bool, log_file: Optional[str]):
     """Run full lifecycle: prompt → contract → code → service → tests"""
+    core_main = _get_core_main()
+    import asyncio
     
-    click.md(
-        f"""## 🚀 Starting
-
-```log
-🚀 RECLAPP FULL LIFECYCLE
-→ Prompt: {prompt}
-→ Output: {output}
-→ Port: {port}
-```
-"""
+    class Args:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+            
+    args = Args(
+        prompt=prompt, 
+        output=output, 
+        port=port, 
+        verbose=verbose, 
+        keep_running=keep_running, 
+        log_file=log_file,
+        max_iterations=5,
+        auto_fix=True
     )
-
-    try:
-        from .evolve_command import evolve_sync
-        exit_code = evolve_sync(
-            prompt=prompt,
-            output=output,
-            keep_running=keep_running,
-            verbose=verbose,
-            port=port,
-            log_file=log_file,
-        )
-        sys.exit(exit_code)
-    except ImportError as e:
-        click.md(f"## ❌ Error\n\n```log\nPython lifecycle engine not available: {e}\n```\n")
-        sys.exit(1)
+    asyncio.run(core_main.cmd_evolve(args))
 
 
 @main.command()
@@ -191,24 +182,17 @@ def lifecycle(prompt: str, output: str, port: int, verbose: bool, keep_running: 
 def generate(contract_path: str, output: str, verbose: bool, engine: str):
     """Generate code from a contract file"""
     
-    # Check if contract is a .md file (Python can handle these natively)
-    is_markdown = contract_path.endswith(".md")
-    
-    if engine == "python" and is_markdown:
-        try:
-            from .generate_command import generate_sync
-            exit_code = generate_sync(
-                contract_path=contract_path,
-                output=output,
-                verbose=verbose
-            )
-            sys.exit(exit_code)
-        except ImportError as e:
-            click.md(f"```log\n⚠️ Python engine not available: {e}\n```\n")
-            sys.exit(1)
-    elif engine == "python" and not is_markdown:
-        click.md("```log\n❌ Error: TypeScript contracts require Node.js engine\n```\n")
-        sys.exit(1)
+    if engine == "python":
+        core_main = _get_core_main()
+        import asyncio
+        
+        class Args:
+            def __init__(self, **kwargs):
+                self.__dict__.update(kwargs)
+                
+        args = Args(contract=contract_path, output=output, verbose=verbose)
+        asyncio.run(core_main.cmd_generate(args))
+        return
     
     if engine == "node":
         click.md(f"```log\n📄 Generating from: {contract_path}\n```\n")
@@ -462,19 +446,25 @@ def evolve(prompt: str, output: str, keep_running: bool, verbose: bool, no_menu:
     """Evolution mode - dynamic code generation with auto-healing"""
     
     if engine == "python":
-        # Use native Python implementation
-        try:
-            from .evolve_command import evolve_sync
-            exit_code = evolve_sync(
-                prompt=prompt,
-                output=output,
-                keep_running=keep_running,
-                verbose=verbose
-            )
-            sys.exit(exit_code)
-        except ImportError as e:
-            click.md(f"```log\n❌ Error: Python engine not available: {e}\n```\n")
-            sys.exit(1)
+        core_main = _get_core_main()
+        import asyncio
+        
+        class Args:
+            def __init__(self, **kwargs):
+                self.__dict__.update(kwargs)
+                
+        args = Args(
+            prompt=prompt, 
+            output=output, 
+            keep_running=keep_running, 
+            verbose=verbose,
+            port=3000, # Default port
+            max_iterations=5,
+            auto_fix=True,
+            log_file=log_file
+        )
+        asyncio.run(core_main.cmd_evolve(args))
+        return
     
     if engine == "node":
         # Use Node.js implementation

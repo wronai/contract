@@ -25,7 +25,7 @@ if result.success:
 @version 2.2.0-python
 """
 
-__version__ = "2.2.0"
+__version__ = "2.4.1"
 
 from .models import (
     ContractAI,

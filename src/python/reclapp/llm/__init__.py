@@ -17,22 +17,15 @@ from .openrouter import OpenRouterClient
 from .windsurf import WindsurfClient, WindsurfConfig
 from .manager import LLMManager, ProviderInfo
 
-# Re-export pycontracts.llm for unified access
+# Re-export pycontracts.llm if available
 try:
-    import sys
-    from pathlib import Path
-    _pycontracts_path = Path(__file__).parent.parent.parent.parent.parent / "pycontracts"
-    if str(_pycontracts_path) not in sys.path:
-        sys.path.insert(0, str(_pycontracts_path))
-    
-    from llm import (
-        LLMConfig,
-        get_client,
-        list_available_providers,
-        RECOMMENDED_MODELS,
-        ProviderManager,
-        generate as pycontracts_generate,
-    )
+    from pycontracts import llm
+    LLMConfig = llm.LLMConfig
+    get_client = llm.get_client
+    list_available_providers = llm.list_available_providers
+    RECOMMENDED_MODELS = llm.RECOMMENDED_MODELS
+    ProviderManager = llm.ProviderManager
+    pycontracts_generate = llm.generate
     PYCONTRACTS_AVAILABLE = True
 except ImportError:
     PYCONTRACTS_AVAILABLE = False
