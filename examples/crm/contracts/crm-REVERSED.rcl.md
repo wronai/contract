@@ -1,6 +1,6 @@
 # CRM System
 
-> Generated from 26 files
+> Generated from 1 files
 
 | Właściwość | Wartość |
 |------------|---------|
@@ -14,24 +14,19 @@
 
 ```yaml
 # entity: Contact
-id              : uuid                 # @unique @required @auto
+id              : uuid                 # @unique @auto
 firstName       : text                 # @required
 lastName        : text                 # @required
 email           : email                # @unique @required
 phone           : phone
-company         : -> Company
+company         : text
 position        : text
-status          : text                 # @required
-source          : text                 # @required
+status          : text
+source          : text
 tags            : text
 notes           : text
-createdAt       : datetime             # @required @auto
-updatedAt       : datetime             # @required @auto
-jobTitle        : string | null
-linkedInUrl     : string | null
-ownerId         : uuid
-customFields    : Record<string, any> | null
-lastContactedAt : datetime
+createdAt       : datetime             # @auto
+updatedAt       : datetime             # @auto
 ```
 
 ---
@@ -40,7 +35,7 @@ lastContactedAt : datetime
 
 ```yaml
 # entity: Company
-id              : uuid                 # @unique @required @auto
+id              : uuid                 # @unique @auto
 name            : text                 # @unique @required
 industry        : text
 website         : url
@@ -52,12 +47,8 @@ country         : text
 taxId           : uuid                 # @unique - NIP
 contacts        : text
 deals           : text
-createdAt       : datetime             # @required @auto
-updatedAt       : datetime             # @required @auto
-domain          : string | null
-phone           : phone
-ownerId         : uuid
-status          : text
+createdAt       : datetime             # @auto
+updatedAt       : datetime             # @auto
 ```
 
 ---
@@ -66,29 +57,20 @@ status          : text
 
 ```yaml
 # entity: Deal
-id              : uuid                 # @unique @required @auto
+id              : uuid                 # @unique @auto
 title           : text                 # @required
 value           : text                 # @required
-stage           : text                 # @required
-probability     : text                 # @required
+stage           : text
+probability     : text
 expectedClose   : date
 contact         : text                 # @required
 company         : text
 owner           : text                 # @required
 notes           : text
 lostReason      : text
-createdAt       : datetime             # @required @auto
-updatedAt       : datetime             # @required @auto
+createdAt       : datetime             # @auto
+updatedAt       : datetime             # @auto
 closedAt        : datetime
-name            : text
-companyId       : -> Company
-contactId       : -> Contact
-ownerId         : uuid
-amount          : int
-currency        : text
-expectedCloseDate: string | null
-actualCloseDate : string | null
-customFields    : Record<string, any> | null
 ```
 
 ---
@@ -97,7 +79,7 @@ customFields    : Record<string, any> | null
 
 ```yaml
 # entity: Activity
-id              : uuid                 # @unique @required @auto
+id              : uuid                 # @unique @auto
 type            : text                 # @required
 subject         : text                 # @required
 description     : text
@@ -106,14 +88,7 @@ completed       : boolean
 contact         : text
 deal            : text
 owner           : text                 # @required
-createdAt       : datetime             # @required @auto
-contactId       : -> Contact
-companyId       : -> Company
-dealId          : -> Deal
-ownerId         : uuid
-completedAt     : datetime
-outcome         : string | null
-updatedAt       : datetime             # @auto
+createdAt       : datetime             # @auto
 ```
 
 ---
@@ -129,41 +104,6 @@ role            : text
 avatar          : text
 active          : boolean
 createdAt       : datetime             # @auto
-```
-
----
-
-### Task
-
-```yaml
-# entity: Task
-id              : uuid                 # @unique @auto
-title           : text
-description     : string | null
-contactId       : -> Contact
-dealId          : -> Deal
-assignedTo      : text
-dueDate         : text
-priority        : text
-status          : text
-completedAt     : datetime
-createdAt       : datetime             # @auto
-updatedAt       : datetime             # @auto
-```
-
----
-
-### Pipeline
-
-```yaml
-# entity: Pipeline
-id              : uuid                 # @unique @auto
-name            : text
-stages          : Record<string, any>
-defaultStage    : text
-isDefault       : bool
-createdAt       : datetime             # @auto
-updatedAt       : datetime             # @auto
 ```
 
 ---
@@ -198,7 +138,7 @@ prefix: /api
   "app": {
     "name": "CRM System",
     "version": "1.0.0",
-    "description": "Generated from 26 files",
+    "description": "Generated from 1 files",
     "domain": "General",
     "type": "Application",
     "users": [],
@@ -214,8 +154,7 @@ prefix: /api
           "type": "uuid",
           "required": true,
           "auto": true,
-          "unique": true,
-          "explicitRequired": true
+          "unique": true
         },
         {
           "name": "firstName",
@@ -248,7 +187,7 @@ prefix: /api
         },
         {
           "name": "company",
-          "type": "-> Company",
+          "type": "text",
           "required": false,
           "auto": false,
           "description": null
@@ -265,16 +204,14 @@ prefix: /api
           "type": "text",
           "required": true,
           "auto": false,
-          "explicitRequired": true,
           "defaultValue": "active"
         },
         {
           "name": "source",
           "type": "text",
-          "required": true,
+          "required": false,
           "auto": false,
-          "description": null,
-          "explicitRequired": true
+          "description": null
         },
         {
           "name": "tags",
@@ -294,55 +231,13 @@ prefix: /api
           "name": "createdAt",
           "type": "datetime",
           "required": true,
-          "auto": true,
-          "explicitRequired": true
+          "auto": true
         },
         {
           "name": "updatedAt",
           "type": "datetime",
           "required": true,
-          "auto": true,
-          "explicitRequired": true
-        },
-        {
-          "name": "jobTitle",
-          "type": "string | null",
-          "required": false,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "linkedInUrl",
-          "type": "string | null",
-          "required": false,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "ownerId",
-          "type": "uuid",
-          "required": true,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "customFields",
-          "type": "Record<string, any> | null",
-          "required": false,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "lastContactedAt",
-          "type": "datetime",
-          "required": false,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
+          "auto": true
         }
       ],
       "typescript": null,
@@ -357,8 +252,7 @@ prefix: /api
           "type": "uuid",
           "required": true,
           "auto": true,
-          "unique": true,
-          "explicitRequired": true
+          "unique": true
         },
         {
           "name": "name",
@@ -443,47 +337,13 @@ prefix: /api
           "name": "createdAt",
           "type": "datetime",
           "required": true,
-          "auto": true,
-          "explicitRequired": true
+          "auto": true
         },
         {
           "name": "updatedAt",
           "type": "datetime",
           "required": true,
-          "auto": true,
-          "explicitRequired": true
-        },
-        {
-          "name": "domain",
-          "type": "string | null",
-          "required": false,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "phone",
-          "type": "phone",
-          "required": false,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "ownerId",
-          "type": "uuid",
-          "required": true,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "status",
-          "type": "text",
-          "required": true,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
+          "auto": true
         }
       ],
       "typescript": null,
@@ -498,8 +358,7 @@ prefix: /api
           "type": "uuid",
           "required": true,
           "auto": true,
-          "unique": true,
-          "explicitRequired": true
+          "unique": true
         },
         {
           "name": "title",
@@ -520,7 +379,6 @@ prefix: /api
           "type": "text",
           "required": true,
           "auto": false,
-          "explicitRequired": true,
           "defaultValue": "lead"
         },
         {
@@ -528,7 +386,6 @@ prefix: /api
           "type": "text",
           "required": true,
           "auto": false,
-          "explicitRequired": true,
           "defaultValue": "10"
         },
         {
@@ -577,15 +434,13 @@ prefix: /api
           "name": "createdAt",
           "type": "datetime",
           "required": true,
-          "auto": true,
-          "explicitRequired": true
+          "auto": true
         },
         {
           "name": "updatedAt",
           "type": "datetime",
           "required": true,
-          "auto": true,
-          "explicitRequired": true
+          "auto": true
         },
         {
           "name": "closedAt",
@@ -593,78 +448,6 @@ prefix: /api
           "required": false,
           "auto": false,
           "description": null
-        },
-        {
-          "name": "name",
-          "type": "text",
-          "required": true,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "companyId",
-          "type": "-> Company",
-          "required": false,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "contactId",
-          "type": "-> Contact",
-          "required": false,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "ownerId",
-          "type": "uuid",
-          "required": true,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "amount",
-          "type": "int",
-          "required": true,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "currency",
-          "type": "text",
-          "required": true,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "expectedCloseDate",
-          "type": "string | null",
-          "required": false,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "actualCloseDate",
-          "type": "string | null",
-          "required": false,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "customFields",
-          "type": "Record<string, any> | null",
-          "required": false,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
         }
       ],
       "typescript": null,
@@ -679,8 +462,7 @@ prefix: /api
           "type": "uuid",
           "required": true,
           "auto": true,
-          "unique": true,
-          "explicitRequired": true
+          "unique": true
         },
         {
           "name": "type",
@@ -742,64 +524,7 @@ prefix: /api
           "name": "createdAt",
           "type": "datetime",
           "required": true,
-          "auto": true,
-          "explicitRequired": true
-        },
-        {
-          "name": "contactId",
-          "type": "-> Contact",
-          "required": false,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "companyId",
-          "type": "-> Company",
-          "required": false,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "dealId",
-          "type": "-> Deal",
-          "required": false,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "ownerId",
-          "type": "uuid",
-          "required": true,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "completedAt",
-          "type": "datetime",
-          "required": false,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "outcome",
-          "type": "string | null",
-          "required": false,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "updatedAt",
-          "type": "datetime",
-          "required": true,
-          "unique": false,
-          "auto": true,
-          "annotations": {}
+          "auto": true
         }
       ],
       "typescript": null,
@@ -861,168 +586,6 @@ prefix: /api
       ],
       "typescript": null,
       "example": null
-    },
-    {
-      "name": "Task",
-      "fields": [
-        {
-          "name": "id",
-          "type": "uuid",
-          "required": true,
-          "unique": true,
-          "auto": true,
-          "annotations": {}
-        },
-        {
-          "name": "title",
-          "type": "text",
-          "required": true,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "description",
-          "type": "string | null",
-          "required": false,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "contactId",
-          "type": "-> Contact",
-          "required": false,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "dealId",
-          "type": "-> Deal",
-          "required": false,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "assignedTo",
-          "type": "text",
-          "required": true,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "dueDate",
-          "type": "text",
-          "required": true,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "priority",
-          "type": "text",
-          "required": true,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "status",
-          "type": "text",
-          "required": true,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "completedAt",
-          "type": "datetime",
-          "required": false,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "createdAt",
-          "type": "datetime",
-          "required": true,
-          "unique": false,
-          "auto": true,
-          "annotations": {}
-        },
-        {
-          "name": "updatedAt",
-          "type": "datetime",
-          "required": true,
-          "unique": false,
-          "auto": true,
-          "annotations": {}
-        }
-      ]
-    },
-    {
-      "name": "Pipeline",
-      "fields": [
-        {
-          "name": "id",
-          "type": "uuid",
-          "required": true,
-          "unique": true,
-          "auto": true,
-          "annotations": {}
-        },
-        {
-          "name": "name",
-          "type": "text",
-          "required": true,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "stages",
-          "type": "Record<string, any>",
-          "required": true,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "defaultStage",
-          "type": "text",
-          "required": true,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "isDefault",
-          "type": "bool",
-          "required": true,
-          "unique": false,
-          "auto": false,
-          "annotations": {}
-        },
-        {
-          "name": "createdAt",
-          "type": "datetime",
-          "required": true,
-          "unique": false,
-          "auto": true,
-          "annotations": {}
-        },
-        {
-          "name": "updatedAt",
-          "type": "datetime",
-          "required": true,
-          "unique": false,
-          "auto": true,
-          "annotations": {}
-        }
-      ]
     }
   ],
   "api": {

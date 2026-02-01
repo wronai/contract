@@ -1,7 +1,7 @@
 /**
  * Contract Markdown Types
  * Defines the structure of .contract.md files
- * @version 3.0.0
+ * @version 2.4.1
  */
 
 // ============================================

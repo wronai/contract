@@ -1,7 +1,7 @@
 /**
  * Contract Markdown Parser
  * Parses .contract.md files into ContractMarkdown structure
- * @version 3.0.0
+ * @version 2.4.1
  */
 
 import * as yaml from 'js-yaml';

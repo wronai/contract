@@ -1,6 +1,6 @@
 # B2B Onboarding
 
-> Generated from 19 files
+> Generated from 1 files
 
 | Właściwość | Wartość |
 |------------|---------|
@@ -14,12 +14,12 @@
 
 ```yaml
 # entity: Customer
-id              : uuid                 # @unique @required @auto
+id              : uuid                 # @unique @auto
 name            : text                 # @required
 taxId           : uuid                 # @unique @required - NIP
 regon           : text
 krsNumber       : text
-email           : email                # @unique @required
+email           : email                # @required
 phone           : phone
 address         : text
 city            : text
@@ -28,8 +28,8 @@ country         : text
 status          : text
 riskScore       : text
 verifiedAt      : datetime
-createdAt       : datetime             # @required @auto
-updatedAt       : datetime             # @required @auto
+createdAt       : datetime             # @auto
+updatedAt       : datetime             # @auto
 ```
 
 ---
@@ -38,8 +38,8 @@ updatedAt       : datetime             # @required @auto
 
 ```yaml
 # entity: Verification
-id              : uuid                 # @unique @required @auto
-customer        : -> Customer          # @required
+id              : uuid                 # @unique @auto
+customer        : text                 # @required
 type            : text                 # @required
 source          : text                 # @required - KRS, CEIDG, etc
 status          : text
@@ -48,8 +48,6 @@ score           : text
 errorMessage    : text
 requestedAt     : datetime             # @auto
 completedAt     : datetime
-createdAt       : datetime             # @auto
-updatedAt       : datetime             # @auto
 ```
 
 ---
@@ -58,16 +56,14 @@ updatedAt       : datetime             # @auto
 
 ```yaml
 # entity: Document
-id              : uuid                 # @unique @required @auto
-customer        : -> Customer          # @required
+id              : uuid                 # @unique @auto
+customer        : text                 # @required
 type            : text                 # @required
 filename        : text                 # @required
 url             : url                  # @required
 status          : text
 verifiedAt      : datetime
 uploadedAt      : datetime             # @auto
-createdAt       : datetime             # @auto
-updatedAt       : datetime             # @auto
 ```
 
 ---
@@ -102,7 +98,7 @@ prefix: /api
   "app": {
     "name": "B2B Onboarding",
     "version": "1.0.0",
-    "description": "Generated from 19 files",
+    "description": "Generated from 1 files",
     "domain": "General",
     "type": "Application",
     "users": [],
@@ -118,8 +114,7 @@ prefix: /api
           "type": "uuid",
           "required": true,
           "auto": true,
-          "unique": true,
-          "explicitRequired": true
+          "unique": true
         },
         {
           "name": "name",
@@ -156,8 +151,7 @@ prefix: /api
           "type": "email",
           "required": true,
           "auto": false,
-          "explicitRequired": true,
-          "unique": true
+          "explicitRequired": true
         },
         {
           "name": "phone",
@@ -219,15 +213,13 @@ prefix: /api
           "name": "createdAt",
           "type": "datetime",
           "required": true,
-          "auto": true,
-          "explicitRequired": true
+          "auto": true
         },
         {
           "name": "updatedAt",
           "type": "datetime",
           "required": true,
-          "auto": true,
-          "explicitRequired": true
+          "auto": true
         }
       ],
       "typescript": null,
@@ -242,12 +234,11 @@ prefix: /api
           "type": "uuid",
           "required": true,
           "auto": true,
-          "unique": true,
-          "explicitRequired": true
+          "unique": true
         },
         {
           "name": "customer",
-          "type": "-> Customer",
+          "type": "text",
           "required": true,
           "auto": false,
           "explicitRequired": true
@@ -307,22 +298,6 @@ prefix: /api
           "required": false,
           "auto": false,
           "description": null
-        },
-        {
-          "name": "createdAt",
-          "type": "datetime",
-          "required": true,
-          "unique": false,
-          "auto": true,
-          "annotations": {}
-        },
-        {
-          "name": "updatedAt",
-          "type": "datetime",
-          "required": true,
-          "unique": false,
-          "auto": true,
-          "annotations": {}
         }
       ],
       "typescript": null,
@@ -337,12 +312,11 @@ prefix: /api
           "type": "uuid",
           "required": true,
           "auto": true,
-          "unique": true,
-          "explicitRequired": true
+          "unique": true
         },
         {
           "name": "customer",
-          "type": "-> Customer",
+          "type": "text",
           "required": true,
           "auto": false,
           "explicitRequired": true
@@ -387,22 +361,6 @@ prefix: /api
           "type": "datetime",
           "required": true,
           "auto": true
-        },
-        {
-          "name": "createdAt",
-          "type": "datetime",
-          "required": true,
-          "unique": false,
-          "auto": true,
-          "annotations": {}
-        },
-        {
-          "name": "updatedAt",
-          "type": "datetime",
-          "required": true,
-          "unique": false,
-          "auto": true,
-          "annotations": {}
         }
       ],
       "typescript": null,

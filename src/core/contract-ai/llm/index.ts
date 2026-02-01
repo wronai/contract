@@ -6,7 +6,7 @@
  * - Remote: LiteLLM, OpenRouter, Windsurf Free Models
  * - Context-based generation
  * 
- * @version 3.0.0
+ * @version 2.4.1
  */
 
 export * from './ollama-client';

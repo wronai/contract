@@ -4,7 +4,7 @@ Contract Markdown Parser
 Parses .contract.md files into ContractMarkdown structure.
 
 Mirrors: src/core/contract-ai/parser/markdown-parser.ts
-@version 3.0.0
+@version 2.4.1
 """
 
 import json

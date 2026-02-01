@@ -1,6 +1,6 @@
 # Task Management App
 
-> Generated from 16 files
+> Generated from 1 files
 
 | Właściwość | Wartość |
 |------------|---------|
@@ -14,12 +14,12 @@
 
 ```yaml
 # entity: User
-id              : uuid                 # @unique @required @auto
+id              : uuid                 # @unique @auto
 email           : email                # @unique @required
 name            : text                 # @required
 avatar          : text
-createdAt       : datetime             # @required @auto
-updatedAt       : datetime             # @required @auto
+createdAt       : datetime             # @auto
+updatedAt       : datetime             # @auto
 ```
 
 ---
@@ -28,13 +28,13 @@ updatedAt       : datetime             # @required @auto
 
 ```yaml
 # entity: Project
-id              : uuid                 # @unique @required @auto
+id              : uuid                 # @unique @auto
 name            : text                 # @required
 description     : text
 owner           : text                 # @required
 status          : text
-createdAt       : datetime             # @required @auto
-updatedAt       : datetime             # @required @auto
+createdAt       : datetime             # @auto
+updatedAt       : datetime             # @auto
 ```
 
 ---
@@ -43,16 +43,16 @@ updatedAt       : datetime             # @required @auto
 
 ```yaml
 # entity: Task
-id              : uuid                 # @unique @required @auto
+id              : uuid                 # @unique @auto
 title           : text                 # @required
 description     : text
 status          : text
 priority        : text
-project         : -> Project           # @required
+project         : text                 # @required
 assignee        : text
 dueDate         : date
-createdAt       : datetime             # @required @auto
-updatedAt       : datetime             # @required @auto
+createdAt       : datetime             # @auto
+updatedAt       : datetime             # @auto
 ```
 
 ---
@@ -108,7 +108,7 @@ prefix: /api
   "app": {
     "name": "Task Management App",
     "version": "1.0.0",
-    "description": "Generated from 16 files",
+    "description": "Generated from 1 files",
     "domain": "General",
     "type": "Application",
     "users": [],
@@ -124,8 +124,7 @@ prefix: /api
           "type": "uuid",
           "required": true,
           "auto": true,
-          "unique": true,
-          "explicitRequired": true
+          "unique": true
         },
         {
           "name": "email",
@@ -153,15 +152,13 @@ prefix: /api
           "name": "createdAt",
           "type": "datetime",
           "required": true,
-          "auto": true,
-          "explicitRequired": true
+          "auto": true
         },
         {
           "name": "updatedAt",
           "type": "datetime",
           "required": true,
-          "auto": true,
-          "explicitRequired": true
+          "auto": true
         }
       ],
       "typescript": null,
@@ -176,8 +173,7 @@ prefix: /api
           "type": "uuid",
           "required": true,
           "auto": true,
-          "unique": true,
-          "explicitRequired": true
+          "unique": true
         },
         {
           "name": "name",
@@ -211,15 +207,13 @@ prefix: /api
           "name": "createdAt",
           "type": "datetime",
           "required": true,
-          "auto": true,
-          "explicitRequired": true
+          "auto": true
         },
         {
           "name": "updatedAt",
           "type": "datetime",
           "required": true,
-          "auto": true,
-          "explicitRequired": true
+          "auto": true
         }
       ],
       "typescript": null,
@@ -234,8 +228,7 @@ prefix: /api
           "type": "uuid",
           "required": true,
           "auto": true,
-          "unique": true,
-          "explicitRequired": true
+          "unique": true
         },
         {
           "name": "title",
@@ -267,7 +260,7 @@ prefix: /api
         },
         {
           "name": "project",
-          "type": "-> Project",
+          "type": "text",
           "required": true,
           "auto": false,
           "explicitRequired": true
@@ -290,15 +283,13 @@ prefix: /api
           "name": "createdAt",
           "type": "datetime",
           "required": true,
-          "auto": true,
-          "explicitRequired": true
+          "auto": true
         },
         {
           "name": "updatedAt",
           "type": "datetime",
           "required": true,
-          "auto": true,
-          "explicitRequired": true
+          "auto": true
         }
       ],
       "typescript": null,

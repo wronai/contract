@@ -1,7 +1,7 @@
 /**
  * Converts ContractMarkdown to existing ContractAI format
  * For backward compatibility with current code generation
- * @version 3.0.0
+ * @version 2.4.1
  */
 
 import { ContractMarkdown, MarkdownEntityDefinition } from '../types/contract-markdown';
