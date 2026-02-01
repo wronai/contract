@@ -1,7 +1,7 @@
 # Reclapp: Praktyczny Przewodnik Testowania
 
 **Data:** 1 Stycznia 2026  
-**Wersja:** 2.2.0  
+**Wersja:** 2.4.1  
 **Kategoria:** Testing Guide  
 **Status:** ✅ VERIFIED
 
@@ -123,7 +123,7 @@ cat ./generated/logs/*.rcl.md | head -100
 
 **Oczekiwany output:**
 ```
-🤖 Reclapp Contract AI Generator v2.2.0
+🤖 Reclapp Contract AI Generator v2.4.1
 
 📄 Loading contract from: examples/contract-ai/crm-contract.ts
 ✅ Contract validated successfully

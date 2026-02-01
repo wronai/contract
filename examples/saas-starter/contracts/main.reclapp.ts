@@ -3,7 +3,7 @@
  * 
  * Multi-tenant SaaS application with subscriptions, billing, and user management.
  * 
- * @version 2.1.0
+ * @version 2.4.1
  */
 
 import type { 
@@ -352,7 +352,7 @@ const env: EnvVar[] = [
 export const contract: ReclappContract = {
   app: {
     name: 'SaaS Starter',
-    version: '2.1.0',
+    version: '2.4.1',
     description: 'Multi-tenant SaaS platform with subscriptions and billing',
     author: 'Reclapp Team',
     license: 'MIT'

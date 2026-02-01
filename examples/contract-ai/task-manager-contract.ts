@@ -4,7 +4,7 @@
  * System zarządzania zadaniami z projektami, użytkownikami i przypisaniami.
  * Oparty na examples/apps/task-manager.
  * 
- * @version 2.2.0
+ * @version 2.4.1
  */
 
 import { ContractAI } from '../../src/core/contract-ai';

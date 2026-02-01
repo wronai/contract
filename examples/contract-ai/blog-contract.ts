@@ -3,7 +3,7 @@
  * 
  * Platforma blogowa z postami, komentarzami i kategoriami.
  * 
- * @version 2.2.0
+ * @version 2.4.1
  */
 
 import { ContractAI } from '../../src/core/contract-ai';

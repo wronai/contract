@@ -256,7 +256,7 @@ reclapp validate examples/crm/contracts/main.reclapp.ts
 🔍 Validating examples/crm/contracts/main.reclapp.ts...
 
 ✅ Contract is valid!
-   App: CRM System v2.1.0
+   App: CRM System v2.4.1
    Entities: 6
    Events: 5
    Dashboards: 4

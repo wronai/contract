@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "reclapp-llm"
-version = "0.1.0"
+version = "2.4.1"
 description = "Unified LLM provider manager for Reclapp"
 readme = "README.md"
 license = "Apache-2.0"

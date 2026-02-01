@@ -20,7 +20,6 @@ from .manager import LLMManager, ProviderInfo
 # Re-export pycontracts.llm if available
 try:
     from pycontracts import llm
-    
     LLMConfig = llm.LLMConfig
     get_client = llm.get_client
     list_available_providers = llm.list_available_providers

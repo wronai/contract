@@ -22,7 +22,7 @@ if result.success:
     print("Contract generated:", result.contract)
 ```
 
-@version 2.2.0-python
+@version 2.4.1
 """
 
 __version__ = "2.4.1"

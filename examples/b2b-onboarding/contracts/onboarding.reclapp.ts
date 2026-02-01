@@ -3,7 +3,7 @@
  * 
  * Complete B2B customer onboarding workflow with KRS/CEIDG verification.
  * 
- * @version 2.1.0
+ * @version 2.4.1
  */
 
 import type { ReclappContract, Entity, Event, Pipeline, Alert, Dashboard, Workflow, EnvVar } from '../../../contracts/dsl-types';
@@ -164,7 +164,7 @@ const env: EnvVar[] = [
 export const contract: ReclappContract = {
   app: {
     name: 'B2B Onboarding',
-    version: '2.1.0',
+    version: '2.4.1',
     description: 'B2B customer onboarding workflow with KRS/CEIDG verification',
     author: 'Reclapp Team',
     license: 'MIT'

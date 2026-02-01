@@ -1,6 +1,6 @@
 // SaaS Starter - Reclapp Contract
 // Multi-tenant SaaS application with subscriptions, billing, and user management
-// Version 2.1.0
+// Version 2.4.1
 //
 // SELF-SUFFICIENT DSL - All source code generated from this definition
 // Generated files output to target/ folder
@@ -10,7 +10,7 @@
 // =============================================================================
 
 APP "SaaS Starter" {
-  VERSION "2.1.0"
+  VERSION "2.4.1"
   DESCRIPTION "Multi-tenant SaaS platform with subscriptions and billing"
   AUTHOR "Reclapp Team"
   LICENSE "MIT"

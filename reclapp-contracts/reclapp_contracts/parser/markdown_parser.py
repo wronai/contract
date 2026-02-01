@@ -202,10 +202,15 @@ def parse_contract_markdown(content: str) -> ContractMarkdown:
 def _extract_frontmatter(content: str) -> tuple[ContractFrontmatter, str]:
     """Extract YAML frontmatter from content"""
     frontmatter_regex = r"^---\n([\s\S]*?)\n---"
-    match = re.match(frontmatter_regex, content)
+    match = re.search(frontmatter_regex, content)
     
     if not match:
-        raise ValueError("Contract must have YAML frontmatter between --- markers")
+        # If no frontmatter, return empty frontmatter and full content
+        frontmatter = ContractFrontmatter(
+            generation={"mode": "full-stack", "output": "./generated"},
+            runtime={"port": 3000, "healthCheck": "/health"}
+        )
+        return frontmatter, content.strip()
     
     # Remove comments from YAML
     yaml_content = "\n".join(
@@ -243,15 +248,30 @@ def _parse_app_section(body: str) -> AppDefinition:
 
 
 def _parse_entities_section(body: str) -> list[MarkdownEntityDefinition]:
-    """Parse ## Entities section"""
-    section = _extract_section(body, "## Entities")
+    """Parse Entities section"""
+    # Try localized or common headers
+    section_headers = ["## Entities", "## 📦 Encje", "## Data Models", "## Models"]
+    section = ""
+    for header in section_headers:
+        section = _extract_section(body, header)
+        if section:
+            break
+            
+    if not section:
+        # Fallback: if no section found, search the whole body for ### Entity headers
+        section = body
+        
     entities: list[MarkdownEntityDefinition] = []
     
-    # Find all ### Entity subsections
-    entity_regex = r"### (\w+)\n([\s\S]*?)(?=###|\n## |$)"
+    # Find all ### Entity subsections (allow emojis and spaces)
+    entity_regex = r"###\s*(?:[\w\s\-\d\(\)\[\]\.\,]+)\s*\n([\s\S]*?)(?=###|\n## |$)"
+    # Actually, simpler regex to just capture the name and content
+    entity_regex = r"###\s*([^\n]+)\n([\s\S]*?)(?=###|\n## |$)"
     
     for match in re.finditer(entity_regex, section):
-        name = match.group(1)
+        name = match.group(1).strip()
+        # Clean name from emojis/extra tags
+        name = re.sub(r'[^\w\s\-]', '', name).strip()
         content = match.group(2)
         entities.append(_parse_entity_content(name, content))
     
@@ -260,12 +280,16 @@ def _parse_entities_section(body: str) -> list[MarkdownEntityDefinition]:
 
 def _parse_entity_content(name: str, content: str) -> MarkdownEntityDefinition:
     """Parse entity content from markdown"""
-    # Extract description (first paragraph before table)
-    desc_match = re.match(r"^([^\n|#]+)\n", content)
+    # Extract description (first paragraph before table or code block)
+    desc_match = re.match(r"^([^\n|#`]+)\n", content)
     description = desc_match.group(1).strip() if desc_match else None
     
     # Parse markdown table
     fields = _parse_markdown_table(content)
+    
+    # If no fields from table, try parsing YAML block
+    if not fields:
+        fields = _parse_yaml_fields(content)
     
     # Extract TypeScript definition
     ts_match = re.search(r"```typescript\n([\s\S]*?)\n```", content)
@@ -287,6 +311,63 @@ def _parse_entity_content(name: str, content: str) -> MarkdownEntityDefinition:
         typescript=typescript,
         example=example
     )
+
+
+def _parse_yaml_fields(content: str) -> list[EntityField]:
+    """Parse entity fields from YAML code block"""
+    yaml_match = re.search(r"```yaml\n([\s\S]*?)\n```", content)
+    if not yaml_match:
+        return []
+        
+    yaml_content = yaml_match.group(1)
+    fields = []
+    
+    # Line by line parsing for field definitions
+    # Format: name : type # @annotations
+    for line in yaml_content.split('\n'):
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+            
+        # Extract name and the rest
+        if ':' not in line:
+            continue
+            
+        parts = line.split(':', 1)
+        name = parts[0].strip()
+        rest = parts[1].strip()
+        
+        # Extract type and comment
+        if '#' in rest:
+            type_part, comment = rest.split('#', 1)
+            type_part = type_part.strip()
+            comment = comment.strip()
+        else:
+            type_part = rest
+            comment = ""
+            
+        # Handle nullable type? suffix
+        is_optional = False
+        if type_part.endswith('?'):
+            type_part = type_part[:-1]
+            is_optional = True
+            
+        # Parse annotations from comment
+        required = "@required" in comment or not is_optional
+        auto = "@auto" in comment
+        
+        # Clean type name (might have array suffix [] or params)
+        clean_type = type_part.split('(')[0].replace('[]', '').strip()
+        
+        fields.append(EntityField(
+            name=name,
+            type=_parse_field_type(clean_type),
+            required=required,
+            auto=auto,
+            description=comment if comment else None
+        ))
+        
+    return fields
 
 
 def _parse_markdown_table(content: str) -> list[EntityField]:

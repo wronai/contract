@@ -1,5 +1,5 @@
 # ============================================================================
-# Reclapp 2.1.0 - AI-Native Declarative Platform
+# Reclapp 2.4.1 - AI-Native Declarative Platform
 # ============================================================================
 # 
 # Usage:
@@ -32,7 +32,7 @@ NC := \033[0m # No Color
 
 # Project info
 PROJECT_NAME := reclapp
-VERSION := 2.1.0
+VERSION := 2.4.1
 DOCKER_IMAGE := reclapp/platform
 
 # ============================================================================

@@ -3,7 +3,7 @@
  * 
  * Full e-commerce solution with products, orders, inventory, and payments.
  * 
- * @version 2.1.0
+ * @version 2.4.1
  */
 
 import type { ReclappContract, Entity, Event, Pipeline, Alert, Dashboard, Workflow, ApiConfig, EnvVar } from '../../../contracts/dsl-types';
@@ -245,7 +245,7 @@ const env: EnvVar[] = [
 export const contract: ReclappContract = {
   app: {
     name: 'E-Commerce Platform',
-    version: '2.1.0',
+    version: '2.4.1',
     description: 'Full e-commerce solution with products, orders, and payments',
     author: 'Reclapp Team',
     license: 'MIT'

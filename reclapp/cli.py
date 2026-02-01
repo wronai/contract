@@ -437,12 +437,13 @@ def stop(verbose: bool):
 @main.command()
 @click.option("--prompt", "-p", required=True, help="Natural language prompt describing the app")
 @click.option("--output", "-o", default="./target", help="Output directory")
+@click.option("--port", default=3000, type=int, help="Service port")
 @click.option("--keep-running", "-k", is_flag=True, help="Keep service running after generation")
 @click.option("--verbose", "-v", is_flag=True, help="Verbose output")
 @click.option("--no-menu", is_flag=True, help="Do not enter interactive menu after evolve finishes (Node engine)")
 @click.option("--log-file", type=str, default=None, help="Write markdown logs to file (Node engine)")
 @click.option("--engine", type=click.Choice(["python", "node"]), default="python", help="Execution engine")
-def evolve(prompt: str, output: str, keep_running: bool, verbose: bool, no_menu: bool, log_file: Optional[str], engine: str):
+def evolve(prompt: str, output: str, port: int, keep_running: bool, verbose: bool, no_menu: bool, log_file: Optional[str], engine: str):
     """Evolution mode - dynamic code generation with auto-healing"""
     
     if engine == "python":
@@ -458,7 +459,7 @@ def evolve(prompt: str, output: str, keep_running: bool, verbose: bool, no_menu:
             output=output, 
             keep_running=keep_running, 
             verbose=verbose,
-            port=3000, # Default port
+            port=port,
             max_iterations=5,
             auto_fix=True,
             log_file=log_file

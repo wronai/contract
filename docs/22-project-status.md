@@ -19,7 +19,7 @@ Reclapp to kompletna platforma do generowania aplikacji B2B z kontraktów AI. Sy
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     RECLAPP 2.2.0                           │
+│                     RECLAPP 2.4.1                           │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  CLI                                                        │

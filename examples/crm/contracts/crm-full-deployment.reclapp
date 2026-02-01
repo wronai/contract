@@ -1,6 +1,6 @@
 // CRM System - Reclapp Contract
 // Customer Relationship Management with contacts, deals, and activities
-// Version 2.1.0
+// Version 2.4.1
 //
 // SELF-SUFFICIENT DSL - All source code generated from this definition
 // Generated files output to target/ folder
@@ -10,7 +10,7 @@
 // =============================================================================
 
 APP "CRM System" {
-  VERSION "2.1.0"
+  VERSION "2.4.1"
   DESCRIPTION "Customer Relationship Management with contacts, deals, and activities"
   AUTHOR "Reclapp Team"
   LICENSE "MIT"

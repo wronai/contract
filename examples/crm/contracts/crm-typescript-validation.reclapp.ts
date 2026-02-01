@@ -4,7 +4,7 @@
  * Customer Relationship Management with contacts, deals, and activities.
  * This TypeScript definition is the validated source of truth.
  * 
- * @version 2.1.0
+ * @version 2.4.1
  */
 
 import type { 
@@ -375,7 +375,7 @@ const env: EnvVar[] = [
 export const contract: ReclappContract = {
   app: {
     name: 'CRM System',
-    version: '2.1.0',
+    version: '2.4.1',
     description: 'Customer Relationship Management with contacts, deals, and activities',
     author: 'Reclapp Team',
     license: 'MIT'

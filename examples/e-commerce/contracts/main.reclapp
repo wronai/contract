@@ -1,6 +1,6 @@
 // E-Commerce Platform - Reclapp Contract
 // Full e-commerce solution with products, orders, inventory, and payments
-// Version 2.1.0
+// Version 2.4.1
 //
 // SELF-SUFFICIENT DSL - All source code generated from this definition
 // Generated files output to target/ folder
@@ -10,7 +10,7 @@
 // =============================================================================
 
 APP "E-Commerce Platform" {
-  VERSION "2.1.0"
+  VERSION "2.4.1"
   DESCRIPTION "Full e-commerce solution with products, orders, and payments"
   AUTHOR "Reclapp Team"
   LICENSE "MIT"

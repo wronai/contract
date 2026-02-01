@@ -3,7 +3,7 @@
  * 
  * Contractor monitoring system with financial tracking and risk detection.
  * 
- * @version 2.1.0
+ * @version 2.4.1
  */
 
 import type { ReclappContract, Entity, Event, Pipeline, Alert, Dashboard, EnvVar } from '../../../contracts/dsl-types';
@@ -189,7 +189,7 @@ const env: EnvVar[] = [
 export const contract: ReclappContract = {
   app: {
     name: 'Contractor Monitoring',
-    version: '2.1.0',
+    version: '2.4.1',
     description: 'Contractor monitoring system with financial tracking and risk detection',
     author: 'Reclapp Team',
     license: 'MIT'

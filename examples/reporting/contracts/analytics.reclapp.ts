@@ -3,7 +3,7 @@
  * 
  * Comprehensive reporting and analytics system with KPIs and trends.
  * 
- * @version 2.1.0
+ * @version 2.4.1
  */
 
 import type { ReclappContract, Entity, Event, Pipeline, Alert, Dashboard, EnvVar } from '../../../contracts/dsl-types';
@@ -195,7 +195,7 @@ const env: EnvVar[] = [
 export const contract: ReclappContract = {
   app: {
     name: 'Analytics & Reporting',
-    version: '2.1.0',
+    version: '2.4.1',
     description: 'Comprehensive reporting and analytics system with KPIs and trends',
     author: 'Reclapp Team',
     license: 'MIT'

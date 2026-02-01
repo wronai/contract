@@ -318,4 +318,4 @@ cat docs/dsl-reference.md
 
 ---
 
-*Dokumentacja Reclapp Studio v2.1.0*
+*Dokumentacja Reclapp Studio v2.4.1*

@@ -1,4 +1,53 @@
-## [2.2.4] - 2026-02-01
+## [2.4.2] - 2026-02-01
+
+### Summary
+
+refactor(examples): CLI interface improvements
+
+### Core
+
+- update src/python/reclapp/__init__.py
+- update src/python/reclapp/parser/markdown_parser.py
+
+### Docs
+
+- docs: update AGENTS.md
+- docs: update README
+- docs: update 00-architecture-overview.md
+- docs: update 21-testing-guide.md
+- docs: update 22-project-status.md
+- docs: update 30-evolution-system.md
+- docs: update cli-reference.md
+- docs: update contract-lifecycle-workflow.md
+- docs: update studio-guide.md
+- docs: update crm-human-readable.rcl.md
+- ... and 1 more
+
+### Test
+
+- update tests/python/test_evolve_free_model.py
+- update tests/python/test_openrouter_models.py
+
+### Build
+
+- deps: update package.json
+
+### Other
+
+- build: update Makefile
+- update examples/b2b-onboarding/contracts/onboarding.reclapp.ts
+- update examples/contract-ai/blog-contract.ts
+- update examples/contract-ai/ecommerce-contract.ts
+- update examples/contract-ai/task-manager-contract.ts
+- update examples/crm/contracts/crm-compact-dsl.reclapp.rcl
+- update examples/crm/contracts/crm-full-deployment.reclapp
+- update examples/crm/contracts/crm-typescript-validation.reclapp.ts
+- update examples/desktop-electron/contracts/investment.reclapp
+- update examples/e-commerce/contracts/main.reclapp
+- ... and 13 more
+
+
+## [2.4.1] - 2026-02-01
 
 ### Summary
 

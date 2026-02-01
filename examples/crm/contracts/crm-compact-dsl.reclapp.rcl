@@ -2,7 +2,7 @@
 // ~87% reduction vs TypeScript format
 
 app "CRM System" {
-  version: "2.1.0"
+  version: "2.4.1"
   description: "Customer Relationship Management with contacts, deals, and activities"
   author: "Reclapp Team"
   license: "MIT"

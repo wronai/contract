@@ -261,4 +261,4 @@ contract_lifecycle:
 ---
 
 *Last updated: 2026-01-01*
-*Version: 2.2.0*
+*Version: 2.4.1*

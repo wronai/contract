@@ -1,6 +1,6 @@
 // Investment Portfolio Manager - Reclapp Contract
 // Desktop Electron application for investment tracking and analysis
-// Version 2.1.0
+// Version 2.4.1
 //
 // This DSL file is SELF-SUFFICIENT - no additional src/ files needed.
 // All backend, frontend, and deployment configs are generated from this definition.
