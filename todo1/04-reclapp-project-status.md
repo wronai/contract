@@ -4,7 +4,7 @@
 **Status:** 🟢 Production Ready  
 **Version:** 2.3.2  
 **Organization:** WronAI / Softreck  
-**Repository:** https://github.com/wronai/reclapp  
+**Repository:** https://github.com/wronai/contract  
 
 ---
 
@@ -231,8 +231,8 @@ Build:
 
 ```bash
 # Clone repository
-git clone https://github.com/wronai/reclapp.git
-cd reclapp
+git clone https://github.com/wronai/contract.git
+cd contract
 
 # Install dependencies
 npm install
@@ -298,7 +298,7 @@ cd my-crm/api && npm install && npm run dev
 
 **Organization:** Softreck / WronAI  
 **Website:** https://softreck.com  
-**Repository:** https://github.com/wronai/reclapp  
+**Repository:** https://github.com/wronai/contract  
 **License:** Apache 2.0  
 
 ---

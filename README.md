@@ -94,7 +94,7 @@ reclapp validate                     # Validate Pydantic contracts
 ./bin/reclapp-full-lifecycle.sh --prompt "Create a notes app"
 
 # From contract file
-./bin/reclapp-full-lifecycle.sh examples/contract-ai/crm-contract.ts
+./bin/reclapp-full-lifecycle.sh examples/crm/contracts/crm-human-readable.rcl.md
 
 # With options
 ./bin/reclapp-full-lifecycle.sh --prompt "Create a CRM" -o ./my-app --port 4000
@@ -114,14 +114,62 @@ reclapp validate                     # Validate Pydantic contracts
 
 ```bash
 # List available contracts
-reclapp list
+./bin/reclapp list
 
-# Generate full application from contract
-reclapp generate examples/crm/contracts/main.reclapp.ts
+# Generate full application from contract (RCL format - recommended)
+./bin/reclapp generate examples/crm/contracts/crm-human-readable.rcl.md
 
-# Or generate and run development servers
-reclapp dev examples/crm/contracts/main.reclapp.ts
+# Or from compact DSL
+./bin/reclapp generate examples/crm/contracts/crm-compact-dsl.reclapp.rcl
+
+# Or from TypeScript (with validation)
+./bin/reclapp generate examples/crm/contracts/crm-typescript-validation.reclapp.ts
+
+# Generate and run development servers
+./bin/reclapp dev examples/crm/contracts/crm-human-readable.rcl.md
 ```
+
+### Workflow Strategies (NEW in 2.5)
+
+Reclapp supports two complementary methods of working with contracts:
+
+1.  **Manual-First (RCL Markdown)**:
+    *   **Workflow**: You write `.rcl.md` manually (see `examples/b2b-onboarding/contracts/onboarding.rcl.md`).
+    *   **Best for**: Clear documentation, human-readable specifications, and explicit control over entities and events.
+    *   **Command**: `./bin/reclapp generate <file>.rcl.md`
+
+2.  **AI-First (Evolution Mode)**:
+    *   **Workflow**: You provide a natural language prompt, and Reclapp generates a `contract.ai.json` execution plan.
+    *   **Best for**: Rapid prototyping, complex logic generation, and automated iteration loops.
+    *   **Command**: `reclapp evolve -p "Your prompt" -o ./output`
+
+**Hybrid Integration**:
+*   **Markdown → JSON**: You can now embed or extract the AI execution plan (JSON) directly from an `.rcl.md` file. This allows you to have a human-readable spec that also controls the automated evolution process.
+*   **JSON → Markdown**: Generated `contract.ai.json` can be converted back to `.rcl.md` for documentation and manual refinement.
+
+### Contract Formats
+
+| Format | Extension | Description | Use Case |
+|--------|-----------|-------------|----------|
+| **RCL Markdown** | `.rcl.md` | Human-readable with documentation | Best for validation and collaboration |
+| **Mini-DSL** | `.reclapp.rcl` | Compact syntax (~87% less code) | Quick prototyping |
+| **TypeScript** | `.reclapp.ts` | Type-safe with validation | Production contracts |
+| **Full Deployment** | `.reclapp` | Complete deployment config | Full-stack apps |
+
+### Convert Between Formats
+
+```bash
+# Convert Mini-DSL to Markdown
+./bin/reclapp convert contract.reclapp.rcl --format md
+
+# Convert Markdown to TypeScript
+./bin/reclapp convert contract.rcl.md --format ts
+
+# Convert TypeScript to Mini-DSL
+./bin/reclapp convert contract.reclapp.ts --format rcl
+```
+
+**Note:** `contract.ai.json` from `reclapp evolve` is an internal AI format and cannot be directly converted. Use the chat interface to generate RCL formats.
 
 ### Run Generated Application
 

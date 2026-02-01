@@ -383,4 +383,4 @@ grep -A20 "### Task" contract.md
 - [Contract Format Proposal](01-reclapp-contract-format-proposal.md)
 - [Parser Implementation](02-reclapp-contract-parser-implementation.md)
 - [Example Contract](examples/todo.contract.md)
-- [Reclapp Documentation](https://github.com/wronai/reclapp/docs)
+- [Reclapp Documentation](https://github.com/wronai/contract/docs)

@@ -31,6 +31,21 @@ export interface FunctionInfo {
   couplingScore?: number;  // fanIn * fanOut (high = central/risky)
 }
 
+export interface EntityField {
+  name: string;
+  type: string;
+  required: boolean;
+  isUnique?: boolean;
+  isAuto?: boolean;
+  comment?: string;
+}
+
+export interface EntityInfo {
+  name: string;
+  fields: EntityField[];
+  comment?: string;
+}
+
 export interface FileInfo {
   path: string;
   relativePath: string;
@@ -41,6 +56,7 @@ export interface FileInfo {
   imports: string[];
   exports: string[];
   classes: string[];
+  entities: EntityInfo[];
 }
 
 export interface DuplicateGroup {
@@ -188,7 +204,8 @@ export class CodeAnalyzer {
       functions: [],
       imports: [],
       exports: [],
-      classes: []
+      classes: [],
+      entities: []
     };
 
     // Parse based on language
@@ -362,6 +379,28 @@ export class CodeAnalyzer {
     const classRegex = /(?:export\s+)?class\s+(\w+)/g;
     while ((match = classRegex.exec(content)) !== null) {
       info.classes.push(match[1]);
+    }
+
+    // Extract interfaces (as potential entities)
+    const interfaceRegex = /(?:export\s+)?interface\s+(\w+)\s*(?:extends\s+[^{]+)?\s*{([^}]*)}/g;
+    while ((match = interfaceRegex.exec(content)) !== null) {
+      const name = match[1];
+      if (name.endsWith('Input') || name.endsWith('Response') || name.endsWith('Params')) continue;
+      
+      const body = match[2];
+      const fields: EntityField[] = [];
+      const fieldRegex = /(\w+)(\?)?\s*:\s*([^;/\n]+)(?:\s*\/\/\s*(.*))?/g;
+      let fieldMatch;
+      while ((fieldMatch = fieldRegex.exec(body)) !== null) {
+        fields.push({
+          name: fieldMatch[1],
+          required: !fieldMatch[2],
+          type: fieldMatch[3].trim(),
+          comment: fieldMatch[4]?.trim()
+        });
+      }
+      
+      info.entities.push({ name, fields });
     }
 
     // Extract functions
@@ -708,45 +747,55 @@ export class CodeAnalyzer {
   /**
    * Generate contract from analysis
    */
-  toContract(report: AnalysisReport): object {
-    // Extract entities from class names
-    const entities = [...new Set(report.files.flatMap(f => f.classes))].map(name => ({
-      name,
-      fields: [],
-      annotations: {}
+  toContract(report: AnalysisReport): any {
+    // Extract entities from collected entity info
+    const entities = report.files.flatMap(f => f.entities).map(e => ({
+      name: e.name,
+      fields: e.fields.map(f => ({
+        name: f.name,
+        type: this.mapTypeToDSL(f.type),
+        required: f.required,
+        annotations: f.comment ? { comment: f.comment } : {}
+      }))
     }));
 
-    // Extract endpoints from function names
+    // Extract endpoints from function names and routes
     const endpoints = report.files
       .flatMap(f => f.functions)
       .filter(fn => fn.name.match(/^(get|post|put|delete|patch|handle)/i))
       .map(fn => ({
         method: fn.name.match(/^(get|post|put|delete|patch)/i)?.[0]?.toUpperCase() || 'GET',
-        path: `/${fn.name.replace(/^(get|post|put|delete|patch|handle)/i, '').toLowerCase()}`,
+        path: `/${fn.name.replace(/^(get|post|put|delete|patch|handle)/i, '').toLowerCase()}s`,
         handler: fn.name
       }));
 
     return {
-      definition: {
-        app: {
-          name: path.basename(report.rootDir),
-          version: '1.0.0',
-          description: `Generated from ${report.summary.totalFiles} files`
-        },
-        entities,
-        endpoints
+      app: {
+        name: path.basename(report.rootDir),
+        version: '1.0.0',
+        description: `Generated from ${report.summary.totalFiles} files`
       },
-      generation: {
-        techStack: {
-          backend: { framework: 'express', language: 'typescript' }
+      entities,
+      endpoints,
+      config: {
+        api: {
+          prefix: '/api',
+          port: 8080
         }
-      },
-      analysis: {
-        source: 'code-analyzer',
-        timestamp: report.timestamp,
-        metrics: report.summary
       }
     };
+  }
+
+  /**
+   * Map implementation types to DSL types
+   */
+  private mapTypeToDSL(type: string): string {
+    const t = type.toLowerCase().trim();
+    if (t === 'string') return 'text';
+    if (t === 'number') return 'int';
+    if (t === 'boolean') return 'bool';
+    if (t === 'date' || t === 'datetime') return 'datetime';
+    return type; // Keep as is if unknown (e.g. enum or another entity)
   }
 }
 

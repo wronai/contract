@@ -22,6 +22,9 @@ Contract Markdown (`.contract.md`) is a new format that combines:
 # Generate from Contract Markdown
 ./bin/reclapp examples/contract-ai/todo.contract.md
 
+# Or from CRM example in RCL format
+./bin/reclapp examples/crm/contracts/crm-human-readable.rcl.md
+
 # Output: examples/target/
 #   ├── api/
 #   ├── frontend/

@@ -39,6 +39,7 @@ export interface IR {
   deployment?: DeploymentConfig;
   env: EnvVar[];
   config: Record<string, any>;
+  aiPlan?: any;
 }
 
 export interface AppInfo {
@@ -141,7 +142,8 @@ const PATTERNS = {
   title: /^# (.+)$/m,
   description: /^> (.+)$/m,
   metaRow: /\| (.+?) \| (.+?) \|/g,
-  yamlBlock: /```yaml\n# (entity|enum|event|alert|pipeline|dashboard|api|deployment|env|source|workflow|config): ?(.+)?\n([\s\S]*?)```/g,
+  yamlBlock: /```yaml\n# (entity|enum|event|alert|pipeline|dashboard|api|deployment|env|source|workflow|config|ai-plan): ?(.+)?\n([\s\S]*?)```/g,
+  jsonBlock: /```json:contract\.ai\.json\n([\s\S]*?)```/g,
   userMessage: /### 🧑 User \((.+?)\)\n\n([\s\S]*?)(?=\n###|\n---|\n##|$)/g,
   assistantMessage: /### 🤖 Assistant \((.+?)\)\n\n([\s\S]*?)(?=\n###|\n---|\n##|$)/g,
 };
@@ -163,6 +165,9 @@ export class MarkdownParser {
 
       // 2. Parse YAML blocks
       this.parseYamlBlocks(ir);
+
+      // 2.1 Parse JSON blocks (ai-plan)
+      this.parseJsonBlocks(ir);
 
       // 3. Parse conversation (optional)
       const conversation = this.parseConversation();
@@ -199,6 +204,7 @@ export class MarkdownParser {
       workflows: [],
       env: [],
       config: {},
+      aiPlan: undefined,
     };
   }
 
@@ -277,12 +283,30 @@ export class MarkdownParser {
           case 'config':
             ir.config = this.parseConfig(name || '', body);
             break;
+          case 'ai-plan':
+            ir.aiPlan = JSON.parse(body);
+            break;
         }
       } catch (error) {
         this.errors.push({
           line: lineNumber,
           block: type,
           message: error instanceof Error ? error.message : 'Parse error',
+        });
+      }
+    }
+  }
+
+  private parseJsonBlocks(ir: IR): void {
+    let match;
+    PATTERNS.jsonBlock.lastIndex = 0;
+    while ((match = PATTERNS.jsonBlock.exec(this.content)) !== null) {
+      try {
+        ir.aiPlan = JSON.parse(match[1]);
+      } catch (error) {
+        this.errors.push({
+          line: this.getLineNumber(match.index),
+          message: `Failed to parse JSON block: ${error instanceof Error ? error.message : 'Unknown error'}`,
         });
       }
     }

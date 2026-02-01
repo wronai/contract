@@ -1171,15 +1171,9 @@ Evolution completed.
 
 const BASE_URL = 'http://localhost:{self.options.port}';
 
-interface TestResult {{
-  name: string;
-  passed: boolean;
-  error?: string;
-}}
-
-async function runTests(): Promise<TestResult[]> {{
-  const results: TestResult[] = [];
-  let createdId: string | null = null;
+async function runTests() {{
+  const results = [];
+  let createdId = null;
 
   // Health check
   try {{
@@ -1257,28 +1251,28 @@ runTests().then(results => {{
 }});
 '''
         
-        test_file = Path(target_dir) / "tests" / "e2e" / "api.e2e.ts"
+        test_file = Path(target_dir) / "tests" / "e2e" / "api.e2e.js"
         test_file.parent.mkdir(parents=True, exist_ok=True)
         test_file.write_text(test_content)
         return str(test_file)
     
     async def _run_e2e_tests(self, target_dir: str) -> tuple[int, int]:
         """Run E2E tests and return (passed, failed)"""
-        test_file = Path(target_dir) / "tests" / "e2e" / "api.e2e.ts"
+        test_file = Path(target_dir) / "tests" / "e2e" / "api.e2e.js"
         if not test_file.exists():
             return 0, 0
         
-        # Check if we can run tests (need npx/tsx)
+        # Run with node (JavaScript)
         import shutil
-        npx_path = shutil.which("npx")
-        if not npx_path:
-            self.renderer.warning("npx not found, skipping E2E tests")
+        node_path = shutil.which("node")
+        if not node_path:
+            self.renderer.warning("node not found, skipping E2E tests")
             return 0, 0  # Skip tests gracefully
         
         try:
-            # Run with ts-node or npx tsx
+            # Run with node
             result = subprocess.run(
-                [npx_path, "tsx", str(test_file)],
+                [node_path, str(test_file)],
                 capture_output=True,
                 text=True,
                 timeout=30,

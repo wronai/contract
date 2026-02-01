@@ -1798,9 +1798,25 @@ async function cmdEvolution(args, options) {
           port = st.port;
         }
       } catch (e) {}
-    } else {
-      const contract = require(path.resolve(contractPath)).default || require(path.resolve(contractPath));
-      await evolutionManager.start(contract);
+    } else if (contractPath) {
+      const fullPath = path.resolve(contractPath);
+      if (fullPath.endsWith('.rcl.md')) {
+        const result = parseMarkdownFile(fullPath);
+        if (result.success && result.ir.aiPlan) {
+          console.log(`📄 Found embedded AI Plan in: ${contractPath}`);
+          await evolutionManager.start(result.ir.aiPlan);
+        } else if (result.success) {
+          const contract = irToContract(result.ir);
+          console.log(`📄 Starting evolution from contract: ${contractPath}`);
+          await evolutionManager.start(contract);
+        } else {
+          console.error(`❌ Failed to parse Markdown contract: ${result.errors[0]?.message}`);
+          process.exit(1);
+        }
+      } else {
+        const contract = require(path.resolve(contractPath)).default || require(path.resolve(contractPath));
+        await evolutionManager.start(contract);
+      }
       try {
         const st = evolutionManager.getStatus();
         if (st && typeof st.port === 'number') {
