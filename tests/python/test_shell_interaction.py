@@ -26,7 +26,12 @@ from reclapp.evolution import (
     ShellRenderer,
     StateAnalyzer,
 )
-from reclapp.cli.main import cli
+# Import cli module directly
+import importlib.util
+spec = importlib.util.spec_from_file_location("cli_main", "../../src/python/reclapp/cli/main.py")
+cli_main = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(cli_main)
+cli = cli_main.cli
 
 
 # ============================================================================

@@ -414,7 +414,7 @@ export function contractToIR(contract: any): IR {
         required: f.required,
         unique: f.unique,
         auto: f.auto,
-        nullable: !f.required,
+        nullable: typeof f.rclType === 'string' ? f.rclType.trim().endsWith('?') : false,
         defaultValue: f.default,
         description: f.description,
       })),
