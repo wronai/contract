@@ -10,7 +10,7 @@
  * - Params > 5 → Parameter Object
  * - Nesting > 4 → Reduce Nesting
  * 
- * @version 1.0.0
+ * @version 2.4.1
  */
 
 import { AnalysisReport, FunctionInfo, FileInfo } from './code-analyzer';

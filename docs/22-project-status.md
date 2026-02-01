@@ -57,10 +57,10 @@ Reclapp to kompletna platforma do generowania aplikacji B2B z kontraktów AI. Sy
 - **Status:** ✅ Kompletny
 - **Testy:** 25 unit + 16 integration
 
-### 2. Pydantic Contracts (Python)
-- **Lokalizacja:** `pycontracts/`
+### 2. Modular Contracts (Python)
+- **Lokalizacja:** `reclapp-contracts/`
 - **Status:** ✅ Kompletny
-- **Schematy:** 14 JSON + 3 TypeScript
+- **Schematy:** 4 core JSON schemas
 
 ### 3. CLI
 - **Lokalizacja:** `bin/reclapp`
@@ -105,8 +105,8 @@ npx jest tests/unit/contract-ai.test.ts
 # Integration tests
 npx jest tests/integration/contract-ai-flow.test.ts
 
-# Pydantic schemas
-python3 -m pycontracts.generate --typescript
+# Contract schemas
+PYTHONPATH=reclapp-contracts:. python3 scripts/generate_schemas.py
 
 # Python contracts
 pytest tests/contracts/ -v
@@ -119,7 +119,8 @@ pytest tests/contracts/ -v
 | `bin/reclapp` | Główne CLI |
 | `bin/reclapp-full-lifecycle.sh` | Full lifecycle runner |
 | `src/core/contract-ai/` | Contract AI core |
-| `pycontracts/` | Pydantic contracts |
+| `reclapp-contracts/` | Modular Contract AI models |
+| `reclapp-llm/` | Unified LLM provider layer |
 | `examples/pydantic-contracts/` | Pydantic examples |
 | `examples/contract-ai/` | TypeScript examples |
 | `docs/21-testing-guide.md` | Przewodnik testowania |
@@ -152,29 +153,15 @@ pytest tests/contracts/ -v
 - ✅ **Test Definitions** - parses Gherkin acceptance tests and API test YAML
 - ✅ **Example Contract** - `examples/contract-ai/todo.contract.md`
 
-## Changelog 2.3.2
-
-- ✅ **Evolution Mode** (`reclapp evolve --prompt "..."`) - dynamic code generation with auto-healing
-- ✅ **EvolutionManager** - service monitoring, log analysis, auto-fix cycles
-- ✅ **Evolution logs** (`*.rcl.md`) - track all evolution cycles and changes
-- ✅ **Tests generation** - automatic test file generation with contract AI
-- ✅ Port management and graceful shutdown for `--keep-running` mode
-- ✅ PyPI publishing commands (`make publish`, `make publish-pypi-test`)
-
-## Changelog 2.3.1
+## Changelog 2.3.x (Legacy)
 
 - ✅ Full lifecycle command (`reclapp-full-lifecycle.sh`)
+- ✅ Evolution Mode - dynamic code generation with auto-healing
 - ✅ **Python CLI** (`pip install -e .` → `reclapp` command)
 - ✅ **Prompt files** (`examples/prompts/*.txt`) - 10 ready-to-use prompts
-- ✅ **reclapp-from-prompt.sh** - generate from .txt files
-- ✅ Pydantic contract examples (5)
-- ✅ Full-lifecycle contract examples (10) - fixed schema
-- ✅ Contract-ai examples (4) - fixed appliesTo, template, rule
+- ✅ Pydantic contract examples
 - ✅ 8/8 validation stages working
-- ✅ Fixed ts-node/TypeScript version compatibility
-- ✅ Added nvm loading for shell scripts
-- ✅ Added fallback minimal server for robust testing
-- ✅ Service health check and CRUD endpoint testing
+- ✅ Port management and graceful shutdown
 
 ## Python CLI Commands
 

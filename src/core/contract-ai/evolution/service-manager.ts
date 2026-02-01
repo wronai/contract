@@ -3,7 +3,7 @@
  * 
  * Manages service lifecycle: start, stop, restart, health checks.
  * 
- * @version 1.0.0
+ * @version 2.4.1
  */
 
 import { spawn, ChildProcess, execSync } from 'child_process';

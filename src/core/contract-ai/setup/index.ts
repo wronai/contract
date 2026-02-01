@@ -3,7 +3,7 @@
  * 
  * Environment setup and dependency management for reclapp.
  * 
- * @version 1.0.0
+ * @version 2.4.1
  */
 
 export * from './dependency-checker';

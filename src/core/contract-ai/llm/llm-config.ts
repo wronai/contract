@@ -4,7 +4,7 @@
  * Configuration for multi-provider LLM support.
  * Reads from environment variables with sensible defaults.
  * 
- * @version 1.0.0
+ * @version 2.4.1
  */
 
 import { LLMConfig, LLMProviderType } from './llm-provider';

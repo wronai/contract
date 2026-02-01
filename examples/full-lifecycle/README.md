@@ -98,7 +98,7 @@ done
 
 - Node.js >= 18.0.0
 - Ollama z llama3 (lub innym modelem)
-- Python 3.10+ (dla pycontracts)
+- Python 3.10+ (dla reclapp-contracts)
 
 ---
 

@@ -4,7 +4,7 @@
 
 | Właściwość | Wartość |
 |------------|---------|
-| Wersja | 2.0.0 |
+| Wersja | 2.4.1 |
 | Autor | Reclapp Team |
 | Licencja | MIT |
 

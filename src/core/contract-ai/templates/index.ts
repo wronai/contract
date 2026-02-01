@@ -4,7 +4,7 @@
  * Modular templates for LLM code generation.
  * Technology-agnostic - LLM decides based on contract.ai.json
  * 
- * @version 1.0.0
+ * @version 2.4.1
  */
 
 import * as fs from 'fs';

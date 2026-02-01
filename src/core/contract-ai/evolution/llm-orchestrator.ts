@@ -4,7 +4,7 @@
  * Handles LLM-based code generation and orchestration.
  * Extracted from evolution-manager.ts for better modularity.
  * 
- * @version 1.0.0
+ * @version 2.4.1
  */
 
 import { ContractAI, GeneratedCode, GeneratedFile } from '../types';

@@ -28,7 +28,7 @@
  *   - red:     Errors
  *   - blue:    Links
  * 
- * @version 1.0.0
+ * @version 2.4.1
  */
 
 // ANSI Color Codes - Standard terminal escape sequences

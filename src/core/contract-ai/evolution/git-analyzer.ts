@@ -3,7 +3,7 @@
  * 
  * Analyzes Git repositories for state, tech stack detection, and contract generation.
  * 
- * @version 1.0.0
+ * @version 2.4.1
  */
 
 import { execSync } from 'child_process';

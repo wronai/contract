@@ -4,7 +4,7 @@
  * Generates fallback code when LLM is not available.
  * Loads templates from src/core/contract-ai/templates/ folder.
  * 
- * @version 2.0.0
+ * @version 2.4.1
  */
 
 import { ContractAI, GeneratedFile } from '../types';

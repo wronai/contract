@@ -3,7 +3,7 @@
  * 
  * Manages task execution pipeline with status tracking and YAML output.
  * 
- * @version 1.0.0
+ * @version 2.4.1
  */
 
 import { ShellRenderer } from './shell-renderer';

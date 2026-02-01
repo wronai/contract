@@ -11,7 +11,7 @@
  * - Rate limiting per provider
  * - Automatic failover
  * 
- * @version 1.0.0
+ * @version 2.4.1
  */
 
 import { EventEmitter } from 'events';

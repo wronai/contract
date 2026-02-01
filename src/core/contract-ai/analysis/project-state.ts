@@ -9,7 +9,7 @@
  * - Identifying discrepancies for refactoring
  * - Providing context for LLM-based refactoring
  * 
- * @version 1.0.0
+ * @version 2.4.1
  */
 
 import * as fs from 'fs';

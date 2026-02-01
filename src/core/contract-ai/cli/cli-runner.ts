@@ -4,7 +4,7 @@
  * Standardized CLI execution with TaskQueue, markdown logs, and consistent output.
  * Used by all reclapp commands for uniform experience.
  * 
- * @version 1.0.0
+ * @version 2.4.1
  */
 
 import { ShellRenderer } from '../evolution/shell-renderer';

@@ -4,7 +4,7 @@ Windsurf LLM Provider - Integration with Windsurf/Codeium AI
 Windsurf uses a local server that proxies to various LLM providers.
 Default endpoint: http://localhost:9090/v1/chat/completions
 
-@version 1.0.0
+@version 2.4.1
 """
 
 import os

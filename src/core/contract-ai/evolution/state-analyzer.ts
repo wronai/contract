@@ -3,7 +3,7 @@
  * 
  * Multi-level state analysis: Contract ↔ SourceCode ↔ Service ↔ Logs
  * 
- * @version 1.0.0
+ * @version 2.4.1
  */
 
 import * as fs from 'fs';

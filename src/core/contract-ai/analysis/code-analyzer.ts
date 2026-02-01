@@ -4,7 +4,7 @@
  * Analyzes codebase structure, detects duplicates, measures complexity,
  * and prepares data for contract generation from existing code.
  * 
- * @version 1.0.0
+ * @version 2.4.1
  */
 
 import * as fs from 'fs';
@@ -846,7 +846,7 @@ export class CodeAnalyzer {
     const events = report.files.flatMap(f => {
       // Look for classes/interfaces that look like events
       return f.entities
-        .filter(e => e.name.endsWith('Event') || e.name.match(/Registered|Started|Completed|Verified|Rejected|Changed|Uploaded|Created|Deleted|Updated|Updated$/))
+        .filter(e => e.name.endsWith('Event') || e.name.match(/Registered|Started|Completed|Verified|Rejected|Changed|Uploaded|Created|Deleted|Updated$/))
         .map(e => ({
           name: e.name.charAt(0).toUpperCase() + e.name.slice(1),
           fields: e.fields.map(f => ({ name: f.name, type: this.mapTypeToDSL(f.type, f.name) }))

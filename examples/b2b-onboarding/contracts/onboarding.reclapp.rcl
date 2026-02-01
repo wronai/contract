@@ -2,7 +2,7 @@
 // Complete onboarding workflow with KRS/CEIDG verification
 
 app "B2B Onboarding" {
-  version: "2.0.0"
+  version: "2.4.1"
   description: "B2B customer onboarding with automatic registry verification"
   author: "Reclapp Team"
   license: "Apache-2.0"

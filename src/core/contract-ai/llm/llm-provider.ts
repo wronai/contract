@@ -6,7 +6,7 @@
  * - Remote: LiteLLM, OpenRouter, Windsurf Free Models
  * - Free Models: DeepSeek V3, DeepSeek R1, GPT-5.1-Codex, SWE-1.5
  * 
- * @version 1.0.0
+ * @version 2.4.1
  */
 
 // ============================================================================

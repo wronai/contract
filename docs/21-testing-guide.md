@@ -466,4 +466,4 @@ grep -A5 "FAILED" debug.log
 
 ---
 
-**Reclapp 2.3 Testing Guide | 1 Stycznia 2026**
+**Reclapp 2.4.1 Testing Guide | 1 Lutego 2026**

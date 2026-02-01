@@ -4,7 +4,7 @@
  * Generates contracts and code step-by-step using contextual information
  * instead of templates. Uses LLM for intelligent generation.
  * 
- * @version 1.0.0
+ * @version 2.4.1
  */
 
 import { LLMManager, TaskContext } from './llm-manager';

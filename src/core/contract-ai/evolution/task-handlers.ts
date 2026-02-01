@@ -4,7 +4,7 @@
  * Extracted task handler functions from evolution-manager.ts
  * Each handler processes a specific task in the evolution pipeline.
  * 
- * @version 1.0.0
+ * @version 2.4.1
  */
 
 import * as fs from 'fs';

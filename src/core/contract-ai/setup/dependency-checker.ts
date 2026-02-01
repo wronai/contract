@@ -4,7 +4,7 @@
  * Detects missing dependencies and creates setup tasks for fresh installations.
  * Helps users configure their environment even without LLM available.
  * 
- * @version 1.0.0
+ * @version 2.4.1
  */
 
 import { execSync, exec } from 'child_process';
