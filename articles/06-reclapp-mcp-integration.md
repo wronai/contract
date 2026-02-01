@@ -1,6 +1,6 @@
 # Reclapp 2.1: MCP Integration - Model Context Protocol dla AI Agentów
 
-**Status:** ✅ Zaimplementowane | **Wersja:** 2.1.0 | **Data:** Grudzień 2024
+**Status:** ✅ Zaimplementowane | **Wersja:** 2.4.1 | **Data:** Grudzień 2024
 
 ## Wprowadzenie
 
@@ -366,7 +366,7 @@ Reclapp zawiera plik `AGENTS.md` definiujący capabilities dla innych systemów:
 # AGENTS.md - Reclapp Agent Specification
 
 name: ReclappAgent
-version: "2.1.0"
+version: "2.4.1"
 capabilities:
   - dsl_generation
   - dsl_validation

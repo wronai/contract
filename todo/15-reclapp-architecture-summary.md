@@ -1,7 +1,7 @@
 # Reclapp 2.2: Architektura LLM-Driven Code Generation
 
 **Data:** 1 Stycznia 2026  
-**Wersja:** 2.2.0  
+**Wersja:** 2.4.1  
 **Status:** Architecture Specification
 
 ---

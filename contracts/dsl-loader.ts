@@ -10,7 +10,7 @@
  *   3. Validate contract structure
  *   4. Return validated contract or errors
  * 
- * @version 2.1.0
+ * @version 2.4.1
  */
 
 import * as fs from 'fs';

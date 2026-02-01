@@ -3,7 +3,7 @@
  * 
  * Eksportuje wszystkie komponenty generatora Contract AI.
  * 
- * @version 2.2.0
+ * @version 2.4.1
  */
 
 export * from './prompt-builder';

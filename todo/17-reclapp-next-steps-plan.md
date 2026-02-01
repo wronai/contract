@@ -443,4 +443,4 @@ touch src/core/contract-ai/feedback/code-corrector.ts
 
 ---
 
-*Plan aktualizacji v2.2.0 | Styczeń 2026*
+*Plan aktualizacji v2.4.1 | Styczeń 2026*

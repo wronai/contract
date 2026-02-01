@@ -3,7 +3,7 @@ Base Generator
 
 Abstract base class for all generators with LLM support.
 
-@version 2.2.0
+@version 2.4.1
 """
 
 from abc import ABC, abstractmethod

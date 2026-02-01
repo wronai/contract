@@ -9,7 +9,7 @@
  *   - Runtime validates and converts other formats (yaml, reclapp) to TypeScript
  *   - All generated code derives from these validated definitions
  * 
- * @version 2.1.0
+ * @version 2.4.1
  */
 
 // ============================================================================

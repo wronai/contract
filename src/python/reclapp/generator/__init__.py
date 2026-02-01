@@ -4,7 +4,7 @@ Reclapp Generator Module
 Contract and code generation with LLM support.
 
 Mirrors: src/core/contract-ai/generator/
-@version 2.2.0
+@version 2.4.1
 """
 
 from .base import BaseGenerator

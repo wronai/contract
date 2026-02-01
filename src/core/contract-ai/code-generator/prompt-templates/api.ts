@@ -3,7 +3,7 @@
  * 
  * Szablony promptów do generowania kodu API przez LLM.
  * 
- * @version 2.2.0
+ * @version 2.4.1
  * @see todo/16-reclapp-implementation-todo-prompts.md
  */
 

@@ -1,7 +1,7 @@
 # Reclapp 2.2: Implementation TODO & Prompts
 
 **Data:** 1 Stycznia 2026  
-**Wersja:** 2.2.0  
+**Wersja:** 2.4.1  
 **Status:** Implementation Guide
 
 ---
@@ -1918,7 +1918,7 @@ Example output:
 ───────────────────────────────────
 $ reclapp generate-ai "Create a CRM with contacts, companies, and deals"
 
-🚀 Reclapp AI Code Generator v2.2.0
+🚀 Reclapp AI Code Generator v2.4.1
 
 📋 Generating Contract AI...
    ✅ Contract generated (3 entities, 12 fields)
@@ -2120,4 +2120,4 @@ Wymagania:
 
 ---
 
-*Implementation Guide v2.2.0 | Reclapp Contract AI*
+*Implementation Guide v2.4.1 | Reclapp Contract AI*

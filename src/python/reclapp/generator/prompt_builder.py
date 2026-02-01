@@ -4,7 +4,7 @@ Prompt Builder
 Builds prompts for LLM-based code generation.
 
 Mirrors: src/core/contract-ai/generator/prompt-builder.ts
-@version 2.2.0
+@version 2.4.1
 """
 
 from typing import Any, Optional

@@ -3,7 +3,7 @@
  * 
  * Zarządza 7-stage'owym pipeline'em walidacji wygenerowanego kodu.
  * 
- * @version 2.2.0
+ * @version 2.4.1
  * @see todo/16-reclapp-implementation-todo-prompts.md
  */
 

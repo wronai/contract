@@ -3,7 +3,7 @@
  * 
  * Full generation flow: contract -> code -> validation -> feedback
  * 
- * @version 2.2.0
+ * @version 2.4.1
  */
 
 import * as path from 'path';

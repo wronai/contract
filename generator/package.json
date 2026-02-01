@@ -1,6 +1,6 @@
 {
   "name": "@reclapp/generator",
-  "version": "2.1.0",
+  "version": "2.4.1",
   "description": "Generate full-stack applications from Reclapp DSL contracts",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

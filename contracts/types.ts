@@ -7,7 +7,7 @@
  * - Safety rails and enforcement
  * - Runtime validation with Zod schemas
  * 
- * @version 2.1.0
+ * @version 2.4.1
  */
 
 // ============================================================================

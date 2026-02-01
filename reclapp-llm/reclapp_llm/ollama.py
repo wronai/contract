@@ -4,7 +4,7 @@ Ollama LLM Client
 Local LLM provider using Ollama.
 
 Mirrors: src/core/contract-ai/llm/ollama-client.ts
-@version 2.2.0
+@version 2.4.1
 """
 
 import os

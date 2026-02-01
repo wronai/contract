@@ -3,7 +3,7 @@
  * 
  * Tests the reclapp generate-ai CLI command end-to-end.
  * 
- * @version 2.2.0
+ * @version 2.4.1
  */
 
 import { execSync, exec } from 'child_process';

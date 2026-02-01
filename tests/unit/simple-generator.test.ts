@@ -29,7 +29,7 @@ describe('SimpleGenerator (bin/reclapp path)', () => {
     const contract: ReclappContract = {
       app: {
         name: 'Test App',
-        version: '2.1.0',
+        version: '2.4.1',
         description: 'Test'
       },
       entities: [Contact],
@@ -100,7 +100,7 @@ describe('SimpleGenerator (bin/reclapp path)', () => {
     const contract: ReclappContract = {
       app: {
         name: 'Test App',
-        version: '2.1.0',
+        version: '2.4.1',
         description: 'Test'
       },
       entities: [Contact],
@@ -146,7 +146,7 @@ describe('SimpleGenerator (bin/reclapp path)', () => {
     const contract: ReclappContract = {
       app: {
         name: 'Test App',
-        version: '2.1.0',
+        version: '2.4.1',
         description: 'Test'
       },
       entities: [Thing],

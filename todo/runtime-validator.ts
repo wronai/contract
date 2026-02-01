@@ -3,7 +3,7 @@
  * 
  * Buduje Docker image, uruchamia kontener i testuje endpoints.
  * 
- * @version 2.2.0
+ * @version 2.4.1
  */
 
 import { spawn, execSync } from 'child_process';

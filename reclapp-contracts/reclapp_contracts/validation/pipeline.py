@@ -4,7 +4,7 @@ Validation Pipeline Orchestrator
 Manages 8-stage validation pipeline for generated code.
 
 Mirrors: src/core/contract-ai/validation/pipeline-orchestrator.ts
-@version 2.2.0
+@version 2.4.1
 """
 
 import asyncio

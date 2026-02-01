@@ -3,7 +3,7 @@
  * 
  * Main entry point for the Reclapp platform.
  * 
- * @version 2.2.0
+ * @version 2.4.1
  */
 
 export * from './core';

@@ -1,7 +1,7 @@
 # Contract AI: Specyfikacja Generowania Kodu przez LLM
 
 **Data:** 1 Stycznia 2026  
-**Wersja:** 2.2.0  
+**Wersja:** 2.4.1  
 **Status:** Proposal
 
 ---
@@ -1328,4 +1328,4 @@ Nowe podejście do generowania kodu w Reclapp:
 
 ---
 
-*Specyfikacja v2.2.0 | Reclapp Contract AI Code Generation*
+*Specyfikacja v2.4.1 | Reclapp Contract AI Code Generation*

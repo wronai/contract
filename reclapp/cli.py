@@ -171,7 +171,7 @@ def lifecycle(prompt: str, output: str, port: int, verbose: bool, keep_running: 
         max_iterations=5,
         auto_fix=True
     )
-    asyncio.run(core_main.cmd_evolve(args))
+    sys.exit(asyncio.run(core_main.cmd_evolve(args)))
 
 
 @main.command()
@@ -191,8 +191,7 @@ def generate(contract_path: str, output: str, verbose: bool, engine: str):
                 self.__dict__.update(kwargs)
                 
         args = Args(contract=contract_path, output=output, verbose=verbose)
-        asyncio.run(core_main.cmd_generate(args))
-        return
+        sys.exit(asyncio.run(core_main.cmd_generate(args)))
     
     if engine == "node":
         click.md(f"```log\n📄 Generating from: {contract_path}\n```\n")
@@ -274,7 +273,7 @@ def list(directory: str, format: str, verbose: bool):
             self.__dict__.update(kwargs)
     
     args = Args(directory=directory, format=format, verbose=verbose)
-    asyncio.run(core_main.cmd_list(args))
+    sys.exit(asyncio.run(core_main.cmd_list(args)))
 
 
 @main.command()
@@ -291,7 +290,7 @@ def prompts(action: str, name: Optional[str], verbose: bool):
             self.__dict__.update(kwargs)
             
     args = Args(action=action, name=name, verbose=verbose)
-    asyncio.run(core_main.cmd_prompts(args))
+    sys.exit(asyncio.run(core_main.cmd_prompts(args)))
 
 
 @main.command()
@@ -308,7 +307,7 @@ def analyze(directory: str, output: Optional[str], verbose: bool):
             self.__dict__.update(kwargs)
             
     args = Args(directory=directory, output=output, verbose=verbose)
-    asyncio.run(core_main.cmd_analyze(args))
+    sys.exit(asyncio.run(core_main.cmd_analyze(args)))
 
 
 @main.command()
@@ -326,7 +325,7 @@ def refactor(contract: str, directory: str, dry_run: bool, verbose: bool):
             self.__dict__.update(kwargs)
             
     args = Args(contract=contract, directory=directory, dry_run=dry_run, verbose=verbose)
-    asyncio.run(core_main.cmd_refactor(args))
+    sys.exit(asyncio.run(core_main.cmd_refactor(args)))
 
 
 @main.command()
@@ -342,7 +341,7 @@ def parse(contract: str, verbose: bool):
             self.__dict__.update(kwargs)
             
     args = Args(contract=contract, verbose=verbose)
-    asyncio.run(core_main.cmd_parse(args))
+    sys.exit(asyncio.run(core_main.cmd_parse(args)))
 
 
 @main.command()
@@ -358,7 +357,7 @@ def validate(contract: str, verbose: bool):
             self.__dict__.update(kwargs)
             
     args = Args(contract=contract, verbose=verbose)
-    asyncio.run(core_main.cmd_validate(args))
+    sys.exit(asyncio.run(core_main.cmd_validate(args)))
 
 
 @main.command()
@@ -400,7 +399,7 @@ def tasks(file: str, workers: int, verbose: bool):
             self.__dict__.update(kwargs)
             
     args = Args(file=file, workers=workers, verbose=verbose)
-    asyncio.run(core_main.cmd_tasks(args))
+    sys.exit(asyncio.run(core_main.cmd_tasks(args)))
 
 
 @main.command()
@@ -416,7 +415,7 @@ def setup(output: str, verbose: bool):
             self.__dict__.update(kwargs)
             
     args = Args(output=output, verbose=verbose)
-    asyncio.run(core_main.cmd_setup(args))
+    sys.exit(asyncio.run(core_main.cmd_setup(args)))
 
 
 @main.command()
@@ -431,7 +430,7 @@ def stop(verbose: bool):
             self.__dict__.update(kwargs)
             
     args = Args(verbose=verbose)
-    asyncio.run(core_main.cmd_stop(args))
+    sys.exit(asyncio.run(core_main.cmd_stop(args)))
 
 
 @main.command()
@@ -464,8 +463,7 @@ def evolve(prompt: str, output: str, port: int, keep_running: bool, verbose: boo
             auto_fix=True,
             log_file=log_file
         )
-        asyncio.run(core_main.cmd_evolve(args))
-        return
+        sys.exit(asyncio.run(core_main.cmd_evolve(args)))
     
     if engine == "node":
         # Use Node.js implementation
@@ -537,7 +535,7 @@ def status(verbose: bool):
             self.__dict__.update(kwargs)
             
     args = Args(verbose=verbose)
-    asyncio.run(core_main.cmd_status(args))
+    sys.exit(asyncio.run(core_main.cmd_status(args)))
 
 
 @main.group()

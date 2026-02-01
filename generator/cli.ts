@@ -38,7 +38,7 @@ function printHeader(): void {
   console.log(color(`
 ╔═══════════════════════════════════════════════════════════════╗
 ║          RECLAPP GENERATOR - Application from Contract        ║
-║                        Version 2.1.0                          ║
+║                        Version 2.4.1                          ║
 ╚═══════════════════════════════════════════════════════════════╝
 `, 'cyan'));
 }
@@ -194,7 +194,7 @@ function parseContract(content: string): any {
   // This is a simplified parser - in production, use the full Peggy parser
   const ast: any = {
     type: 'Program',
-    version: '2.1.0',
+    version: '2.4.1',
     statements: []
   };
 

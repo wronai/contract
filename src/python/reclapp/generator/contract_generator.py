@@ -4,7 +4,7 @@ Contract Generator
 Generates ContractAI from natural language prompts using LLM.
 
 Mirrors: src/core/contract-ai/generator/contract-generator.ts
-@version 2.2.0
+@version 2.4.1
 """
 
 import json

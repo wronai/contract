@@ -14,7 +14,7 @@ Stages:
 8. Runtime - Docker deploy & test
 
 Mirrors: src/core/contract-ai/validation/
-@version 2.2.0
+@version 2.4.1
 """
 
 from .pipeline import (

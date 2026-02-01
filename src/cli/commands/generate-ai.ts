@@ -16,7 +16,7 @@
  *   --dry-run          Generate contract only, no code
  *   --model            LLM model to use (default: llama3)
  * 
- * @version 2.2.0
+ * @version 2.4.1
  */
 
 import * as fs from 'fs';
@@ -126,7 +126,7 @@ Examples:
 // ============================================================================
 
 async function generateAI(options: GenerateAIOptions): Promise<void> {
-  console.log('\n🤖 Reclapp Contract AI Generator v2.2.0\n');
+  console.log('\n🤖 Reclapp Contract AI Generator v2.4.1\n');
 
   // Validate input
   if (!options.contractFile && !options.prompt) {

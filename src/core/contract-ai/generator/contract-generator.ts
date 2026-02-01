@@ -3,7 +3,7 @@
  * 
  * Główna klasa generująca Contract AI z LLM z self-correction loop.
  * 
- * @version 2.2.0
+ * @version 2.4.1
  * @see todo/16-reclapp-implementation-todo-prompts.md
  */
 

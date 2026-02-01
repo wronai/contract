@@ -4,7 +4,7 @@
  * Generates TypeScript types, API client, and React hooks from ContractAI.
  * Ensures frontend stays synchronized with contract definitions.
  * 
- * @version 2.2.0
+ * @version 2.4.1
  */
 
 import { ContractAI, EntityDefinition, FieldDefinition } from '../types';

@@ -3,7 +3,7 @@
  * 
  * Sprawdza bramki jakości (quality gates).
  * 
- * @version 2.2.0
+ * @version 2.4.1
  */
 
 import { StageResult, GeneratedFile, QualityMetric } from '../../types';

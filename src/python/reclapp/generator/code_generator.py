@@ -4,7 +4,7 @@ Code Generator
 Generates application code from ContractAI using LLM.
 
 Mirrors: src/core/contract-ai/code-generator/llm-generator.ts
-@version 2.2.0
+@version 2.4.1
 """
 
 import json

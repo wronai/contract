@@ -3,7 +3,7 @@
  * 
  * Sprawdza składnię TypeScript wygenerowanego kodu.
  * 
- * @version 2.2.0
+ * @version 2.4.1
  */
 
 import { StageResult } from '../../types';

@@ -363,7 +363,7 @@ Response:
 | Version | Date | Changes |
 |---------|------|---------|
 | 2.4.1 | 2026-02 | Unified Python CLI, modular packages, enhanced auto-healing |
-| 2.1.0 | 2024-12 | Added MCP integration, causal verification loop |
+| 2.4.1 | 2024-12 | Added MCP integration, causal verification loop |
 | 2.0.0 | 2024-11 | Added AI Contract, verification engine |
 | 1.0.0 | 2024-10 | Initial DSL-based agent specification |
 

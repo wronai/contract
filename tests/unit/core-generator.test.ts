@@ -98,7 +98,7 @@ describe('Generator (CLI) - API output', () => {
 
     return {
       type: 'Program',
-      version: '2.1.0',
+      version: '2.4.1',
       statements: [entity],
       location: loc
     };

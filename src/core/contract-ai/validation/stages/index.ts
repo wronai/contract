@@ -1,7 +1,7 @@
 /**
  * Validation Stages - Index
  * 
- * @version 2.2.0
+ * @version 2.4.1
  */
 
 export * from './syntax-validator';

@@ -9,7 +9,7 @@ Features:
 - React hooks for data fetching
 - Zod validation schemas
 
-@version 2.2.0
+@version 2.4.1
 """
 
 from typing import Any, Dict, List, Literal, Optional

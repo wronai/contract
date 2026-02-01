@@ -3,7 +3,7 @@
  * 
  * Generuje i uruchamia testy na podstawie contract.validation.tests
  * 
- * @version 2.2.0
+ * @version 2.4.1
  */
 
 import { execSync } from 'child_process';

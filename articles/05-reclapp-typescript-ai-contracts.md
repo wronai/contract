@@ -1,6 +1,6 @@
 # Reclapp 2.1: TypeScript AI Contracts - Deklaratywne Kontrakty dla Autonomicznych Agentów
 
-**Status:** ✅ Zaimplementowane | **Wersja:** 2.1.0 | **Data:** Grudzień 2024
+**Status:** ✅ Zaimplementowane | **Wersja:** 2.4.1 | **Data:** Grudzień 2024
 
 ## Wprowadzenie
 

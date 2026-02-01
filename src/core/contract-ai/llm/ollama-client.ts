@@ -3,7 +3,7 @@
  * 
  * Implementacja LLMClient dla lokalnego Ollama.
  * 
- * @version 2.2.0
+ * @version 2.4.1
  */
 
 import * as http from 'http';

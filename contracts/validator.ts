@@ -4,7 +4,7 @@
  * Runtime validation of AI Contracts using internal schema objects.
  * Ensures contracts are valid before execution.
  * 
- * @version 2.1.0
+ * @version 2.4.1
  */
 
 import type { 

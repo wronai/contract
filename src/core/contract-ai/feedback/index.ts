@@ -3,7 +3,7 @@
  * 
  * Zarządza pętlą feedbacku i korekcji kodu.
  * 
- * @version 2.2.0
+ * @version 2.4.1
  */
 
 export * from './feedback-generator';

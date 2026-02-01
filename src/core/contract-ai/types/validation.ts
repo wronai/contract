@@ -3,7 +3,7 @@
  * 
  * Definiuje reguły walidacji i kryteria akceptacji wygenerowanego kodu.
  * 
- * @version 2.2.0
+ * @version 2.4.1
  * @see todo/14-reclapp-llm-code-generation-spec.md
  */
 

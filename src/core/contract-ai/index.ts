@@ -25,7 +25,7 @@
  * }
  * ```
  * 
- * @version 2.2.0
+ * @version 2.4.1
  * @see todo/14-reclapp-llm-code-generation-spec.md
  * @see todo/15-reclapp-architecture-summary.md
  * @see todo/16-reclapp-implementation-todo-prompts.md

@@ -112,7 +112,7 @@ export class ReclappMCPServer {
   constructor() {
     this.config = {
       name: 'reclapp-mcp-server',
-      version: '2.1.0',
+      version: '2.4.1',
       capabilities: {
         resources: { listChanged: true },
         tools: {},

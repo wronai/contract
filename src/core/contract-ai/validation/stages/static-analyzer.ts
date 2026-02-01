@@ -3,7 +3,7 @@
  * 
  * Uruchamia analizę statyczną kodu (ESLint-like rules).
  * 
- * @version 2.2.0
+ * @version 2.4.1
  */
 
 import { StageResult, GeneratedFile } from '../../types';

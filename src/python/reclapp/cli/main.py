@@ -461,6 +461,7 @@ async def cmd_generate(args: argparse.Namespace) -> int:
     import json
     from ..generator import CodeGenerator, CodeGeneratorOptions
     from ..llm import LLMManager
+    from ..parser.markdown_parser import parse_contract_markdown
     
     # Load contract
     contract_path = Path(args.contract)
@@ -469,10 +470,19 @@ async def cmd_generate(args: argparse.Namespace) -> int:
         return 1
     
     try:
-        with open(contract_path) as f:
-            contract = json.load(f)
-    except json.JSONDecodeError as e:
-        print(f"❌ Invalid JSON in contract: {e}")
+        if contract_path.suffix == ".md":
+            content = contract_path.read_text()
+            contract_md = parse_contract_markdown(content)
+            # CodeGenerator expects a dict, so we convert from model
+            # Note: We need to ensure it matches the internal AI format if possible
+            # or update CodeGenerator to handle the parsed model.
+            # For now, let's dump to dict.
+            contract = contract_md.model_dump(by_alias=True)
+        else:
+            with open(contract_path) as f:
+                contract = json.load(f)
+    except Exception as e:
+        print(f"❌ Failed to load contract: {e}")
         return 1
     
     print(f"\n## Reclapp Code Generator v{__version__}\n")
