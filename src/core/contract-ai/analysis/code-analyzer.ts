@@ -413,12 +413,21 @@ export class CodeAnalyzer {
     }
 
     // Extract Express.js routes
-    const routeRegex = /(?:router|app)\.(get|post|put|delete|patch)\s*\(\s*['"]([^'"]+)['"]/g;
+    const routeRegex = /(?:router|app)\.(get|post|put|delete|patch|use)\s*\(\s*['"]([^'"]+)['"]/g;
     while ((match = routeRegex.exec(content)) !== null) {
-      info.endpoints.push({
-        method: match[1].toUpperCase(),
-        path: match[2]
-      });
+      if (match[1] === 'use') {
+        // middleware or sub-router base path
+        // we keep it as a pseudo-endpoint for prefix detection
+        info.endpoints.push({
+          method: 'USE',
+          path: match[2]
+        });
+      } else {
+        info.endpoints.push({
+          method: match[1].toUpperCase(),
+          path: match[2]
+        });
+      }
     }
 
     // Extract enums
@@ -846,18 +855,19 @@ export class CodeAnalyzer {
           const nameLower = f.name.toLowerCase();
           
           for (const otherEntity of entities) {
-            const otherName = otherEntity.name.charAt(0).toUpperCase() + otherEntity.name.slice(1);
+            const otherName = otherEntity.name;
             const otherLower = otherName.toLowerCase();
-            if (nameLower === otherLower || nameLower === otherLower + 'id') {
+            // Match exactly or with Id/UUID suffix
+            if (nameLower === otherLower || nameLower === otherLower + 'id' || nameLower === otherLower + 'uuid') {
               type = `-> ${otherName}`;
               break;
             }
           }
           
           // Detect enums
-          if (type === 'text' || type === 'json' || type === 'any') {
+          if (type === 'text' || type === 'json' || type === 'any' || type === 'String') {
             for (const en of enums) {
-              const enumName = en.name.charAt(0).toUpperCase() + en.name.slice(1);
+              const enumName = en.name;
               if (nameLower === enumName.toLowerCase() || f.name.endsWith(enumName)) {
                 type = enumName;
                 break;
@@ -906,7 +916,7 @@ export class CodeAnalyzer {
         // Find common prefix by splitting paths
         const pathArrays = paths.map(p => p.split('/').filter(Boolean));
         let commonParts: string[] = [];
-        const firstPath = pathArrays[0];
+        const firstPath = pathArrays[0] || [];
         
         for (let i = 0; i < firstPath.length; i++) {
           const part = firstPath[i];
@@ -919,14 +929,23 @@ export class CodeAnalyzer {
         
         // If commonParts includes resource names (plural), trim them
         // Usually prefixes are /api or /api/v1, not /api/customers
-        if (commonParts.length > 0) {
+        while (commonParts.length > 0) {
           const lastPart = commonParts[commonParts.length - 1];
-          if (lastPart.endsWith('s') || entities.some(e => e.name.toLowerCase() === lastPart.toLowerCase().replace(/s$/, ''))) {
+          const isResource = lastPart.endsWith('s') || 
+                           entities.some(e => e.name.toLowerCase() === lastPart.toLowerCase().replace(/s$/, '')) ||
+                           events.some(e => e.name.toLowerCase() === lastPart.toLowerCase().replace(/s$/, ''));
+          
+          // Keep common prefixes like 'api', 'v1', 'v2' even if they end in 's' (rare)
+          if (isResource && !['api', 'v1', 'v2', 'v3'].includes(lastPart.toLowerCase())) {
             commonParts.pop();
+          } else {
+            break;
           }
         }
 
-        apiPrefix = commonParts.length > 0 ? '/' + commonParts.join('/') : '/api';
+        if (commonParts.length > 0) {
+          apiPrefix = '/' + commonParts.join('/');
+        }
       }
     }
 

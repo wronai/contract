@@ -59,6 +59,7 @@ export interface EntityField {
   name: string;
   type: string;
   required?: boolean;
+  explicitRequired?: boolean;
   unique?: boolean;
   auto?: boolean;
   nullable?: boolean;
@@ -345,10 +346,13 @@ export class MarkdownParser {
     const descMatch = comment.match(/-\s*(.+)$/);
     const description = descMatch?.[1]?.trim();
 
+    const isRequired = modifiers.includes('required');
+
     return {
       name,
       type: typeStr,
-      required: modifiers.includes('required'),
+      required: isRequired,
+      explicitRequired: isRequired,
       unique: modifiers.includes('unique'),
       auto: modifiers.includes('auto') || modifiers.includes('generated'),
       nullable: typeStr.endsWith('?'),
@@ -550,7 +554,7 @@ export class MarkdownParser {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith('#')) continue;
 
-      const match = trimmed.match(/^(\w+)\s*:\s*(\w+)(?:\s*#\s*(.*))?$/);
+      const match = trimmed.match(/^(\w+)\s*:\s*([\w?]+)(?:\s*#\s*(.*))?$/);
       if (match) {
         const [, name, type, comment] = match;
         const commentStr = comment || '';
@@ -559,7 +563,7 @@ export class MarkdownParser {
           name,
           type,
           required: commentStr.includes('@required'),
-          secret: type === 'secret',
+          secret: type.startsWith('secret'),
         };
 
         const defaultMatch = commentStr.match(/=\s*"?([^"]+)"?/);
@@ -657,6 +661,7 @@ export function irToContract(ir: IR): any {
         rclType: f.type,
         type: mapFieldType(f.type),
         required: f.required,
+        explicitRequired: f.explicitRequired,
         unique: f.unique,
         auto: f.auto,
         default: f.defaultValue,

@@ -1152,17 +1152,16 @@ Evolution completed.
             self._service_process = None
     
     async def _generate_e2e_tests(self, target_dir: str) -> Optional[str]:
-        """Generate E2E test file"""
-        if not self._contract:
-            return None
-        
-        entities = self._contract.get("definition", {}).get("entities", [])
-        if not entities:
-            return None
-        
-        entity = entities[0]
-        entity_name = entity.get("name", "Item")
-        entity_lower = entity_name.lower()
+        """Generate E2E test file (fallback even without entities)"""
+        # Fallback entity if contract or entities are missing
+        entity_name = "Item"
+        entity_lower = "item"
+        if self._contract:
+            entities = self._contract.get("definition", {}).get("entities", [])
+            if entities:
+                entity = entities[0]
+                entity_name = entity.get("name", entity_name)
+                entity_lower = entity_name.lower()
         
         test_content = f'''/**
  * E2E Tests for {entity_name} API
@@ -1251,14 +1250,14 @@ runTests().then(results => {{
 }});
 '''
         
-        test_file = Path(target_dir) / "tests" / "e2e" / "api.e2e.js"
+        test_file = Path(target_dir) / "tests" / "e2e" / "api.e2e.ts"
         test_file.parent.mkdir(parents=True, exist_ok=True)
         test_file.write_text(test_content)
         return str(test_file)
     
     async def _run_e2e_tests(self, target_dir: str) -> tuple[int, int]:
         """Run E2E tests and return (passed, failed)"""
-        test_file = Path(target_dir) / "tests" / "e2e" / "api.e2e.js"
+        test_file = Path(target_dir) / "tests" / "e2e" / "api.e2e.ts"
         if not test_file.exists():
             return 0, 0
         

@@ -135,7 +135,7 @@ class TestLLMConfig:
         """Test getting default provider."""
         config = LLMConfig()
         provider = config.get_default_provider()
-        assert provider in ['ollama', 'openrouter', 'openai', 'anthropic', 'groq', 'together', 'litellm']
+        assert provider in ['auto', 'ollama', 'openrouter', 'openai', 'anthropic', 'groq', 'together', 'litellm']
         
     def test_get_default_provider_from_env(self):
         """Test getting default provider from env."""

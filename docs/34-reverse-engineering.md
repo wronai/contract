@@ -20,7 +20,7 @@ The `reverse` command analyzes the source code of an application to:
 reclapp reverse .
 
 # Reverse engineer a specific directory and save to a custom path
-reclapp reverse ./my-app --output ./docs/contracts/my-app.rcl.md
+reclapp reverse ./my-app/ --output ./my-app/contract/my-app.rcl.md
 ```
 
 ## Integrating with AI Plan

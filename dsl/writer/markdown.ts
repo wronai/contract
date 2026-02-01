@@ -135,15 +135,15 @@ export function writeMarkdownContract(
         const comment = commentParts.length > 0 ? `# ${commentParts.join(' ')}` : '';
 
         const typeStr = field.type + (field.nullable && !field.type.endsWith('?') ? '?' : '');
-        lines.push(`${field.name.padEnd(16)}: ${typeStr.padEnd(20)} ${comment}`.trimEnd());
+        const line = `${field.name.padEnd(16)}: ${typeStr.padEnd(21)}${comment}`;
+        lines.push(line.trimEnd());
       }
 
       lines.push('```');
       lines.push('');
+      lines.push('---');
+      lines.push('');
     }
-
-    lines.push('---');
-    lines.push('');
   }
 
   // Enums
@@ -157,7 +157,7 @@ export function writeMarkdownContract(
 
       for (const value of enumDef.values) {
         const desc = value.description ? ` # ${value.description}` : '';
-        lines.push(`- ${value.name}${desc}`);
+        lines.push(`- ${value.name.padEnd(14)}${desc}`.trimEnd());
       }
 
       lines.push('```');
@@ -244,34 +244,6 @@ export function writeMarkdownContract(
     lines.push('');
   }
 
-  // Dashboards
-  if (ir.dashboards.length > 0) {
-    lines.push(`## 📊 ${L.dashboards}`);
-    lines.push('');
-
-    for (const dashboard of ir.dashboards) {
-      lines.push(`### ${prettyTitles ? humanizeTitle(dashboard.name) : dashboard.name}`);
-      lines.push('');
-      lines.push('```yaml');
-      lines.push(`# dashboard: ${dashboard.name}`);
-      if (dashboard.entity) {
-        lines.push(`entity: ${dashboard.entity}`);
-      }
-      lines.push(`metrics: [${(dashboard.metrics || []).join(', ')}]`);
-      if (dashboard.stream) {
-        lines.push(`stream: ${dashboard.stream}`);
-      }
-      if (dashboard.layout) {
-        lines.push(`layout: ${dashboard.layout}`);
-      }
-      lines.push('```');
-      lines.push('');
-    }
-
-    lines.push('---');
-    lines.push('');
-  }
-
   // Sources
   if (ir.sources.length > 0) {
     lines.push(`## 🔌 ${L.sources}`);
@@ -320,7 +292,35 @@ export function writeMarkdownContract(
     lines.push('');
   }
 
-    if (ir.api) {
+  // Dashboards
+  if (ir.dashboards.length > 0) {
+    lines.push(`## 📊 ${L.dashboards}`);
+    lines.push('');
+
+    for (const dashboard of ir.dashboards) {
+      lines.push(`### ${prettyTitles ? humanizeTitle(dashboard.name) : dashboard.name}`);
+      lines.push('');
+      lines.push('```yaml');
+      lines.push(`# dashboard: ${dashboard.name}`);
+      if (dashboard.entity) {
+        lines.push(`entity: ${dashboard.entity}`);
+      }
+      lines.push(`metrics: [${(dashboard.metrics || []).join(', ')}]`);
+      if (dashboard.stream) {
+        lines.push(`stream: ${dashboard.stream}`);
+      }
+      if (dashboard.layout) {
+        lines.push(`layout: ${dashboard.layout}`);
+      }
+      lines.push('```');
+      lines.push('');
+    }
+
+    lines.push('---');
+    lines.push('');
+  }
+
+  if (ir.api) {
     lines.push(`## 🌐 ${L.api}`);
     lines.push('');
     lines.push('```yaml');
@@ -369,10 +369,15 @@ export function writeMarkdownContract(
       const modifiers: string[] = [];
       if (envVar.required) modifiers.push('@required');
 
-      const modStr = modifiers.length > 0 ? ` # ${modifiers.join(' ')}` : '';
-      const defaultStr = envVar.default ? ` = "${envVar.default}"` : '';
+      const modStr = modifiers.join(' ');
+      const defaultStr = envVar.default ? `= "${envVar.default}"` : '';
+      
+      const commentParts: string[] = [];
+      if (modStr) commentParts.push(modStr);
+      if (defaultStr) commentParts.push(defaultStr);
+      const comment = commentParts.length > 0 ? `# ${commentParts.join(' ')}` : '';
 
-      lines.push(`${envVar.name.padEnd(20)}: ${envVar.type}${modStr}${defaultStr}`);
+      lines.push(`${envVar.name.padEnd(16)}: ${envVar.type.padEnd(21)}${comment}`.trimEnd());
     }
 
     lines.push('```');
@@ -394,6 +399,7 @@ export function writeMarkdownContract(
   }
 
   lines.push(`*${L.generatedBy}*`);
+  lines.push('');
 
   return lines.join('\n');
 }
@@ -438,6 +444,9 @@ export function contractToIR(contract: any): IR {
 }
 
 function mapTypeToRcl(type: string, fieldName?: string): string {
+  if (!type) return 'text';
+  if (type.startsWith('->')) return type;
+
   const typeMap: Record<string, string> = {
     String: 'text',
     Int: 'int',
@@ -459,5 +468,25 @@ function mapTypeToRcl(type: string, fieldName?: string): string {
   }
   if (type.length > 0 && type[0] === type[0].toUpperCase()) return type;
 
-  return type.toLowerCase();
+  return mapped;
+}
+
+function humanizeTitle(name: string): string {
+  // Special cases for acronyms
+  const specialCases: Record<string, string> = {
+    'VIESVAT': 'VIES VAT',
+    'KRSRegistry': 'KRS Registry',
+    'CEIDGRegistry': 'CEIDG Registry',
+  };
+  
+  if (specialCases[name]) return specialCases[name];
+
+  return name
+    .replace(/_/g, ' ')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\s+/g, ' ')
+    .trim();
 }

@@ -1339,7 +1339,11 @@ async function cmdReverse(args, options) {
 
     // Convert contract to IR and then to Markdown
     const ir = contractToIR(contract);
-    const markdown = writeMarkdownContract(ir, [], { includeConversation: false, includeTimestamp: false });
+    const markdown = writeMarkdownContract(ir, [], { 
+      includeConversation: false, 
+      includeTimestamp: false,
+      prettyTitles: true
+    });
 
     // Ensure directory exists
     const outDir = path.dirname(outPath);

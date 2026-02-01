@@ -255,11 +255,15 @@ class TestLLMManagerMocked:
                 
     @pytest.mark.asyncio
     async def test_generate_no_provider(self):
-        with patch.object(OllamaClient, 'is_available', new_callable=AsyncMock) as mock_avail:
-            mock_avail.return_value = False
+        with patch.object(OllamaClient, 'is_available', new_callable=AsyncMock) as mock_ollama_avail, \
+             patch.object(OpenRouterClient, 'is_available', new_callable=AsyncMock) as mock_or_avail:
+            mock_ollama_avail.return_value = False
+            mock_or_avail.return_value = False
             
             manager = LLMManager()
-            await manager.initialize()
+            # Clear any potentially loaded providers from env
+            with patch.dict('os.environ', {'OPENROUTER_API_KEY': ''}):
+                await manager.initialize()
             
             with pytest.raises(RuntimeError, match="No LLM provider"):
                 await manager.generate(GenerateOptions(system="test", user="test"))

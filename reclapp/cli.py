@@ -400,6 +400,34 @@ def evolve(prompt: str, output: str, keep_running: bool, verbose: bool, no_menu:
             sys.exit(1)
 
 
+@main.command()
+@click.argument("target_dir", default=".")
+@click.option("--output", "-o", help="Output .rcl.md file path")
+@click.option("--verbose", "-v", is_flag=True, help="Verbose output")
+def reverse(target_dir: str, output: Optional[str], verbose: bool):
+    """Reverse-engineer a contract from an existing application"""
+    click.md(f"```log\n🔄 Reverse engineering from: {target_dir}\n```\n")
+    
+    node = find_node()
+    if not node:
+        click.md("```log\n❌ Error: Node.js not found\n```\n")
+        sys.exit(1)
+    
+    if NODE_CLI.exists():
+        cmd = [node, str(NODE_CLI), "reverse", target_dir]
+        if output:
+            cmd.extend(["-o", output])
+        if verbose:
+            cmd.append("-v")
+        
+        env = setup_node_env()
+        result = subprocess.run(cmd, env=env, cwd=str(PROJECT_ROOT))
+        sys.exit(result.returncode)
+    else:
+        click.md("```log\n❌ Error: Node CLI not found\n```\n")
+        sys.exit(1)
+
+
 # ============================================================================
 # LLM MANAGEMENT COMMANDS
 # ============================================================================

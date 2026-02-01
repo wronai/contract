@@ -16,52 +16,103 @@
 
 ```yaml
 # entity: Customer
-id              : text                 # @unique @auto
+id              : uuid                 # @unique @auto
 name            : text                 # @required
-taxId           : text                 # @unique @required
-regon           : text
-krsNumber       : text
-email           : text                 # @required
-phone           : text
+taxId           : text                 # @unique @required - NIP
+regon           : text?
+krsNumber       : text?
+email           : email                # @required
+phone           : phone?
 address         : text
 city            : text
 postalCode      : text
-country         : text                 #  = PL
-status          : CustomerStatus       #  = pending
-riskScore       : int(0..100)          #  = 50
-verifiedAt      : datetime
+country         : text                 # = PL
+status          : CustomerStatus       # = pending
+riskScore       : int(0..100)          # = 50
+verifiedAt      : datetime?
 createdAt       : datetime             # @auto
 updatedAt       : datetime             # @auto
 ```
+
+---
 
 ### Verification
 
 ```yaml
 # entity: Verification
-id              : text                 # @unique @auto
+id              : uuid                 # @unique @auto
 customer        : -> Customer          # @required
 type            : VerificationType     # @required
-source          : text                 # @required
-status          : VerificationStatus   #  = pending
-result          : json
-score           : int(0..100)
-errorMessage    : text
+source          : text                 # @required - KRS, CEIDG, etc
+status          : VerificationStatus   # = pending
+result          : json?
+score           : int(0..100)?
+errorMessage    : text?
 requestedAt     : datetime             # @auto
-completedAt     : datetime
+completedAt     : datetime?
 ```
+
+---
 
 ### Document
 
 ```yaml
 # entity: Document
-id              : text                 # @unique @auto
+id              : uuid                 # @unique @auto
 customer        : -> Customer          # @required
 type            : DocumentType         # @required
 filename        : text                 # @required
-url             : text                 # @required
-status          : DocumentStatus       #  = pending
-verifiedAt      : datetime
+url             : url                  # @required
+status          : DocumentStatus       # = pending
+verifiedAt      : datetime?
 uploadedAt      : datetime             # @auto
+```
+
+---
+
+## 🏷️ Typy wyliczeniowe
+
+```yaml
+# enum: CustomerStatus
+- pending        # Oczekujący na weryfikację
+- verifying      # W trakcie weryfikacji
+- verified       # Zweryfikowany
+- rejected       # Odrzucony
+- blocked        # Zablokowany
+```
+
+```yaml
+# enum: VerificationType
+- krs            # Weryfikacja KRS
+- ceidg          # Weryfikacja CEIDG
+- vat            # Weryfikacja VAT EU
+- financial      # Weryfikacja finansowa
+- aml            # Anti Money Laundering
+```
+
+```yaml
+# enum: VerificationStatus
+- pending        # Oczekująca
+- inProgress     # W trakcie
+- completed      # Zakończona
+- failed         # Nieudana
+- expired        # Wygasła
+```
+
+```yaml
+# enum: DocumentType
+- registration   # Dokumenty rejestracyjne
+- financial      # Dokumenty finansowe
+- identity       # Dokumenty tożsamości
+- contract       # Umowy
+- other          # Inne
+```
+
+```yaml
+# enum: DocumentStatus
+- pending        # Oczekujący
+- verified       # Zweryfikowany
+- rejected       # Odrzucony
 ```
 
 ---
@@ -141,7 +192,7 @@ filename        : text
 
 ## 🚨 Alerty
 
-### HighRiskCustomer
+### High Risk Customer
 
 ```yaml
 # alert: HighRiskCustomer
@@ -152,7 +203,7 @@ severity: high
 message: "Klient wysokiego ryzyka: {{name}} (score: {{riskScore}})"
 ```
 
-### VerificationFailed
+### Verification Failed
 
 ```yaml
 # alert: VerificationFailed
@@ -163,7 +214,7 @@ severity: medium
 message: "Weryfikacja nieudana dla klienta"
 ```
 
-### PendingTooLong
+### Pending Too Long
 
 ```yaml
 # alert: PendingTooLong
@@ -176,31 +227,9 @@ message: "Klient {{name}} oczekuje na weryfikację ponad 7 dni"
 
 ---
 
-## 📊 Panele
-
-### OnboardingDashboard
-
-```yaml
-# dashboard: OnboardingDashboard
-entity: Customer
-metrics: [count, avg.riskScore]
-layout: grid
-```
-
-### VerificationStatus
-
-```yaml
-# dashboard: VerificationStatus
-entity: Verification
-metrics: [count]
-layout: grid
-```
-
----
-
 ## 🔌 Źródła danych
 
-### KRSRegistry
+### KRS Registry
 
 ```yaml
 # source: KRSRegistry
@@ -210,7 +239,7 @@ auth: none
 cache: "1h"
 ```
 
-### CEIDGRegistry
+### CEIDG Registry
 
 ```yaml
 # source: CEIDGRegistry
@@ -220,7 +249,7 @@ auth: apiKey
 cache: "1h"
 ```
 
-### VIESVAT
+### VIES VAT
 
 ```yaml
 # source: VIESVAT
@@ -234,7 +263,7 @@ cache: "24h"
 
 ## ⚙️ Przepływy pracy
 
-### CustomerOnboarding
+### Customer Onboarding
 
 ```yaml
 # workflow: CustomerOnboarding
@@ -242,12 +271,69 @@ trigger: CustomerRegistered
 steps: [verifyKRS, verifyCEIDG, calculateRisk, approveOrReject]
 ```
 
-### RiskRecalculation
+### Risk Recalculation
 
 ```yaml
 # workflow: RiskRecalculation
 trigger: VerificationCompleted
 steps: [aggregateScores, updateRiskScore, checkThresholds]
+```
+
+---
+
+## 📊 Panele
+
+### Onboarding Dashboard
+
+```yaml
+# dashboard: OnboardingDashboard
+entity: Customer
+metrics: [count, avg.riskScore]
+layout: grid
+```
+
+### Verification Status
+
+```yaml
+# dashboard: VerificationStatus
+entity: Verification
+metrics: [count]
+layout: grid
+```
+
+---
+
+## 🌐 Konfiguracja API
+
+```yaml
+# api:
+prefix: /api/v1
+auth: jwt
+rateLimit: 100
+```
+
+---
+
+## 🚀 Deployment
+
+```yaml
+# deployment:
+type: docker
+database: postgresql
+cache: redis
+```
+
+---
+
+## 🔐 Zmienne środowiskowe
+
+```yaml
+# env:
+DATABASE_URL    : string               # @required
+JWT_SECRET      : secret               # @required
+KRS_API_KEY     : secret?
+CEIDG_API_KEY   : secret               # @required
+SLACK_WEBHOOK   : string?
 ```
 
 ---

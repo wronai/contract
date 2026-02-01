@@ -91,7 +91,7 @@ def check_markdown_structure(content: str) -> list[str]:
     return issues
 
 
-def test_html_conversion(content: str, name: str) -> tuple[bool, str]:
+def _test_html_conversion(content: str, name: str) -> tuple[bool, str]:
     """Test that markdown converts to valid HTML."""
     try:
         html = markdown_to_html(content, title=name)
@@ -145,7 +145,7 @@ def main():
             continue
         
         # Test HTML conversion
-        html_ok, html_result = test_html_conversion(output, name)
+        html_ok, html_result = _test_html_conversion(output, name)
         if not html_ok:
             print(f"  ❌ HTML conversion failed: {html_result}")
             results.append((name, False, html_result))
