@@ -2,7 +2,7 @@
 Pydantic Contract Examples
 """
 try:
-    from .base import (
+    from base import (
         ContractBase, Definition, Generation, Validation,
         Entity, Field, FieldAnnotations, ApiDefinition, ApiResource,
         AppDefinition, Instruction, TechStack, TechStackBackend,

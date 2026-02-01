@@ -351,7 +351,7 @@ export class MarkdownParser {
       required: modifiers.includes('required'),
       unique: modifiers.includes('unique'),
       auto: modifiers.includes('auto') || modifiers.includes('generated'),
-      nullable: typeStr.endsWith('?') || !modifiers.includes('required'),
+      nullable: typeStr.endsWith('?'),
       defaultValue,
       description,
     };

@@ -130,7 +130,7 @@ export function writeMarkdownContract(
         const defaultStr = field.defaultValue ? ` = ${field.defaultValue}` : '';
         const descStr = field.description ? ` - ${field.description}` : '';
 
-        let comment = `# ${modStr}${defaultStr}${descStr}`.trim();
+        let comment = modStr || defaultStr || descStr ? `# ${modStr}${defaultStr}${descStr}`.trim() : '';
         if (comment === '#') comment = '';
 
         const typeStr = field.type + (field.nullable && !field.type.endsWith('?') ? '?' : '');

@@ -6,6 +6,7 @@
 |------------|---------|
 | Wersja | 2.0.0 |
 | Autor | Reclapp Team |
+| Licencja | MIT |
 | Utworzono | 2026-02-01 |
 
 ---

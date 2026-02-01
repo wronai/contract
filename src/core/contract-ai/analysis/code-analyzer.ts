@@ -897,24 +897,36 @@ export class CodeAnalyzer {
     // Try to find API config from .env or server.ts
     let apiPrefix = '/api';
     let apiPort = 8080;
-    let apiAuth = undefined;
+    let apiAuth: string | undefined = undefined;
 
     if (endpoints.length > 0) {
       // Intelligent prefix detection: find common base path
       const paths = endpoints.map(e => e.path).filter(p => p && p.startsWith('/'));
       if (paths.length > 0) {
-        // Simple heuristic: find common prefix like /api/v1
-        const parts = paths[0].split('/').filter(Boolean);
-        let common = '/';
-        for (let i = 0; i < parts.length; i++) {
-          const testPrefix = common + parts[i] + '/';
-          if (paths.every(p => (p + '/').startsWith(testPrefix))) {
-            common = testPrefix;
+        // Find common prefix by splitting paths
+        const pathArrays = paths.map(p => p.split('/').filter(Boolean));
+        let commonParts: string[] = [];
+        const firstPath = pathArrays[0];
+        
+        for (let i = 0; i < firstPath.length; i++) {
+          const part = firstPath[i];
+          if (pathArrays.every(arr => arr[i] === part)) {
+            commonParts.push(part);
           } else {
             break;
           }
         }
-        apiPrefix = common.replace(/\/$/, '') || '/api';
+        
+        // If commonParts includes resource names (plural), trim them
+        // Usually prefixes are /api or /api/v1, not /api/customers
+        if (commonParts.length > 0) {
+          const lastPart = commonParts[commonParts.length - 1];
+          if (lastPart.endsWith('s') || entities.some(e => e.name.toLowerCase() === lastPart.toLowerCase().replace(/s$/, ''))) {
+            commonParts.pop();
+          }
+        }
+
+        apiPrefix = commonParts.length > 0 ? '/' + commonParts.join('/') : '/api';
       }
     }
 
@@ -979,13 +991,12 @@ export class CodeAnalyzer {
       ...aiPlan,
       app: {
         ...derivedContract.app,
-        ...aiPlan.app, // Prefer original AI plan app info
+        ...aiPlan.app, // Prefer original AI plan app info (name, version, description)
       },
       api: {
-        ...aiPlan.api,
-        ...(derivedContract.api?.prefix && derivedContract.api.prefix !== '/api' ? { prefix: derivedContract.api.prefix } : {}),
-        ...(derivedContract.api?.port && derivedContract.api.port !== 8080 ? { port: derivedContract.api.port } : {}),
-        ...(derivedContract.api?.auth ? { auth: derivedContract.api.auth } : {})
+        prefix: aiPlan.api?.prefix || derivedContract.api?.prefix || '/api',
+        port: aiPlan.api?.port || derivedContract.api?.port || 8080,
+        auth: aiPlan.api?.auth || derivedContract.api?.auth
       },
       config: {
         ...aiPlan.config,
@@ -1051,8 +1062,8 @@ export class CodeAnalyzer {
     if (n === 'url' || n === 'uri' || n === 'website' || n === 'link') return 'url';
     if (n === 'createdat' || n === 'updatedat' || n.endsWith('at') || n === 'timestamp') return 'datetime';
     
-    // Fallback to suffix matching for IDs, but avoid common business IDs like taxId
-    if (n.endsWith('id') && !n.match(/tax|vat|national|citizen|business/)) return 'uuid';
+    // Fallback to suffix matching for IDs, but avoid common business IDs like taxId or regon
+    if (n.endsWith('id') && !n.match(/tax|vat|national|citizen|business|regon|krs/i)) return 'uuid';
     
     if (t === 'string' || t === 'text') return 'text';
     if (t === 'number' || t === 'int' || t === 'integer') return 'int';

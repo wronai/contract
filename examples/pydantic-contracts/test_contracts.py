@@ -2,7 +2,7 @@
 Tests for Pydantic Contract Examples
 """
 import pytest
-from .contracts import (
+from contracts import (
     NotesContract, TodoContract, CRMContract,
     InventoryContract, BookingContract
 )
