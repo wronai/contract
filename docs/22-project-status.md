@@ -21,32 +21,32 @@ Reclapp to kompletna platforma do generowania aplikacji B2B z kontraktów AI. Sy
 ┌─────────────────────────────────────────────────────────────┐
 │                     RECLAPP 2.2.0                           │
 ├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  CLI                                                         │
+│                                                             │
+│  CLI                                                        │
 │  ├── reclapp evolve -p "..." (LLM-powered)                  │
-│  ├── reclapp import /path/to/project (Git import)          │
+│  ├── reclapp import /path/to/project (Git import)           │
 │  └── reclapp tasks build.tasks (Task executor)              │
-│                                                              │
-│  EVOLUTION SYSTEM                                            │
+│                                                             │
+│  EVOLUTION SYSTEM                                           │
 │  ├── LLM Code Generation (with fallbacks)                   │
 │  ├── Multi-Level State Analysis                             │
 │  ├── CodeRAG Navigation                                     │
 │  ├── Git Integration                                        │
 │  └── 4-Level Error Recovery                                 │
-│                                                              │
-│  VERIFICATION PIPELINE                                       │
+│                                                             │
+│  VERIFICATION PIPELINE                                      │
 │  ├── Contract ↔ SourceCode verification                     │
 │  ├── SourceCode ↔ Service verification                      │
 │  ├── Service ↔ Logs verification                            │
 │  └── Automatic reconciliation                               │
-│                                                              │
-│  OUTPUT                                                      │
+│                                                             │
+│  OUTPUT                                                     │
 │  ├── api/ (LLM-generated Express.js + TypeScript)           │
 │  ├── tests/e2e/ (LLM-generated E2E tests)                   │
 │  ├── contract/contract.ai.json                              │
 │  ├── state/evolution-state.json                             │
 │  └── logs/*.rcl.md                                          │
-│                                                              │
+│                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 

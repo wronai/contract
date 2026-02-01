@@ -169,13 +169,13 @@ class EvolutionManager:
                     break
                 
                 # Run E2E tests
-                tests_passed, tests_failed = await self._phase_tests(target_dir)
+                tests_passed, tests_failed, test_output = await self._phase_tests(target_dir)
                 
                 if tests_failed == 0:
                     self.renderer.success(f"All {tests_passed} tests passed!")
                 elif self.options.auto_fix and iteration < self.options.max_iterations:
                     self.renderer.warning(f"{tests_failed} tests failed, attempting auto-fix...")
-                    await self._auto_fix_code(target_dir, tests_failed)
+                    await self._auto_fix_code(target_dir, tests_failed, test_output)
                     continue
                 else:
                     errors.append(f"{tests_failed} tests failed")
@@ -287,6 +287,17 @@ class EvolutionManager:
         if not contract:
             self.task_queue.fail("parse", "Failed to generate contract")
             return None
+        
+        # Override port from options if specified
+        if "generation" not in contract:
+            contract["generation"] = {}
+        if "techStack" not in contract["generation"]:
+            contract["generation"]["techStack"] = {}
+        if "backend" not in contract["generation"]["techStack"]:
+            contract["generation"]["techStack"]["backend"] = {}
+        
+        contract["generation"]["techStack"]["backend"]["port"] = self.options.port
+        
         self.task_queue.done("parse")
         
         self.task_queue.start("save-contract")
@@ -399,7 +410,7 @@ class EvolutionManager:
         
         return True
     
-    async def _phase_tests(self, target_dir: str) -> tuple[int, int]:
+    async def _phase_tests(self, target_dir: str) -> tuple[int, int, str]:
         """Phase 5: Generate and run E2E tests"""
         # Generate tests
         self.task_queue.start("generate-tests")
@@ -413,14 +424,14 @@ class EvolutionManager:
         
         # Run tests
         self.task_queue.start("run-tests")
-        passed, failed = await self._run_e2e_tests(target_dir)
+        passed, failed, output = await self._run_e2e_tests(target_dir)
         
         if failed == 0:
             self.task_queue.done("run-tests")
         else:
             self.task_queue.fail("run-tests", f"{failed} tests failed")
         
-        return passed, failed
+        return passed, failed, output
     
     async def _phase_additional(self, target_dir: str):
         """Phase 5-9: Additional generation (Database, Docker, CI/CD, Frontend, Docs)"""
@@ -1267,18 +1278,18 @@ runTests().then(results => {{
         test_file.write_text(test_content)
         return str(test_file)
     
-    async def _run_e2e_tests(self, target_dir: str) -> tuple[int, int]:
-        """Run E2E tests and return (passed, failed)"""
+    async def _run_e2e_tests(self, target_dir: str) -> tuple[int, int, str]:
+        """Run E2E tests and return (passed, failed, output)"""
         test_file = Path(target_dir) / "tests" / "e2e" / "api.e2e.ts"
         if not test_file.exists():
-            return 0, 0
+            return 0, 0, ""
         
         # Run with node (JavaScript)
         import shutil
         node_path = shutil.which("node")
         if not node_path:
             self.renderer.warning("node not found, skipping E2E tests")
-            return 0, 0  # Skip tests gracefully
+            return 0, 0, ""  # Skip tests gracefully
         
         try:
             # Run with node
@@ -1290,9 +1301,14 @@ runTests().then(results => {{
                 cwd=str(Path(target_dir) / "api")
             )
             
+            output = result.stdout + "\n" + result.stderr
+            
             # Parse JSON output
             try:
-                results = json.loads(result.stdout.strip())
+                # The test script might print other things before JSON, try to find JSON block
+                stdout_lines = result.stdout.strip().split('\n')
+                json_str = stdout_lines[-1] if stdout_lines else ""
+                results = json.loads(json_str)
                 passed = sum(1 for r in results if r.get("passed"))
                 failed = sum(1 for r in results if not r.get("passed"))
                 
@@ -1303,21 +1319,21 @@ runTests().then(results => {{
                     else:
                         self.renderer.error(f"❌ {r['name']}: {r.get('error', 'Failed')}")
                 
-                return passed, failed
+                return passed, failed, output
             except:
                 # Fallback: check exit code
                 if result.returncode == 0:
-                    return 1, 0
-                return 0, 1
+                    return 1, 0, output
+                return 0, 1, output
                 
         except subprocess.TimeoutExpired:
             self.renderer.error("Tests timed out")
-            return 0, 1
+            return 0, 1, "Timeout"
         except Exception as e:
             self.renderer.error(f"Test error: {e}")
-            return 0, 1
+            return 0, 1, str(e)
     
-    async def _auto_fix_code(self, target_dir: str, failed_count: int):
+    async def _auto_fix_code(self, target_dir: str, failed_count: int, test_output: str = ""):
         """Try to fix failing code with LLM - mirrors TypeScript recovery logic"""
         if not self._llm_client or not self._contract:
             self.renderer.warning("No LLM available for auto-fix")
@@ -1337,7 +1353,7 @@ runTests().then(results => {{
         if test_path.exists():
             test_code = test_path.read_text()
         
-        # Build fix prompt
+        # Build fix prompt with test output context
         fix_prompt = f"""Fix the following Express API code. The E2E tests are failing.
 
 Current server.ts:
@@ -1350,10 +1366,16 @@ Test expectations (from api.e2e.ts):
 {test_code[:1000]}
 ```
 
+Test failure output:
+```log
+{test_output[:1000]}
+```
+
 Common issues to fix:
 1. Ensure POST endpoints accept JSON body with 'title' field
 2. Ensure all CRUD operations work correctly
 3. Ensure proper error handling
+4. Pay attention to the specific error messages in the test output!
 
 Generate ONLY the fixed server.ts code, no explanations."""
 

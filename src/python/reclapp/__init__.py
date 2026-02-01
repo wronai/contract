@@ -44,6 +44,19 @@ from .models import (
     WorkflowDefinition,
 )
 
+from .generator import (
+    ContractGenerator,
+    ContractGeneratorOptions,
+    CodeGenerator,
+    CodeGeneratorOptions,
+)
+
+from .evolution import (
+    EvolutionManager,
+    EvolutionOptions,
+    EvolutionResult,
+)
+
 __all__ = [
     "__version__",
     "ContractAI",
@@ -60,4 +73,11 @@ __all__ = [
     "ApiDefinition",
     "ApiResourceDefinition",
     "WorkflowDefinition",
+    "ContractGenerator",
+    "ContractGeneratorOptions",
+    "CodeGenerator",
+    "CodeGeneratorOptions",
+    "EvolutionManager",
+    "EvolutionOptions",
+    "EvolutionResult",
 ]
