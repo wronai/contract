@@ -654,13 +654,16 @@ export function irToContract(ir: IR): any {
       name: e.name,
       fields: e.fields.map((f) => ({
         name: f.name,
+        rclType: f.type,
         type: mapFieldType(f.type),
         required: f.required,
         unique: f.unique,
         auto: f.auto,
         default: f.defaultValue,
+        description: f.description,
       })),
     })),
+    enums: ir.enums,
     events: ir.events.map((e) => ({
       name: e.name,
       fields: e.fields,
@@ -670,6 +673,9 @@ export function irToContract(ir: IR): any {
     dashboards: ir.dashboards,
     sources: ir.sources,
     workflows: ir.workflows,
+    api: ir.api,
+    deployment: ir.deployment,
+    env: ir.env,
     config: ir.config,
     aiPlan: ir.aiPlan,
   };

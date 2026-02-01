@@ -409,7 +409,7 @@ export function contractToIR(contract: any): IR {
       name: e.name,
       fields: (e.fields || []).map((f: any) => ({
         name: f.name,
-        type: mapTypeToRcl(f.type),
+        type: f.rclType || mapTypeToRcl(f.type),
         required: f.required,
         unique: f.unique,
         auto: f.auto,

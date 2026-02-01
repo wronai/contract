@@ -806,7 +806,7 @@ export class CodeAnalyzer {
 
     // Extract entities from collected entity info
     const entities = report.files.flatMap(f => f.entities).map(e => ({
-      name: e.name,
+      name: e.name.charAt(0).toUpperCase() + e.name.slice(1), // Normalize to Uppercase
       fields: e.fields.map(f => ({
         name: f.name,
         type: this.mapTypeToDSL(f.type, f.name),
@@ -827,7 +827,7 @@ export class CodeAnalyzer {
       return f.entities
         .filter(e => e.name.endsWith('Event') || e.name.match(/Registered|Started|Completed|Verified|Rejected|Changed|Uploaded$/))
         .map(e => ({
-          name: e.name,
+          name: e.name.charAt(0).toUpperCase() + e.name.slice(1),
           fields: e.fields.map(f => ({ name: f.name, type: this.mapTypeToDSL(f.type, f.name) }))
         }));
     });
@@ -846,19 +846,20 @@ export class CodeAnalyzer {
           const nameLower = f.name.toLowerCase();
           
           for (const otherEntity of entities) {
-            const otherLower = otherEntity.name.toLowerCase();
+            const otherName = otherEntity.name.charAt(0).toUpperCase() + otherEntity.name.slice(1);
+            const otherLower = otherName.toLowerCase();
             if (nameLower === otherLower || nameLower === otherLower + 'id') {
-              // Preserve original casing from otherEntity.name
-              type = `-> ${otherEntity.name}`;
+              type = `-> ${otherName}`;
               break;
             }
           }
           
           // Detect enums
-          if (type === 'text' || type === 'any') {
+          if (type === 'text' || type === 'json' || type === 'any') {
             for (const en of enums) {
-              if (nameLower === en.name.toLowerCase() || f.name.endsWith(en.name)) {
-                type = en.name;
+              const enumName = en.name.charAt(0).toUpperCase() + en.name.slice(1);
+              if (nameLower === enumName.toLowerCase() || f.name.endsWith(enumName)) {
+                type = enumName;
                 break;
               }
             }
@@ -896,13 +897,45 @@ export class CodeAnalyzer {
     // Try to find API config from .env or server.ts
     let apiPrefix = '/api';
     let apiPort = 8080;
+    let apiAuth = undefined;
+
+    if (endpoints.length > 0) {
+      // Intelligent prefix detection: find common base path
+      const paths = endpoints.map(e => e.path).filter(p => p && p.startsWith('/'));
+      if (paths.length > 0) {
+        // Simple heuristic: find common prefix like /api/v1
+        const parts = paths[0].split('/').filter(Boolean);
+        let common = '/';
+        for (let i = 0; i < parts.length; i++) {
+          const testPrefix = common + parts[i] + '/';
+          if (paths.every(p => (p + '/').startsWith(testPrefix))) {
+            common = testPrefix;
+          } else {
+            break;
+          }
+        }
+        apiPrefix = common.replace(/\/$/, '') || '/api';
+      }
+    }
 
     const apiFiles = report.files.filter(f => f.relativePath.includes('server.ts') || f.relativePath.includes('app.ts'));
     for (const f of apiFiles) {
       const content = fs.readFileSync(f.path, 'utf-8');
-      const prefixMatch = content.match(/prefix[:\s]+['"]([^'"]+)['"]/i) || content.match(/app\.use\(['"]([^'"]+)['"]/);
+      
+      // Look for explicit prefix variable or generic app.use with a router that looks global
+      const prefixMatch = content.match(/(?:prefix|apiPrefix|basePath)[:\s]+['"]([^'"]+)['"]/i);
       if (prefixMatch && prefixMatch[1] !== '/') {
         apiPrefix = prefixMatch[1];
+      }
+      
+      const authMatch = content.match(/auth[:\s]+['"]([^'"]+)['"]/i) || 
+                        content.match(/passport\.authenticate/) || 
+                        content.match(/jwt/) || 
+                        content.match(/session/i);
+      if (authMatch) {
+        if (content.includes('jwt') || content.includes('Jwt')) apiAuth = 'jwt';
+        else if (content.includes('passport')) apiAuth = 'passport';
+        else if (content.includes('session')) apiAuth = 'session';
       }
     }
 
@@ -911,6 +944,9 @@ export class CodeAnalyzer {
       const env = fs.readFileSync(envPath, 'utf-8');
       const portMatch = env.match(/PORT=(\d+)/);
       if (portMatch) apiPort = parseInt(portMatch[1]);
+      
+      const jwtMatch = env.match(/JWT_SECRET/);
+      if (jwtMatch && !apiAuth) apiAuth = 'jwt';
     }
 
     return {
@@ -927,7 +963,8 @@ export class CodeAnalyzer {
       endpoints,
       api: {
         prefix: apiPrefix,
-        port: apiPort
+        port: apiPort,
+        auth: apiAuth
       }
     };
   }
@@ -942,11 +979,17 @@ export class CodeAnalyzer {
       ...aiPlan,
       app: {
         ...derivedContract.app,
-        ...aiPlan.app, // Prefer original AI plan app info (name, version, description)
+        ...aiPlan.app, // Prefer original AI plan app info
+      },
+      api: {
+        ...aiPlan.api,
+        ...(derivedContract.api?.prefix && derivedContract.api.prefix !== '/api' ? { prefix: derivedContract.api.prefix } : {}),
+        ...(derivedContract.api?.port && derivedContract.api.port !== 8080 ? { port: derivedContract.api.port } : {}),
+        ...(derivedContract.api?.auth ? { auth: derivedContract.api.auth } : {})
       },
       config: {
         ...aiPlan.config,
-        ...derivedContract.api // Merge detected API config (override with code reality if different)
+        ...derivedContract.config
       }
     };
 
@@ -967,7 +1010,10 @@ export class CodeAnalyzer {
           if (fieldIdx >= 0) {
             // Field exists, update type if it's more specific in code, but keep aiPlan specificity like int(0..100)
             const aiType = mergedFields[fieldIdx].type;
-            if (aiType === 'String' || aiType === 'Number' || aiType === 'Boolean' || aiType === 'Any' || aiType === 'Json') {
+            const aiTypeLower = (aiType || '').toLowerCase();
+            const genericTypes = ['string', 'number', 'boolean', 'any', 'json', 'text', 'object', ''];
+            
+            if (genericTypes.includes(aiTypeLower)) {
               mergedFields[fieldIdx].type = df.type;
             }
             mergedFields[fieldIdx].required = df.required;
@@ -991,9 +1037,6 @@ export class CodeAnalyzer {
     if (!merged.pipelines) merged.pipelines = aiPlan.pipelines || [];
     if (!merged.dashboards) merged.dashboards = aiPlan.dashboards || [];
     if (!merged.workflows) merged.workflows = aiPlan.workflows || [];
-
-    // Attach aiPlan itself for reference
-    merged.aiPlan = aiPlan;
 
     return merged;
   }
