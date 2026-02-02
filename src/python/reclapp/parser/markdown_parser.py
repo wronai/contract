@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 # TYPES
 # ============================================================================
 
-FieldType = Literal["uuid", "string", "text", "number", "boolean", "datetime", "date", "enum", "json"]
+FieldType = str  # Relaxed type for better compatibility with reverse engineering
 
 
 class EntityField(BaseModel):
@@ -417,11 +417,12 @@ def _parse_markdown_table(content: str) -> list[EntityField]:
     return fields
 
 
-def _parse_field_type(type_str: str) -> FieldType:
-    """Parse field type string to FieldType"""
-    normalized = type_str.lower().strip()
+def _parse_field_type(type_str: str) -> str:
+    """Parse field type string to internal representation"""
+    normalized = type_str.strip()
+    lower = normalized.lower()
     
-    type_map: dict[str, FieldType] = {
+    type_map = {
         "uuid": "uuid",
         "string": "string",
         "text": "text",
@@ -436,7 +437,11 @@ def _parse_field_type(type_str: str) -> FieldType:
         "object": "json"
     }
     
-    return type_map.get(normalized, "string")
+    if lower in type_map:
+        return type_map[lower]
+        
+    # Return original if it looks like a relationship or custom type (Enums, Entities)
+    return normalized
 
 
 def _parse_api_section(body: str) -> ApiDefinition:

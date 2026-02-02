@@ -70,3 +70,4 @@ ignore = ["E501"]
 pythonpath = ["src/python", "."]
 asyncio_mode = "auto"
 addopts = "-p no:aiohttp"
+python_classes = ["Test*", "!TestType", "!TestDefinition"]

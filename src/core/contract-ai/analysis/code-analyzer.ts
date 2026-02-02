@@ -97,7 +97,7 @@ export interface AnalysisReport {
 export class CodeAnalyzer {
   private rootDir: string;
   private extensions = ['.ts', '.tsx', '.js', '.jsx', '.py', '.java', '.go', '.rs', '.cs', '.cpp', '.c', '.h', '.rb', '.php'];
-  private ignorePatterns = ['node_modules', 'dist', 'build', '.git', 'coverage', '__pycache__'];
+  private ignorePatterns = ['node_modules', 'dist', 'build', '.git', 'coverage', '__pycache__', 'target', 'logs'];
 
   constructor(rootDir: string) {
     this.rootDir = path.resolve(rootDir);

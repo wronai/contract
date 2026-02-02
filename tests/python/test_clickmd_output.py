@@ -1,14 +1,22 @@
 import sys
+import importlib.util
 from io import StringIO
+from pathlib import Path
 
 import clickmd
 from click.testing import CliRunner
 from clickmd.renderer import get_renderer
 
-sys.path.insert(0, "src/python")
-sys.path.insert(0, ".")
+# Find the wrapper cli.py specifically
+project_root = Path(__file__).parent.parent.parent
+wrapper_cli_path = project_root / "reclapp" / "cli.py"
 
-import reclapp.cli as c
+spec = importlib.util.spec_from_file_location("reclapp_wrapper_cli", str(wrapper_cli_path))
+wrapper_cli = importlib.util.module_from_spec(spec)
+sys.modules["reclapp_wrapper_cli"] = wrapper_cli
+spec.loader.exec_module(wrapper_cli)
+
+import reclapp_wrapper_cli as c
 
 
 class _TTYStringIO(StringIO):

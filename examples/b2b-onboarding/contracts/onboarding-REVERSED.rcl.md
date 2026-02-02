@@ -25,8 +25,8 @@ address         : text
 city            : text
 postalCode      : text
 country         : text
-status          : text
-riskScore       : text
+status          : CustomerStatus
+riskScore       : int
 verifiedAt      : datetime
 createdAt       : datetime             # @auto
 updatedAt       : datetime             # @auto
@@ -39,12 +39,12 @@ updatedAt       : datetime             # @auto
 ```yaml
 # entity: Verification
 id              : uuid                 # @unique @auto
-customer        : text                 # @required
-type            : text                 # @required
+customer        : -> Customer          # @required
+type            : VerificationType     # @required
 source          : text                 # @required - KRS, CEIDG, etc
-status          : text
+status          : VerificationStatus
 result          : json
-score           : text
+score           : int
 errorMessage    : text
 requestedAt     : datetime             # @auto
 completedAt     : datetime
@@ -57,11 +57,11 @@ completedAt     : datetime
 ```yaml
 # entity: Document
 id              : uuid                 # @unique @auto
-customer        : text                 # @required
-type            : text                 # @required
+customer        : -> Customer          # @required
+type            : DocumentType         # @required
 filename        : text                 # @required
 url             : url                  # @required
-status          : text
+status          : DocumentStatus
 verifiedAt      : datetime
 uploadedAt      : datetime             # @auto
 ```
@@ -190,14 +190,14 @@ prefix: /api
         },
         {
           "name": "status",
-          "type": "text",
+          "type": "CustomerStatus",
           "required": true,
           "auto": false,
           "defaultValue": "pending"
         },
         {
           "name": "riskScore",
-          "type": "text",
+          "type": "int",
           "required": true,
           "auto": false,
           "defaultValue": "50"
@@ -238,14 +238,14 @@ prefix: /api
         },
         {
           "name": "customer",
-          "type": "text",
+          "type": "-> Customer",
           "required": true,
           "auto": false,
           "explicitRequired": true
         },
         {
           "name": "type",
-          "type": "text",
+          "type": "VerificationType",
           "required": true,
           "auto": false,
           "explicitRequired": true
@@ -260,7 +260,7 @@ prefix: /api
         },
         {
           "name": "status",
-          "type": "text",
+          "type": "VerificationStatus",
           "required": true,
           "auto": false,
           "defaultValue": "pending"
@@ -274,7 +274,7 @@ prefix: /api
         },
         {
           "name": "score",
-          "type": "text",
+          "type": "int",
           "required": false,
           "auto": false,
           "description": null
@@ -316,14 +316,14 @@ prefix: /api
         },
         {
           "name": "customer",
-          "type": "text",
+          "type": "-> Customer",
           "required": true,
           "auto": false,
           "explicitRequired": true
         },
         {
           "name": "type",
-          "type": "text",
+          "type": "DocumentType",
           "required": true,
           "auto": false,
           "explicitRequired": true
@@ -344,7 +344,7 @@ prefix: /api
         },
         {
           "name": "status",
-          "type": "text",
+          "type": "DocumentStatus",
           "required": true,
           "auto": false,
           "defaultValue": "pending"

@@ -1,6 +1,6 @@
 # CRM System
 
-> Generated from 1 files
+> Express API with TypeScript CRUD endpoints
 
 | Właściwość | Wartość |
 |------------|---------|
@@ -21,8 +21,8 @@ email           : email                # @unique @required
 phone           : phone
 company         : text
 position        : text
-status          : text
-source          : text
+status          : ContactStatus
+source          : LeadSource
 tags            : text
 notes           : text
 createdAt       : datetime             # @auto
@@ -39,14 +39,14 @@ id              : uuid                 # @unique @auto
 name            : text                 # @unique @required
 industry        : text
 website         : url
-size            : text
-revenue         : text
+size            : CompanySize
+revenue         : money
 address         : text
 city            : text
 country         : text
 taxId           : text                 # @unique - NIP
-contacts        : text
-deals           : text
+contacts        : <- Contact
+deals           : <- Deal
 createdAt       : datetime             # @auto
 updatedAt       : datetime             # @auto
 ```
@@ -59,13 +59,13 @@ updatedAt       : datetime             # @auto
 # entity: Deal
 id              : uuid                 # @unique @auto
 title           : text                 # @required
-value           : text                 # @required
-stage           : text
-probability     : text
+value           : money                # @required
+stage           : DealStage
+probability     : int
 expectedClose   : date
-contact         : text                 # @required
-company         : text
-owner           : text                 # @required
+contact         : -> Contact           # @required
+company         : -> Company
+owner           : -> User              # @required
 notes           : text
 lostReason      : text
 createdAt       : datetime             # @auto
@@ -80,14 +80,14 @@ closedAt        : datetime
 ```yaml
 # entity: Activity
 id              : uuid                 # @unique @auto
-type            : text                 # @required
+type            : ActivityType         # @required
 subject         : text                 # @required
 description     : text
 dueDate         : datetime
 completed       : boolean
-contact         : text
-deal            : text
-owner           : text                 # @required
+contact         : -> Contact
+deal            : -> Deal
+owner           : -> User              # @required
 createdAt       : datetime             # @auto
 ```
 
@@ -100,8 +100,8 @@ createdAt       : datetime             # @auto
 id              : uuid                 # @unique @auto
 email           : email                # @unique @required
 name            : text                 # @required
-role            : text
-avatar          : text
+role            : UserRole
+avatar          : url
 active          : boolean
 createdAt       : datetime             # @auto
 ```
@@ -138,7 +138,7 @@ prefix: /api
   "app": {
     "name": "CRM System",
     "version": "1.0.0",
-    "description": "Generated from 1 files",
+    "description": "Express API with TypeScript CRUD endpoints",
     "domain": "General",
     "type": "Application",
     "users": [],
@@ -201,14 +201,14 @@ prefix: /api
         },
         {
           "name": "status",
-          "type": "text",
+          "type": "ContactStatus",
           "required": true,
           "auto": false,
           "defaultValue": "active"
         },
         {
           "name": "source",
-          "type": "text",
+          "type": "LeadSource",
           "required": false,
           "auto": false,
           "description": null
@@ -278,14 +278,14 @@ prefix: /api
         },
         {
           "name": "size",
-          "type": "text",
+          "type": "CompanySize",
           "required": false,
           "auto": false,
           "description": null
         },
         {
           "name": "revenue",
-          "type": "text",
+          "type": "money",
           "required": false,
           "auto": false,
           "description": null
@@ -321,14 +321,14 @@ prefix: /api
         },
         {
           "name": "contacts",
-          "type": "text",
+          "type": "<- Contact",
           "required": true,
           "auto": false,
           "description": null
         },
         {
           "name": "deals",
-          "type": "text",
+          "type": "<- Deal",
           "required": true,
           "auto": false,
           "description": null
@@ -369,21 +369,21 @@ prefix: /api
         },
         {
           "name": "value",
-          "type": "text",
+          "type": "money",
           "required": true,
           "auto": false,
           "explicitRequired": true
         },
         {
           "name": "stage",
-          "type": "text",
+          "type": "DealStage",
           "required": true,
           "auto": false,
           "defaultValue": "lead"
         },
         {
           "name": "probability",
-          "type": "text",
+          "type": "int",
           "required": true,
           "auto": false,
           "defaultValue": "10"
@@ -397,21 +397,21 @@ prefix: /api
         },
         {
           "name": "contact",
-          "type": "text",
+          "type": "-> Contact",
           "required": true,
           "auto": false,
           "explicitRequired": true
         },
         {
           "name": "company",
-          "type": "text",
+          "type": "-> Company",
           "required": false,
           "auto": false,
           "description": null
         },
         {
           "name": "owner",
-          "type": "text",
+          "type": "-> User",
           "required": true,
           "auto": false,
           "explicitRequired": true
@@ -466,7 +466,7 @@ prefix: /api
         },
         {
           "name": "type",
-          "type": "text",
+          "type": "ActivityType",
           "required": true,
           "auto": false,
           "explicitRequired": true
@@ -501,21 +501,21 @@ prefix: /api
         },
         {
           "name": "contact",
-          "type": "text",
+          "type": "-> Contact",
           "required": false,
           "auto": false,
           "description": null
         },
         {
           "name": "deal",
-          "type": "text",
+          "type": "-> Deal",
           "required": false,
           "auto": false,
           "description": null
         },
         {
           "name": "owner",
-          "type": "text",
+          "type": "-> User",
           "required": true,
           "auto": false,
           "explicitRequired": true
@@ -558,14 +558,14 @@ prefix: /api
         },
         {
           "name": "role",
-          "type": "text",
+          "type": "UserRole",
           "required": true,
           "auto": false,
           "defaultValue": "sales"
         },
         {
           "name": "avatar",
-          "type": "text",
+          "type": "url",
           "required": false,
           "auto": false,
           "description": null

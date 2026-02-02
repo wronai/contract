@@ -17,7 +17,7 @@
 id              : uuid                 # @unique @auto
 email           : email                # @unique @required
 name            : text                 # @required
-avatar          : text
+avatar          : url
 createdAt       : datetime             # @auto
 updatedAt       : datetime             # @auto
 ```
@@ -31,8 +31,8 @@ updatedAt       : datetime             # @auto
 id              : uuid                 # @unique @auto
 name            : text                 # @required
 description     : text
-owner           : text                 # @required
-status          : text
+owner           : -> User              # @required
+status          : ProjectStatus = active
 createdAt       : datetime             # @auto
 updatedAt       : datetime             # @auto
 ```
@@ -46,10 +46,10 @@ updatedAt       : datetime             # @auto
 id              : uuid                 # @unique @auto
 title           : text                 # @required
 description     : text
-status          : text
-priority        : text
-project         : text                 # @required
-assignee        : text
+status          : TaskStatus = todo
+priority        : Priority = medium
+project         : -> Project           # @required
+assignee        : -> User
 dueDate         : date
 createdAt       : datetime             # @auto
 updatedAt       : datetime             # @auto
@@ -143,7 +143,7 @@ prefix: /api
         },
         {
           "name": "avatar",
-          "type": "text",
+          "type": "url",
           "required": false,
           "auto": false,
           "description": null
@@ -191,14 +191,14 @@ prefix: /api
         },
         {
           "name": "owner",
-          "type": "text",
+          "type": "-> User",
           "required": true,
           "auto": false,
           "explicitRequired": true
         },
         {
           "name": "status",
-          "type": "text",
+          "type": "ProjectStatus = active",
           "required": true,
           "auto": false,
           "description": null
@@ -246,28 +246,28 @@ prefix: /api
         },
         {
           "name": "status",
-          "type": "text",
+          "type": "TaskStatus = todo",
           "required": true,
           "auto": false,
           "description": null
         },
         {
           "name": "priority",
-          "type": "text",
+          "type": "Priority = medium",
           "required": true,
           "auto": false,
           "description": null
         },
         {
           "name": "project",
-          "type": "text",
+          "type": "-> Project",
           "required": true,
           "auto": false,
           "explicitRequired": true
         },
         {
           "name": "assignee",
-          "type": "text",
+          "type": "-> User",
           "required": false,
           "auto": false,
           "description": null
