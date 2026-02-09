@@ -7,6 +7,20 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import {
+  fieldTypeToTs as _fieldTypeToTs,
+  fieldTypeToSql as _fieldTypeToSql,
+  fieldTypeToZod as _fieldTypeToZod,
+  getInputType as _getInputType,
+  isSystemFieldName as _isSystemFieldName,
+  sqlDefault as _sqlDefault,
+} from '../shared/type-mappers';
+import {
+  toCamelCase as _toCamelCase,
+  toPascalCase as _toPascalCase,
+  toKebabCase as _toKebabCase,
+  toSnakeCase as _toSnakeCase,
+} from '../templates/index';
 import type { 
   ReclappContract, 
   Entity, 
@@ -1479,65 +1493,23 @@ coverage/
   }
 
   private fieldTypeToTs(type: string): string {
-    const map: Record<string, string> = {
-      'String': 'string',
-      'Int': 'number',
-      'Float': 'number',
-      'Decimal': 'number',
-      'Boolean': 'boolean',
-      'DateTime': 'string',
-      'Date': 'string',
-      'UUID': 'string',
-      'JSON': 'Record<string, any>',
-      'Money': 'number',
-      'Email': 'string',
-      'URL': 'string'
-    };
-    return map[type] || 'any';
+    return _fieldTypeToTs(type);
   }
 
   private fieldTypeToSql(type: string): string {
-    const map: Record<string, string> = {
-      'String': 'TEXT',
-      'Int': 'INTEGER',
-      'Float': 'DOUBLE PRECISION',
-      'Decimal': 'DECIMAL(10,2)',
-      'Boolean': 'BOOLEAN',
-      'DateTime': 'TIMESTAMPTZ',
-      'Date': 'DATE',
-      'UUID': 'UUID',
-      'JSON': 'JSONB',
-      'Money': 'DECIMAL(12,2)',
-      'Email': 'VARCHAR(255)',
-      'URL': 'TEXT'
-    };
-    return map[type] || 'TEXT';
+    return _fieldTypeToSql(type);
   }
 
   private sqlDefault(value: any, type: string): string {
-    if (typeof value === 'string') return `'${value}'`;
-    if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
-    return String(value);
+    return _sqlDefault(value, type);
   }
 
   private getInputType(type: string): string {
-    const map: Record<string, string> = {
-      'String': 'text',
-      'Int': 'number',
-      'Float': 'number',
-      'Decimal': 'number',
-      'Boolean': 'checkbox',
-      'DateTime': 'datetime-local',
-      'Date': 'date',
-      'Email': 'email',
-      'URL': 'url',
-      'Money': 'number'
-    };
-    return map[type] || 'text';
+    return _getInputType(type);
   }
 
   private isSystemFieldName(name: string): boolean {
-    return name === 'id' || name === 'createdAt' || name === 'updatedAt';
+    return _isSystemFieldName(name);
   }
 
   private entityRequiresAuth(entityName: string): boolean {
@@ -1546,22 +1518,7 @@ coverage/
   }
 
   private fieldTypeToZod(type: string): string {
-    const zodMap: Record<string, string> = {
-      'String': 'z.string()',
-      'Int': 'z.number().int()',
-      'Float': 'z.number()',
-      'Decimal': 'z.number()',
-      'Money': 'z.number()',
-      'Boolean': 'z.boolean()',
-      'DateTime': 'z.string().datetime()',
-      'Date': 'z.string()',
-      'Email': 'z.string().email()',
-      'URL': 'z.string().url()',
-      'UUID': 'z.string().uuid()',
-      'JSON': 'z.unknown()'
-    };
-
-    return zodMap[type] || 'z.unknown()';
+    return _fieldTypeToZod(type);
   }
 
   private fieldToZod(field: EntityField, mode: 'create' | 'update'): string {
@@ -1682,22 +1639,10 @@ export const requireRole = (...roles: string[]) => {
 `;
   }
 
-  private toKebabCase(str: string): string {
-    return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-  }
-
-  private toCamelCase(str: string): string {
-    return str.charAt(0).toLowerCase() + str.slice(1);
-  }
-
-  private toPascalCase(str: string): string {
-    return str.replace(/[-_](.)/g, (_, c) => c.toUpperCase())
-              .replace(/^(.)/, (_, c) => c.toUpperCase());
-  }
-
-  private toSnakeCase(str: string): string {
-    return str.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase();
-  }
+  private toKebabCase(str: string): string { return _toKebabCase(str); }
+  private toCamelCase(str: string): string { return _toCamelCase(str); }
+  private toPascalCase(str: string): string { return _toPascalCase(str); }
+  private toSnakeCase(str: string): string { return _toSnakeCase(str); }
 }
 
 // ============================================================================

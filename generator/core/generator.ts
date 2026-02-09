@@ -4,6 +4,20 @@
 
 import { Program, EntityDeclaration, EventDeclaration, PipelineDeclaration, 
          AlertDeclaration, DashboardDeclaration, SourceDeclaration } from '../../dsl/ast/types';
+import {
+  fieldTypeToTs as sharedFieldTypeToTs,
+  fieldTypeToSql as sharedFieldTypeToSql,
+  fieldTypeToMongoose as sharedFieldTypeToMongoose,
+  fieldTypeToZod as sharedFieldTypeToZod,
+  getInputType as sharedGetInputType,
+  isSystemFieldName as sharedIsSystemFieldName,
+} from '../shared/type-mappers';
+import {
+  toCamelCase as sharedToCamelCase,
+  toPascalCase as sharedToPascalCase,
+  toKebabCase as sharedToKebabCase,
+  toSnakeCase as sharedToSnakeCase,
+} from '../templates/index';
 
 export interface GeneratorOptions {
   target: 'api' | 'frontend' | 'docker' | 'kubernetes' | 'database' | 'cicd' | 'full-stack';
@@ -1882,89 +1896,24 @@ clean:
   // ============================================================
 
   private fieldTypeToTs(type: any): string {
-    const base = String(type?.baseType || '').toLowerCase() || 'any';
-    const tsTypeMap: Record<string, string> = {
-      string: 'string',
-      int: 'number',
-      integer: 'number',
-      float: 'number',
-      number: 'number',
-      decimal: 'number',
-      boolean: 'boolean',
-      bool: 'boolean',
-      date: 'string',
-      datetime: 'string',
-      timestamp: 'string',
-      uuid: 'string',
-      json: 'Record<string, any>'
-    };
-    const tsType = tsTypeMap[base] || 'any';
-    
-    return type.isArray ? `${tsType}[]` : tsType;
+    const base = String(type?.baseType || '');
+    return sharedFieldTypeToTs(base, !!type?.isArray);
   }
 
   private fieldTypeToSql(type: any): string {
-    const base = String(type?.baseType || '').toLowerCase() || 'text';
-    const sqlTypeMap: Record<string, string> = {
-      string: 'TEXT',
-      int: 'INTEGER',
-      integer: 'INTEGER',
-      float: 'REAL',
-      number: 'NUMERIC',
-      decimal: 'DECIMAL(10,2)',
-      boolean: 'BOOLEAN',
-      bool: 'BOOLEAN',
-      date: 'DATE',
-      datetime: 'TIMESTAMPTZ',
-      timestamp: 'TIMESTAMPTZ',
-      uuid: 'UUID',
-      json: 'JSONB'
-    };
-    return sqlTypeMap[base] || 'TEXT';
+    return sharedFieldTypeToSql(String(type?.baseType || ''));
   }
 
   private fieldTypeToMongoose(type: any): string {
-    const base = String(type?.baseType || '').toLowerCase() || 'string';
-    const mongooseTypeMap: Record<string, string> = {
-      string: 'String',
-      int: 'Number',
-      integer: 'Number',
-      float: 'Number',
-      number: 'Number',
-      decimal: 'Number',
-      boolean: 'Boolean',
-      bool: 'Boolean',
-      date: 'Date',
-      datetime: 'Date',
-      timestamp: 'Date',
-      uuid: 'String',
-      json: 'Object'
-    };
-    return mongooseTypeMap[base] || 'String';
+    return sharedFieldTypeToMongoose(String(type?.baseType || ''));
   }
 
   private getInputType(type: any): string {
-    const base = String(type?.baseType || '').toLowerCase() || 'text';
-    const inputTypeMap: Record<string, string> = {
-      string: 'text',
-      int: 'number',
-      integer: 'number',
-      float: 'number',
-      number: 'number',
-      decimal: 'number',
-      boolean: 'checkbox',
-      bool: 'checkbox',
-      date: 'date',
-      datetime: 'datetime-local',
-      timestamp: 'datetime-local',
-      email: 'email',
-      url: 'url'
-    };
-    return inputTypeMap[base] || 'text';
+    return sharedGetInputType(String(type?.baseType || ''));
   }
 
   private isSystemFieldName(name: string): boolean {
-    return name === 'id' || name === 'createdAt' || name === 'updatedAt';
+    return sharedIsSystemFieldName(name);
   }
 
   private literalToJs(value: any): any {
@@ -1985,33 +1934,8 @@ clean:
   }
 
   private fieldTypeToZod(type: any): string {
-    const base = String(type?.baseType || '').toLowerCase() || 'unknown';
-    const zodTypeMap: Record<string, string> = {
-      string: 'z.string()',
-      text: 'z.string()',
-      int: 'z.number().int()',
-      integer: 'z.number().int()',
-      float: 'z.number()',
-      number: 'z.number()',
-      decimal: 'z.number()',
-      money: 'z.number()',
-      boolean: 'z.boolean()',
-      bool: 'z.boolean()',
-      date: 'z.string()',
-      datetime: 'z.string().datetime()',
-      timestamp: 'z.string().datetime()',
-      uuid: 'z.string().uuid()',
-      json: 'z.unknown()',
-      email: 'z.string().email()',
-      url: 'z.string().url()'
-    };
-    const zodType = zodTypeMap[base] || 'z.unknown()';
-
-    if (type.isArray) {
-      return `z.array(${zodType})`;
-    }
-
-    return zodType;
+    const base = String(type?.baseType || '');
+    return sharedFieldTypeToZod(base, !!type?.isArray);
   }
 
   private fieldToZod(field: any, mode: 'create' | 'update'): string {
@@ -2064,19 +1988,8 @@ clean:
     return zodType;
   }
 
-  private toCamelCase(str: string): string {
-    return str.charAt(0).toLowerCase() + str.slice(1);
-  }
-
-  private toPascalCase(str: string): string {
-    return str.replace(/(^|[-_\s])(\w)/g, (_, __, c) => c.toUpperCase());
-  }
-
-  private toKebabCase(str: string): string {
-    return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-  }
-
-  private toSnakeCase(str: string): string {
-    return str.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase();
-  }
+  private toCamelCase(str: string): string { return sharedToCamelCase(str); }
+  private toPascalCase(str: string): string { return sharedToPascalCase(str); }
+  private toKebabCase(str: string): string { return sharedToKebabCase(str); }
+  private toSnakeCase(str: string): string { return sharedToSnakeCase(str); }
 }
