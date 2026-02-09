@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 # TYPES
 # ============================================================================
 
-FieldType = Literal["uuid", "string", "text", "number", "boolean", "datetime", "date", "enum", "json"]
+FieldType = str  # Relaxed type for better compatibility with reverse engineering
 
 
 class EntityField(BaseModel):
@@ -236,12 +236,20 @@ def _extract_frontmatter(content: str) -> tuple[ContractFrontmatter, str]:
 # ============================================================================
 
 def _parse_app_section(body: str) -> AppDefinition:
-    """Parse ## App Definition section"""
-    section = _extract_section(body, "## App Definition")
+    """Parse App Definition section"""
+    section_headers = ["## App Definition", "## Definicja aplikacji"]
+    section = ""
+    for header in section_headers:
+        section = _extract_section(body, header)
+        if section:
+            break
     
-    domain = _extract_field(section, "Domain") or "General"
-    app_type = _extract_field(section, "Type") or "Application"
-    users = _extract_list_from_field(section, "Users")
+    if not section:
+        return AppDefinition()
+        
+    domain = _extract_field(section, "Domain") or _extract_field(section, "Domena") or "General"
+    app_type = _extract_field(section, "Type") or _extract_field(section, "Typ") or "Application"
+    users = _extract_list_from_field(section, "Users") or _extract_list_from_field(section, "Użytkownicy")
     features = _extract_checkbox_list(section)
     
     return AppDefinition(domain=domain, type=app_type, users=users, features=features)
@@ -409,11 +417,12 @@ def _parse_markdown_table(content: str) -> list[EntityField]:
     return fields
 
 
-def _parse_field_type(type_str: str) -> FieldType:
-    """Parse field type string to FieldType"""
-    normalized = type_str.lower().strip()
+def _parse_field_type(type_str: str) -> str:
+    """Parse field type string to internal representation"""
+    normalized = type_str.strip()
+    lower = normalized.lower()
     
-    type_map: dict[str, FieldType] = {
+    type_map = {
         "uuid": "uuid",
         "string": "string",
         "text": "text",
@@ -428,12 +437,24 @@ def _parse_field_type(type_str: str) -> FieldType:
         "object": "json"
     }
     
-    return type_map.get(normalized, "string")
+    if lower in type_map:
+        return type_map[lower]
+        
+    # Return original if it looks like a relationship or custom type (Enums, Entities)
+    return normalized
 
 
 def _parse_api_section(body: str) -> ApiDefinition:
-    """Parse ## API section"""
-    section = _extract_section(body, "## API")
+    """Parse API section"""
+    section_headers = ["## API", "## 🌐 API", "## 🌐 Konfiguracja API"]
+    section = ""
+    for header in section_headers:
+        section = _extract_section(body, header)
+        if section:
+            break
+            
+    if not section:
+        return ApiDefinition()
     
     # Extract base URL
     base_url_match = re.search(r"```\n(http[^\n]+)\n```", section)
@@ -470,8 +491,16 @@ def _parse_endpoint_tables(section: str) -> list[ApiEndpoint]:
 
 
 def _parse_rules_section(body: str) -> RulesDefinition:
-    """Parse ## Business Rules section"""
-    section = _extract_section(body, "## Business Rules")
+    """Parse Business Rules section"""
+    section_headers = ["## Business Rules", "## Reguły biznesowe", "## Zasady"]
+    section = ""
+    for header in section_headers:
+        section = _extract_section(body, header)
+        if section:
+            break
+            
+    if not section:
+        return RulesDefinition(validations=[], assertions=[])
     
     # Parse assertions from YAML block
     yaml_match = re.search(r"```yaml\n([\s\S]*?)\n```", section)
@@ -489,13 +518,18 @@ def _parse_rules_section(body: str) -> RulesDefinition:
 
 
 def _parse_tech_section(body: str, frontmatter: ContractFrontmatter) -> TechStack:
-    """Parse ## Tech Stack section"""
-    section = _extract_section(body, "## Tech Stack")
-    
+    """Parse Tech Stack section"""
+    section_headers = ["## Tech Stack", "## Stos technologiczny", "## Technologia"]
+    section = ""
+    for header in section_headers:
+        section = _extract_section(body, header)
+        if section:
+            break
+            
     # Parse YAML blocks in the section
-    backend_match = re.search(r"### Backend[\s\S]*?```yaml\n([\s\S]*?)\n```", section)
-    frontend_match = re.search(r"### Frontend[\s\S]*?```yaml\n([\s\S]*?)\n```", section)
-    database_match = re.search(r"### Database[\s\S]*?```yaml\n([\s\S]*?)\n```", section)
+    backend_match = re.search(r"### (?:Backend|Serwer)[\s\S]*?```yaml\n([\s\S]*?)\n```", section)
+    frontend_match = re.search(r"### (?:Frontend|Klient)[\s\S]*?```yaml\n([\s\S]*?)\n```", section)
+    database_match = re.search(r"### (?:Database|Baza danych)[\s\S]*?```yaml\n([\s\S]*?)\n```", section)
     
     backend = BackendTech()
     
@@ -544,15 +578,23 @@ def _parse_tech_section(body: str, frontmatter: ContractFrontmatter) -> TechStac
 
 
 def _parse_tests_section(body: str) -> TestsDefinition:
-    """Parse ## Tests section"""
-    section = _extract_section(body, "## Tests")
+    """Parse Tests section"""
+    section_headers = ["## Tests", "## Testy"]
+    section = ""
+    for header in section_headers:
+        section = _extract_section(body, header)
+        if section:
+            break
+            
+    if not section:
+        return TestsDefinition(acceptance=[], api=[])
     
     # Parse Gherkin acceptance tests
     gherkin_match = re.search(r"```gherkin\n([\s\S]*?)\n```", section)
     acceptance = _parse_gherkin(gherkin_match.group(1)) if gherkin_match else []
     
     # Parse API tests from YAML
-    tests_match = re.search(r"### API Tests[\s\S]*?```yaml\n([\s\S]*?)\n```", section)
+    tests_match = re.search(r"### (?:API Tests|Testy API)[\s\S]*?```yaml\n([\s\S]*?)\n```", section)
     api_tests: list[TestCase] = []
     
     if tests_match:

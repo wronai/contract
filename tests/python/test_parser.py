@@ -200,9 +200,10 @@ class TestFrontmatter:
         assert contract.frontmatter.runtime is not None
         assert contract.frontmatter.runtime["port"] == 3000
         
-    def test_missing_frontmatter_raises(self):
-        with pytest.raises(ValueError, match="frontmatter"):
-            parse_contract_markdown("# No frontmatter here")
+    def test_missing_frontmatter_returns_default(self):
+        contract = parse_contract_markdown("# No frontmatter here")
+        assert contract.frontmatter is not None
+        assert contract.frontmatter.contract is None
 
 
 # ============================================================================
@@ -522,7 +523,7 @@ More content.
         assert _parse_field_type("string") == "string"
         assert _parse_field_type("INTEGER") == "number"
         assert _parse_field_type("bool") == "boolean"
-        assert _parse_field_type("unknown") == "string"
+        assert _parse_field_type("unknown") == "unknown"
 
 
 # ============================================================================

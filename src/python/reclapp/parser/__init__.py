@@ -1,12 +1,13 @@
 """
 Reclapp Parser Module
 
+Re-exports from canonical package: reclapp-contracts (reclapp_contracts.parser).
 Parses contract files into ContractAI models.
 
 Mirrors: src/core/contract-ai/parser/
 """
 
-from .markdown_parser import (
+from reclapp_contracts.parser import (
     parse_contract_markdown,
     validate_contract,
     ContractMarkdown,

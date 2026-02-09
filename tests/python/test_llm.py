@@ -91,8 +91,8 @@ class TestLLMManagerAdvanced:
         openrouter_mock.is_available.return_value = True
         openrouter_mock.list_models.return_value = [LLMModelInfo(name="test")]
         
-        with patch('reclapp.llm.manager.OllamaClient', return_value=ollama_mock), \
-             patch('reclapp.llm.manager.OpenRouterClient', return_value=openrouter_mock), \
+        with patch('reclapp_llm.manager.OllamaClient', return_value=ollama_mock), \
+             patch('reclapp_llm.manager.OpenRouterClient', return_value=openrouter_mock), \
              patch.dict('os.environ', {'OPENROUTER_API_KEY': 'test'}):
             
             await manager.initialize()
@@ -128,7 +128,7 @@ class TestLLMManagerAdvanced:
             groq_mock.is_available.return_value = True
             
             manager = LLMManager()
-            with patch('reclapp.llm.manager.GroqClient', return_value=groq_mock):
+            with patch('reclapp_llm.manager.GroqClient', return_value=groq_mock):
                 await manager.initialize()
                 assert manager._primary_provider == 'groq'
 

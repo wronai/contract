@@ -1,10 +1,11 @@
 """
 Reclapp Models - Pydantic models for Contract AI
 
+Re-exports from canonical package: reclapp-contracts (reclapp_contracts.models).
 Replaces TypeScript types from src/core/contract-ai/types/
 """
 
-from .definition import (
+from reclapp_contracts.models import (
     FieldType,
     BasicFieldType,
     ExtendedFieldType,
@@ -24,9 +25,6 @@ from .definition import (
     ApiDefinition,
     AppDefinition,
     DefinitionLayer,
-)
-
-from .generation import (
     InstructionPriority,
     Instruction,
     PatternType,
@@ -38,9 +36,6 @@ from .generation import (
     DatabaseTechStack,
     TechStack,
     GenerationLayer,
-)
-
-from .validation import (
     AssertionType,
     Assertion,
     TestType,
@@ -49,9 +44,6 @@ from .validation import (
     QualityGate,
     AcceptanceCriteria,
     ValidationLayer,
-)
-
-from .contract import (
     ContractMetadata,
     ContractAI,
     is_valid_contract,
