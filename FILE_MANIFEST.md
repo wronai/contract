@@ -1,47 +1,23 @@
 # Reclapp 2.4.1 - File Manifest
 
-Generated: 2026-01-01
+Generated: 2026-02-09 (updated)
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    RECLAPP PLATFORM                         │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
-│  │   Studio    │  │  CLI Tools  │  │    Generated Apps   │  │
-│  │  (Web UI)   │  │             │  │                     │  │
-│  │  :7861      │  │ reclapp     │  │  API :8080          │  │
-│  │             │  │ reclapp-chat│  │  Frontend :3000     │  │
-│  └──────┬──────┘  └──────┬──────┘  └──────────┬──────────┘  │
-│         │                │                     │            │
-│         └────────────────┼─────────────────────┘            │
-│                          ▼                                  │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │              lib/chat-core.js (Shared)                 │ │
-│  │  - ReclappChat class                                   │ │
-│  │  - Contract extraction, validation, formatting         │ │
-│  │  - TypeScript & Markdown generation                    │ │
-│  │  - Ollama LLM integration                              │ │
-│  └────────────────────────────────────────────────────────┘ │
-│                          ▼                                  │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
-│  │  contracts/  │  │    core/     │  │     dsl/     │       │
-│  │  TypeScript  │  │  AI-Native   │  │   Parser     │       │
-│  │  Contracts   │  │  Components  │  │   Grammar    │       │
-│  └──────────────┘  └──────────────┘  └──────────────┘       │
-└─────────────────────────────────────────────────────────────┘
-```
+> See [README.md](README.md) and [docs/00-architecture-overview.md](docs/00-architecture-overview.md) for the canonical architecture diagrams.
 
 ## Statistics
 
-| Type | Count |
-|------|-------|
-| TypeScript files | 32 |
-| JavaScript files | 6 |
-| Test files | 12 |
-| Markdown files | 15 |
-| Config files | 8 |
+> Note: Counts are approximate. Use `project.functions.toon` for accurate analysis.
+
+| Type | Count (approx) |
+|------|--------|
+| TypeScript files | 50+ |
+| JavaScript files | 10+ |
+| Python files | 40+ |
+| Test files | 20+ |
+| Markdown docs | 20+ |
+| Config files | 10+ |
 
 ## Source Files
 
@@ -49,14 +25,20 @@ Generated: 2026-01-01
 
 ```text
 ./lib/
-└── chat-core.js        # Shared ReclappChat class
-    ├── chat()          # LLM conversation
-    ├── extractContract()
-    ├── formatContract()
-    ├── validateContract()
-    ├── saveContract()  # Save in 3 formats
-    ├── toMarkdown()    # With conversation history
-    └── toTypeScript()  # Type-safe contracts
+├── chat-core.js        # Shared ReclappChat class (delegates to rcl-utils)
+│   ├── chat()          # LLM conversation
+│   ├── extractContract()
+│   ├── formatContract()
+│   ├── validateContract()
+│   ├── saveContract()  # Save in 3 formats
+│   ├── toMarkdown()    # With conversation history
+│   └── toTypeScript()  # Type-safe contracts
+└── rcl-utils.js        # Shared RCL utilities (R04)
+    ├── callOllamaRaw()  # Ollama API wrapper
+    ├── extractContractFromResponse()
+    ├── isLikelyRcl()
+    ├── coerceToRclString()
+    └── convertLegacyJsonContractToRcl()
 ```
 
 ### Reclapp Studio (Web UI)
@@ -82,9 +64,12 @@ Generated: 2026-01-01
 
 ```text
 ./bin/
-├── reclapp             # Main CLI (generate, list, dev)
-├── reclapp-chat        # AI chat (uses lib/chat-core)
-└── reclapp-validate-ts # TypeScript validator
+├── reclapp                    # Main CLI (evolve, generate, list, dev, ...)
+├── commands/
+│   └── evolution.js           # Extracted cmdEvolution (R02)
+├── reclapp-chat               # AI chat (uses lib/chat-core)
+├── reclapp-from-prompt.sh     # Helper: evolve from .txt prompt file
+└── reclapp-full-lifecycle.sh   # Full lifecycle runner
 ```
 
 ### Contracts System
@@ -150,6 +135,17 @@ Generated: 2026-01-01
 ├── 05-reclapp-typescript-ai-contracts.md
 ├── 06-reclapp-mcp-integration.md
 └── 07-reclapp-causal-verification-loop.md
+```
+
+### Shared Modules (Refactored Feb 2026)
+
+```text
+./generator/shared/
+└── type-mappers.ts        # Unified TS/SQL/Zod/Mongoose type mappers (R05)
+
+./src/core/contract-ai/evolution/
+├── contract-extractor.ts  # Entity extraction from prompts (R01)
+└── ...                    # See 00-architecture-overview.md for full list
 ```
 
 ## Contract Formats

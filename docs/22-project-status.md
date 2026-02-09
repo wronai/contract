@@ -24,7 +24,7 @@ Reclapp to kompletna platforma do generowania aplikacji B2B z kontraktów AI. Sy
 │                                                             │
 │  CLI                                                        │
 │  ├── reclapp evolve -p "..." (LLM-powered)                  │
-│  ├── reclapp import /path/to/project (Git import)           │
+│  ├── reclapp reverse /path/to/project (Contract extraction) │
 │  └── reclapp tasks build.tasks (Task executor)              │
 │                                                             │
 │  EVOLUTION SYSTEM                                           │
@@ -65,7 +65,7 @@ Reclapp to kompletna platforma do generowania aplikacji B2B z kontraktów AI. Sy
 ### 3. CLI
 - **Lokalizacja:** `bin/reclapp`
 - **Status:** ✅ Kompletny
-- **Komendy:** generate-ai, generate, evolve, validate, list, stop
+- **Komendy:** evolve, generate, generate-ai (legacy), validate, list, stop, chat, convert, normalize, analyze, reverse, refactor, tasks, setup, studio
 
 ### 4. Examples
 - **TypeScript:** `examples/contract-ai/` (5 przykładów)
@@ -91,7 +91,7 @@ Reclapp to kompletna platforma do generowania aplikacji B2B z kontraktów AI. Sy
 ./bin/reclapp-full-lifecycle.sh --prompt "Create a notes app"
 
 # Test z kontraktem
-./bin/reclapp generate-ai examples/contract-ai/crm-contract.ts
+./bin/reclapp evolve -p "Create a CRM with contacts and deals" -o ./crm
 
 # Test Pydantic
 cd examples/pydantic-contracts && python3 contracts.py

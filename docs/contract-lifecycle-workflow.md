@@ -163,7 +163,7 @@ Git Commit ──▶ CI Pipeline ──▶ Contract Validation ──▶ Code Ge
 |-----------|--------|-------------|
 | Contract Generator | ✅ | Generates ContractAI from prompt |
 | LLM Code Generator | ✅ | Generates code with Ollama/simulation |
-| Validation Pipeline | ✅ | 7/7 stages implemented |
+| Validation Pipeline | ✅ | 8/8 stages implemented |
 | Feedback Loop | ✅ | FeedbackGenerator + CodeCorrector |
 | Iteration Manager | ✅ | Retry loop with max iterations |
 | Ollama Integration | ✅ | Auto-detection, fallback to simulation |
@@ -205,16 +205,15 @@ src/core/contract-ai/
 ## 🚀 CLI Commands
 
 ```bash
-# Generate code from contract
+# Evolution mode (recommended) - from prompt with auto-healing
+./bin/reclapp evolve -p "Create a blog API with posts and comments" -o ./output
+
+# Keep running with monitoring
+./bin/reclapp evolve -p "Create a CRM system" -o ./crm -k
+
+# Legacy: generate-ai (no auto-healing)
 ./bin/reclapp generate-ai examples/contract-ai/crm-contract.ts
-
-# Generate with custom output
 ./bin/reclapp generate-ai contract.ts -o ./output
-
-# Generate from prompt
-./bin/reclapp generate-ai --prompt "Create a blog API with posts and comments"
-
-# Dry run (preview contract without generating)
 ./bin/reclapp generate-ai --dry-run --prompt "Create a task manager"
 ```
 

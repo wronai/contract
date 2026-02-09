@@ -47,30 +47,6 @@ refactor(examples): CLI interface improvements
 - ... and 13 more
 
 
-## [2.4.1] - 2026-02-01
-
-### Summary
-
-feat(docs): CLI interface with 3 supporting modules
-
-### Core
-
-- update src/python/reclapp/__init__.py
-- update src/python/reclapp/evolution/evolution_manager.py
-
-### Docs
-
-- docs: update 22-project-status.md
-
-### Test
-
-- update tests/python/test_evolve_free_model.py
-
-### Other
-
-- update .gitignore
-
-
 ## [2.2.3] - 2026-02-01
 
 ### Summary

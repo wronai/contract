@@ -458,7 +458,9 @@ pipeline.registerStage(customStage);
 
 ## CLI Reference
 
-### generate-ai
+### generate-ai (legacy — prefer `reclapp evolve`)
+
+> **Note:** `generate-ai` is a legacy command. For new projects use `reclapp evolve --prompt "..."` which includes auto-healing, E2E tests, and service monitoring.
 
 ```bash
 ./bin/reclapp generate-ai [contract-file] [options]

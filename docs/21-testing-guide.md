@@ -97,9 +97,9 @@ curl http://localhost:11434/api/tags
 
 ```bash
 # Najprostsza komenda - z promptem
-./bin/reclapp generate-ai --prompt "Create a simple task manager"
+./bin/reclapp evolve -p "Create a simple task manager" -o ./output
 
-# Lub z gotowym kontraktem
+# Lub z gotowym kontraktem (legacy generate-ai)
 ./bin/reclapp generate-ai examples/contract-ai/crm-contract.ts
 ```
 
@@ -118,7 +118,8 @@ cat ./generated/logs/*.rcl.md | head -100
 ### Przykład 1: CRM System (z pliku kontraktu)
 
 ```bash
-./bin/reclapp generate-ai examples/contract-ai/crm-contract.ts
+./bin/reclapp evolve -p "Create a CRM system" -o ./crm
+# Lub legacy: ./bin/reclapp generate-ai examples/contract-ai/crm-contract.ts
 ```
 
 **Oczekiwany output:**
@@ -351,10 +352,9 @@ docker-compose down
 ### Symulacja Błędu i Korekcji
 
 ```bash
-./bin/reclapp generate-ai \
-  --prompt "Create a system with complex validation rules" \
-  --max-iterations 5 \
-  --verbose
+./bin/reclapp evolve \
+  -p "Create a system with complex validation rules" \
+  -o ./output --no-menu -v
 ```
 
 **Scenariusz z feedback loop:**
@@ -459,8 +459,8 @@ grep -A5 "FAILED" debug.log
 - [ ] Python models i parsery przechodzą testy (`pytest tests/python/`)
 - [ ] Unit testy przechodzą (`npx jest tests/unit/`)
 - [ ] Integration testy przechodzą (`npx jest tests/integration/`)
-- [ ] CLI generuje kod (`./bin/reclapp generate-ai --prompt "..."`)
-- [ ] 7/7 validation stages PASSED
+- [ ] CLI generuje kod (`./bin/reclapp evolve -p "..." -o ./output`)
+- [ ] 8/8 validation stages PASSED
 - [ ] Wygenerowane API startuje (`cd generated/api && npm run dev`)
 - [ ] Endpointy odpowiadają (`curl localhost:3000/health`)
 

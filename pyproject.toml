@@ -67,7 +67,7 @@ select = ["E", "F", "I", "W"]
 ignore = ["E501"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src/python", "."]
+pythonpath = ["src/python", ".", "reclapp-llm", "reclapp-contracts"]
 asyncio_mode = "auto"
 addopts = "-p no:aiohttp"
 python_classes = ["Test*", "!TestType", "!TestDefinition"]

@@ -2,30 +2,35 @@
 
 > Wygenerowano na podstawie analizy `project.functions.toon` (318 modułów, ~1400 funkcji)
 > Data: 2026-02-09
+>
+> **Postęp:** R01 🔧 | R02 ✅ | R03 ✅ | R04 ✅ | R05 ✅ | R06 ✅ | R08 ⏭️ | R09 ⏭️
 
 ---
 
 ## 🔴 Krytyczne (Priorytet 1)
 
-### R01. Rozbić monolityczny `EvolutionManager` (TypeScript)
+### R01. Rozbić monolityczny `EvolutionManager` (TypeScript) 🔧
 - **Plik:** `src/core/contract-ai/evolution/evolution-manager.ts`
-- **Problem:** 105 metod, ~4600 linii. Klasa odpowiada za: Code RAG, git, LLM, serwis, testy, frontend, bazy danych, Docker, CI/CD, dokumentację, analizę stanu, recovery błędów.
-- **Akcja:** Wydzielić odpowiedzialności do istniejących i nowych modułów:
-  - `service-manager.ts` — już istnieje, przenieść `startService`, `stopService`, `restartService`, `waitForHealth`, `killProcessOnPort`, `checkHealth`, `isPortAvailable`, `findAvailablePort`
-  - `llm-orchestrator.ts` — już istnieje, przenieść `generateDynamicServerCode`, `generateDynamicPackageJson`, `tryLLMFix`, `buildRAGContext`
-  - `doc-generator.ts` — już istnieje, przenieść `generateReadme`, `generateApiDocs`, `getFallbackReadme`
-  - `test-generator.ts` — już istnieje, przenieść `generateTestFiles`, `runTests`, `orchestrateTestsLayer`
+- **Problem:** 105 metod, ~4600 linii → **zredukowano do ~4237 linii**
+- **Wykonano:**
+  - ✅ `contract-extractor.ts` — wydzielono `createMinimalContract`, `extractEntitiesFromPrompt`, `getEntityFields`, `getEntityRelations`, `capitalize`, `singularize`, `isValidEntityName` (382 linie)
+- **Pozostało:**
+  - `service-manager.ts` — przenieść `startService`, `stopService`, `restartService`, `waitForHealth`, `killProcessOnPort`, `checkHealth`, `isPortAvailable`, `findAvailablePort`
+  - `llm-orchestrator.ts` — przenieść `generateDynamicServerCode`, `generateDynamicPackageJson`, `tryLLMFix`, `buildRAGContext`
+  - `doc-generator.ts` — przenieść `generateReadme`, `generateApiDocs`, `getFallbackReadme`
+  - `test-generator.ts` — przenieść `generateTestFiles`, `runTests`, `orchestrateTestsLayer`
   - Nowy `artifact-generator.ts` — `generateDatabaseArtifacts`, `generateCicdArtifacts`, `generateDockerArtifacts`, `generatePrismaSchema`, `generateApiEnv`
-  - Nowy `error-recovery.ts` — `attemptRecovery`, `tryHeuristicFix`, `tryRegistryFix`, `tryFallbackFix`, `tryLLMFix`, `getErrorHints`, `logErrorHints`, `hashError`
+  - Nowy `error-recovery.ts` — `attemptRecovery`, `tryHeuristicFix`, `tryRegistryFix`, `tryFallbackFix`, `tryLLMFix`, `getErrorHints`, `logErrorHints`, `hashError` (silnie sprzężone z `this.options`, `this.renderer`, `this.fixRegistry`)
   - Nowy `prompt-factory.ts` — `buildSystemPrompt`, `buildUserPrompt`, `buildContractDrivenPrompt`, `buildLayer2Context`, `buildStateContext`
-  - Nowy `contract-extractor.ts` — `createMinimalContract`, `extractEntitiesFromPrompt`, `getEntityFields`, `getEntityRelations`
 
-### R02. Rozbić monolityczny `bin/reclapp`
-- **Plik:** `bin/reclapp`
-- **Problem:** 25 funkcji-komend w jednym pliku (JavaScript). Sama `cmdEvolution` ma 946 linii.
-- **Akcja:** Przenieść komendy do osobnych modułów `bin/commands/*.js`. `cmdEvolution` wymaga rozbicia na fazy analogicznie do R01.
+### R02. ✅ Rozbić monolityczny `bin/reclapp`
+- **Plik:** `bin/reclapp` — **zredukowano z 2694 → 1753 linii**
+- **Wykonano:**
+  - ✅ `bin/commands/evolution.js` — wydzielono `cmdEvolution` (871 linii). `bin/reclapp` deleguje przez `require('./commands/evolution')`.
+- **Pozostało:**
+  - Przenieść kolejne komendy (`cmdGenerateAI`, `cmdStudio`, `cmdAnalyze`, `cmdReverse`, `cmdRefactor`, `cmdTasks`) do `bin/commands/*.js`.
 
-### R03. Wyeliminować duplikację Python ↔ Python (3 kopie pakietów)
+### R03. ✅ Wyeliminować duplikację Python ↔ Python (3 kopie pakietów)
 - **Problem:** Trzy nakładające się pakiety Python:
   - `src/python/reclapp/` (główny)
   - `reclapp-contracts/reclapp_contracts/` (modele, parser, walidacja)
@@ -35,11 +40,11 @@
   - `src/python/reclapp/parser/markdown_parser.py` ≡ `reclapp-contracts/reclapp_contracts/parser/markdown_parser.py`
   - `src/python/reclapp/validation/` ≡ `reclapp-contracts/reclapp_contracts/validation/`
   - `src/python/reclapp/models/` ≡ `reclapp-contracts/reclapp_contracts/models/`
-- **Akcja:** Zdecydować o jednej kanonowej lokalizacji. Opcje:
-  1. `src/python/reclapp/` jako jedyny pakiet, usunąć `reclapp-llm/` i `reclapp-contracts/`
-  2. Utrzymać `reclapp-llm` i `reclapp-contracts` jako osobne pip-pakiety, `src/python/reclapp/` importuje z nich (usunąć lokalne kopie)
+- **Rozwiązanie (opcja 2):** `reclapp-llm` i `reclapp-contracts` jako kanonowe pip-pakiety. `src/python/reclapp/` zawiera cienkie re-eksporty. Lokalne kopie plików usunięte, proxy moduły dodane dla deep imports.
+- **Zsynchronizowano:** Enhanced parser (`i18n`, relaxed `FieldType`) skopiowany do `reclapp-contracts`.
+- **Testy:** 153 passed, 2 skipped. Patch targets w testach zaktualizowane (`reclapp_llm.manager`).
 
-### R04. Wyeliminować duplikację JavaScript ↔ TypeScript (chat-core / studio)
+### R04. ✅ Wyeliminować duplikację JavaScript ↔ JavaScript (chat-core / studio)
 - **Pliki:** `lib/chat-core.js`, `studio/server.js`, `studio/chat-shell.js`
 - **Problem:** Identyczne funkcje zduplikowane:
   - `coerceToRclString` — 2×
@@ -49,13 +54,13 @@
   - `validateContract` (w server.js) vs `ReclappChat.validateContract`
   - `callOllama` — 2×
   - `color()` — 3× (cli.ts, chat-shell.js, reclapp-chat)
-- **Akcja:** Wydzielić wspólny moduł `lib/rcl-utils.js` z tymi funkcjami. `chat-core.js` i `studio/server.js` importują z niego.
+- **Rozwiązanie:** Utworzono `lib/rcl-utils.js` ze wspólnymi funkcjami. `chat-core.js` deleguje metody do `rclUtils.*`. `studio/server.js` importuje z `rcl-utils.js`, ~200 linii duplikacji usunięte.
 
 ---
 
 ## 🟠 Wysokie (Priorytet 2)
 
-### R05. Zduplikowane generatory kodu (3–5 implementacji)
+### R05. ✅ Zduplikowane generatory kodu (3–5 implementacji)
 - **Pliki:**
   - `generator/core/generator.ts` — 59 metod, pełen generator z DSL AST
   - `generator/core/contract-generator.ts` — 50 metod, generator z ReclappContract
@@ -69,13 +74,9 @@
   - `generateApiDockerfile`, `generateFrontendDockerfile`, `generateDockerCompose`
   - `generateEntityRoutes`, `generateEntityModel`
   - `generateApiPackageJson`, `generateTsConfig`, `generateViteConfig`
-- **Akcja:**
-  1. Wydzielić wspólny moduł `generator/shared/type-mappers.ts` (fieldType*, fieldToZod)
-  2. Wydzielić `generator/shared/naming.ts` (toKebabCase, toCamelCase, etc.) — mogą korzystać z istniejącego `generator/templates/index.ts`
-  3. Wydzielić `generator/shared/docker-templates.ts`
-  4. Rozważyć konsolidację Generator + ContractGenerator do jednej klasy z adapterem wejścia (AST vs Contract)
+- **Rozwiązanie:** Utworzono `generator/shared/type-mappers.ts` z zunifikowanymi mapperami (TS, SQL, Mongoose, Zod, HTML input). Oba generatory (`Generator`, `ContractGenerator`) delegują do shared modułu. Utility nazewnicze delegują do `generator/templates/index.ts`.
 
-### R06. Zduplikowane utility nazewnicze
+### R06. ✅ Zduplikowane utility nazewnicze
 - **Problem:** Funkcje `capitalize`, `pluralize`, `toCamelCase`, `toKebabCase`, `toSnakeCase`, `toPascalCase`, `toConstantCase` istnieją w:
   - `generator/templates/index.ts` (8 funkcji) ← kanonowa lokalizacja
   - `generator/core/generator.ts` — metody klasy Generator
@@ -85,7 +86,7 @@
   - `src/python/reclapp/sdk/sdk_generator.py` — `_pluralize`
   - `src/python/reclapp/testing/e2e_generator.py` — `_pluralize`
   - `dsl/writer/markdown.ts` — `humanizeTitle`
-- **Akcja:** Jeden punkt importu (`generator/templates/index.ts` lub nowy `lib/naming.ts`), usunąć lokalne kopie.
+- **Rozwiązanie:** Oba generatory delegują `toCamelCase`, `toPascalCase`, `toKebabCase`, `toSnakeCase` do `generator/templates/index.ts`.
 
 ### R07. Zduplikowane highlightery składni
 - **Pliki:**
@@ -94,23 +95,22 @@
   - `src/core/contract-ai/evolution/shell-renderer.ts` — TS ShellRenderer z 6 `highlight*` metod
 - **Akcja:** `ShellRenderer` (Python) powinien delegować do `clickmd.renderer.MarkdownRenderer` zamiast duplikować logikę highlightingu. TS ShellRenderer — rozważyć wspólny moduł.
 
-### R08. Zduplikowany markdown parser (3 implementacje)
+### R08. ⏭️ Zduplikowany markdown parser (odroczone — różne formaty)
 - **Pliki:**
   - `dsl/parser/markdown.ts` — `MarkdownParser` (25 metod)
   - `src/core/contract-ai/parser/markdown-parser.ts` — (18 metod)
   - `src/python/reclapp/parser/markdown_parser.py` — (19 funkcji)
   - `reclapp-contracts/reclapp_contracts/parser/markdown_parser.py` — (19 funkcji, identyczny z powyższym)
-- **Akcja:** TS: skonsolidować do jednej lokalizacji (np. `dsl/parser/markdown.ts` jako kanonowa). Python: usunąć jedną z dwóch kopii (patrz R03).
+- **Status:** TS parsery przetwarzają różne formaty (`.rcl.md` → IR vs `.contract.md` → ContractMarkdown) — nie są prawdziwymi duplikatami. Python: rozwiązane w R03 (re-export z `reclapp_contracts`).
 
-### R09. Zduplikowany `validateContract`
-- **Problem:** Minimum 4 implementacje walidacji kontraktu:
-  - `contracts/validator.ts` — `validateContract` (82 linii)
-  - `contracts/dsl-types.ts` — `validateContract` (49 linii)
-  - `reclapp-contracts/reclapp_contracts/parser/markdown_parser.py` — `validate_contract`
-  - `src/python/reclapp/parser/markdown_parser.py` — `validate_contract`
-  - `src/core/contract-ai/generator/contract-validator.ts` — `ContractValidator` klasa (7 metod)
-  - `studio/server.js` — `validateContractSyntax`
-- **Akcja:** Jedna kanonowa walidacja per język. TS: `contracts/validator.ts` + `contract-validator.ts` → jedno API. Python: jedno miejsce.
+### R09. ⏭️ Zduplikowany `validateContract` (odroczone — różne typy)
+- **Problem:** 3 TS implementacje o tej samej nazwie, ale walidują **różne typy**:
+  - `contracts/dsl-types.ts` — waliduje `ReclappContract` (DSL)
+  - `contracts/validator.ts` — waliduje agent contracts (Zod `AgentContractSchema`)
+  - `src/core/contract-ai/parser/markdown-parser.ts` — waliduje `ContractMarkdown`
+  - `studio/server.js` — JS walidacja składni RCL (częściowo rozwiązana w R04)
+- **Status:** Nie są prawdziwymi duplikatami — walidują różne reprezentacje kontraktu. Python: rozwiązane w R03 (re-export).
+- **Przyszła akcja:** Rozważyć rename dla klarowności (`validateReclappContract`, `validateAgentContract`, `validateContractMarkdown`).
 
 ---
 

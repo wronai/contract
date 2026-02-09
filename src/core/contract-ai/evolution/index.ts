@@ -19,3 +19,4 @@ export { ServiceManager } from './service-manager';
 export type { ServiceStatus as ManagedServiceStatus, ServiceManagerOptions, LogCallback } from './service-manager';
 export * from './llm-prompts';
 export * from './fallback-templates';
+export * from './contract-extractor';
