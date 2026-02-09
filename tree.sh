@@ -1,1 +1,0 @@
-tree -I node_modules -I venv -I __pycache__ -I dist -I .venv -I output -I generated -I test-verify -I todo

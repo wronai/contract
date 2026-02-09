@@ -1,0 +1,1399 @@
+project: src
+generated: "2026-02-09T19:12:10.168115"
+modules[125]{path,lang,items}:
+  index.ts,typescript,0
+  core/index.ts,typescript,0
+  cli/index.ts,typescript,0
+  types/js-yaml.d.ts,typescript,0
+  python/reclapp/__init__.py,python,0
+  python/reclapp/generator/base.py,python,9
+  python/reclapp/generator/code_generator.py,python,14
+  python/reclapp/generator/__init__.py,python,0
+  python/reclapp/generator/contract_generator.py,python,8
+  python/reclapp/generator/prompt_builder.py,python,8
+  python/reclapp/analysis/__init__.py,python,0
+  python/reclapp/analysis/git_analyzer.py,python,12
+  python/reclapp/analysis/code_rag.py,python,32
+  python/reclapp/models/contract.py,python,5
+  python/reclapp/models/__init__.py,python,0
+  python/reclapp/models/validation.py,python,0
+  python/reclapp/models/generation.py,python,0
+  python/reclapp/models/definition.py,python,0
+  python/reclapp/cli/runner.py,python,8
+  python/reclapp/cli/__init__.py,python,0
+  python/reclapp/cli/__main__.py,python,0
+  python/reclapp/cli/executor.py,python,7
+  python/reclapp/cli/main.py,python,19
+  python/reclapp/llm/openrouter.py,python,9
+  python/reclapp/llm/manager.py,python,24
+  python/reclapp/llm/anthropic.py,python,9
+  python/reclapp/llm/ollama.py,python,11
+  python/reclapp/llm/litellm.py,python,9
+  python/reclapp/llm/__init__.py,python,0
+  python/reclapp/llm/provider.py,python,7
+  python/reclapp/llm/groq.py,python,9
+  python/reclapp/llm/windsurf.py,python,11
+  python/reclapp/llm/openai.py,python,9
+  python/reclapp/llm/together.py,python,9
+  python/reclapp/parser/__init__.py,python,0
+  python/reclapp/parser/markdown_parser.py,python,19
+  python/reclapp/evolution/shell_renderer.py,python,23
+  python/reclapp/evolution/state_analyzer.py,python,11
+  python/reclapp/evolution/__init__.py,python,0
+  python/reclapp/evolution/task_queue.py,python,13
+  python/reclapp/evolution/generators.py,python,10
+  python/reclapp/evolution/evolution_manager.py,python,35
+  python/reclapp/validation/stages.py,python,10
+  python/reclapp/validation/__init__.py,python,1
+  python/reclapp/validation/pipeline.py,python,6
+  python/reclapp/sdk/sdk_generator.py,python,17
+  python/reclapp/sdk/__init__.py,python,0
+  python/reclapp/testing/api_tester.py,python,10
+  python/reclapp/testing/__init__.py,python,0
+  python/reclapp/testing/e2e_generator.py,python,14
+  cli/commands/generate-ai.ts,typescript,5
+  core/contract-ai/index.ts,typescript,0
+  core/contract-ai/generator/index.ts,typescript,0
+  core/contract-ai/generator/contract-validator.ts,typescript,7
+  core/contract-ai/generator/prompt-builder.ts,typescript,5
+  core/contract-ai/generator/contract-generator.ts,typescript,13
+  core/contract-ai/templates/index.ts,typescript,11
+  core/contract-ai/code-generator/llm-generator.ts,typescript,12
+  core/contract-ai/code-generator/index.ts,typescript,0
+  core/contract-ai/analysis/project-state.ts,typescript,13
+  core/contract-ai/analysis/index.ts,typescript,0
+  core/contract-ai/analysis/refactoring-contract.ts,typescript,14
+  core/contract-ai/analysis/code-analyzer.ts,typescript,21
+  core/contract-ai/cli/index.ts,typescript,0
+  core/contract-ai/cli/cli-runner.ts,typescript,11
+  core/contract-ai/types/index.ts,typescript,6
+  core/contract-ai/types/generation.ts,typescript,0
+  core/contract-ai/types/validation.ts,typescript,0
+  core/contract-ai/types/definition.ts,typescript,0
+  core/contract-ai/types/contract-markdown.ts,typescript,0
+  core/contract-ai/llm/llm-config.ts,typescript,3
+  core/contract-ai/llm/index.ts,typescript,0
+  core/contract-ai/llm/llm-manager.ts,typescript,11
+  core/contract-ai/llm/parallel-executor.ts,typescript,37
+  core/contract-ai/llm/llm-provider.ts,typescript,9
+  core/contract-ai/llm/pydantic-validator.ts,typescript,13
+  core/contract-ai/llm/ollama-client.ts,typescript,10
+  core/contract-ai/llm/context-generator.ts,typescript,15
+  core/contract-ai/parser/index.ts,typescript,0
+  core/contract-ai/parser/markdown-parser.ts,typescript,18
+  core/contract-ai/evolution/index.ts,typescript,0
+  core/contract-ai/evolution/evolution-manager.ts,typescript,105
+  core/contract-ai/evolution/shell-renderer.ts,typescript,26
+  core/contract-ai/evolution/llm-orchestrator.ts,typescript,11
+  core/contract-ai/evolution/git-analyzer.ts,typescript,11
+  core/contract-ai/evolution/task-handlers.ts,typescript,10
+  core/contract-ai/evolution/llm-prompts.ts,typescript,4
+  core/contract-ai/evolution/task-queue.ts,typescript,11
+  core/contract-ai/evolution/state-analyzer.ts,typescript,10
+  core/contract-ai/evolution/fallback-templates.ts,typescript,11
+  core/contract-ai/evolution/doc-generator.ts,typescript,3
+  core/contract-ai/evolution/task-executor.ts,typescript,20
+  core/contract-ai/evolution/service-manager.ts,typescript,14
+  core/contract-ai/evolution/code-rag.ts,typescript,32
+  core/contract-ai/evolution/test-generator.ts,typescript,8
+  core/contract-ai/validation/index.ts,typescript,1
+  core/contract-ai/validation/pipeline-orchestrator.ts,typescript,9
+  core/contract-ai/feedback/code-corrector.ts,typescript,13
+  core/contract-ai/feedback/index.ts,typescript,0
+  core/contract-ai/feedback/iteration-manager.ts,typescript,5
+  core/contract-ai/feedback/feedback-generator.ts,typescript,9
+  core/contract-ai/feedback/generation-log.ts,typescript,17
+  core/contract-ai/setup/index.ts,typescript,0
+  core/contract-ai/setup/dependency-checker.ts,typescript,13
+  core/contract-ai/sdk/index.ts,typescript,0
+  core/contract-ai/sdk/sdk-generator.ts,typescript,19
+  core/contract-ai/converter/index.ts,typescript,0
+  core/contract-ai/converter/to-contract-ai.ts,typescript,7
+  core/contract-ai/validation/stages/index.ts,typescript,0
+  core/contract-ai/validation/stages/schema-validator.ts,typescript,3
+  core/contract-ai/validation/stages/test-runner.ts,typescript,12
+  core/contract-ai/validation/stages/quality-checker.ts,typescript,7
+  core/contract-ai/validation/stages/assertion-validator.ts,typescript,14
+  core/contract-ai/validation/stages/static-analyzer.ts,typescript,4
+  core/contract-ai/validation/stages/security-scanner.ts,typescript,9
+  core/contract-ai/validation/stages/runtime-validator.ts,typescript,13
+  core/contract-ai/validation/stages/syntax-validator.ts,typescript,6
+  core/contract-ai/code-generator/prompt-templates/index.ts,typescript,0
+  core/contract-ai/code-generator/prompt-templates/tests.ts,typescript,4
+  core/contract-ai/code-generator/prompt-templates/api.ts,typescript,12
+  core/contract-ai/code-generator/prompt-templates/frontend.ts,typescript,10
+  core/contract-ai/templates/frontend/react-app.template.ts,typescript,0
+  core/contract-ai/templates/tests/e2e-native.template.ts,typescript,0
+  core/contract-ai/templates/contracts/index.ts,typescript,2
+  core/contract-ai/templates/api/server.template.ts,typescript,0
+
+function_details:
+  python/reclapp/generator/base.py:
+    functions[9]{name,kind,sig,loc,async,lines,cc,does}:
+      BaseGenerator.__init__,method,"(options:Optional[TOptions]=None, verbose:bool=False)",34-37,false,4,1,creates
+      BaseGenerator.options,method,"() -> Optional[TOptions]",40-42,false,3,1,Get generator options
+      BaseGenerator.llm_client,method,"() -> Optional[LLMProvider]",45-47,false,3,1,Get LLM client
+      BaseGenerator.verbose,method,() -> bool,50-52,false,3,1,Check if verbose mode is enabled
+      BaseGenerator.set_llm_client,method,"(client:LLMProvider) -> None",54-56,false,3,1,Set the LLM client for generation
+      BaseGenerator.require_llm_client,method,() -> LLMProvider,58-62,false,5,2,Get LLM client or raise error if not set
+      BaseGenerator._estimate_tokens,method,"(text:str) -> int",64-66,false,3,1,"Estimate token count (rough approximation: ~4 chars per token)"
+      BaseGenerator._log,method,"(message:str) -> None",68-71,false,4,2,Log message if verbose mode is enabled
+      BaseGenerator.generate,method,() -> TResult,74-76,true,3,1,Main generation method - must be implemented by subclasses
+  python/reclapp/generator/code_generator.py:
+    functions[14]{name,kind,sig,loc,async,lines,cc,does}:
+      CodeGenerator.__init__,method,"(options:Optional[CodeGeneratorOptions]=None)",82-85,false,4,3,creates
+      CodeGenerator.generate,method,"(contract:dict[str,Any], output_dir:Optional[str]=None) -> CodeGenerationResult",87-222,true,136,18,Generate application code from contract.
+      CodeGenerator._generate_package_json,method,"(app_name:str, backend:dict) -> str",224-251,false,28,1,Generate package.json
+      CodeGenerator._generate_index_file,method,"(contract:dict, backend:dict) -> str",253-290,true,38,2,Generate main index file
+      CodeGenerator._generate_entity_model,method,"(entity:dict, language:str) -> str",292-312,false,21,3,Generate entity model file
+      CodeGenerator._generate_route_file,method,"(entity:dict, api:dict, backend:dict) -> str",314-379,true,66,1,Generate route file for entity
+      CodeGenerator._generate_tsconfig,method,() -> str,381-399,false,19,1,Generate tsconfig.json
+      CodeGenerator._map_field_type,method,"(contract_type:str) -> str",401-415,false,15,1,Map contract field type to TypeScript type
+      CodeGenerator._write_files,method,"(files:list[GeneratedFile], output_dir:str) -> None",417-424,false,8,2,Write generated files to disk
+      CodeGenerator._estimate_tokens,method,"(text:str) -> int",426-428,false,3,1,Estimate token count
+      CodeGenerator._generate_with_llm,method,"(contract:dict[str,Any], output_dir:str) -> CodeGenerationResult",430-496,true,67,5,Generate code using LLM
+      CodeGenerator._get_system_prompt,method,() -> str,498-570,false,73,1,Get system prompt for LLM code generation
+      CodeGenerator._build_llm_prompt,method,"(contract:dict[str,Any]) -> str",572-695,false,124,4,Build prompt for LLM code generation
+      CodeGenerator._parse_llm_response,method,"(content:str) -> list[GeneratedFile]",697-742,false,46,19,Parse LLM response to extract generated files
+  python/reclapp/generator/contract_generator.py:
+    functions[8]{name,kind,sig,loc,async,lines,cc,does}:
+      ContractGenerator.__init__,method,"(options:Optional[ContractGeneratorOptions]=None)",86-89,false,4,3,creates
+      ContractGenerator.generate,method,"(user_prompt:str) -> ContractGenerationResult",91-183,true,93,11,Generate a ContractAI from natural language prompt.
+      ContractGenerator._build_initial_prompt,method,"(user_prompt:str) -> GenerateOptions",185-226,false,42,1,Build initial generation prompt
+      ContractGenerator._build_correction_prompt,method,"(user_prompt:str, current_contract:Optional[dict], errors:list[ContractValidationError], attempt:int) -> GenerateOptions",228-256,false,29,3,Build correction prompt based on previous errors
+      ContractGenerator._call_llm,method,"(options:GenerateOptions) -> str",258-261,true,4,1,Call LLM and get response
+      ContractGenerator._parse_contract_from_response,method,"(response:str) -> Optional[dict]",263-285,false,23,6,Parse ContractAI JSON from LLM response
+      ContractGenerator._validate_contract,method,"(contract:dict) -> list[ContractValidationError]",287-353,false,67,13,Validate contract structure
+      ContractGenerator._estimate_tokens,method,"(text:str) -> int",355-358,false,4,1,Estimate token count (rough approximation)
+  python/reclapp/generator/prompt_builder.py:
+    functions[8]{name,kind,sig,loc,async,lines,cc,does}:
+      PromptBuilder.__init__,method,(),32-34,false,3,1,creates
+      PromptBuilder._register_default_templates,method,() -> None,36-85,false,50,1,Register default prompt templates
+      PromptBuilder.register_template,method,"(template:PromptTemplate) -> None",87-89,false,3,1,Register a custom template
+      PromptBuilder.get_template,method,"(name:str) -> Optional[PromptTemplate]",91-93,false,3,1,Get a template by name
+      PromptBuilder.build_contract_prompt,method,"(user_prompt:str) -> dict[str, str]",95-101,false,7,1,Build prompt for contract generation
+      PromptBuilder.build_code_prompt,method,"(file_type:str, context:str) -> dict[str, str]",103-113,false,11,1,Build prompt for code generation
+      PromptBuilder.build_fix_prompt,method,"(code:str, errors:list[str]) -> dict[str, str]",115-126,false,12,2,Build prompt for code fixing
+      PromptBuilder.build_from_template,method,"(template_name:str, variables:dict[str,Any]) -> dict[str, str]",128-141,false,14,2,Build prompt from named template with variables
+  python/reclapp/analysis/git_analyzer.py:
+    functions[12]{name,kind,sig,loc,async,lines,cc,does}:
+      GitAnalyzer.__init__,method,"(cwd:str)",68-69,false,2,1,creates
+      GitAnalyzer._run_git,method,"() -> Optional[str]",71-85,false,15,3,Run git command and return output
+      GitAnalyzer.is_git_repo,method,() -> bool,87-90,false,4,1,Check if directory is a git repository
+      GitAnalyzer.get_branch,method,() -> str,92-95,false,4,2,Get current branch name
+      GitAnalyzer.get_last_commit,method,"() -> Optional[CommitInfo]",97-110,false,14,3,Get information about the last commit
+      GitAnalyzer.get_recent_commits,method,"(count:int=5) -> list[CommitInfo]",112-129,false,18,5,Get recent commits
+      GitAnalyzer.get_status,method,() -> GitStatus,131-154,false,24,8,"Get git status (modified, untracked, staged)"
+      GitAnalyzer.get_remotes,method,"() -> list[str]",156-170,false,15,5,Get list of remote URLs
+      GitAnalyzer.get_file_structure,method,"() -> list[FileEntry]",172-195,false,24,6,Get list of tracked files and directories
+      GitAnalyzer.detect_stack,method,() -> DetectedStack,197-268,false,72,34,Detect technology stack from repository files
+      GitAnalyzer.get_full_state,method,() -> GitState,270-281,false,12,1,Get complete repository state
+      GitAnalyzer.generate_contract_from_code,method,"(llm_client:Optional[Any]=None) -> Optional[dict]",283-413,true,131,15,Generate a ContractAI from existing codebase using LLM analysis.
+  python/reclapp/analysis/code_rag.py:
+    functions[32]{name,kind,sig,loc,async,lines,cc,does}:
+      SemanticChunker.__init__,method,"(language:str='python')",85-86,false,2,1,creates
+      SemanticChunker.parse_file,method,"(file_path:str, content:str) -> List[CodeChunk]",88-123,false,36,6,Parse file and extract semantic chunks
+      SemanticChunker._parse_python,method,"(file_path:str, content:str, parent_id:str) -> List[CodeChunk]",125-206,false,82,13,Parse Python file for functions and classes
+      SemanticChunker._parse_typescript,method,"(file_path:str, content:str, parent_id:str) -> List[CodeChunk]",208-273,false,66,11,Parse TypeScript/JavaScript file
+      SemanticChunker._detect_language,method,"(ext:str) -> str",275-292,false,18,1,Detect language from file extension
+      SemanticChunker._generate_id,method,"(file_path:str, chunk_type:str, line:int) -> str",294-298,false,5,1,Generate unique ID for chunk
+      SemanticChunker._extract_imports,method,"(content:str, lang:str) -> List[str]",300-319,false,20,7,Extract import statements
+      SemanticChunker._extract_exports,method,"(content:str, lang:str) -> List[str]",321-329,false,9,3,Extract exported symbols
+      SemanticChunker._extract_signature,method,"(code:str, chunk_type:str) -> str",331-349,false,19,6,Extract function/class signature
+      SemanticChunker._extract_local_dependencies,method,"(code:str) -> List[str]",351-361,false,11,3,Extract function calls as dependencies
+      CodeIndexer.__init__,method,"(llm_client:Optional[Any]=None)",378-381,false,4,1,creates
+      CodeIndexer.index_directory,method,"(directory:str, exclude_patterns:Optional[List[str]]=None) -> None",383-424,true,42,12,Index entire directory
+      CodeIndexer._generate_summary,method,"(chunk:CodeChunk) -> str",426-441,true,16,3,Generate summary using LLM
+      CodeIndexer._scan_directory,method,"(directory:str, exclude_patterns:List[str]) -> List[str]",443-456,false,14,7,Scan directory for code files
+      CodeIndexer.get_index,method,() -> CodeIndex,458-459,false,2,1,retrieves index
+      CodeIndexer.get_chunk,method,"(chunk_id:str) -> Optional[CodeChunk]",461-462,false,2,1,retrieves chunk
+      CodeIndexer.get_chunks_by_file,method,"(file_path:str) -> List[CodeChunk]",464-466,false,3,3,retrieves chunks by file
+      CodeIndexer.get_chunks_by_symbol,method,"(name:str) -> List[CodeChunk]",468-470,false,3,3,retrieves chunks by symbol
+      CodeIndexer.get_callers,method,"(chunk_id:str) -> List[CodeChunk]",472-480,false,9,4,Get chunks that call this chunk
+      CodeIndexer.get_callees,method,"(chunk_id:str) -> List[CodeChunk]",482-485,false,4,3,Get chunks that this chunk calls
+      HierarchicalRetriever.__init__,method,"(indexer:CodeIndexer, llm_client:Optional[Any]=None)",499-501,false,3,1,creates
+      HierarchicalRetriever.search,method,"(query:str, top_k:int=10) -> List[SearchResult]",503-528,true,26,5,Search code by query - hierarchical approach
+      HierarchicalRetriever._search_files,method,"(query:str, index:CodeIndex) -> List[str]",530-560,false,31,11,Find relevant files for query
+      HierarchicalRetriever._score_chunk,method,"(chunk:CodeChunk, query:str) -> float",562-596,false,35,11,Score a chunk against query
+      HierarchicalRetriever.trace_call_path,method,"(from_id:str, to_id:str, max_depth:int=5) -> List[List[str]]",598-624,false,27,1,Trace call path between two chunks
+      HierarchicalRetriever.get_hierarchy,method,"() -> List[HierarchicalLevel]",626-669,false,44,13,Get hierarchical view of codebase
+      CodeRAG.__init__,method,"(llm_client:Optional[Any]=None)",691-695,false,5,1,creates
+      CodeRAG.index,method,"(directory:str) -> Dict[str, int]",697-706,true,10,1,Index a codebase
+      CodeRAG.ask,method,"(question:str) -> Dict[str, Any]",708-763,true,56,11,Ask a question about the code
+      CodeRAG.find_usages,method,"(symbol_name:str) -> List[CodeChunk]",765-773,false,9,3,Find where a symbol is used
+      CodeRAG.get_structure,method,"() -> List[HierarchicalLevel]",775-777,false,3,1,Get code structure overview
+      CodeRAG.export_index,method,() -> str,779-789,false,11,2,Export index to JSON for persistence
+  python/reclapp/models/contract.py:
+    functions[5]{name,kind,sig,loc,async,lines,cc,does}:
+      is_valid_contract,function,"(obj:object) -> bool",86-103,false,18,4,Check if object is a valid ContractAI
+      has_definition_layer,function,"(contract:dict) -> bool",106-121,false,16,6,Check if contract has Definition layer
+      has_generation_layer,function,"(contract:dict) -> bool",124-130,false,7,3,Check if contract has Generation layer
+      has_validation_layer,function,"(contract:dict) -> bool",133-139,false,7,3,Check if contract has Validation layer
+      create_minimal_contract,function,"(name:str, version:str='1.0.0', entities:Optional[list[dict]]=None) -> ContractAI",146-200,false,55,5,Create a minimal ContractAI with defaults
+  python/reclapp/cli/runner.py:
+    functions[8]{name,kind,sig,loc,async,lines,cc,does}:
+      CLITaskResult.__init__,method,"(success:bool, message:Optional[str]=None, data:Optional[Dict[str,Any]]=None, error:Optional[str]=None)",21-31,false,11,1,creates
+      CLIRunner.__init__,method,"(name:str, version:str, verbose:bool=True, show_progress:bool=True, continue_on_error:bool=True)",41-62,false,22,1,creates
+      CLIRunner.header,method,() -> None,64-66,false,3,1,Print header
+      CLIRunner.add_task,method,"(task_id:str, name:str, run_fn:Callable[Any,Any], description:Optional[str]=None, skip_fn:Optional[Callable[Any,bool]]=None) -> 'CLIRunner'",68-85,false,18,1,Add task to queue
+      CLIRunner.log,method,"(message:str) -> None",87-93,false,7,2,Log message
+      CLIRunner.yaml,method,"(type_name:str, description:str, data:Dict[str,Any]) -> None",95-108,false,14,1,Log YAML data
+      CLIRunner.print_todo,method,() -> None,110-129,false,20,7,Print current TODO list
+      CLIRunner.run,method,"() -> Dict[str, Any]",131-265,true,135,18,Run all tasks
+  python/reclapp/cli/executor.py:
+    functions[7]{name,kind,sig,loc,async,lines,cc,does}:
+      ExecutorTask.__init__,method,"(id:str, command:str, timeout:int=60000, cwd:Optional[str]=None)",24-35,false,12,2,creates
+      TaskExecutor.__init__,method,"(max_workers:int=3, verbose:bool=True)",44-52,false,9,1,creates
+      TaskExecutor.add_task,method,"(command:str, timeout:int=60000, task_id:Optional[str]=None) -> ExecutorTask",54-61,false,8,2,Add a single task to the queue
+      TaskExecutor.add_tasks_from_file,method,"(file_path:str) -> None",63-85,false,23,6,Parse tasks from a file (Dockerfile-style or bash lines)
+      TaskExecutor.run_task,method,"(task_id:str) -> None",87-148,true,62,6,Execute a single task using subprocess
+      TaskExecutor.wait_for_all,method,() -> None,150-170,true,21,6,Run tasks from queue until all finished using parallel workers
+      TaskExecutor.print_summary,method,() -> None,172-197,false,26,11,Print final status of all tasks in YAML/Markdown
+  python/reclapp/cli/main.py:
+    functions[19]{name,kind,sig,loc,async,lines,cc,does}:
+      create_parser,function,() -> argparse.ArgumentParser,21-270,false,250,1,Create the argument parser
+      cmd_evolve,function,"(args:Any) -> int",273-347,true,75,11,Execute the evolve command
+      show_interactive_menu,function,"(manager:Any, args:Any, port:int)",350-417,true,68,15,Show interactive menu like TypeScript - mirrors bin/reclapp actions
+      show_file,function,"(path:str)",420-429,true,10,2,Display file contents
+      check_health,function,"(port:int)",432-440,true,9,2,Check service health
+      show_logs,function,"(output_dir:str)",443-456,true,14,3,Show latest log file
+      cmd_generate,function,"(args:Any) -> int",459-532,true,74,11,Execute the generate command
+      cmd_parse,function,"(args:Any) -> int",535-563,true,29,4,Execute the parse command - parse contract and print JSON
+      cmd_validate,function,"(args:Any) -> int",566-610,true,45,7,Execute the validate command
+      cmd_setup,function,"(args:Any) -> int",613-675,true,63,2,Execute the setup command - check environment and API keys
+      cmd_tasks,function,"(args:Any) -> int",678-704,true,27,3,Execute the tasks command - parallel command execution from file
+      cmd_status,function,"(args:Any) -> int",707-726,true,20,1,Execute the status command
+      cmd_list,function,"(args:Any) -> int",729-817,true,89,21,Execute the list command - find and display contracts
+      cmd_prompts,function,"(args:Any) -> int",820-894,true,75,8,Execute the prompts command - manage prompt templates
+      cmd_analyze,function,"(args:Any) -> int",897-979,true,83,3,Execute the analyze command - extract contract from codebase
+      cmd_refactor,function,"(args:Any) -> int",982-1042,true,61,5,Execute the refactor command - apply contract changes to code
+      cmd_stop,function,"(args:Any) -> int",1045-1076,true,32,4,Execute the stop command - stop all running containers/processes
+      cli,function,"(args:Optional[list[str]]=None) -> int",1079-1113,false,35,13,Main CLI entry point
+      main,function,(),1116-1118,false,3,1,Entry point for console script
+  python/reclapp/llm/openrouter.py:
+    functions[9]{name,kind,sig,loc,async,lines,cc,does}:
+      OpenRouterClient.__init__,method,"(config:Optional[OpenRouterConfig]=None)",19-26,false,8,2,creates
+      OpenRouterClient.name,method,() -> str,29-30,false,2,1,name
+      OpenRouterClient.model,method,() -> str,33-34,false,2,1,model
+      OpenRouterClient.is_available,method,() -> bool,36-37,true,2,1,is available
+      OpenRouterClient.list_models,method,"() -> list[LLMModelInfo]",39-57,true,19,3,List available models from OpenRouter
+      OpenRouterClient.generate,method,"(options:GenerateOptions) -> LLMResponse",59-102,true,44,8,creates
+      OpenRouterClient.close,method,(),104-105,true,2,1,stops
+      OpenRouterClient.__aenter__,method,(),107-108,true,2,1,aenter
+      OpenRouterClient.__aexit__,method,(),110-111,true,2,1,aexit
+  python/reclapp/llm/manager.py:
+    functions[24]{name,kind,sig,loc,async,lines,cc,does}:
+      ProviderInfo.__init__,method,"(name:str, status:LLMProviderStatus, provider:Optional[LLMProvider]=None)",26-32,false,7,1,creates
+      LLMManager.__init__,method,"(verbose:bool=False)",63-68,false,6,1,creates
+      LLMManager.is_available,method,() -> bool,71-76,false,6,2,Check if any provider is available
+      LLMManager.is_ready,method,() -> bool,78-80,false,3,2,Check if manager is initialized and has available provider
+      LLMManager.get_provider,method,"() -> Optional[LLMProvider]",82-84,false,3,1,Get the primary available provider
+      LLMManager.primary_provider,method,"() -> Optional[LLMProvider]",87-91,false,5,3,Get the primary (first available) provider
+      LLMManager.providers,method,"() -> dict[str, ProviderInfo]",94-96,false,3,1,Get all provider info
+      LLMManager.initialize,method,() -> None,98-133,true,36,10,Initialize all configured providers
+      LLMManager._load_env_file,method,() -> None,135-161,false,27,11,retrieves env file
+      LLMManager._init_ollama,method,() -> None,163-185,true,23,3,Initialize Ollama provider
+      LLMManager._init_openrouter,method,() -> None,187-214,true,28,4,Initialize OpenRouter provider if API key is set
+      LLMManager._init_openai,method,() -> None,216-240,true,25,4,Initialize OpenAI provider
+      LLMManager._init_anthropic,method,() -> None,242-266,true,25,4,Initialize Anthropic provider
+      LLMManager._init_groq,method,() -> None,268-292,true,25,4,Initialize Groq provider
+      LLMManager._init_together,method,() -> None,294-318,true,25,4,Initialize Together AI provider
+      LLMManager._init_litellm,method,() -> None,320-334,true,15,2,Initialize LiteLLM provider
+      LLMManager._init_windsurf,method,() -> None,336-355,true,20,3,Initialize Windsurf provider
+      LLMManager.add_provider,method,"(name:str, provider:LLMProvider) -> None",357-364,false,8,1,Add a custom provider
+      LLMManager.generate,method,"(options:GenerateOptions, provider_name:Optional[str]=None) -> LLMResponse",366-397,true,32,5,Generate completion using available provider.
+      LLMManager.generate_with_fallback,method,"(options:GenerateOptions, providers:Optional[list[str]]=None) -> LLMResponse",399-430,true,32,6,Generate with fallback to other providers on failure.
+      LLMManager.get_status,method,() -> dict,432-442,false,11,4,Get status of all providers
+      LLMManager.close,method,() -> None,444-448,true,5,3,Close all provider connections
+      LLMManager.__aenter__,method,(),450-452,true,3,1,aenter
+      LLMManager.__aexit__,method,(),454-455,true,2,1,aexit
+  python/reclapp/llm/anthropic.py:
+    functions[9]{name,kind,sig,loc,async,lines,cc,does}:
+      AnthropicClient.__init__,method,"(config:Optional[AnthropicConfig]=None)",29-37,false,9,2,creates
+      AnthropicClient.name,method,() -> str,40-41,false,2,1,name
+      AnthropicClient.model,method,() -> str,44-45,false,2,1,model
+      AnthropicClient.is_available,method,() -> bool,47-49,true,3,1,Check if Anthropic API key is configured
+      AnthropicClient.list_models,method,"() -> list[LLMModelInfo]",51-62,true,12,2,List available Anthropic models (hardcoded since Anthropic doesn't have a simple...
+      AnthropicClient.generate,method,"(options:GenerateOptions) -> LLMResponse",64-107,true,44,6,Generate completion using Anthropic
+      AnthropicClient.close,method,(),109-111,true,3,1,Close HTTP client
+      AnthropicClient.__aenter__,method,(),113-114,true,2,1,aenter
+      AnthropicClient.__aexit__,method,(),116-117,true,2,1,aexit
+  python/reclapp/llm/ollama.py:
+    functions[11]{name,kind,sig,loc,async,lines,cc,does}:
+      OllamaClient.__init__,method,"(config:Optional[OllamaConfig]=None)",42-47,false,6,2,creates
+      OllamaClient.name,method,() -> str,50-51,false,2,1,name
+      OllamaClient.model,method,() -> str,54-55,false,2,1,model
+      OllamaClient.is_available,method,() -> bool,57-63,true,7,2,Check if Ollama is running
+      OllamaClient.list_models,method,"() -> list[LLMModelInfo]",65-89,true,25,5,List available Ollama models
+      OllamaClient.has_model,method,"(model_name:Optional[str]=None) -> bool",91-107,true,17,9,Check if model is available
+      OllamaClient.generate,method,"(options:GenerateOptions) -> LLMResponse",109-174,true,66,8,Generate completion using Ollama.
+      OllamaClient._sleep,method,"(attempt:int)",176-179,true,4,1,Exponential backoff sleep
+      OllamaClient.close,method,(),181-183,true,3,1,Close HTTP client
+      OllamaClient.__aenter__,method,(),185-186,true,2,1,aenter
+      OllamaClient.__aexit__,method,(),188-189,true,2,1,aexit
+  python/reclapp/llm/litellm.py:
+    functions[9]{name,kind,sig,loc,async,lines,cc,does}:
+      LiteLLMClient.__init__,method,"(config:Optional[LiteLLMConfig]=None)",33-39,false,7,2,creates
+      LiteLLMClient.name,method,() -> str,42-43,false,2,1,name
+      LiteLLMClient.model,method,() -> str,46-47,false,2,1,model
+      LiteLLMClient.is_available,method,() -> bool,49-51,true,3,1,Check if LiteLLM is available
+      LiteLLMClient.list_models,method,"() -> list[LLMModelInfo]",53-57,true,5,1,LiteLLM doesn't expose a simple models list via its universal API without comple...
+      LiteLLMClient.generate,method,"(options:GenerateOptions) -> LLMResponse",59-102,true,44,8,Generate completion using LiteLLM
+      LiteLLMClient.close,method,(),104-106,true,3,1,No persistent connection to close for LiteLLM
+      LiteLLMClient.__aenter__,method,(),108-109,true,2,1,aenter
+      LiteLLMClient.__aexit__,method,(),111-112,true,2,1,aexit
+  python/reclapp/llm/provider.py:
+    functions[7]{name,kind,sig,loc,async,lines,cc,does}:
+      LLMProvider.name,method,() -> str,64-66,false,3,1,Provider name
+      LLMProvider.model,method,() -> str,70-72,false,3,1,Current model name
+      LLMProvider.is_available,method,() -> bool,75-77,true,3,1,Check if provider is available
+      LLMProvider.list_models,method,"() -> list[LLMModelInfo]",80-82,true,3,1,List available models
+      LLMProvider.generate,method,"(options:GenerateOptions) -> LLMResponse",85-87,true,3,1,Generate completion
+      LLMProvider.has_model,method,"(model_name:str) -> bool",89-96,true,8,3,Check if specific model is available
+      LLMProvider.get_code_models,method,"(models:list[LLMModelInfo]) -> list[LLMModelInfo]",98-104,false,7,4,Filter models suitable for code generation
+  python/reclapp/llm/groq.py:
+    functions[9]{name,kind,sig,loc,async,lines,cc,does}:
+      GroqClient.__init__,method,"(config:Optional[GroqConfig]=None)",29-37,false,9,2,creates
+      GroqClient.name,method,() -> str,40-41,false,2,1,name
+      GroqClient.model,method,() -> str,44-45,false,2,1,model
+      GroqClient.is_available,method,() -> bool,47-49,true,3,1,Check if Groq API key is configured
+      GroqClient.list_models,method,"() -> list[LLMModelInfo]",51-71,true,21,5,List available Groq models
+      GroqClient.generate,method,"(options:GenerateOptions) -> LLMResponse",73-120,true,48,8,Generate completion using Groq
+      GroqClient.close,method,(),122-124,true,3,1,Close HTTP client
+      GroqClient.__aenter__,method,(),126-127,true,2,1,aenter
+      GroqClient.__aexit__,method,(),129-130,true,2,1,aexit
+  python/reclapp/llm/windsurf.py:
+    functions[11]{name,kind,sig,loc,async,lines,cc,does}:
+      WindsurfClient.__init__,method,"(config:Optional[WindsurfConfig]=None)",50-59,false,10,2,creates
+      WindsurfClient.name,method,() -> str,62-63,false,2,1,name
+      WindsurfClient.model,method,() -> str,66-67,false,2,1,model
+      WindsurfClient.is_available,method,() -> bool,69-82,true,14,3,Check if Windsurf server is running and accessible
+      WindsurfClient.list_models,method,"() -> list[LLMModelInfo]",84-107,true,24,4,List available models from Windsurf
+      WindsurfClient.has_model,method,"(model_name:Optional[str]=None) -> bool",109-115,true,7,3,Check if a specific model is available
+      WindsurfClient.generate,method,"(options:GenerateOptions) -> LLMResponse",117-173,true,57,8,Generate completion using Windsurf
+      WindsurfClient._get_headers,method,"() -> dict[str, str]",175-184,false,10,2,Get request headers
+      WindsurfClient.close,method,(),186-188,true,3,1,Close the HTTP client
+      WindsurfClient.__aenter__,method,(),190-191,true,2,1,aenter
+      WindsurfClient.__aexit__,method,(),193-194,true,2,1,aexit
+  python/reclapp/llm/openai.py:
+    functions[9]{name,kind,sig,loc,async,lines,cc,does}:
+      OpenAIClient.__init__,method,"(config:Optional[OpenAIConfig]=None)",29-37,false,9,2,creates
+      OpenAIClient.name,method,() -> str,40-41,false,2,1,name
+      OpenAIClient.model,method,() -> str,44-45,false,2,1,model
+      OpenAIClient.is_available,method,() -> bool,47-49,true,3,1,Check if OpenAI API key is configured
+      OpenAIClient.list_models,method,"() -> list[LLMModelInfo]",51-71,true,21,5,List available OpenAI models
+      OpenAIClient.generate,method,"(options:GenerateOptions) -> LLMResponse",73-120,true,48,8,Generate completion using OpenAI
+      OpenAIClient.close,method,(),122-124,true,3,1,Close HTTP client
+      OpenAIClient.__aenter__,method,(),126-127,true,2,1,aenter
+      OpenAIClient.__aexit__,method,(),129-130,true,2,1,aexit
+  python/reclapp/llm/together.py:
+    functions[9]{name,kind,sig,loc,async,lines,cc,does}:
+      TogetherClient.__init__,method,"(config:Optional[TogetherConfig]=None)",29-37,false,9,2,creates
+      TogetherClient.name,method,() -> str,40-41,false,2,1,name
+      TogetherClient.model,method,() -> str,44-45,false,2,1,model
+      TogetherClient.is_available,method,() -> bool,47-49,true,3,1,Check if Together API key is configured
+      TogetherClient.list_models,method,"() -> list[LLMModelInfo]",51-71,true,21,5,List available Together models
+      TogetherClient.generate,method,"(options:GenerateOptions) -> LLMResponse",73-117,true,45,7,Generate completion using Together AI
+      TogetherClient.close,method,(),119-121,true,3,1,Close HTTP client
+      TogetherClient.__aenter__,method,(),123-124,true,2,1,aenter
+      TogetherClient.__aexit__,method,(),126-127,true,2,1,aexit
+  python/reclapp/parser/markdown_parser.py:
+    functions[19]{name,kind,sig,loc,async,lines,cc,does}:
+      parse_contract_markdown,function,"(content:str) -> ContractMarkdown",171-195,false,25,1,Parse contract markdown content into ContractMarkdown structure.
+      _extract_frontmatter,function,"(content:str) -> tuple[ContractFrontmatter, str]",202-231,false,30,7,Extract YAML frontmatter from content
+      _parse_app_section,function,"(body:str) -> AppDefinition",238-255,false,18,9,Parse App Definition section
+      _parse_entities_section,function,"(body:str) -> list[MarkdownEntityDefinition]",258-286,false,29,5,Parse Entities section
+      _parse_entity_content,function,"(name:str, content:str) -> MarkdownEntityDefinition",289-321,false,33,6,Parse entity content from markdown
+      _parse_yaml_fields,function,"(content:str) -> list[EntityField]",324-378,false,55,10,Parse entity fields from YAML code block
+      _parse_markdown_table,function,"(content:str) -> list[EntityField]",381-417,false,37,20,Parse markdown table into EntityField list
+      _parse_field_type,function,"(type_str:str) -> str",420-444,false,25,2,Parse field type string to internal representation
+      _parse_api_section,function,"(body:str) -> ApiDefinition",447-466,false,20,5,Parse API section
+      _parse_endpoint_tables,function,"(section:str) -> list[ApiEndpoint]",469-490,false,22,10,Parse API endpoint tables
+      _parse_rules_section,function,"(body:str) -> RulesDefinition",493-517,false,25,9,Parse Business Rules section
+      _parse_tech_section,function,"(body:str, frontmatter:ContractFrontmatter) -> TechStack",520-577,false,58,28,Parse Tech Stack section
+      _parse_tests_section,function,"(body:str) -> TestsDefinition",580-608,false,29,10,Parse Tests section
+      _parse_gherkin,function,"(content:str) -> list[AcceptanceTest]",611-634,false,24,5,Parse Gherkin format tests
+      _extract_section,function,"(body:str, header:str) -> str",641-646,false,6,2,Extract content under a markdown header
+      _extract_field,function,"(section:str, label:str) -> str",649-653,false,5,2,"Extract **Label:** value from section"
+      _extract_list_from_field,function,"(section:str, label:str) -> list[str]",656-661,false,6,3,Extract comma-separated list from field
+      _extract_checkbox_list,function,"(section:str) -> list[str]",664-672,false,9,2,Extract checkbox list items
+      validate_contract,function,"(contract:ContractMarkdown) -> ContractValidationResult",679-718,false,40,11,Validate parsed contract.
+  python/reclapp/evolution/shell_renderer.py:
+    functions[23]{name,kind,sig,loc,async,lines,cc,does}:
+      ShellRenderer.__init__,method,"(verbose:bool=True)",62-70,false,9,3,creates
+      ShellRenderer.renderer,method,"() -> Optional[\"_ClickmdRenderer\"]",73-75,false,3,1,Expose underlying clickmd renderer
+      ShellRenderer.enable_log,method,() -> None,77-80,false,4,1,Enable log buffering for markdown export
+      ShellRenderer.get_log,method,() -> str,82-84,false,3,1,Get buffered log as clean markdown
+      ShellRenderer.clear_log,method,() -> None,86-88,false,3,1,Clear log buffer
+      ShellRenderer.save_log,method,"(file_path:str) -> None",90-97,false,8,3,Save log to file as markdown
+      ShellRenderer._log,method,"(text:str) -> None",99-104,false,6,2,Buffer log line if logging is enabled
+      ShellRenderer._get_clickmd,method,(),106-115,false,10,3,Get clickmd module (lazy load)
+      ShellRenderer._try_md,method,"(text:str) -> bool",117-123,false,7,2,try md
+      ShellRenderer._try_echo,method,"(text:str) -> bool",125-131,false,7,2,try echo
+      ShellRenderer.heading,method,"(level:int, text:str) -> None",133-143,false,11,3,Print a heading
+      ShellRenderer.codeblock,method,"(language:Language, content:str) -> None",145-162,false,18,4,Print a syntax-highlighted code block
+      ShellRenderer.text,method,"(content:str) -> None",164-172,false,9,3,Print plain text
+      ShellRenderer.success,method,"(message:str) -> None",174-182,false,9,3,Print success message
+      ShellRenderer.error,method,"(message:str) -> None",184-192,false,9,3,Print error message
+      ShellRenderer.warning,method,"(message:str) -> None",194-202,false,9,3,Print warning message
+      ShellRenderer.info,method,"(message:str) -> None",204-212,false,9,3,Print info message
+      ShellRenderer._highlight_line,method,"(line:str, language:Language) -> str",214-227,false,14,6,Apply syntax highlighting to a line
+      ShellRenderer._highlight_yaml,method,"(line:str) -> str",229-257,false,29,10,Highlight YAML syntax
+      ShellRenderer._highlight_json,method,"(line:str) -> str",259-285,false,27,1,Highlight JSON syntax
+      ShellRenderer._highlight_bash,method,"(line:str) -> str",287-299,false,13,4,Highlight Bash syntax
+      ShellRenderer._highlight_js,method,"(line:str) -> str",301-324,false,24,3,Highlight JavaScript/TypeScript syntax
+      ShellRenderer._highlight_log,method,"(line:str) -> str",326-336,false,11,10,Highlight log messages
+  python/reclapp/evolution/state_analyzer.py:
+    functions[11]{name,kind,sig,loc,async,lines,cc,does}:
+      StateDiscrepancy.to_dict,method,() -> dict,46-55,false,10,1,converts dict
+      MultiLevelState.is_consistent,method,() -> bool,95-97,false,3,3,Check if all levels are consistent
+      MultiLevelState.to_dict,method,() -> dict,99-118,false,20,2,converts dict
+      StateAnalyzer.__init__,method,"(target_dir:str, verbose:bool=False)",136-138,false,3,1,creates
+      StateAnalyzer.analyze,method,"(contract:Optional[dict]=None) -> MultiLevelState",140-161,true,22,3,Perform full multi-level analysis
+      StateAnalyzer._load_contract,method,"() -> Optional[dict]",163-171,false,9,3,Load contract from file
+      StateAnalyzer._analyze_contract,method,"(contract:dict) -> ContractState",173-204,false,32,4,Extract state from contract
+      StateAnalyzer._analyze_code,method,() -> CodeState,206-229,false,24,11,Extract state from generated code
+      StateAnalyzer._analyze_runtime,method,() -> RuntimeState,231-261,true,31,7,Extract state from running service
+      StateAnalyzer._find_discrepancies,method,"(state:MultiLevelState) -> list[StateDiscrepancy]",263-311,false,49,8,Find discrepancies between state levels
+      StateAnalyzer.write_state_snapshot,method,"(state:MultiLevelState) -> str",313-321,false,9,1,Write state snapshot to file
+  python/reclapp/evolution/task_queue.py:
+    functions[13]{name,kind,sig,loc,async,lines,cc,does}:
+      TaskQueue.__init__,method,"(verbose:bool=True)",53-56,false,4,1,creates
+      TaskQueue.renderer,method,"() -> \"ShellRenderer\"",59-64,false,6,2,Lazy load renderer
+      TaskQueue.add,method,"(name:str, task_id:Optional[str]=None) -> Task",66-74,false,9,2,Add a new task to the queue
+      TaskQueue.start,method,"(task_id:str) -> None",76-82,false,7,2,Mark a task as running
+      TaskQueue.done,method,"(task_id:str) -> None",84-96,false,13,4,Mark a task as done
+      TaskQueue.fail,method,"(task_id:str, error:str) -> None",98-105,false,8,2,Mark a task as failed
+      TaskQueue.skip,method,"(task_id:str) -> None",107-112,false,6,2,Mark a task as skipped
+      TaskQueue.get_task,method,"(task_id:str) -> Optional[Task]",114-116,false,3,1,Get task by ID
+      TaskQueue.get_stats,method,"() -> dict[str, int]",118-127,false,10,11,Get task statistics
+      TaskQueue.print,method,"(force:bool=True) -> None",129-131,false,3,1,Print current task list
+      TaskQueue._find_task,method,"(task_id:str) -> Optional[Task]",133-135,false,3,3,Find task by ID
+      TaskQueue._print_todo_list,method,"(force:bool=False) -> None",137-195,false,59,17,Print task list as YAML
+      TaskQueue.get_icon,method,"(status:TaskStatus) -> str",198-207,false,10,1,Get status icon
+  python/reclapp/evolution/generators.py:
+    functions[10]{name,kind,sig,loc,async,lines,cc,does}:
+      EvolutionGenerators.__init__,method,"(contract:Optional[dict]=None, port:int=3000)",22-24,false,3,1,creates
+      EvolutionGenerators.set_contract,method,"(contract:dict) -> None",26-28,false,3,1,Set contract for generation
+      EvolutionGenerators.generate_database,method,"(target_dir:str) -> None",30-92,true,63,6,Generate Prisma database schema
+      EvolutionGenerators.generate_frontend,method,"(target_dir:str) -> None",94-313,true,220,3,Generate React frontend
+      EvolutionGenerators.generate_dockerfile,method,"(target_dir:str) -> None",315-348,true,34,1,Generate Dockerfile for the API
+      EvolutionGenerators.generate_cicd,method,"(target_dir:str) -> None",350-376,true,27,1,Generate CI/CD templates
+      EvolutionGenerators.generate_docs,method,"(target_dir:str) -> None",378-428,true,51,4,Generate README documentation
+      EvolutionGenerators.generate_test_fixtures,method,"(target_dir:str) -> None",430-460,true,31,3,Generate test fixture files
+      EvolutionGenerators.generate_test_config,method,"(target_dir:str) -> None",462-485,true,24,1,Generate test configuration file
+      EvolutionGenerators.generate_e2e_tests,method,"(target_dir:str) -> Optional[str]",487-596,true,110,3,Generate E2E test file
+  python/reclapp/evolution/evolution_manager.py:
+    functions[35]{name,kind,sig,loc,async,lines,cc,does}:
+      EvolutionManager.__init__,method,"(options:Optional[EvolutionOptions]=None)",94-107,false,14,2,creates
+      EvolutionManager.set_llm_client,method,"(client:Any) -> None",109-111,false,3,1,Set the LLM client
+      EvolutionManager.evolve,method,"(prompt:str, output_dir:Optional[str]=None) -> EvolutionResult",113-218,true,106,20,Run the full evolution pipeline with auto-healing.
+      EvolutionManager._setup_tasks,method,(),220-261,false,42,1,Setup full task queue (21 tasks like TypeScript)
+      EvolutionManager._phase_setup,method,"(target_dir:str)",263-281,true,19,2,"Phase 1: Setup directories and state"
+      EvolutionManager._phase_contract,method,"(prompt:str, target_dir:str) -> Optional[dict]",283-312,true,30,5,"Phase 2: Generate and save contract"
+      EvolutionManager._phase_code_generation,method,"(contract:dict, target_dir:str) -> list[str]",314-329,true,16,2,"Phase 3: Generate code"
+      EvolutionManager._phase_service,method,"(target_dir:str) -> bool",331-411,true,81,20,"Phase 4: Install deps and start service"
+      EvolutionManager._phase_tests,method,"(target_dir:str) -> tuple[int, int, str]",413-434,true,22,3,"Phase 5: Generate and run E2E tests"
+      EvolutionManager._phase_additional,method,"(target_dir:str)",436-461,true,26,1,"Phase 5-9: Additional generation (Database, Docker, CI/CD, Frontend, Docs)"
+      EvolutionManager._phase_verification,method,"(target_dir:str)",463-496,true,34,6,"Phase 10: Final verification with multi-level state analysis"
+      EvolutionManager._generate_database,method,"(target_dir:str)",498-563,true,66,6,Generate Prisma database schema
+      EvolutionManager._generate_frontend,method,"(target_dir:str)",565-785,true,221,3,Generate React frontend
+      EvolutionManager._generate_dockerfile,method,"(target_dir:str)",787-821,true,35,1,Generate Dockerfile for the API
+      EvolutionManager._generate_cicd,method,"(target_dir:str)",823-849,true,27,1,Generate CI/CD templates
+      EvolutionManager._generate_docs,method,"(target_dir:str)",851-904,true,54,4,Generate README documentation
+      EvolutionManager._generate_api_docs,method,"(target_dir:str)",906-930,true,25,3,Generate API.md documentation like TypeScript
+      EvolutionManager._generate_test_fixtures,method,"(target_dir:str)",932-962,true,31,3,Generate test fixtures like TypeScript
+      EvolutionManager._generate_test_config,method,"(target_dir:str)",964-987,true,24,1,Generate test configuration like TypeScript
+      EvolutionManager._save_evolution_log,method,"(target_dir:str)",989-1016,true,28,2,Save evolution log like TypeScript
+      EvolutionManager._find_npm,method,"() -> Optional[str]",1018-1041,false,24,8,Find npm executable
+      EvolutionManager._with_llm_heartbeat,method,"(purpose:str, coro, heartbeat_interval:float=5.0, timeout:float=120.0) -> T",1043-1131,true,89,8,Wrap an async LLM call with heartbeat logging.
+      EvolutionManager._kill_port,method,"(port:int)",1133-1149,true,17,5,Kill process using port
+      EvolutionManager._check_health,method,"(retries:int=5) -> bool",1151-1165,true,15,4,Check service health
+      EvolutionManager._stop_service,method,(),1167-1175,true,9,3,Stop the service
+      EvolutionManager._generate_e2e_tests,method,"(target_dir:str) -> Optional[str]",1177-1279,true,103,3,Generate E2E test file (fallback even without entities)
+      EvolutionManager._run_e2e_tests,method,"(target_dir:str) -> tuple[int, int, str]",1281-1366,true,86,25,"Run E2E tests and return (passed, failed, output)"
+      EvolutionManager._auto_fix_code,method,"(target_dir:str, failed_count:int, test_output:str='')",1368-1435,true,68,9,Try to fix failing code with LLM - mirrors TypeScript recovery logic
+      EvolutionManager._extract_code_block,method,"(content:str, language:str='') -> str",1437-1451,false,15,5,Extract code block from markdown response
+      EvolutionManager._generate_contract,method,"(prompt:str) -> Optional[dict]",1453-1494,true,42,5,Generate contract from prompt using LLM or fallback to template
+      EvolutionManager._extract_app_name,method,"(prompt:str) -> str",1496-1501,false,6,2,parses app name
+      EvolutionManager._extract_entities,method,"(prompt:str) -> list[dict]",1503-1525,false,23,9,parses entities
+      EvolutionManager._generate_code,method,"(contract:dict, output_dir:str) -> list[str]",1527-1553,true,27,5,Generate code from contract using LLM
+      EvolutionManager._validate_code,method,"(output_dir:str) -> list[str]",1555-1559,true,5,1,Validate generated code
+      EvolutionManager.get_task_queue,method,() -> TaskQueue,1561-1563,false,3,1,Get the task queue
+  python/reclapp/validation/stages.py:
+    functions[10]{name,kind,sig,loc,async,lines,cc,does}:
+      create_syntax_validator,function,() -> ValidationStage,21-54,false,34,1,Create syntax validation stage.
+      _check_js_syntax,function,"(filename:str, content:str) -> list[StageError]",57-94,false,38,10,Check JavaScript/TypeScript syntax
+      _check_python_syntax,function,"(filename:str, content:str) -> list[StageError]",97-111,false,15,2,Check Python syntax using compile()
+      create_schema_validator,function,() -> ValidationStage,118-160,false,43,1,Create schema validation stage.
+      create_assertion_validator,function,() -> ValidationStage,167-221,false,55,1,Create assertion validation stage.
+      create_static_analyzer,function,() -> ValidationStage,228-276,false,49,1,Create static analysis stage.
+      create_test_runner,function,() -> ValidationStage,283-321,false,39,1,Create test runner stage.
+      create_quality_checker,function,() -> ValidationStage,328-383,false,56,1,Create quality checker stage.
+      create_security_scanner,function,() -> ValidationStage,390-430,false,41,1,Create security scanner stage.
+      create_runtime_validator,function,() -> ValidationStage,437-457,false,21,1,Create runtime validation stage.
+  python/reclapp/validation/__init__.py:
+    functions[1]{name,kind,sig,loc,async,lines,cc,does}:
+      create_default_pipeline,function,"(options:dict=None) -> \"ValidationPipeline\"",58-81,false,24,2,Create a configured validation pipeline with all stages.
+  python/reclapp/validation/pipeline.py:
+    functions[6]{name,kind,sig,loc,async,lines,cc,does}:
+      ValidationPipeline.__init__,method,"(fail_fast:bool=True, timeout:int=60000, verbose:bool=False, work_dir:str='/tmp/reclapp-validation')",118-131,false,14,1,creates
+      ValidationPipeline.register_stage,method,"(stage:ValidationStage) -> None",133-135,false,3,1,Register a validation stage
+      ValidationPipeline.register_stages,method,"(stages:list[ValidationStage]) -> None",137-139,false,3,1,Register multiple validation stages
+      ValidationPipeline.validate,method,"(contract:dict[str,Any], code:GeneratedCode) -> PipelineResult",141-208,true,68,19,Run the validation pipeline.
+      ValidationPipeline._run_stage,method,"(stage:ValidationStage, context:ValidationContext) -> StageResult",210-251,true,42,5,Run a single validation stage with timeout
+      ValidationPipeline.get_stage_names,method,"() -> list[str]",253-255,false,3,2,Get list of registered stage names
+  python/reclapp/sdk/sdk_generator.py:
+    functions[17]{name,kind,sig,loc,async,lines,cc,does}:
+      SDKGenerator.__init__,method,"(options:Optional[SDKGeneratorOptions]=None)",67-68,false,2,2,creates
+      SDKGenerator.generate,method,"(contract:ContractAI) -> GeneratedSDK",70-106,false,37,4,Generate complete SDK from contract
+      SDKGenerator._generate_types,method,"(contract:ContractAI) -> str",108-133,false,26,3,Generate TypeScript type definitions
+      SDKGenerator._generate_entity_type,method,"(entity:EntityDefinition) -> List[str]",135-154,false,20,7,Generate type for a single entity
+      SDKGenerator._generate_input_types,method,"(entity:EntityDefinition) -> List[str]",156-187,false,32,9,Generate Create/Update input types
+      SDKGenerator._generate_api_response_types,method,"(contract:ContractAI) -> List[str]",189-213,false,25,2,Generate API response wrapper types
+      SDKGenerator._generate_zod_schemas,method,"(contract:ContractAI) -> str",215-231,false,17,2,Generate Zod validation schemas
+      SDKGenerator._generate_entity_schema,method,"(entity:EntityDefinition) -> List[str]",233-262,false,30,6,Generate Zod schema for entity
+      SDKGenerator._generate_client,method,"(contract:ContractAI) -> str",264-323,false,60,3,Generate API client
+      SDKGenerator._generate_entity_client_methods,method,"(entity:EntityDefinition) -> List[str]",325-389,false,65,1,Generate CRUD methods for entity
+      SDKGenerator._generate_hooks,method,"(contract:ContractAI) -> str",391-416,false,26,3,Generate React hooks
+      SDKGenerator._generate_entity_hooks,method,"(entity:EntityDefinition) -> List[str]",418-530,false,113,1,Generate React hooks for entity
+      SDKGenerator._generate_index,method,"(contract:ContractAI) -> str",532-552,false,21,4,Generate index file
+      SDKGenerator._field_type_to_ts,method,"(field:FieldDefinition) -> str",554-579,false,26,3,Map field type to TypeScript type
+      SDKGenerator._field_type_to_zod,method,"(field:FieldDefinition) -> str",581-605,false,25,3,Map field type to Zod schema
+      SDKGenerator._format_field_comment,method,"(field:FieldDefinition) -> str",607-623,false,17,7,Format field annotations as comment
+      SDKGenerator._pluralize,method,"(word:str) -> str",625-632,false,8,3,Simple pluralization
+  python/reclapp/testing/api_tester.py:
+    functions[10]{name,kind,sig,loc,async,lines,cc,does}:
+      APITester.__init__,method,"(base_url:str, timeout:int=30)",58-61,false,4,1,creates
+      APITester._get_client,method,() -> httpx.AsyncClient,63-66,true,4,2,retrieves client
+      APITester.close,method,(),68-71,true,4,2,stops
+      APITester.run_test,method,"(test:EndpointTest) -> APITestResult",73-135,true,63,16,Run a single endpoint test
+      APITester.run_tests,method,"(tests:List[EndpointTest]) -> List[APITestResult]",137-143,true,7,2,Run multiple endpoint tests
+      APITester.health_check,method,"(path:str='/health') -> bool",145-149,true,5,1,Quick health check
+      APITester.probe_endpoints,method,"(endpoints:List[str]) -> Dict[str, bool]",151-161,true,11,2,Probe multiple endpoints for availability
+      APITester.generate_crud_tests,method,"(entity_name:str, base_path:str, create_payload:Dict[str,Any]) -> List[EndpointTest]",163-200,false,38,1,Generate standard CRUD tests for an entity
+      APITester.__aenter__,method,(),202-203,true,2,1,aenter
+      APITester.__aexit__,method,(),205-206,true,2,1,aexit
+  python/reclapp/testing/e2e_generator.py:
+    functions[14]{name,kind,sig,loc,async,lines,cc,does}:
+      E2ETestGenerator.__init__,method,"(config:Optional[E2ETestConfig]=None)",75-76,false,2,2,creates
+      E2ETestGenerator.generate,method,"(contract:ContractAI) -> TestSuite",78-121,false,44,9,Generate complete test suite from contract
+      E2ETestGenerator._generate_playwright_config,method,() -> str,127-161,false,35,1,Generate playwright.config.ts
+      E2ETestGenerator._generate_health_tests_ts,method,() -> GeneratedTest,163-188,false,26,1,Generate health check tests (TypeScript)
+      E2ETestGenerator._generate_api_tests_ts,method,"(entity:EntityDefinition) -> GeneratedTest",190-257,false,68,1,Generate API tests for entity (TypeScript)
+      E2ETestGenerator._generate_ui_tests_ts,method,"(contract:ContractAI) -> GeneratedTest",259-316,false,58,1,Generate UI tests (TypeScript)
+      E2ETestGenerator._generate_conftest_py,method,() -> str,322-339,false,18,1,Generate conftest.py for pytest-playwright
+      E2ETestGenerator._generate_health_tests_py,method,() -> GeneratedTest,341-365,false,25,1,Generate health check tests (Python)
+      E2ETestGenerator._generate_api_tests_py,method,"(entity:EntityDefinition) -> GeneratedTest",367-431,false,65,1,Generate API tests for entity (Python)
+      E2ETestGenerator._generate_test_payload,method,"(entity:EntityDefinition) -> str",437-462,false,26,10,Generate test payload as JSON string
+      E2ETestGenerator._generate_update_payload,method,"(entity:EntityDefinition) -> str",464-481,false,18,7,Generate update payload as JSON string
+      E2ETestGenerator._generate_test_payload_py,method,"(entity:EntityDefinition) -> str",483-505,false,23,9,Generate test payload as Python dict string
+      E2ETestGenerator._generate_update_payload_py,method,"(entity:EntityDefinition) -> str",507-524,false,18,7,Generate update payload as Python dict string
+      E2ETestGenerator._pluralize,method,"(word:str) -> str",526-533,false,8,3,Simple pluralization
+  cli/commands/generate-ai.ts:
+    functions[5]{name,kind,sig,loc,async,lines,cc,does}:
+      parseArgs,function,"(args: string[]) -> GenerateAIOptions",43-93,false,51,1,parses args
+      printHelp,function,() -> void,95-122,false,28,1,logs help
+      generateAI,function,"(options: GenerateAIOptions) -> Promise<void>",128-243,true,116,1,creates ai
+      loadContract,function,"(filePath: string) -> Promise<any>",249-270,true,22,1,retrieves contract
+      writeGeneratedFiles,function,"(files: Array<{ path: string; content: string }>, outputDir: string) -> Promise<void>",272-290,true,19,1,logs generated files
+  core/contract-ai/generator/contract-validator.ts:
+    functions[7]{name,kind,sig,loc,async,lines,cc,does}:
+      createContractValidator,function,() -> ContractValidator,566-568,false,3,1,creates contract validator
+      ContractValidator.validate,method,"(contract: unknown) -> ContractValidationResult",55-90,false,36,1,validates
+      ContractValidator.validateDefinitionLayer,method,"(layer: unknown) -> ContractValidationError[]",95-235,false,141,1,validates definition layer
+      ContractValidator.validateGenerationLayer,method,"(layer: unknown) -> ContractValidationError[]",240-375,false,136,1,validates generation layer
+      ContractValidator.validateValidationLayer,method,"(layer: unknown) -> ContractValidationError[]",380-513,false,134,1,validates validation layer
+      ContractValidator.validateCrossLayerConsistency,method,"(contract: ContractAI) -> ContractValidationError[]",518-550,false,33,1,validates cross layer consistency
+      ContractValidator.isValidFieldType,method,"(type: FieldType) -> boolean",555-559,false,5,1,is valid field type
+  core/contract-ai/generator/prompt-builder.ts:
+    functions[5]{name,kind,sig,loc,async,lines,cc,does}:
+      createPromptBuilder,function,() -> ContractPromptBuilder,222-224,false,3,1,creates prompt builder
+      ContractPromptBuilder.buildSystemPrompt,method,() -> string,24-88,false,65,1,creates system prompt
+      ContractPromptBuilder.buildUserPrompt,method,"(requirements: string) -> string",93-108,false,16,1,creates user prompt
+      ContractPromptBuilder.buildCorrectionPrompt,method,"(originalPrompt: string, contract: Partial<ContractAI>, errors: ContractValidationError[]) -> string",113-142,false,30,1,creates correction prompt
+      ContractPromptBuilder.buildExampleContracts,method,() -> string,147-215,false,69,1,creates example contracts
+  core/contract-ai/generator/contract-generator.ts:
+    functions[13]{name,kind,sig,loc,async,lines,cc,does}:
+      createContractGenerator,function,(options?) -> ContractGenerator,451-453,false,3,1,creates contract generator
+      ContractGenerator.constructor,method,"(options: Partial<ContractGeneratorOptions>)",104-108,false,5,1,constructor
+      ContractGenerator.setLLMClient,method,"(client: LLMClient) -> void",113-115,false,3,1,updates llm client
+      ContractGenerator.generate,method,"(userPrompt: string) -> Promise<ContractGenerationResult>",120-220,true,101,1,creates
+      ContractGenerator.tryCreateSchemaValidator,method,() -> Promise<Awaited<ReturnType<typeof createPydanticValidator>> | null>,222-232,true,11,1,try create schema validator
+      ContractGenerator.mapSchemaErrors,method,"(errors: SchemaValidationError[]) -> ContractValidationError[]",234-242,false,9,1,converts schema errors
+      ContractGenerator.buildInitialPrompt,method,"(userPrompt: string) -> LLMPrompt",247-252,false,6,1,creates initial prompt
+      ContractGenerator.buildCorrectionPrompt,method,"(userPrompt: string, contract: Partial<ContractAI>, errors: ContractValidationError[], attempt: number) -> LLMPrompt",257-285,false,29,1,creates correction prompt
+      ContractGenerator.callLLM,method,"(prompt: LLMPrompt) -> Promise<string>",290-302,true,13,1,call llm
+      ContractGenerator.parseContractFromResponse,method,"(response: string) -> Partial<ContractAI> | null",307-333,false,27,1,parses contract from response
+      ContractGenerator.generateFeedbackLevel,method,"(attempt: number) -> FeedbackLevel",338-342,false,5,1,creates feedback level
+      ContractGenerator.estimateTokens,method,"(text: string) -> number",347-350,false,4,1,estimate tokens
+      ContractGenerator.simulateLLMResponse,method,"(prompt: LLMPrompt) -> string",355-444,false,90,1,simulate llm response
+  core/contract-ai/templates/index.ts:
+    functions[11]{name,kind,sig,loc,async,lines,cc,does}:
+      TemplateRAG.constructor,method,(templateDir?),61-64,false,4,1,constructor
+      TemplateRAG.loadTemplates,method,() -> void,69-89,false,21,1,retrieves templates
+      TemplateRAG.search,method,"(query: TemplateQuery) -> TemplateMatch[]",94-144,false,51,1,filters
+      TemplateRAG.get,method,"(id: string) -> Template | undefined",149-151,false,3,1,retrieves
+      TemplateRAG.getByCategory,method,"(category: string) -> Template[]",156-159,false,4,1,retrieves by category
+      TemplateRAG.render,method,"(templateId: string, variables: Record<string, any>) -> string",164-187,false,24,1,formats
+      TemplateRAG.buildContextFromContract,method,"(contract: any) -> string",192-223,false,32,1,creates context from contract
+      TemplateRAG.getRelevantTemplates,method,"(contract: any, task: string) -> Template[]",228-249,false,22,1,retrieves relevant templates
+      TemplateRAG.exportAsContext,method,"(templates: Template[]) -> string",254-274,false,21,1,export as context
+      TemplateRAG.getAllIds,method,"() -> string[]",279-281,false,3,1,retrieves all ids
+      TemplateRAG.count,method,() -> number,286-288,false,3,1,count
+  core/contract-ai/code-generator/llm-generator.ts:
+    functions[12]{name,kind,sig,loc,async,lines,cc,does}:
+      createLLMCodeGenerator,function,(options?) -> LLMCodeGenerator,653-655,false,3,1,creates llm code generator
+      LLMCodeGenerator.constructor,method,"(options: Partial<CodeGeneratorOptions>)",75-83,false,9,1,constructor
+      LLMCodeGenerator.setLLMClient,method,"(client: LLMClient) -> void",88-90,false,3,1,updates llm client
+      LLMCodeGenerator.getLLMClient,method,() -> LLMClient | null,92-94,false,3,1,retrieves llm client
+      LLMCodeGenerator.registerTemplate,method,"(target: GenerationTarget, template: PromptTemplate) -> void",99-101,false,3,1,registers template
+      LLMCodeGenerator.generate,method,"(contract: ContractAI) -> Promise<GeneratedCode>",106-148,true,43,1,creates
+      LLMCodeGenerator.generateTarget,method,"(contract: ContractAI, target: GenerationTarget) -> Promise<GeneratedFile[]>",153-181,true,29,1,creates target
+      LLMCodeGenerator.determineTargets,method,"(contract: ContractAI) -> GenerationTarget[]",186-204,false,19,1,determine targets
+      LLMCodeGenerator.callLLM,method,"(systemPrompt: string, userPrompt: string) -> Promise<string>",209-221,true,13,1,call llm
+      LLMCodeGenerator.parseFilesFromResponse,method,"(response: string, target: GenerationTarget) -> GeneratedFile[]",226-268,false,43,1,parses files from response
+      LLMCodeGenerator.validateBasicSyntax,method,"(file: GeneratedFile) -> SyntaxError[]",273-321,false,49,1,validates basic syntax
+      LLMCodeGenerator.simulateLLMResponse,method,"(prompt: string) -> string",326-646,false,321,1,simulate llm response
+  core/contract-ai/analysis/project-state.ts:
+    functions[13]{name,kind,sig,loc,async,lines,cc,does}:
+      ProjectStateGenerator.constructor,method,"(report: AnalysisReport, rootDir: string)",119-122,false,4,1,constructor
+      ProjectStateGenerator.generate,method,() -> ProjectState,127-170,false,44,1,creates
+      ProjectStateGenerator.extractModules,method,"() -> ModuleInfo[]",175-203,false,29,1,parses modules
+      ProjectStateGenerator.extractEntities,method,"() -> EntityInfo[]",208-230,false,23,1,parses entities
+      ProjectStateGenerator.extractEndpoints,method,"() -> EndpointInfo[]",235-264,false,30,1,parses endpoints
+      ProjectStateGenerator.extractDependencies,method,"() -> DependencyInfo[]",269-283,false,15,1,parses dependencies
+      ProjectStateGenerator.identifyHotspots,method,"() -> HotspotInfo[]",288-317,false,30,1,identify hotspots
+      ProjectStateGenerator.calculateRiskScore,method,"(fn: FunctionInfo) -> number",322-346,false,25,1,processes risk score
+      ProjectStateGenerator.getRiskReason,method,"(fn: FunctionInfo, score: number) -> string",351-360,false,10,1,retrieves risk reason
+      ProjectStateGenerator.summarizeCallGraph,method,"() -> ProjectState['callGraph']",365-381,false,17,1,summarize call graph
+      ProjectStateGenerator.toJSON,method,() -> string,390-392,false,3,1,converts json
+      ProjectStateGenerator.save,method,"(outputDir: string) -> string",397-407,false,11,1,caches
+      ProjectStateGenerator.toLLMSummary,method,() -> string,412-438,false,27,1,converts llm summary
+  core/contract-ai/analysis/refactoring-contract.ts:
+    functions[14]{name,kind,sig,loc,async,lines,cc,does}:
+      RefactoringContractGenerator.constructor,method,"(report: AnalysisReport, repoUrl?)",103-106,false,4,1,constructor
+      RefactoringContractGenerator.generate,method,() -> RefactoringContract,111-130,false,20,1,creates
+      RefactoringContractGenerator.identifyIssues,method,"() -> RefactoringIssue[]",135-179,false,45,1,identify issues
+      RefactoringContractGenerator.createIssue,method,"(id: number, file: FileInfo, fn: FunctionInfo, type: RefactoringType, metrics: RefactoringIssue['metrics']) -> RefactoringIssue",184-212,false,29,1,creates issue
+      RefactoringContractGenerator.generateLLMContext,method,"(fn: FunctionInfo, type: RefactoringType, metrics: RefactoringIssue['metrics']) -> RefactoringIssue['llmContext']",217-280,false,64,1,creates llm context
+      RefactoringContractGenerator.determineSeverity,method,"(metrics: RefactoringIssue['metrics']) -> RefactoringIssue['severity']",285-297,false,13,1,determine severity
+      RefactoringContractGenerator.estimateEffort,method,"(type: RefactoringType, metrics: RefactoringIssue['metrics'], severity: RefactoringIssue['severity']) -> number",302-327,false,26,1,estimate effort
+      RefactoringContractGenerator.generateRationale,method,"(type: RefactoringType, metrics: RefactoringIssue['metrics']) -> string",332-345,false,14,1,creates rationale
+      RefactoringContractGenerator.getAction,method,"(type: RefactoringType) -> string",350-360,false,11,1,retrieves action
+      RefactoringContractGenerator.countBySeverity,method,"(issues: RefactoringIssue[]) -> Record<string, number>",365-371,false,7,1,count by severity
+      RefactoringContractGenerator.generateRecommendations,method,"(issues: RefactoringIssue[]) -> string[]",376-402,false,27,1,creates recommendations
+      RefactoringContractGenerator.toJSON,method,() -> string,411-413,false,3,1,converts json
+      RefactoringContractGenerator.toMarkdown,method,() -> string,418-464,false,47,1,converts markdown
+      RefactoringContractGenerator.toTodoList,method,() -> string,469-511,false,43,1,converts todo list
+  core/contract-ai/analysis/code-analyzer.ts:
+    functions[21]{name,kind,sig,loc,async,lines,cc,does}:
+      CodeAnalyzer.constructor,method,"(rootDir: string)",102-104,false,3,1,constructor
+      CodeAnalyzer.analyze,method,() -> Promise<AnalysisReport>,109-164,true,56,1,processes
+      CodeAnalyzer.findSourceFiles,method,"() -> string[]",169-194,false,26,1,retrieves source files
+      CodeAnalyzer.analyzeFile,method,"(filePath: string) -> FileInfo",199-234,false,36,1,processes file
+      CodeAnalyzer.parseCSharpJava,method,"(content: string, lines: string[], info: FileInfo) -> void",239-278,false,40,1,parses c sharp java
+      CodeAnalyzer.parseGo,method,"(content: string, lines: string[], info: FileInfo) -> void",283-324,false,42,1,parses go
+      CodeAnalyzer.parseCpp,method,"(content: string, lines: string[], info: FileInfo) -> void",329-368,false,40,1,parses cpp
+      CodeAnalyzer.parseTypeScript,method,"(content: string, lines: string[], info: FileInfo) -> void",373-497,false,125,1,parses type script
+      CodeAnalyzer.parsePython,method,"(content: string, lines: string[], info: FileInfo) -> void",502-537,false,36,1,parses python
+      CodeAnalyzer.findFunctionEnd,method,"(lines: string[], startIdx: number) -> number",542-561,false,20,1,retrieves function end
+      CodeAnalyzer.findPythonFunctionEnd,method,"(lines: string[], startIdx: number) -> number",566-578,false,13,1,retrieves python function end
+      CodeAnalyzer.calculateComplexity,method,"(code: string) -> number",583-603,false,21,1,processes complexity
+      CodeAnalyzer.extractFunctionCalls,method,"(code: string) -> string[]",608-623,false,16,1,parses function calls
+      CodeAnalyzer.calculateCallGraphMetrics,method,"(functions: FunctionInfo[], callGraph: Map<string, string[]>) -> void",628-655,false,28,1,processes call graph metrics
+      CodeAnalyzer.findDuplicates,method,"(functions: FunctionInfo[]) -> DuplicateGroup[]",660-686,false,27,1,retrieves duplicates
+      CodeAnalyzer.generateRecommendations,method,"(files: FileInfo[], functions: FunctionInfo[], duplicates: DuplicateGroup[]) -> string[]",691-718,false,28,1,creates recommendations
+      CodeAnalyzer.detectLanguage,method,"(ext: string) -> string",723-735,false,13,1,detect language
+      CodeAnalyzer.toMarkdown,method,"(report: AnalysisReport) -> string",740-791,false,52,1,converts markdown
+      CodeAnalyzer.toContract,method,"(report: AnalysisReport) -> any",796-1013,false,218,1,converts contract
+      CodeAnalyzer.mergeWithAIPlan,method,"(derivedContract: any, aiPlanSource: any) -> any",1018-1219,false,202,1,merges with ai plan
+      CodeAnalyzer.mapTypeToDSL,method,"(type: string, fieldName?) -> string",1220-1242,false,23,1,converts type to dsl
+  core/contract-ai/cli/cli-runner.ts:
+    functions[11]{name,kind,sig,loc,async,lines,cc,does}:
+      createCLIRunner,function,"(name: string, version: string, options?) -> CLIRunner",346-352,false,7,1,creates cli runner
+      CLIRunner.constructor,method,"(options: CLIRunnerOptions)",68-79,false,12,1,constructor
+      CLIRunner.header,method,() -> void,84-86,false,3,1,header
+      CLIRunner.addTask,method,"(task: CLITask) -> this",91-95,false,5,1,creates task
+      CLIRunner.addTasks,method,"(tasks: CLITask[]) -> this",100-105,false,6,1,creates tasks
+      CLIRunner.log,method,"(message: string) -> void",110-112,false,3,1,logs
+      CLIRunner.yaml,method,"(type: string, description: string, data: Record<string, unknown>) -> void",117-181,false,65,1,yaml
+      CLIRunner.printTodo,method,() -> void,186-202,false,17,1,logs todo
+      CLIRunner.run,method,() -> Promise<CLIRunnerResult>,207-325,true,119,1,starts
+      CLIRunner.getRenderer,method,() -> ShellRenderer,330-332,false,3,1,retrieves renderer
+      CLIRunner.getTaskQueue,method,() -> TaskQueue,337-339,false,3,1,retrieves task queue
+  core/contract-ai/types/index.ts:
+    functions[6]{name,kind,sig,loc,async,lines,cc,does}:
+      isValidContractAI,function,"(obj: unknown)",121-133,false,13,1,is valid contract ai
+      hasDefinitionLayer,function,"(contract: Partial<ContractAI>) -> boolean",138-147,false,10,1,has definition layer
+      hasGenerationLayer,function,"(contract: Partial<ContractAI>) -> boolean",152-162,false,11,1,has generation layer
+      hasValidationLayer,function,"(contract: Partial<ContractAI>) -> boolean",167-178,false,12,1,has validation layer
+      createEmptyContract,function,"(appName: string, version: string) -> ContractAI",187-233,false,47,1,creates empty contract
+      touchContract,function,"(contract: ContractAI) -> ContractAI",238-248,false,11,1,touch contract
+  core/contract-ai/llm/llm-config.ts:
+    functions[3]{name,kind,sig,loc,async,lines,cc,does}:
+      loadConfigFromEnv,function,() -> LLMEnvConfig,116-144,false,29,1,retrieves config from env
+      buildProviderConfigs,function,"(envConfig: LLMEnvConfig) -> LLMConfig[]",149-202,false,54,1,creates provider configs
+      generateEnvTemplate,function,() -> string,207-274,false,68,1,creates env template
+  core/contract-ai/llm/llm-manager.ts:
+    functions[11]{name,kind,sig,loc,async,lines,cc,does}:
+      createLLMManagerFromEnv,function,() -> LLMManager,242-300,false,59,1,creates llm manager from env
+      createFreeModelsManager,function,() -> LLMManager,305-333,false,29,1,creates free models manager
+      LLMManager.constructor,method,"(config: LLMManagerConfig)",58-67,false,10,1,constructor
+      LLMManager.initializeProviders,method,() -> void,72-85,false,14,1,initializes providers
+      LLMManager.checkAvailability,method,"() -> Promise<ProviderStatus[]>",90-116,true,27,1,checks availability
+      LLMManager.getBestProvider,method,"(context: TaskContext) -> ILLMProvider | null",121-152,false,32,1,retrieves best provider
+      LLMManager.chat,method,"(messages: LLMMessage[], context?, config?) -> Promise<LLMResponse>",157-194,true,38,1,chat
+      LLMManager.streamChat,method,"(messages: LLMMessage[], context?, config?) -> AsyncGenerator<string>",199-211,true,13,1,stream chat
+      LLMManager.getProvider,method,"(type: LLMProviderType) -> ILLMProvider | undefined",216-218,false,3,1,retrieves provider
+      LLMManager.getStatuses,method,"() -> ProviderStatus[]",223-225,false,3,1,retrieves statuses
+      LLMManager.delay,method,"(ms: number) -> Promise<void>",230-232,false,3,1,delay
+  core/contract-ai/llm/parallel-executor.ts:
+    functions[37]{name,kind,sig,loc,async,lines,cc,does}:
+      createParallelExecutor,function,"(configs: LLMConfig[], options?) -> ParallelExecutor",616-623,false,8,1,creates parallel executor
+      createFreeModelsExecutor,function,() -> ParallelExecutor,628-675,false,48,1,creates free models executor
+      WorkerPool.constructor,method,"(config: ParallelExecutorConfig)",87-87,false,1,1,constructor
+      WorkerPool.addWorker,method,"(type: LLMProviderType, provider: ILLMProvider) -> void",89-102,false,14,1,creates worker
+      WorkerPool.getWorker,method,"(type: LLMProviderType) -> ILLMProvider | undefined",104-106,false,3,1,retrieves worker
+      WorkerPool.getAllWorkers,method,"() -> Map<LLMProviderType, ILLMProvider>",108-110,false,3,1,retrieves all workers
+      WorkerPool.getStats,method,"(type: LLMProviderType) -> ProviderStats | undefined",112-114,false,3,1,retrieves stats
+      WorkerPool.getAllStats,method,"() -> ProviderStats[]",116-118,false,3,1,retrieves all stats
+      WorkerPool.canMakeRequest,method,"(type: LLMProviderType) -> boolean",120-130,false,11,1,checks make request
+      WorkerPool.recordRequest,method,"(type: LLMProviderType, success: boolean, latency: number) -> void",132-151,false,20,1,record request
+      WorkerPool.incrementLoad,method,"(type: LLMProviderType) -> void",153-156,false,4,1,increment load
+      WorkerPool.decrementLoad,method,"(type: LLMProviderType) -> void",158-161,false,4,1,decrement load
+      WorkerPool.selectProvider,method,"(strategy: string, preferred?) -> LLMProviderType | null",163-180,false,18,1,retrieves provider
+      WorkerPool.roundRobinSelect,method,"(available: LLMProviderType[]) -> LLMProviderType",182-196,false,15,1,round robin select
+      WorkerPool.leastLoadedSelect,method,"(available: LLMProviderType[]) -> LLMProviderType",198-211,false,14,1,least loaded select
+      WorkerPool.lowestLatencySelect,method,"(available: LLMProviderType[]) -> LLMProviderType",213-229,false,17,1,lowest latency select
+      TaskQueue.enqueue,method,"(task: ParallelTask) -> void",244-247,false,4,1,enqueue
+      TaskQueue.dequeue,method,() -> ParallelTask | null,249-257,false,9,1,dequeue
+      TaskQueue.size,method,() -> number,259-265,false,7,1,size
+      TaskQueue.isEmpty,method,() -> boolean,267-269,false,3,1,is empty
+      TaskQueue.clear,method,() -> void,271-275,false,5,1,deletes
+      ParallelExecutor.constructor,method,"(config: Partial<ParallelExecutorConfig>)",290-303,false,14,1,constructor
+      ParallelExecutor.addProvider,method,"(config: LLMConfig) -> void",308-312,false,5,1,creates provider
+      ParallelExecutor.addProviders,method,"(configs: LLMConfig[]) -> void",317-321,false,5,1,creates providers
+      ParallelExecutor.submitTask,method,"(task: Omit<ParallelTask, 'id' | 'createdAt'>) -> Promise<TaskResult>",326-337,true,12,1,submit task
+      ParallelExecutor.submitBatch,method,"(request: BatchRequest) -> Promise<TaskResult[]>",342-370,true,29,1,submit batch
+      ParallelExecutor.parallelGenerate,method,"(prompts: Array<{ messages: LLMMessage[]; config?: Partial<LLMConfig> }>, options: { maxConcurrency?: number; onProgress?: (i: number, total: number) => void }) -> Promise<LLMResponse[]>",375-395,true,21,1,parallel generate
+      ParallelExecutor.broadcastGenerate,method,"(messages: LLMMessage[], config?) -> Promise<Map<LLMProviderType, LLMResponse>>",400-425,true,26,1,broadcast generate
+      ParallelExecutor.raceGenerate,method,"(messages: LLMMessage[], config?) -> Promise<LLMResponse>",430-444,true,15,1,race generate
+      ParallelExecutor.getStats,method,"() -> ProviderStats[]",449-451,false,3,1,retrieves stats
+      ParallelExecutor.getQueueSize,method,() -> number,456-458,false,3,1,retrieves queue size
+      ParallelExecutor.getActiveRequests,method,() -> number,463-465,false,3,1,retrieves active requests
+      ParallelExecutor.executeTask,method,"(task: ParallelTask) -> Promise<TaskResult>",471-552,true,82,1,starts task
+      ParallelExecutor.executeWithConcurrency,method,"(promises: Promise<T>[]) -> Promise<T[]>",554-581,true,28,1,starts with concurrency
+      ParallelExecutor.withTimeout,method,"(promise: Promise<T>, ms: number) -> Promise<T>",583-598,true,16,1,with timeout
+      ParallelExecutor.generateTaskId,method,() -> string,600-602,false,3,1,creates task id
+      ParallelExecutor.delay,method,"(ms: number) -> Promise<void>",604-606,false,3,1,delay
+  core/contract-ai/llm/llm-provider.ts:
+    functions[9]{name,kind,sig,loc,async,lines,cc,does}:
+      createProvider,function,"(config: LLMConfig) -> ILLMProvider",450-463,false,14,1,creates provider
+      OllamaProvider.isAvailable,method,() -> Promise<boolean>,203-214,true,12,1,is available
+      OllamaProvider.chat,method,"(messages: LLMMessage[], config?) -> Promise<LLMResponse>",216-250,true,35,1,chat
+      LiteLLMProvider.isAvailable,method,() -> Promise<boolean>,261-272,true,12,1,is available
+      LiteLLMProvider.chat,method,"(messages: LLMMessage[], config?) -> Promise<LLMResponse>",274-319,true,46,1,chat
+      OpenRouterProvider.isAvailable,method,() -> Promise<boolean>,336-338,true,3,1,is available
+      OpenRouterProvider.chat,method,"(messages: LLMMessage[], config?) -> Promise<LLMResponse>",340-382,true,43,1,chat
+      WindsurfProvider.isAvailable,method,() -> Promise<boolean>,393-396,true,4,1,is available
+      WindsurfProvider.chat,method,"(messages: LLMMessage[], config?) -> Promise<LLMResponse>",398-443,true,46,1,chat
+  core/contract-ai/llm/pydantic-validator.ts:
+    functions[13]{name,kind,sig,loc,async,lines,cc,does}:
+      createPydanticValidator,function,(schemasDir?) -> Promise<PydanticValidator>,426-432,true,7,1,creates pydantic validator
+      PydanticValidator.constructor,method,(schemasDir?),61-63,false,3,1,constructor
+      PydanticValidator.normalizeSchemaName,method,"(name: string) -> string",65-72,false,8,1,normalize schema name
+      PydanticValidator.loadSchemas,method,() -> Promise<void>,77-84,true,8,1,retrieves schemas
+      PydanticValidator.loadSchemasFromDir,method,"(dir: string) -> Promise<void>",89-109,true,21,1,retrieves schemas from dir
+      PydanticValidator.getSchema,method,"(name: string) -> JSONSchema | undefined",114-116,false,3,1,retrieves schema
+      PydanticValidator.resolveJsonPointer,method,"(root: any, pointer: string) -> JSONSchema | undefined",118-131,false,14,1,resolve json pointer
+      PydanticValidator.resolveRef,method,"(ref: string, rootSchema: JSONSchema) -> JSONSchema | undefined",133-147,false,15,1,resolve ref
+      PydanticValidator.validate,method,"(schemaName: string, data: unknown) -> SchemaValidationResult",152-170,false,19,1,validates
+      PydanticValidator.validateValue,method,"(value: unknown, schema: JSONSchema, path: string, rootSchema: JSONSchema) -> ValidationError[]",175-362,false,188,1,validates value
+      PydanticValidator.getType,method,"(value: unknown) -> string",367-371,false,5,1,retrieves type
+      PydanticValidator.validateFormat,method,"(value: string, format: string, path: string) -> ValidationError | null",376-412,false,37,1,validates format
+      PydanticValidator.getLoadedSchemas,method,"() -> string[]",417-419,false,3,1,retrieves loaded schemas
+  core/contract-ai/llm/ollama-client.ts:
+    functions[10]{name,kind,sig,loc,async,lines,cc,does}:
+      createOllamaClient,function,(config?) -> OllamaClient,238-240,false,3,1,creates ollama client
+      checkOllamaAvailable,function,(host?) -> Promise<boolean>,245-248,true,4,1,checks ollama available
+      OllamaClient.constructor,method,(config?),61-68,false,8,1,constructor
+      OllamaClient.isAvailable,method,() -> Promise<boolean>,73-80,true,8,1,is available
+      OllamaClient.hasModel,method,(modelName?) -> Promise<boolean>,85-108,true,24,1,has model
+      OllamaClient.generate,method,"(opts: GenerateOptions) -> Promise<string>",113-163,true,51,1,creates
+      OllamaClient.httpGet,method,"(path: string) -> Promise<{ statusCode: number; body: string }>",168-185,false,18,1,http get
+      OllamaClient.httpPost,method,"(path: string, data: any) -> Promise<{ statusCode: number; body: string }>",190-220,false,31,1,http post
+      OllamaClient.sleep,method,"(ms: number) -> Promise<void>",222-224,false,3,1,sleep
+      OllamaClient.getConfig,method,() -> OllamaConfig,229-231,false,3,1,retrieves config
+  core/contract-ai/llm/context-generator.ts:
+    functions[15]{name,kind,sig,loc,async,lines,cc,does}:
+      ContextGenerator.constructor,method,"(llmManager: LLMManager, context: ContextInfo)",111-114,false,4,1,constructor
+      ContextGenerator.createPlan,method,"(prompt: string) -> Promise<GenerationPlan>",119-166,true,48,1,creates plan
+      ContextGenerator.executeStep,method,"(step: GenerationStep) -> Promise<GeneratedFile[]>",171-201,true,31,1,starts step
+      ContextGenerator.executePlan,method,"(plan: GenerationPlan, onProgress?) -> Promise<Map<string, GeneratedFile[]>>",206-226,true,21,1,starts plan
+      ContextGenerator.generateContract,method,"(prompt: string) -> Promise<ContractAI | null>",231-294,true,64,1,creates contract
+      ContextGenerator.generateCodeFile,method,"(fileType: 'api' | 'service' | 'test' | 'frontend', contract: ContractAI, entityName: string) -> Promise<GeneratedFile | null>",299-341,true,43,1,creates code file
+      ContextGenerator.refactorCode,method,"(code: string, instructions: string, context: string) -> Promise<string>",346-383,true,38,1,refactor code
+      ContextGenerator.buildUserPrompt,method,"(step: GenerationStep) -> string",389-410,false,22,1,creates user prompt
+      ContextGenerator.buildCodePrompt,method,"(fileType: string, entity: any, contract: ContractAI) -> string",412-433,false,22,1,creates code prompt
+      ContextGenerator.parseResponse,method,"(response: LLMResponse, step: GenerationStep) -> GeneratedFile[]",435-466,false,32,1,parses response
+      ContextGenerator.extractCode,method,"(content: string) -> string",468-475,false,8,1,parses code
+      ContextGenerator.getDefaultFilePath,method,"(step: GenerationStep) -> string",477-487,false,11,1,retrieves default file path
+      ContextGenerator.getFilePath,method,"(fileType: string, entityName: string) -> string",489-498,false,10,1,retrieves file path
+      ContextGenerator.determineComplexity,method,"(step: GenerationStep) -> 'low' | 'medium' | 'high'",500-504,false,5,1,determine complexity
+      ContextGenerator.estimateTokens,method,"(prompt: string) -> number",506-511,false,6,1,estimate tokens
+  core/contract-ai/parser/markdown-parser.ts:
+    functions[18]{name,kind,sig,loc,async,lines,cc,does}:
+      parseContractMarkdown,function,"(content: string) -> ContractMarkdown",25-38,false,14,1,parses contract markdown
+      extractFrontmatter,function,"(content: string) -> { \n  frontmatter: ContractFrontmatter; \n  body: string \n}",44-69,false,26,1,parses frontmatter
+      parseAppSection,function,"(body: string) -> ContractMarkdown['app']",75-84,false,10,1,parses app section
+      parseEntitiesSection,function,"(body: string) -> MarkdownEntityDefinition[]",86-100,false,15,1,parses entities section
+      parseEntityContent,function,"(name: string, content: string) -> MarkdownEntityDefinition",102-126,false,25,1,parses entity content
+      parseMarkdownTable,function,"(content: string) -> EntityField[]",128-155,false,28,1,parses markdown table
+      parseFieldType,function,"(typeStr: string) -> FieldType",157-176,false,20,1,parses field type
+      parseApiSection,function,"(body: string) -> ContractMarkdown['api']",178-189,false,12,1,parses api section
+      parseEndpointTables,function,"(section: string) -> ApiEndpoint[]",191-216,false,26,1,parses endpoint tables
+      parseRulesSection,function,"(body: string) -> ContractMarkdown['rules']",218-235,false,18,1,parses rules section
+      parseTechSection,function,"(body: string, frontmatter: ContractFrontmatter) -> ContractMarkdown['tech']",237-300,false,64,1,parses tech section
+      parseTestsSection,function,"(body: string) -> ContractMarkdown['tests']",302-325,false,24,1,parses tests section
+      parseGherkin,function,"(content: string) -> AcceptanceTest[]",327-351,false,25,1,parses gherkin
+      extractSection,function,"(body: string, header: string) -> string",357-362,false,6,1,parses section
+      extractField,function,"(section: string, label: string) -> string",364-368,false,5,1,parses field
+      extractListFromField,function,"(section: string, label: string) -> string[]",370-374,false,5,1,parses list from field
+      extractCheckboxList,function,"(section: string) -> string[]",376-386,false,11,1,parses checkbox list
+      validateContract,function,"(contract: ContractMarkdown) -> ContractValidationResult",392-430,false,39,1,validates contract
+  core/contract-ai/evolution/evolution-manager.ts:
+    functions[105]{name,kind,sig,loc,async,lines,cc,does}:
+      createEvolutionManager,function,(options?) -> EvolutionManager,4616-4618,false,3,1,creates evolution manager
+      EvolutionManager.constructor,method,"(options: Partial<EvolutionOptions>)",139-146,false,8,1,constructor
+      EvolutionManager.initCodeRAG,method,"() -> Promise<{ files: number; chunks: number }>",155-179,true,25,1,creates code rag
+      EvolutionManager.askCode,method,"(question: string) -> Promise<{ answer: string; sources: SearchResult[] }>",184-211,true,28,1,ask code
+      EvolutionManager.findSymbolUsages,method,"(symbol: string) -> CodeChunk[]",216-221,false,6,1,retrieves symbol usages
+      EvolutionManager.getCodeStructure,method,"() -> { level: number; name: string; count: number }[]",226-235,false,10,1,retrieves code structure
+      EvolutionManager.buildRAGContext,method,"(query: string, maxChunks: number) -> Promise<string>",240-259,true,20,1,creates rag context
+      EvolutionManager.buildContractDrivenPrompt,method,"(task: string) -> string",269-310,false,42,1,creates contract driven prompt
+      EvolutionManager.getTechStackFromContract,method,"() -> { language: string; framework: string; database?: string }",315-323,false,9,1,retrieves tech stack from contract
+      EvolutionManager.analyzeState,method,() -> Promise<MultiLevelState>,328-439,true,112,1,processes state
+      EvolutionManager.reconcileState,method,"() -> Promise<{ fixed: number; remaining: number }>",444-472,true,29,1,reconcile state
+      EvolutionManager.importFromGit,method,(targetDir?) -> Promise<ContractAI | null>,477-519,true,43,1,import from git
+      EvolutionManager.getGitState,method,() -> GitState | null,524-527,false,4,1,retrieves git state
+      EvolutionManager.setLLMClient,method,"(client: LLMClient) -> void",532-534,false,3,1,updates llm client
+      EvolutionManager.initParallelLLM,method,"() -> Promise<{ providers: number; available: number }>",539-567,true,29,1,creates parallel llm
+      EvolutionManager.generateEntitiesParallel,method,"() -> Promise<GeneratedFile[]>",572-631,true,60,1,creates entities parallel
+      EvolutionManager.generateContractFromPrompt,method,"(prompt: string) -> Promise<ContractAI | null>",636-650,true,15,1,creates contract from prompt
+      EvolutionManager.extractCode,method,"(content: string) -> string",655-661,false,7,1,parses code
+      EvolutionManager.setContract,method,"(contract: ContractAI) -> void",666-668,false,3,1,updates contract
+      EvolutionManager.printTasks,method,() -> void,670-672,false,3,1,logs tasks
+      EvolutionManager.getTasks,method,"() -> Task[]",674-676,false,3,1,retrieves tasks
+      EvolutionManager.buildStateContext,method,() -> string,681-725,false,45,1,creates state context
+      EvolutionManager.writeStateSnapshot,method,(forceLog) -> void,734-793,false,60,1,logs state snapshot
+      EvolutionManager.readOutputFileSnippet,method,"(relPath: string, maxChars: number) -> string",795-805,false,11,1,retrieves output file snippet
+      EvolutionManager.validateApiOutput,method,"() -> { required: string[]; missing: string[] }",807-811,false,5,1,validates api output
+      EvolutionManager.getMustNonApiTargets,method,"() -> string[]",813-822,false,10,1,retrieves must non api targets
+      EvolutionManager.validateLayer2Output,method,"() -> { mustTargets: string[]; missingTargets: string[] }",824-854,false,31,1,validates layer2 output
+      EvolutionManager.getTargetPriority,method,"(target: string) -> 'must' | 'should' | 'may' | null",856-866,false,11,1,retrieves target priority
+      EvolutionManager.withTimeout,method,"(promise: Promise<T>, ms: number) -> Promise<T>",868-893,true,26,1,with timeout
+      EvolutionManager.withRetries,method,"(fn: () => Promise<T>, attempts: number, delayMs: number, shouldRetry?) -> Promise<T>",895-920,true,26,1,with retries
+      EvolutionManager.yamlEscape,method,"(value: string) -> string",922-924,false,3,1,yaml escape
+      EvolutionManager.getErrorHints,method,"(errorMsg: string) -> { type: string; hints: string[] }",926-1002,false,77,1,retrieves error hints
+      EvolutionManager.logErrorHints,method,"(scope: string, taskId: string, errorMsg: string) -> void",1004-1020,false,17,1,logs error hints
+      EvolutionManager.attemptRecovery,method,"(taskId: string, error: string, context: string) -> Promise<{ fixed: boolean; strategy: string; action?: string }>",1035-1080,true,46,1,attempt recovery
+      EvolutionManager.tryHeuristicFix,method,"(taskId: string, error: string) -> { fixed: boolean; pattern?: string; action?: string }",1085-1174,false,90,1,try heuristic fix
+      EvolutionManager.hashError,method,"(error: string) -> string",1176-1181,false,6,1,hash error
+      EvolutionManager.generateDynamicServerCode,method,() -> Promise<string>,1183-1228,true,46,1,creates dynamic server code
+      EvolutionManager.generateDynamicPackageJson,method,() -> Promise<string>,1230-1248,true,19,1,creates dynamic package json
+      EvolutionManager.tryRegistryFix,method,"(taskId: string, error: string) -> { fixed: boolean; fixId?: string; action?: string }",1253-1269,false,17,1,try registry fix
+      EvolutionManager.tryFallbackFix,method,"(taskId: string, error: string) -> Promise<{ fixed: boolean; generator?: string; action?: string }>",1274-1368,true,95,1,try fallback fix
+      EvolutionManager.tryLLMFix,method,"(taskId: string, error: string, context: string) -> Promise<{ fixed: boolean; confidence?: number; action?: string; reusableFix?: string }>",1373-1442,true,70,1,try llm fix
+      EvolutionManager.orchestrateTestsLayer,method,() -> Promise<boolean>,1447-1451,true,5,1,orchestrate tests layer
+      EvolutionManager.orchestrateFrontendLayer,method,() -> Promise<boolean>,1456-1497,true,42,1,orchestrate frontend layer
+      EvolutionManager.orchestrateCustomLayer,method,"(layerName: string) -> Promise<boolean>",1502-1529,true,28,1,orchestrate custom layer
+      EvolutionManager.buildLayer2Context,method,"(stateContext: string, missingTargets: string[]) -> string",1535-1561,false,27,1,creates layer2 context
+      EvolutionManager.narrate,method,"(action: string, details?) -> void",1566-1571,false,6,1,narrate
+      EvolutionManager.logReasoning,method,"(task: string, problem?, approach?) -> void",1576-1584,false,9,1,logs reasoning
+      EvolutionManager.logLLMRequest,method,"(purpose: string, prompt: string) -> void",1589-1604,false,16,1,logs llm request
+      EvolutionManager.logLLMResponse,method,"(success: boolean, chars: number, source: 'llm' | 'fallback') -> void",1609-1619,false,11,1,logs llm response
+      EvolutionManager.validatePlanAgainstContract,method,"() -> { valid: boolean; issues: string[]; suggestions: string[] }",1624-1668,false,45,1,validates plan against contract
+      EvolutionManager.evolveIteratively,method,"(prompt: string, maxIterations) -> Promise<void>",1674-2160,true,487,1,evolve iteratively
+      EvolutionManager.generateTestFiles,method,() -> Promise<void>,2165-2172,true,8,1,creates test files
+      EvolutionManager.generateReadme,method,() -> Promise<void>,2178-2287,true,110,1,creates readme
+      EvolutionManager.generateApiDocs,method,() -> Promise<void>,2289-2361,true,73,1,creates api docs
+      EvolutionManager.generatePrismaSchema,method,() -> Promise<void>,2366-2452,true,87,1,creates prisma schema
+      EvolutionManager.generateApiEnv,method,() -> Promise<void>,2457-2480,true,24,1,creates api env
+      EvolutionManager.saveMultiLevelStateSnapshot,method,() -> Promise<void>,2485-2525,true,41,1,caches multi level state snapshot
+      EvolutionManager.generateDatabaseArtifacts,method,() -> Promise<boolean>,2527-2673,true,147,1,creates database artifacts
+      EvolutionManager.generateCicdArtifacts,method,() -> Promise<boolean>,2675-2748,true,74,1,creates cicd artifacts
+      EvolutionManager.generateDockerArtifacts,method,() -> Promise<boolean>,2750-2907,true,158,1,creates docker artifacts
+      EvolutionManager.getFallbackReadme,method,() -> string,2912-3041,false,130,1,retrieves fallback readme
+      EvolutionManager.detectApiEndpoints,method,"(pluralName: string) -> { basePath: string; endpoints: Record<string, string> }",3046-3076,false,31,1,detect api endpoints
+      EvolutionManager.runTests,method,"() -> Promise<{ passed: boolean; error?: string }>",3082-3153,true,72,1,starts tests
+      EvolutionManager.writeContractSnapshot,method,() -> void,3155-3171,false,17,1,logs contract snapshot
+      EvolutionManager.startFromPrompt,method,"(prompt: string) -> Promise<void>",3176-3258,true,83,1,starts from prompt
+      EvolutionManager.createMinimalContract,method,"(prompt: string) -> ContractAI",3263-3403,false,141,1,creates minimal contract
+      EvolutionManager.extractEntitiesFromPrompt,method,"(prompt: string) -> Array<{name: string; fields: any[]; relations: any[]}>",3408-3493,false,86,1,parses entities from prompt
+      EvolutionManager.getEntityFields,method,"(entityName: string, prompt: string) -> any[]",3498-3602,false,105,1,retrieves entity fields
+      EvolutionManager.getEntityRelations,method,"(entityName: string, allEntities: Set<string>) -> any[]",3607-3632,false,26,1,retrieves entity relations
+      EvolutionManager.capitalize,method,"(str: string) -> string",3637-3639,false,3,1,capitalize
+      EvolutionManager.singularize,method,"(str: string) -> string",3644-3649,false,6,1,singularize
+      EvolutionManager.isValidEntityName,method,"(name: string) -> boolean",3654-3657,false,4,1,is valid entity name
+      EvolutionManager.start,method,"(contract: ContractAI, initialCode?) -> Promise<void>",3662-3700,true,39,1,starts
+      EvolutionManager.generateCode,method,"(trigger: EvolutionCycle['trigger'], context?) -> Promise<GeneratedCode>",3705-3790,true,86,1,creates code
+      EvolutionManager.buildSystemPrompt,method,() -> string,3795-3797,false,3,1,creates system prompt
+      EvolutionManager.buildUserPrompt,method,"(trigger: EvolutionCycle['trigger'], context?) -> string",3802-3809,false,8,1,creates user prompt
+      EvolutionManager.parseFilesFromResponse,method,"(response: string) -> GeneratedFile[]",3814-3832,false,19,1,parses files from response
+      EvolutionManager.writeFiles,method,"(files: GeneratedFile[]) -> Promise<void>",3837-3876,true,40,1,logs files
+      EvolutionManager.startService,method,() -> Promise<void>,3881-4027,true,147,1,starts service
+      EvolutionManager.stopService,method,() -> Promise<void>,4032-4041,true,10,1,stops service
+      EvolutionManager.restartService,method,() -> Promise<void>,4046-4053,true,8,1,restart service
+      EvolutionManager.waitForHealth,method,(maxAttempts) -> Promise<boolean>,4058-4073,true,16,1,wait for health
+      EvolutionManager.startMonitoring,method,() -> void,4078-4094,false,17,1,starts monitoring
+      EvolutionManager.stopMonitoring,method,() -> void,4099-4108,false,10,1,stops monitoring
+      EvolutionManager.killProcessOnPort,method,"(port: number) -> Promise<void>",4113-4125,true,13,1,kill process on port
+      EvolutionManager.checkHealth,method,() -> Promise<boolean>,4130-4150,true,21,1,checks health
+      EvolutionManager.isPortAvailable,method,"(port: number) -> Promise<boolean>",4152-4161,true,10,1,is port available
+      EvolutionManager.findAvailablePort,method,"(startPort: number, tries: number) -> Promise<number | null>",4163-4169,true,7,1,retrieves available port
+      EvolutionManager.handleHealthFailure,method,() -> Promise<void>,4174-4206,true,33,1,handles health failure
+      EvolutionManager.analyzeRecentLogs,method,"() -> string[]",4211-4229,false,19,1,processes recent logs
+      EvolutionManager.evolveWithFeedback,method,"(issueDescription: string) -> Promise<void>",4235-4277,true,43,1,evolve with feedback
+      EvolutionManager.handleLogIssues,method,"(issues: string[]) -> Promise<void>",4282-4348,true,67,1,handles log issues
+      EvolutionManager.addLog,method,"(level: LogEntry['level'], message: string, source: string) -> void",4353-4365,false,13,1,creates log
+      EvolutionManager.getRecentErrors,method,"() -> LogEntry[]",4370-4375,false,6,1,retrieves recent errors
+      EvolutionManager.logEvolutionCycle,method,"(cycle: EvolutionCycle) -> void",4380-4383,false,4,1,logs evolution cycle
+      EvolutionManager.writeEvolutionLog,method,() -> void,4388-4403,false,16,1,logs evolution log
+      EvolutionManager.generateEvolutionLogContent,method,() -> string,4408-4463,false,56,1,creates evolution log content
+      EvolutionManager.generateFallbackCode,method,() -> string,4468-4471,false,4,1,creates fallback code
+      EvolutionManager.getNodeEnv,method,() -> NodeJS.ProcessEnv,4476-4491,false,16,1,retrieves node env
+      EvolutionManager.runCommand,method,"(cmd: string, args: string[], cwd: string) -> Promise<string>",4496-4516,false,21,1,starts command
+      EvolutionManager.sleep,method,"(ms: number) -> Promise<void>",4521-4523,false,3,1,sleep
+      EvolutionManager.getStatus,method,() -> ServiceStatus,4528-4538,false,11,1,retrieves status
+      EvolutionManager.getHistory,method,"() -> EvolutionCycle[]",4543-4545,false,3,1,retrieves history
+      EvolutionManager.evolve,method,"(reason: string) -> Promise<void>",4550-4572,true,23,1,evolve
+      EvolutionManager.shutdown,method,() -> Promise<void>,4577-4609,true,33,1,stops
+  core/contract-ai/evolution/shell-renderer.ts:
+    functions[26]{name,kind,sig,loc,async,lines,cc,does}:
+      getRenderer,function,() -> ShellRenderer,453-458,false,6,1,retrieves renderer
+      renderMarkdown,function,"(text: string) -> void",473-512,false,40,1,formats markdown
+      ShellRenderer.constructor,method,(useColors),62-64,false,3,1,constructor
+      ShellRenderer.enableLog,method,() -> void,69-72,false,4,1,enable log
+      ShellRenderer.getLog,method,() -> string,77-79,false,3,1,retrieves log
+      ShellRenderer.clearLog,method,() -> void,84-86,false,3,1,deletes log
+      ShellRenderer.log,method,"(text: string) -> void",91-98,false,8,1,logs
+      ShellRenderer.c,method,"(color: keyof typeof COLORS, text: string) -> string",101-104,false,4,1,c
+      ShellRenderer.heading,method,"(level: number, text: string) -> void",107-110,false,4,1,heading
+      ShellRenderer.codeblock,method,"(lang: string, content: string) -> void",113-127,false,15,1,codeblock
+      ShellRenderer.renderMarkdownWithFences,method,"(markdownText: string, textLang: string) -> void",129-168,false,40,1,formats markdown with fences
+      ShellRenderer.highlightLine,method,"(lang: string, line: string) -> string",171-197,false,27,1,highlight line
+      ShellRenderer.highlightLog,method,"(line: string) -> string",199-241,false,43,1,highlight log
+      ShellRenderer.highlightJs,method,"(line: string) -> string",244-264,false,21,1,highlight js
+      ShellRenderer.highlightMarkdown,method,"(line: string) -> string",267-281,false,15,1,highlight markdown
+      ShellRenderer.highlightYaml,method,"(line: string) -> string",284-325,false,42,1,highlight yaml
+      ShellRenderer.highlightJson,method,"(line: string) -> string",328-356,false,29,1,highlight json
+      ShellRenderer.highlightBash,method,"(line: string) -> string",359-374,false,16,1,highlight bash
+      ShellRenderer.status,method,"(icon: string, message: string, type: 'info' | 'success' | 'warning' | 'error') -> void",377-385,false,9,1,status
+      ShellRenderer.kv,method,"(key: string, value: string | number | boolean) -> void",388-390,false,3,1,kv
+      ShellRenderer.progress,method,"(done: number, total: number, label?) -> void",393-398,false,6,1,progress
+      ShellRenderer.separator,method,() -> void,401-403,false,3,1,separator
+      ShellRenderer.inline,method,"(text: string) -> string",406-408,false,3,1,inline
+      ShellRenderer.task,method,"(name: string, status: 'pending' | 'running' | 'done' | 'failed', duration?) -> void",411-427,false,17,1,task
+      ShellRenderer.saveLog,method,"(filePath: string) -> void",432-440,false,9,1,caches log
+      ShellRenderer.print,method,"(text: string, color?) -> void",445-447,false,3,1,logs
+  core/contract-ai/evolution/llm-orchestrator.ts:
+    functions[11]{name,kind,sig,loc,async,lines,cc,does}:
+      LLMOrchestrator.constructor,method,"(options: LLMOrchestratorOptions, renderer: ShellRenderer)",44-47,false,4,1,constructor
+      LLMOrchestrator.setClient,method,"(client: LLMClient) -> void",52-54,false,3,1,updates client
+      LLMOrchestrator.getClient,method,() -> LLMClient | null,59-61,false,3,1,retrieves client
+      LLMOrchestrator.isAvailable,method,() -> boolean,66-68,false,3,1,is available
+      LLMOrchestrator.withTimeout,method,"(promise: Promise<T>, ms: number) -> Promise<T>",73-98,true,26,1,with timeout
+      LLMOrchestrator.withRetries,method,"(fn: () => Promise<T>, maxRetries: number, delayMs: number) -> Promise<T>",103-122,true,20,1,with retries
+      LLMOrchestrator.orchestrateFrontend,method,"(contract: ContractAI) -> Promise<GenerationResult>",127-166,true,40,1,orchestrate frontend
+      LLMOrchestrator.orchestrateCustomLayer,method,"(contract: ContractAI, layerName: string) -> Promise<GenerationResult>",171-200,true,30,1,orchestrate custom layer
+      LLMOrchestrator.generateReadme,method,"(contract: ContractAI) -> Promise<{ content: string; source: 'llm' | 'fallback' }>",205-253,true,49,1,creates readme
+      LLMOrchestrator.parseFilesFromResponse,method,"(response: string, target: string) -> GeneratedFile[]",258-270,false,13,1,parses files from response
+      LLMOrchestrator.getFallbackReadme,method,"(contract: ContractAI) -> string",275-311,false,37,1,retrieves fallback readme
+  core/contract-ai/evolution/git-analyzer.ts:
+    functions[11]{name,kind,sig,loc,async,lines,cc,does}:
+      GitAnalyzer.constructor,method,"(cwd: string)",37-39,false,3,1,constructor
+      GitAnalyzer.isGitRepo,method,() -> boolean,41-48,false,8,1,is git repo
+      GitAnalyzer.getBranch,method,() -> string,50-56,false,7,1,retrieves branch
+      GitAnalyzer.getLastCommit,method,"() -> { hash: string; message: string; date: string } | null",58-66,false,9,1,retrieves last commit
+      GitAnalyzer.getRecentCommits,method,"(count) -> Array<{ hash: string; message: string; date: string }>",68-78,false,11,1,retrieves recent commits
+      GitAnalyzer.getStatus,method,"() -> { modified: string[]; untracked: string[]; staged: string[] }",80-99,false,20,1,retrieves status
+      GitAnalyzer.getRemotes,method,"() -> string[]",101-113,false,13,1,retrieves remotes
+      GitAnalyzer.getFileStructure,method,"() -> { path: string; type: 'file' | 'dir' }[]",115-137,false,23,1,retrieves file structure
+      GitAnalyzer.detectStack,method,"() -> { language: string; framework: string; dependencies: string[] }",139-178,false,40,1,detect stack
+      GitAnalyzer.getFullState,method,() -> GitState,180-191,false,12,1,retrieves full state
+      GitAnalyzer.generateContractFromCode,method,(llmClient?) -> Promise<ContractAI | null>,193-306,true,114,1,creates contract from code
+  core/contract-ai/evolution/task-handlers.ts:
+    functions[10]{name,kind,sig,loc,async,lines,cc,does}:
+      handleFolders,function,"(ctx: TaskContext) -> Promise<TaskResult>",43-58,true,16,1,handles folders
+      handleStateFile,function,"(ctx: TaskContext, writeSnapshot: () => void) -> Promise<TaskResult>",60-63,true,4,1,handles state file
+      handleContractSave,function,"(ctx: TaskContext, writeSnapshot: () => void) -> Promise<TaskResult>",65-68,true,4,1,handles contract save
+      handleValidatePlan,function,"(ctx: TaskContext, validate: () => PlanValidation) -> Promise<TaskResult>",80-105,true,26,1,handles validate plan
+      handleValidateApi,function,"(ctx: TaskContext) -> Promise<TaskResult>",111-138,true,28,1,handles validate api
+      handleLayer2Validation,function,"(ctx: TaskContext, validate: () => Layer2Result) -> Promise<TaskResult>",149-182,true,34,1,handles layer2 validation
+      handleMultiLevelAnalysis,function,"(ctx: TaskContext, analyze: () => Promise<MultiLevelAnalysis>) -> Promise<TaskResult>",202-251,true,50,1,handles multi level analysis
+      handleInstallAndStart,function,"(ctx: TaskContext, startService: () => Promise<void>) -> Promise<TaskResult>",257-263,true,7,1,handles install and start
+      handleRunTests,function,"(ctx: TaskContext, runTests: () => Promise<{ passed: boolean; error?: string }>) -> Promise<TaskResult>",269-280,true,12,1,handles run tests
+      handleGenerateFrontend,function,"(ctx: TaskContext, orchestrate: () => Promise<boolean>, generateFallback: () => Record<string, string>) -> Promise<TaskResult>",286-319,true,34,1,handles generate frontend
+  core/contract-ai/evolution/llm-prompts.ts:
+    functions[4]{name,kind,sig,loc,async,lines,cc,does}:
+      PromptBuilder.buildSystemPrompt,method,() -> string,32-73,false,42,1,creates system prompt
+      PromptBuilder.buildUserPrompt,method,"(contract: ContractAI, ctx: PromptContext) -> string",78-135,false,58,1,creates user prompt
+      PromptBuilder.buildContractDrivenPrompt,method,"(contract: ContractAI, task: string, port: number) -> string",140-175,false,36,1,creates contract driven prompt
+      PromptBuilder.buildFixPrompt,method,"(error: string, codeContext?) -> string",180-200,false,21,1,creates fix prompt
+  core/contract-ai/evolution/task-queue.ts:
+    functions[11]{name,kind,sig,loc,async,lines,cc,does}:
+      TaskQueue.constructor,method,(verbose),37-40,false,4,1,constructor
+      TaskQueue.add,method,"(name: string, id?) -> Task",42-50,false,9,1,creates
+      TaskQueue.start,method,"(id: string) -> void",52-59,false,8,1,starts
+      TaskQueue.done,method,"(id: string) -> void",61-71,false,11,1,done
+      TaskQueue.fail,method,"(id: string, error: string) -> void",73-81,false,9,1,fail
+      TaskQueue.skip,method,"(id: string) -> void",83-89,false,7,1,skip
+      TaskQueue.printTodoList,method,(force) -> void,91-140,false,50,1,logs todo list
+      TaskQueue.print,method,() -> void,142-144,false,3,1,logs
+      TaskQueue.getIcon,method,"(status: TaskStatus) -> string",146-155,false,10,1,retrieves icon
+      TaskQueue.getTasks,method,"() -> Task[]",157-159,false,3,1,retrieves tasks
+      TaskQueue.clear,method,() -> void,161-163,false,3,1,deletes
+  core/contract-ai/evolution/state-analyzer.ts:
+    functions[10]{name,kind,sig,loc,async,lines,cc,does}:
+      StateAnalyzer.constructor,method,"(outputDir: string, port: number)",61-64,false,4,1,constructor
+      StateAnalyzer.setPort,method,"(port: number) -> void",66-68,false,3,1,updates port
+      StateAnalyzer.analyzeContract,method,"() -> { entities: string[]; endpoints: string[]; targets: string[] }",70-115,false,46,1,processes contract
+      StateAnalyzer.analyzeSourceCode,method,"() -> { files: string[]; detectedEndpoints: string[]; detectedEntities: string[] }",117-157,false,41,1,processes source code
+      StateAnalyzer.scanDir,method,"(dir: string, files: string[]) -> void",159-173,false,15,1,scan dir
+      StateAnalyzer.analyzeService,method,"(endpointsToProbe: string[]) -> Promise<{ running: boolean; healthEndpoint: boolean; respondingEndpoints: string[]; probes: Array<{ endpoint: string; ok: boolean; status?: number; error?: string }>; port: number }>",175-222,true,48,1,processes service
+      StateAnalyzer.analyzeLogs,method,"() -> { errors: string[]; warnings: string[]; lastActivity: string | null }",224-270,false,47,1,processes logs
+      StateAnalyzer.findDiscrepancies,method,"(contract: ReturnType<typeof this.analyzeContract>, sourceCode: ReturnType<typeof this.analyzeSourceCode>, service: Awaited<ReturnType<typeof this.analyzeService>>, logs: ReturnType<typeof this.analyzeLogs>) -> StateDiscrepancy[]",272-397,false,126,1,retrieves discrepancies
+      StateAnalyzer.analyze,method,() -> Promise<MultiLevelState>,399-414,true,16,1,processes
+      StateAnalyzer.generateReconciliationPlan,method,"(state: MultiLevelState) -> string[]",416-449,false,34,1,creates reconciliation plan
+  core/contract-ai/evolution/fallback-templates.ts:
+    functions[11]{name,kind,sig,loc,async,lines,cc,does}:
+      FallbackTemplates.generate,method,"(contract: ContractAI, options: FallbackOptions) -> string",43-157,false,115,1,creates
+      FallbackTemplates.generateServer,method,"(contract: ContractAI, port: number) -> string",162-214,false,53,1,creates server
+      FallbackTemplates.generatePackageJson,method,() -> string,219-239,false,21,1,creates package json
+      FallbackTemplates.generateTsConfig,method,() -> string,244-258,false,15,1,creates ts config
+      FallbackTemplates.parseFiles,method,"(response: string) -> GeneratedFile[]",263-283,false,21,1,parses files
+      FallbackTemplates.stripJsonComments,method,"(json: string) -> string",288-293,false,6,1,strip json comments
+      FallbackTemplates.generateE2ETests,method,"(port: number, entityName: string, basePath: string, entityFields?) -> string",298-309,false,12,1,creates e2 e tests
+      FallbackTemplates.generateTestPayload,method,"(entityName: string, fields?) -> string",314-336,false,23,1,creates test payload
+      FallbackTemplates.generateUpdatePayload,method,"(entityName: string, fields?) -> string",341-362,false,22,1,creates update payload
+      FallbackTemplates.generateFrontend,method,"(port: number, entityName: string) -> Record<string, string>",367-384,false,18,1,creates frontend
+      FallbackTemplates.generateWithFrontend,method,"(contract: ContractAI, options: FallbackOptions) -> string",389-408,false,20,1,creates with frontend
+  core/contract-ai/evolution/doc-generator.ts:
+    functions[3]{name,kind,sig,loc,async,lines,cc,does}:
+      DocGenerator.constructor,method,"(options: DocGeneratorOptions, llmClient: LLMClient | null)",36-40,false,5,1,constructor
+      DocGenerator.generateReadme,method,"(contract: ContractAI) -> Promise<void>",45-129,true,85,1,creates readme
+      DocGenerator.getFallbackReadme,method,"(contract: ContractAI) -> string",134-265,false,132,1,retrieves fallback readme
+  core/contract-ai/evolution/task-executor.ts:
+    functions[20]{name,kind,sig,loc,async,lines,cc,does}:
+      createTaskExecutor,function,(options?) -> TaskExecutor,401-403,false,3,1,creates task executor
+      RingBuffer.constructor,method,"(size: number)",52-54,false,3,1,constructor
+      RingBuffer.append,method,"(item: T) -> void",56-61,false,6,1,append
+      RingBuffer.getAll,method,"() -> T[]",63-65,false,3,1,retrieves all
+      RingBuffer.clear,method,() -> void,67-69,false,3,1,deletes
+      TaskExecutor.constructor,method,"(options: Partial<TaskExecutorOptions>)",86-96,false,11,1,constructor
+      TaskExecutor.addTask,method,"(command: string, options: Partial<ExecutorTask>) -> ExecutorTask",102-125,false,24,1,creates task
+      TaskExecutor.addTasksFromFile,method,"(filePath: string) -> void",127-148,false,22,1,creates tasks from file
+      TaskExecutor.processQueue,method,() -> Promise<void>,154-161,true,8,1,processes queue
+      TaskExecutor.executeTask,method,"(taskId: string) -> Promise<void>",163-246,true,84,1,starts task
+      TaskExecutor.startWatching,method,"(filePath: string) -> void",252-267,false,16,1,starts watching
+      TaskExecutor.stopWatching,method,() -> void,269-274,false,6,1,stops watching
+      TaskExecutor.checkFileChanges,method,() -> void,276-285,false,10,1,checks file changes
+      TaskExecutor.log,method,"(message: string) -> void",291-301,false,11,1,logs
+      TaskExecutor.printMarkdown,method,() -> void,303-334,false,32,1,logs markdown
+      TaskExecutor.getIcon,method,"(state: TaskState) -> string",336-345,false,10,1,retrieves icon
+      TaskExecutor.renderMarkdown,method,() -> string,347-362,false,16,1,formats markdown
+      TaskExecutor.getStatus,method,"() -> { tasks: ExecutorTask[]; logs: string[] }",368-373,false,6,1,retrieves status
+      TaskExecutor.waitForAll,method,() -> Promise<void>,375-386,true,12,1,wait for all
+      TaskExecutor.clear,method,() -> void,388-394,false,7,1,deletes
+  core/contract-ai/evolution/service-manager.ts:
+    functions[14]{name,kind,sig,loc,async,lines,cc,does}:
+      ServiceManager.constructor,method,"(options: ServiceManagerOptions)",45-47,false,3,1,constructor
+      ServiceManager.setLogCallback,method,"(callback: LogCallback) -> void",52-54,false,3,1,updates log callback
+      ServiceManager.getStatus,method,() -> ServiceStatus,59-67,false,9,1,retrieves status
+      ServiceManager.start,method,() -> Promise<boolean>,72-137,true,66,1,starts
+      ServiceManager.stop,method,() -> Promise<void>,142-151,true,10,1,stops
+      ServiceManager.restart,method,() -> Promise<boolean>,156-163,true,8,1,restart
+      ServiceManager.checkHealth,method,() -> Promise<boolean>,168-175,true,8,1,checks health
+      ServiceManager.waitForHealth,method,(maxAttempts) -> Promise<boolean>,180-192,true,13,1,wait for health
+      ServiceManager.startMonitoring,method,(onUnhealthy?) -> void,197-204,false,8,1,starts monitoring
+      ServiceManager.stopMonitoring,method,() -> void,209-214,false,6,1,stops monitoring
+      ServiceManager.runCommand,method,"(command: string, args: string[], cwd: string) -> Promise<{ stdout: string; stderr: string }>",219-238,true,20,1,starts command
+      ServiceManager.killProcessOnPort,method,"(port: number) -> Promise<void>",243-249,true,7,1,kill process on port
+      ServiceManager.getNodeEnv,method,() -> NodeJS.ProcessEnv,254-256,false,3,1,retrieves node env
+      ServiceManager.sleep,method,"(ms: number) -> Promise<void>",261-263,false,3,1,sleep
+  core/contract-ai/evolution/code-rag.ts:
+    functions[32]{name,kind,sig,loc,async,lines,cc,does}:
+      SemanticChunker.constructor,method,"(language: string)",67-69,false,3,1,constructor
+      SemanticChunker.parseFile,method,"(filePath: string, content: string) -> CodeChunk[]",74-108,false,35,1,parses file
+      SemanticChunker.parseTypeScript,method,"(filePath: string, content: string, parentId: string) -> CodeChunk[]",113-225,false,113,1,parses type script
+      SemanticChunker.parsePython,method,"(filePath: string, content: string, parentId: string) -> CodeChunk[]",230-323,false,94,1,parses python
+      SemanticChunker.detectLanguage,method,"(ext: string) -> string",325-342,false,18,1,detect language
+      SemanticChunker.generateId,method,"(filePath: string, type: string, line: number) -> string",344-347,false,4,1,creates id
+      SemanticChunker.extractImports,method,"(content: string, lang: string) -> string[]",349-369,false,21,1,parses imports
+      SemanticChunker.extractExports,method,"(content: string, lang: string) -> string[]",371-382,false,12,1,parses exports
+      SemanticChunker.extractSignature,method,"(code: string, type: string) -> string",384-395,false,12,1,parses signature
+      SemanticChunker.extractLocalDependencies,method,"(code: string) -> string[]",397-407,false,11,1,parses local dependencies
+      CodeIndexer.constructor,method,(llmClient?),419-429,false,11,1,constructor
+      CodeIndexer.indexDirectory,method,"(dir: string, excludePatterns: string[]) -> Promise<void>",434-475,true,42,1,index directory
+      CodeIndexer.generateSummary,method,"(chunk: CodeChunk) -> Promise<string>",480-494,true,15,1,creates summary
+      CodeIndexer.scanDirectory,method,"(dir: string, excludePatterns: string[]) -> string[]",496-521,false,26,1,scan directory
+      CodeIndexer.getIndex,method,() -> CodeIndex,523-525,false,3,1,retrieves index
+      CodeIndexer.getChunk,method,"(id: string) -> CodeChunk | undefined",527-529,false,3,1,retrieves chunk
+      CodeIndexer.getChunksByFile,method,"(filePath: string) -> CodeChunk[]",531-534,false,4,1,retrieves chunks by file
+      CodeIndexer.getChunksBySymbol,method,"(name: string) -> CodeChunk[]",536-539,false,4,1,retrieves chunks by symbol
+      CodeIndexer.getCallers,method,"(chunkId: string) -> CodeChunk[]",541-550,false,10,1,retrieves callers
+      CodeIndexer.getCallees,method,"(chunkId: string) -> CodeChunk[]",552-555,false,4,1,retrieves callees
+      HierarchicalRetriever.constructor,method,"(indexer: CodeIndexer, llmClient?)",566-569,false,4,1,constructor
+      HierarchicalRetriever.search,method,"(query: string, topK: number) -> Promise<SearchResult[]>",576-599,true,24,1,filters
+      HierarchicalRetriever.searchFiles,method,"(query: string, index: CodeIndex) -> string[]",604-644,false,41,1,filters files
+      HierarchicalRetriever.scoreChunk,method,"(chunk: CodeChunk, query: string) -> number",649-683,false,35,1,score chunk
+      HierarchicalRetriever.traceCallPath,method,"(fromId: string, toId: string, maxDepth: number) -> string[][]",688-710,false,23,1,trace call path
+      HierarchicalRetriever.getHierarchy,method,"() -> HierarchicalLevel[]",715-765,false,51,1,retrieves hierarchy
+      CodeRAG.constructor,method,(llmClient?),778-782,false,5,1,constructor
+      CodeRAG.index,method,"(dir: string) -> Promise<{ files: number; chunks: number }>",787-796,true,10,1,index
+      CodeRAG.ask,method,"(question: string) -> Promise<{ answer: string; sources: SearchResult[] }>",801-849,true,49,1,ask
+      CodeRAG.findUsages,method,"(symbolName: string) -> CodeChunk[]",854-863,false,10,1,retrieves usages
+      CodeRAG.getStructure,method,"() -> HierarchicalLevel[]",868-870,false,3,1,retrieves structure
+      CodeRAG.exportIndex,method,() -> string,875-884,false,10,1,export index
+  core/contract-ai/evolution/test-generator.ts:
+    functions[8]{name,kind,sig,loc,async,lines,cc,does}:
+      TestGenerator.constructor,method,"(options: TestGeneratorOptions, llmClient: LLMClient | null)",43-47,false,5,1,constructor
+      TestGenerator.generateTestFiles,method,"(contract: ContractAI) -> Promise<void>",52-75,true,24,1,creates test files
+      TestGenerator.generateTestConfig,method,"(testDir: string) -> Promise<void>",80-121,true,42,1,creates test config
+      TestGenerator.getFallbackTestConfig,method,() -> string,123-145,false,23,1,retrieves fallback test config
+      TestGenerator.generateApiE2ETests,method,"(e2eDir: string, entityName: string, pluralName: string) -> Promise<void>",150-220,true,71,1,creates api e2 e tests
+      TestGenerator.detectApiBasePath,method,"(pluralName: string) -> string",225-246,false,22,1,detect api base path
+      TestGenerator.generateFixtures,method,"(fixturesDir: string, entityName: string) -> Promise<void>",252-292,true,41,1,creates fixtures
+      TestGenerator.getFallbackFixtures,method,"(entityName: string, lowerName: string) -> Record<string, any>",294-308,false,15,1,retrieves fallback fixtures
+  core/contract-ai/validation/index.ts:
+    functions[1]{name,kind,sig,loc,async,lines,cc,does}:
+      createDefaultValidationPipeline,function,"(options: Partial<PipelineOptions>) -> ValidationPipelineOrchestrator",35-53,false,19,1,creates default validation pipeline
+  core/contract-ai/validation/pipeline-orchestrator.ts:
+    functions[9]{name,kind,sig,loc,async,lines,cc,does}:
+      createValidationPipeline,function,(options?) -> ValidationPipelineOrchestrator,264-268,false,5,1,creates validation pipeline
+      ValidationPipelineOrchestrator.constructor,method,"(options: Partial<PipelineOptions>)",94-96,false,3,1,constructor
+      ValidationPipelineOrchestrator.registerStage,method,"(stage: ValidationStage) -> void",101-103,false,3,1,registers stage
+      ValidationPipelineOrchestrator.registerStages,method,"(stages: ValidationStage[]) -> void",108-110,false,3,1,registers stages
+      ValidationPipelineOrchestrator.validate,method,"(contract: ContractAI, code: GeneratedCode) -> Promise<PipelineResult>",115-179,true,65,1,validates
+      ValidationPipelineOrchestrator.runStage,method,"(stage: ValidationStage, context: ValidationContext) -> Promise<StageResult>",184-222,true,39,1,starts stage
+      ValidationPipelineOrchestrator.shouldContinue,method,"(stageOrName: ValidationStage | string, result: StageResult) -> boolean",227-243,false,17,1,checks continue
+      ValidationPipelineOrchestrator.getStages,method,"() -> ValidationStage[]",248-250,false,3,1,retrieves stages
+      ValidationPipelineOrchestrator.clearStages,method,() -> void,255-257,false,3,1,deletes stages
+  core/contract-ai/feedback/code-corrector.ts:
+    functions[13]{name,kind,sig,loc,async,lines,cc,does}:
+      createCodeCorrector,function,(options?) -> CodeCorrector,375-377,false,3,1,creates code corrector
+      CodeCorrector.constructor,method,"(options: Partial<CorrectorOptions>)",64-66,false,3,1,constructor
+      CodeCorrector.setLLMClient,method,"(client: LLMClient) -> void",71-73,false,3,1,updates llm client
+      CodeCorrector.correct,method,"(code: GeneratedCode, feedback: ValidationFeedback, contract: ContractAI) -> Promise<GeneratedCode>",78-134,true,57,1,correct
+      CodeCorrector.inferTargetFromPath,method,"(path: string) -> string | undefined",136-141,false,6,1,infer target from path
+      CodeCorrector.correctFile,method,"(file: GeneratedFile, issues: ValidationIssue[], hints: ContractHint[], contract: ContractAI) -> Promise<GeneratedFile>",146-175,true,30,1,correct file
+      CodeCorrector.groupIssuesByFile,method,"(issues: ValidationIssue[]) -> Map<string, ValidationIssue[]>",180-192,false,13,1,group issues by file
+      CodeCorrector.buildCorrectionPrompt,method,"(file: GeneratedFile, issues: ValidationIssue[], hints: ContractHint[], contract: ContractAI) -> string",197-253,false,57,1,creates correction prompt
+      CodeCorrector.getSystemPrompt,method,() -> string,258-272,false,15,1,retrieves system prompt
+      CodeCorrector.extractCodeFromResponse,method,"(response: string) -> string",277-289,false,13,1,parses code from response
+      CodeCorrector.simulateCorrection,method,"(content: string, issues: ValidationIssue[]) -> string",294-317,false,24,1,simulate correction
+      CodeCorrector.addTryCatch,method,"(content: string) -> string",322-338,false,17,1,creates try catch
+      CodeCorrector.addEmailValidation,method,"(content: string) -> string",343-368,false,26,1,creates email validation
+  core/contract-ai/feedback/iteration-manager.ts:
+    functions[5]{name,kind,sig,loc,async,lines,cc,does}:
+      createIterationManager,function,(options?) -> IterationManager,243-247,false,5,1,creates iteration manager
+      IterationManager.constructor,method,"(options: Partial<IterationManagerOptions>)",83-87,false,5,1,constructor
+      IterationManager.validateAndCorrect,method,"(contract: ContractAI, initialCode: GeneratedCode, pipeline: ValidationPipelineOrchestrator, codeGenerator: LLMCodeGenerator) -> Promise<IterationResult>",92-201,true,110,1,validates and correct
+      IterationManager.meetsAcceptanceCriteria,method,"(contract: ContractAI, result: PipelineResult) -> boolean",206-223,false,18,1,meets acceptance criteria
+      IterationManager.correctCode,method,"(contract: ContractAI, currentCode: GeneratedCode, feedback: ValidationFeedback, codeGenerator: LLMCodeGenerator) -> Promise<GeneratedCode>",228-236,true,9,1,correct code
+  core/contract-ai/feedback/feedback-generator.ts:
+    functions[9]{name,kind,sig,loc,async,lines,cc,does}:
+      createFeedbackGenerator,function,() -> FeedbackGenerator,321-323,false,3,1,creates feedback generator
+      FeedbackGenerator.generateFeedback,method,"(contract: ContractAI, result: PipelineResult) -> ValidationFeedback",62-77,false,16,1,creates feedback
+      FeedbackGenerator.buildCorrectionPrompt,method,"(contract: ContractAI, currentCode: { path: string; content: string }[], feedback: ValidationFeedback) -> string",82-161,false,80,1,creates correction prompt
+      FeedbackGenerator.extractIssues,method,"(result: PipelineResult) -> ValidationIssue[]",166-196,false,31,1,parses issues
+      FeedbackGenerator.generateSummary,method,"(issues: ValidationIssue[]) -> string",201-220,false,20,1,creates summary
+      FeedbackGenerator.extractContractHints,method,"(contract: ContractAI, issues: ValidationIssue[]) -> string[]",225-246,false,22,1,parses contract hints
+      FeedbackGenerator.getFilesToFix,method,"(issues: ValidationIssue[]) -> string[]",251-261,false,11,1,retrieves files to fix
+      FeedbackGenerator.groupIssuesByFile,method,"(issues: ValidationIssue[]) -> Record<string, ValidationIssue[]>",266-279,false,14,1,group issues by file
+      FeedbackGenerator.getSuggestionForError,method,"(code?, message?) -> string | undefined",284-314,false,31,1,retrieves suggestion for error
+  core/contract-ai/feedback/generation-log.ts:
+    functions[17]{name,kind,sig,loc,async,lines,cc,does}:
+      createGenerationLogWriter,function,"(options: LogWriterOptions) -> GenerationLogWriter",411-413,false,3,1,creates generation log writer
+      GenerationLogWriter.constructor,method,"(options: LogWriterOptions)",107-110,false,4,1,constructor
+      GenerationLogWriter.writeLog,method,"(entry: GenerationLogEntry) -> string",115-145,false,31,1,logs log
+      GenerationLogWriter.buildHeader,method,"(appName: string, version: string) -> string",147-153,false,7,1,creates header
+      GenerationLogWriter.buildMetadata,method,"(entry: GenerationLogEntry, dateStr: string, timeStr: string, entityCount: number) -> string",155-179,false,25,1,creates metadata
+      GenerationLogWriter.buildRunSection,method,"(entry: GenerationLogEntry) -> string",181-217,false,37,1,creates run section
+      GenerationLogWriter.buildIterationSection,method,"(entry: GenerationLogEntry) -> string",219-232,false,14,1,creates iteration section
+      GenerationLogWriter.buildNextStepsSection,method,"(entry: GenerationLogEntry) -> string",234-253,false,20,1,creates next steps section
+      GenerationLogWriter.buildGenerationSection,method,"(generatedCode: GeneratedCode) -> string",255-275,false,21,1,creates generation section
+      GenerationLogWriter.buildStageIssues,method,"(stage: StageResult) -> string",277-300,false,24,1,creates stage issues
+      GenerationLogWriter.escapeTableCell,method,"(value: string) -> string",302-304,false,3,1,escape table cell
+      GenerationLogWriter.buildValidationSection,method,"(pipelineResult: PipelineResult) -> string",306-337,false,32,1,creates validation section
+      GenerationLogWriter.buildContractSection,method,"(contract: ContractAI) -> string",339-361,false,23,1,creates contract section
+      GenerationLogWriter.buildActionsSection,method,"(entry: GenerationLogEntry, now: Date) -> string",363-380,false,18,1,creates actions section
+      GenerationLogWriter.buildFooter,method,() -> string,382-385,false,4,1,creates footer
+      GenerationLogWriter.generateFilename,method,"(appName: string, now: Date) -> string",387-394,false,8,1,creates filename
+      GenerationLogWriter.getLanguageFromPath,method,"(filePath: string) -> string",396-404,false,9,1,retrieves language from path
+  core/contract-ai/setup/dependency-checker.ts:
+    functions[13]{name,kind,sig,loc,async,lines,cc,does}:
+      checkEnvironment,function,() -> Promise<EnvironmentReport>,623-626,true,4,1,checks environment
+      printEnvironmentStatus,function,() -> Promise<void>,628-632,true,5,1,logs environment status
+      DependencyChecker.constructor,method,(),314-316,false,3,1,constructor
+      DependencyChecker.checkDependency,method,"(dep: Dependency) -> Promise<DependencyCheck>",321-356,true,36,1,checks dependency
+      DependencyChecker.checkAll,method,"() -> Promise<DependencyCheck[]>",361-370,true,10,1,checks all
+      DependencyChecker.generateReport,method,() -> Promise<EnvironmentReport>,375-399,true,25,1,creates report
+      DependencyChecker.generateSetupTasks,method,"(checks: DependencyCheck[]) -> SetupTask[]",404-444,false,41,1,creates setup tasks
+      DependencyChecker.saveSetupTasks,method,"(outputDir: string, tasks: SetupTask[]) -> string",449-463,false,15,1,caches setup tasks
+      DependencyChecker.generateSetupMarkdown,method,"(tasks: SetupTask[]) -> string",468-535,false,68,1,creates setup markdown
+      DependencyChecker.printStatus,method,"(report: EnvironmentReport) -> void",540-583,false,44,1,logs status
+      DependencyChecker.getInstallCommand,method,"(dep: Dependency) -> string",589-595,false,7,1,retrieves install command
+      DependencyChecker.getNpmVersion,method,() -> string | undefined,597-603,false,7,1,retrieves npm version
+      DependencyChecker.compareVersions,method,"(v1: string, v2: string) -> number",605-616,false,12,1,compare versions
+  core/contract-ai/sdk/sdk-generator.ts:
+    functions[19]{name,kind,sig,loc,async,lines,cc,does}:
+      createSDKGenerator,function,(options?) -> SDKGenerator,680-682,false,3,1,creates sdk generator
+      SDKGenerator.constructor,method,"(options: SDKGeneratorOptions)",49-57,false,9,1,constructor
+      SDKGenerator.generate,method,"(contract: ContractAI) -> GeneratedSDK",62-101,false,40,1,creates
+      SDKGenerator.generateTypes,method,"(contract: ContractAI) -> string",106-133,false,28,1,creates types
+      SDKGenerator.generateEntityType,method,"(entity: EntityDefinition) -> string[]",138-160,false,23,1,creates entity type
+      SDKGenerator.generateInputTypes,method,"(entity: EntityDefinition) -> string[]",165-198,false,34,1,creates input types
+      SDKGenerator.generateApiResponseTypes,method,"(contract: ContractAI) -> string[]",203-229,false,27,1,creates api response types
+      SDKGenerator.generateZodSchemas,method,"(contract: ContractAI) -> string",234-251,false,18,1,creates zod schemas
+      SDKGenerator.generateEntitySchema,method,"(entity: EntityDefinition) -> string[]",256-286,false,31,1,creates entity schema
+      SDKGenerator.generateClient,method,"(contract: ContractAI) -> string",291-349,false,59,1,creates client
+      SDKGenerator.generateEntityClientMethods,method,"(entity: EntityDefinition) -> string[]",354-408,false,55,1,creates entity client methods
+      SDKGenerator.generateHooks,method,"(contract: ContractAI) -> string",413-439,false,27,1,creates hooks
+      SDKGenerator.generateEntityHooks,method,"(entity: EntityDefinition) -> string[]",444-542,false,99,1,creates entity hooks
+      SDKGenerator.generateIndex,method,"(contract: ContractAI) -> string",547-570,false,24,1,creates index
+      SDKGenerator.fieldTypeToTS,method,"(field: FieldDefinition) -> string",579-601,false,23,1,field type to ts
+      SDKGenerator.fieldTypeToZod,method,"(field: FieldDefinition) -> string",606-620,false,15,1,field type to zod
+      SDKGenerator.getZodBase,method,"(type: string) -> string",625-647,false,23,1,retrieves zod base
+      SDKGenerator.formatFieldComment,method,"(field: FieldDefinition) -> string",652-660,false,9,1,formats field comment
+      SDKGenerator.pluralize,method,"(word: string) -> string",665-673,false,9,1,pluralize
+  core/contract-ai/converter/to-contract-ai.ts:
+    functions[7]{name,kind,sig,loc,async,lines,cc,does}:
+      convertToContractAI,function,"(contract: ContractMarkdown) -> ContractAI & { app: any; entities: any[] }",10-83,false,74,1,converts to contract ai
+      convertEntity,function,"(entity: MarkdownEntityDefinition) -> ContractAI['definition']['entities'][0]",85-100,false,16,1,converts entity
+      mapFieldType,function,"(type: string) -> string",102-115,false,14,1,converts field type
+      mapDatabaseType,function,"(type: string) -> 'sqlite' | 'postgresql' | 'mysql' | 'mongodb' | 'in-memory'",117-128,false,12,1,converts database type
+      extractResources,function,"(contract: ContractMarkdown) -> any[]",130-160,false,31,1,parses resources
+      extractInstructions,function,"(contract: ContractMarkdown) -> any[]",162-192,false,31,1,parses instructions
+      capitalize,function,"(str: string) -> string",194-196,false,3,1,capitalize
+  core/contract-ai/validation/stages/schema-validator.ts:
+    functions[3]{name,kind,sig,loc,async,lines,cc,does}:
+      createSchemaValidator,function,() -> SchemaValidator,101-103,false,3,1,creates schema validator
+      SchemaValidator.extractFileFromSchemaPath,method,"(schemaPath: string, files: Array<{ path: string }>) -> string | undefined",10-20,false,11,1,parses file from schema path
+      SchemaValidator.validator,method,"(context: ValidationContext) -> Promise<StageResult>",22-98,true,77,1,validator
+  core/contract-ai/validation/stages/test-runner.ts:
+    functions[12]{name,kind,sig,loc,async,lines,cc,does}:
+      createTestRunner,function,() -> TestRunner,372-374,false,3,1,creates test runner
+      TestRunner.validator,method,"(context: ValidationContext) -> Promise<StageResult>",54-132,true,79,1,validator
+      TestRunner.generateTestFiles,method,"(specs: TestSpecification[], contract: ContractAI) -> Map<string, string>",137-147,false,11,1,creates test files
+      TestRunner.generateTestFile,method,"(spec: TestSpecification, contract: ContractAI) -> string",152-178,false,27,1,creates test file
+      TestRunner.generateTestCase,method,"(scenario: TestScenario, endpoint: string, type: string) -> string",183-224,false,42,1,creates test case
+      TestRunner.parseMethod,method,"(when: string) -> string",229-235,false,7,1,parses method
+      TestRunner.parsePath,method,"(when: string, defaultEndpoint: string) -> string",240-245,false,6,1,parses path
+      TestRunner.writeTestFiles,method,"(workDir: string, testFiles: Map<string, string>) -> string[]",250-270,false,21,1,logs test files
+      TestRunner.runJest,method,"(workDir: string, testFiles: Map<string, string>) -> Promise<JestResult>",275-289,true,15,1,starts jest
+      TestRunner.canRunRealJest,method,"(workDir: string) -> boolean",294-306,false,13,1,checks run real jest
+      TestRunner.runRealJest,method,"(workDir: string) -> JestResult",311-344,false,34,1,starts real jest
+      TestRunner.simulateJest,method,"(testFiles: Map<string, string>) -> JestResult",349-365,false,17,1,simulate jest
+  core/contract-ai/validation/stages/quality-checker.ts:
+    functions[7]{name,kind,sig,loc,async,lines,cc,does}:
+      createQualityChecker,function,() -> QualityChecker,242-244,false,3,1,creates quality checker
+      QualityChecker.validator,method,"(context: ValidationContext) -> Promise<StageResult>",24-68,true,45,1,validator
+      QualityChecker.checkThreshold,method,"(value: number, threshold: number, operator: string) -> boolean",73-86,false,14,1,checks threshold
+      QualityChecker.calculateLinesOfCode,method,"(files: GeneratedFile[]) -> number",91-107,false,17,1,processes lines of code
+      QualityChecker.calculateAverageComplexity,method,"(files: GeneratedFile[]) -> number",112-153,false,42,1,processes average complexity
+      QualityChecker.calculateDuplicationRatio,method,"(files: GeneratedFile[]) -> number",158-188,false,31,1,processes duplication ratio
+      QualityChecker.calculateTypeCoverage,method,"(files: GeneratedFile[]) -> number",193-235,false,43,1,processes type coverage
+  core/contract-ai/validation/stages/assertion-validator.ts:
+    functions[14]{name,kind,sig,loc,async,lines,cc,does}:
+      createAssertionValidator,function,() -> AssertionValidator,317-319,false,3,1,creates assertion validator
+      AssertionValidator.getFileForAssertion,method,"(assertion: CodeAssertion) -> string | undefined",24-38,false,15,1,retrieves file for assertion
+      AssertionValidator.validator,method,"(context: ValidationContext) -> Promise<StageResult>",40-71,true,32,1,validator
+      AssertionValidator.checkAssertion,method,"(assertion: CodeAssertion, files: GeneratedFile[]) -> { passed: boolean; details?: string }",76-107,false,32,1,checks assertion
+      AssertionValidator.checkFileExists,method,"(path: string, files: GeneratedFile[]) -> { passed: boolean }",112-116,false,5,1,checks file exists
+      AssertionValidator.checkFileContains,method,"(path: string, pattern: string, files: GeneratedFile[]) -> { passed: boolean }",121-131,false,11,1,checks file contains
+      AssertionValidator.checkFileNotContains,method,"(path: string, pattern: string, files: GeneratedFile[]) -> { passed: boolean }",136-146,false,11,1,checks file not contains
+      AssertionValidator.checkExportsFunction,method,"(path: string, functionName: string, files: GeneratedFile[]) -> { passed: boolean }",151-169,false,19,1,checks exports function
+      AssertionValidator.checkExportsClass,method,"(path: string, className: string, files: GeneratedFile[]) -> { passed: boolean }",174-190,false,17,1,checks exports class
+      AssertionValidator.checkHasErrorHandling,method,"(path: string, files: GeneratedFile[]) -> { passed: boolean }",195-207,false,13,1,checks has error handling
+      AssertionValidator.checkHasValidation,method,"(entityName: string, fieldName: string, files: GeneratedFile[]) -> { passed: boolean }",212-234,false,23,1,checks has validation
+      AssertionValidator.hasFieldValidation,method,"(content: string, fieldName: string) -> boolean",239-252,false,14,1,has field validation
+      AssertionValidator.findFile,method,"(path: string, files: GeneratedFile[]) -> GeneratedFile | undefined",257-284,false,28,1,retrieves file
+      AssertionValidator.generateNameVariants,method,"(name: string) -> string[]",289-310,false,22,1,creates name variants
+  core/contract-ai/validation/stages/static-analyzer.ts:
+    functions[4]{name,kind,sig,loc,async,lines,cc,does}:
+      createStaticAnalyzer,function,() -> StaticAnalyzer,203-205,false,3,1,creates static analyzer
+      StaticAnalyzer.validator,method,"(context: ValidationContext) -> Promise<StageResult>",24-73,true,50,1,validator
+      StaticAnalyzer.checkRule,method,"(ruleName: string, file: GeneratedFile) -> Array<{ message: string; line?: number }>",78-156,false,79,1,checks rule
+      StaticAnalyzer.runBuiltInRules,method,"(file: GeneratedFile) -> StageResult['warnings']",161-196,false,36,1,starts built in rules
+  core/contract-ai/validation/stages/security-scanner.ts:
+    functions[9]{name,kind,sig,loc,async,lines,cc,does}:
+      createSecurityScanner,function,() -> SecurityScanner,300-302,false,3,1,creates security scanner
+      SecurityScanner.validator,method,"(context: ValidationContext) -> Promise<StageResult>",24-71,true,48,1,validator
+      SecurityScanner.runSecurityCheck,method,"(check: SecurityCheck, file: GeneratedFile) -> Array<{ message: string; line?: number }>",76-106,false,31,1,starts security check
+      SecurityScanner.checkHardcodedSecrets,method,"(lines: string[], filePath: string) -> Array<{ message: string; line?: number }>",111-149,false,39,1,checks hardcoded secrets
+      SecurityScanner.checkSqlInjection,method,"(lines: string[]) -> Array<{ message: string; line?: number }>",154-178,false,25,1,checks sql injection
+      SecurityScanner.checkXss,method,"(lines: string[]) -> Array<{ message: string; line?: number }>",183-214,false,32,1,checks xss
+      SecurityScanner.checkInputValidation,method,"(file: GeneratedFile) -> Array<{ message: string; line?: number }>",219-240,false,22,1,checks input validation
+      SecurityScanner.checkHttpsOnly,method,"(lines: string[]) -> Array<{ message: string; line?: number }>",245-261,false,17,1,checks https only
+      SecurityScanner.runBuiltInChecks,method,"(file: GeneratedFile) -> StageResult['errors']",266-293,false,28,1,starts built in checks
+  core/contract-ai/validation/stages/runtime-validator.ts:
+    functions[13]{name,kind,sig,loc,async,lines,cc,does}:
+      createRuntimeValidator,function,() -> RuntimeValidator,414-416,false,3,1,creates runtime validator
+      RuntimeValidator.validator,method,"(context: ValidationContext) -> Promise<StageResult>",52-146,true,95,1,validator
+      RuntimeValidator.isDockerAvailable,method,() -> boolean,151-158,false,8,1,is docker available
+      RuntimeValidator.hasDockerfile,method,"(workDir: string) -> boolean",163-170,false,8,1,has dockerfile
+      RuntimeValidator.buildAndRun,method,"(workDir: string) -> Promise<ContainerInfo>",175-205,true,31,1,creates and run
+      RuntimeValidator.waitForHealthy,method,"(port: number) -> Promise<boolean>",210-227,true,18,1,wait for healthy
+      RuntimeValidator.testEndpoints,method,"(port: number, entities: EntityDefinition[]) -> Promise<EndpointTestResult[]>",232-277,true,46,1,checks endpoints
+      RuntimeValidator.testEndpoint,method,"(baseUrl: string, method: string, path: string, expectedStatus: number, body?) -> Promise<EndpointTestResult>",282-313,true,32,1,checks endpoint
+      RuntimeValidator.httpRequest,method,"(method: string, url: string, body?) -> Promise<{ status: number; data: any }>",318-364,false,47,1,http request
+      RuntimeValidator.cleanup,method,"(containerId: string) -> Promise<void>",369-376,true,8,1,cleanup
+      RuntimeValidator.getRandomPort,method,() -> number,381-383,false,3,1,retrieves random port
+      RuntimeValidator.sleep,method,"(ms: number) -> Promise<void>",388-390,false,3,1,sleep
+      RuntimeValidator.createResult,method,"(errors: StageResult['errors'], warnings: StageResult['warnings'], startTime: number) -> StageResult",395-407,false,13,1,creates result
+  core/contract-ai/validation/stages/syntax-validator.ts:
+    functions[6]{name,kind,sig,loc,async,lines,cc,does}:
+      createSyntaxValidator,function,() -> SyntaxValidator,263-265,false,3,1,creates syntax validator
+      SyntaxValidator.validator,method,"(context: ValidationContext) -> Promise<StageResult>",24-57,true,34,1,validator
+      SyntaxValidator.checkBasicSyntax,method,"(filePath: string, content: string) -> StageResult['errors']",62-159,false,98,1,checks basic syntax
+      SyntaxValidator.checkRequiredFiles,method,"(context: ValidationContext) -> StageResult['errors']",164-187,false,24,1,checks required files
+      SyntaxValidator.fileExists,method,"(requiredPath: string, existingPaths: string[]) -> boolean",192-230,false,39,1,file exists
+      SyntaxValidator.generateNameVariants,method,"(name: string) -> string[]",235-256,false,22,1,creates name variants
+  core/contract-ai/code-generator/prompt-templates/tests.ts:
+    functions[4]{name,kind,sig,loc,async,lines,cc,does}:
+      createTestsPromptTemplate,function,() -> TestsPromptTemplate,107-109,false,3,1,creates tests prompt template
+      TestsPromptTemplate.buildPrompt,method,"(contract: ContractAI) -> string",31-66,false,36,1,creates prompt
+      TestsPromptTemplate.getRequiredFiles,method,"(contract: ContractAI) -> string[]",71-78,false,8,1,retrieves required files
+      TestsPromptTemplate.getSystemPrompt,method,() -> string,83-100,false,18,1,retrieves system prompt
+  core/contract-ai/code-generator/prompt-templates/api.ts:
+    functions[12]{name,kind,sig,loc,async,lines,cc,does}:
+      createApiPromptTemplate,function,() -> ApiPromptTemplate,277-279,false,3,1,creates api prompt template
+      ApiPromptTemplate.buildPrompt,method,"(contract: ContractAI) -> string",34-96,false,63,1,creates prompt
+      ApiPromptTemplate.getRequiredFiles,method,"(contract: ContractAI) -> string[]",101-117,false,17,1,retrieves required files
+      ApiPromptTemplate.getSystemPrompt,method,() -> string,122-160,false,39,1,retrieves system prompt
+      ApiPromptTemplate.formatTechStack,method,"(techStack: ContractAI['generation']['techStack']) -> string",166-178,false,13,1,formats tech stack
+      ApiPromptTemplate.formatEntities,method,"(entities: EntityDefinition[]) -> string",180-198,false,19,1,formats entities
+      ApiPromptTemplate.formatApi,method,(api?) -> string,200-210,false,11,1,formats api
+      ApiPromptTemplate.formatInstructions,method,"(instructions: ContractAI['generation']['instructions'], target: string) -> string",212-223,false,12,1,formats instructions
+      ApiPromptTemplate.formatPatterns,method,"(patterns: ContractAI['generation']['patterns'], target: string) -> string",225-248,false,24,1,formats patterns
+      ApiPromptTemplate.formatConstraints,method,"(constraints: ContractAI['generation']['constraints']) -> string",250-254,false,5,1,formats constraints
+      ApiPromptTemplate.formatTestScenarios,method,"(tests: ContractAI['validation']['tests']) -> string",256-263,false,8,1,formats test scenarios
+      ApiPromptTemplate.toKebabCase,method,"(str: string) -> string",265-270,false,6,1,converts kebab case
+  core/contract-ai/code-generator/prompt-templates/frontend.ts:
+    functions[10]{name,kind,sig,loc,async,lines,cc,does}:
+      createFrontendPromptTemplate,function,() -> FrontendPromptTemplate,323-325,false,3,1,creates frontend prompt template
+      FrontendPromptTemplate.buildPrompt,method,"(contract: ContractAI) -> string",25-71,false,47,1,creates prompt
+      FrontendPromptTemplate.getRequiredFiles,method,"(contract: ContractAI) -> string[]",76-97,false,22,1,retrieves required files
+      FrontendPromptTemplate.getSystemPrompt,method,() -> string,102-137,false,36,1,retrieves system prompt
+      FrontendPromptTemplate.formatTechStack,method,"(techStack: ContractAI['generation']['techStack']) -> string",143-160,false,18,1,formats tech stack
+      FrontendPromptTemplate.formatEntitiesWithComponents,method,"(entities: EntityDefinition[]) -> string",162-190,false,29,1,formats entities with components
+      FrontendPromptTemplate.formatInstructions,method,"(instructions: ContractAI['generation']['instructions'], target: string) -> string",192-213,false,22,1,formats instructions
+      FrontendPromptTemplate.formatPatterns,method,"(patterns: ContractAI['generation']['patterns'], target: string) -> string",215-285,false,71,1,formats patterns
+      FrontendPromptTemplate.formatConstraints,method,"(constraints: ContractAI['generation']['constraints']) -> string",287-299,false,13,1,formats constraints
+      FrontendPromptTemplate.getInputType,method,"(fieldType: string) -> string",301-316,false,16,1,retrieves input type
+  core/contract-ai/templates/contracts/index.ts:
+    functions[2]{name,kind,sig,loc,async,lines,cc,does}:
+      loadStageContract,function,"(stage: string) -> StageContract | null",20-39,false,20,1,retrieves stage contract
+      getStageRequirements,function,"(stage: string) -> string",41-69,false,29,1,retrieves stage requirements
