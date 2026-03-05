@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## [2.4.4] - 2026-03-05
+
+### Docs
+- Update studio/projects/test-md/contracts/main.rcl.md
+
 ## [2.4.3] - 2026-03-05
 
 ### Docs

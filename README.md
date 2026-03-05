@@ -1,7 +1,7 @@
 ![reclapp.png](reclapp.png)
 # Reclapp 2.4.1 - AI-Native Declarative Platform
 
-[![Version](https://img.shields.io/badge/version-2.4.3-blue.svg)](https://github.com/wronai/contract)
+[![Version](https://img.shields.io/badge/version-2.4.4-blue.svg)](https://github.com/wronai/contract)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
