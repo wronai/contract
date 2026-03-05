@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "reclapp"
-version = "2.4.2"
+version = "2.4.3"
 description = "Reclapp - AI-Native Declarative Platform for autonomous B2B applications with causal reasoning, 8-stage validation pipeline, and multi-provider LLM orchestration."
 readme = "README.md"
 license = "Apache-2.0"

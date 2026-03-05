@@ -7,7 +7,7 @@ Usage:
     reclapp-lifecycle --prompt "Create a CRM system"
 """
 
-__version__ = "2.4.2"
+__version__ = "2.4.3"
 __author__ = "Reclapp Team"
 
 try:

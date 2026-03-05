@@ -194,8 +194,97 @@ class GitAnalyzer:
         
         return sorted(structure, key=lambda x: x.path)
     
+    def _detect_language(self, files: list[str]) -> str:
+        """Detect primary language from file extensions."""
+        if any(f.endswith((".ts", ".tsx")) for f in files):
+            return "typescript"
+        elif any(f.endswith((".js", ".jsx")) for f in files):
+            return "javascript"
+        elif any(f.endswith(".py") for f in files):
+            return "python"
+        elif any(f.endswith(".go") for f in files):
+            return "go"
+        elif any(f.endswith(".rs") for f in files):
+            return "rust"
+        return "unknown"
+
+    def _detect_node_framework(self, pkg_path: Path) -> tuple[str, list[str]]:
+        """
+        Detect Node.js framework and dependencies from package.json.
+        Returns (framework, dependencies).
+        """
+        if not pkg_path.exists():
+            return "unknown", []
+        
+        try:
+            pkg = json.loads(pkg_path.read_text())
+            deps = {**pkg.get("dependencies", {}), **pkg.get("devDependencies", {})}
+            dependencies = list(deps.keys())[:50]
+            
+            framework_map = {
+                "next": "nextjs",
+                "react": "react",
+                "vue": "vue",
+                "express": "express",
+                "fastify": "fastify",
+                "@nestjs/core": "nestjs",
+                "nestjs": "nestjs",
+            }
+            
+            for dep, framework in framework_map.items():
+                if dep in deps:
+                    return framework, dependencies
+                    
+            return "unknown", dependencies
+        except Exception:
+            return "unknown", []
+
+    def _detect_python_framework(
+        self, req_path: Path, pyproject_path: Path
+    ) -> tuple[str, list[str]]:
+        """
+        Detect Python framework and dependencies.
+        Returns (framework, dependencies).
+        """
+        framework = "unknown"
+        dependencies: list[str] = []
+        
+        # Check requirements.txt
+        if req_path.exists():
+            try:
+                reqs = req_path.read_text().split("\n")
+                dependencies = [
+                    r.split("==")[0].split(">=")[0].strip()
+                    for r in reqs if r.strip()
+                ][:50]
+                
+                req_lower = [r.lower() for r in reqs]
+                if any("django" in r for r in req_lower):
+                    framework = "django"
+                elif any("flask" in r for r in req_lower):
+                    framework = "flask"
+                elif any("fastapi" in r for r in req_lower):
+                    framework = "fastapi"
+            except Exception:
+                pass
+        
+        # Check pyproject.toml (can override requirements.txt detection)
+        if pyproject_path.exists():
+            try:
+                content = pyproject_path.read_text().lower()
+                if "django" in content:
+                    framework = "django"
+                elif "flask" in content:
+                    framework = "flask"
+                elif "fastapi" in content:
+                    framework = "fastapi"
+            except Exception:
+                pass
+        
+        return framework, dependencies
+
     def detect_stack(self) -> DetectedStack:
-        """Detect technology stack from repository files"""
+        """Detect technology stack from repository files."""
         result = DetectedStack()
         
         try:
@@ -206,61 +295,18 @@ class GitAnalyzer:
             files = files_output.split("\n")
             
             # Detect language
-            if any(f.endswith((".ts", ".tsx")) for f in files):
-                result.language = "typescript"
-            elif any(f.endswith((".js", ".jsx")) for f in files):
-                result.language = "javascript"
-            elif any(f.endswith(".py") for f in files):
-                result.language = "python"
-            elif any(f.endswith(".go") for f in files):
-                result.language = "go"
-            elif any(f.endswith(".rs") for f in files):
-                result.language = "rust"
+            result.language = self._detect_language(files)
             
-            # Check package.json for Node.js projects
-            pkg_path = self.cwd / "package.json"
-            if pkg_path.exists():
-                pkg = json.loads(pkg_path.read_text())
-                deps = {**pkg.get("dependencies", {}), **pkg.get("devDependencies", {})}
-                result.dependencies = list(deps.keys())[:50]
-                
-                if "next" in deps:
-                    result.framework = "nextjs"
-                elif "react" in deps:
-                    result.framework = "react"
-                elif "vue" in deps:
-                    result.framework = "vue"
-                elif "express" in deps:
-                    result.framework = "express"
-                elif "fastify" in deps:
-                    result.framework = "fastify"
-                elif "@nestjs/core" in deps or "nestjs" in deps:
-                    result.framework = "nestjs"
-            
-            # Check requirements.txt for Python projects
-            req_path = self.cwd / "requirements.txt"
-            if req_path.exists():
-                reqs = req_path.read_text().split("\n")
-                result.dependencies = [r.split("==")[0].split(">=")[0].strip() 
-                                       for r in reqs if r.strip()][:50]
-                
-                if any("django" in r.lower() for r in reqs):
-                    result.framework = "django"
-                elif any("flask" in r.lower() for r in reqs):
-                    result.framework = "flask"
-                elif any("fastapi" in r.lower() for r in reqs):
-                    result.framework = "fastapi"
-            
-            # Check pyproject.toml
-            pyproject_path = self.cwd / "pyproject.toml"
-            if pyproject_path.exists():
-                content = pyproject_path.read_text()
-                if "django" in content.lower():
-                    result.framework = "django"
-                elif "flask" in content.lower():
-                    result.framework = "flask"
-                elif "fastapi" in content.lower():
-                    result.framework = "fastapi"
+            # Detect framework and dependencies based on language
+            if result.language in ("typescript", "javascript"):
+                pkg_path = self.cwd / "package.json"
+                result.framework, result.dependencies = self._detect_node_framework(pkg_path)
+            elif result.language == "python":
+                req_path = self.cwd / "requirements.txt"
+                pyproject_path = self.cwd / "pyproject.toml"
+                result.framework, result.dependencies = self._detect_python_framework(
+                    req_path, pyproject_path
+                )
         
         except Exception:
             pass
