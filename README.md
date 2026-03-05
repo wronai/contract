@@ -1,8 +1,8 @@
 ![reclapp.png](reclapp.png)
 # Reclapp 2.4.1 - AI-Native Declarative Platform
 
-[![Version](https://img.shields.io/badge/version-2.4.1-blue.svg)](https://github.com/wronai/contract)
-[![License](https://img.shields.io/badge/license-Apache-green.svg)](LICENSE) 
+[![Version](https://img.shields.io/badge/version-2.4.2-blue.svg)](https://github.com/wronai/contract)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
 [![GitHub stars](https://img.shields.io/github/stars/wronai/contract?style=social)](https://github.com/wronai/contract/stargazers)
@@ -135,8 +135,12 @@ Reclapp is split into several packages for better maintenance:
 
 **Reclapp** - *AI-Native Declarative Platform for Autonomous B2B Applications*
 
+## License
+
+Apache License 2.0 - see [LICENSE](LICENSE) for details.
+
 ## Author
 
-Created by **Tom Sapletta** - [info@softreck.com](mailto:info@softreck.com)
+Created by **Tom Sapletta** - [tom@sapletta.com](mailto:tom@sapletta.com)
 
 Made with ❤️ by [Softreck](https://softreck.com)

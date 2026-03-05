@@ -1,3 +1,24 @@
+## [Unreleased]
+
+## [2.4.2] - 2026-03-05
+
+### Docs
+- Update project/README.md
+- Update project/context.md
+
+### Other
+- Update contracts/tests/test_contracts.py
+- Update frontend/test/reclapp-frontend.test.js
+- Update generator/test/generator.test.js
+- Update project.sh
+- Update project/analysis.toon
+- Update project/calls.mmd
+- Update project/calls.png
+- Update project/compact_flow.mmd
+- Update project/compact_flow.png
+- Update project/dashboard.html
+- ... and 11 more files
+
 ## [2.4.1] - 2026-02-01
 
 ### Summary

@@ -1,0 +1,445 @@
+# contract/flow | 412 func | 12 pipelines | 6 hub-types | 2026-03-05
+
+PIPELINES[12] (Analysis:2, Core:1, Export:1, IO:4, NLP:2, Unknown:2):
+  Reclapp-contracts [IO]: ? → str
+              → main()                                  CC=1    pure ▶
+              → cli(args:Optional[list[str]]) → int     CC=13   pure
+              → cmd_validate(args:argparse.Namespace) → int CC=7    IO
+              → parse_contract_markdown(content:str) → ContractMarkdown CC=1    pure
+              → _parse_entities_section(body:str) → list[MarkdownEntityDefinition] CC=5    mutation
+              → _parse_entity_content(name:str, content:str) → MarkdownEntityDefinition CC=6    IO
+              → _parse_yaml_fields(content:str) → list[EntityField] CC=10   mutation
+              → _parse_field_type(type_str:str) → str   CC=2    pure ■
+              PURITY: 4/8 pure  BOTTLENECK: cli(CC=13)
+
+  Reclapp-contracts [IO]: argparse.Namespace → str
+              → cmd_parse(args:argparse.Namespace) → int CC=4    IO ▶
+              → parse_contract_markdown(content:str) → ContractMarkdown CC=1    pure
+              → _parse_entities_section(body:str) → list[MarkdownEntityDefinition] CC=5    mutation
+              → _parse_entity_content(name:str, content:str) → MarkdownEntityDefinition CC=6    IO
+              → _parse_yaml_fields(content:str) → list[EntityField] CC=10   mutation
+              → _parse_field_type(type_str:str) → str   CC=2    pure ■
+              PURITY: 2/6 pure  BOTTLENECK: _parse_yaml_fields(CC=10)
+
+  Reclapp [Analysis]: Optional[Any] → ?
+              → generate_contract_from_code(llm_client:Optional[Any]) → Optional[dict] CC=15   IO  !! ▶
+              → get_full_state() → GitState             CC=1    pure
+              → detect_stack() → DetectedStack          CC=34   IO  !!
+              → list(directory:str, format:str, verbose:bool) CC=1    mutation
+              → _get_core_main()                        CC=6    mutation ■
+              PURITY: 1/5 pure  BOTTLENECK: detect_stack(CC=34)
+
+  Tools [Export]: ? → str
+              → run() → dict                            CC=8    IO ▶
+              → print_todo()                            CC=12   pure
+              → yaml(type_name:str, description:str, data:dict) CC=1    IO
+              → _format_yaml(data:dict, indent:int) → list[str] CC=8    mutation
+              → _format_value(value:Any) → str          CC=4    pure ■
+              PURITY: 2/5 pure  BOTTLENECK: print_todo(CC=12)
+
+  Reclapp [Analysis]: str → ?
+              → parse_file(file_path:str, content:str) → List[CodeChunk] CC=6    mutation ▶
+              → _parse_python(file_path:str, content:str, parent_id:str) → List[CodeChunk] CC=13   mutation
+              → _extract_local_dependencies(code:str) → List[str] CC=3    mutation
+              → list(directory:str, format:str, verbose:bool) CC=1    mutation
+              → _get_core_main()                        CC=6    mutation ■
+              PURITY: 0/5 pure  BOTTLENECK: _parse_python(CC=13)
+
+  Reclapp [Core]: str → Path
+              → llm_model_list(provider:str)            CC=1    pure ▶
+              → llm_config_list(provider:str)           CC=7    mutation
+              → _load_litellm_yaml() → dict             CC=8    IO
+              → _get_litellm_config_path() → Path       CC=1    pure ■
+              PURITY: 2/4 pure  BOTTLENECK: _load_litellm_yaml(CC=8)
+
+  Tools [Unknown]: ? → str
+              → main()                                  CC=4    pure ▶
+              → cmd_setup(config:SetupConfig)           CC=18   IO  !!
+              → print(message:object) → None            CC=2    pure
+              → _strip_rich_markup(text:str) → str      CC=1    pure ■
+              PURITY: 3/4 pure  BOTTLENECK: cmd_setup(CC=18)
+
+  Src [NLP]: ContractAI → str
+              → generate(contract:ContractAI) → GeneratedSDK CC=4    pure ▶
+              → _generate_client(contract:ContractAI) → str CC=3    mutation
+              → _generate_entity_client_methods(entity:EntityDefinition) → List[str] CC=1    mutation
+              → _pluralize(word:str) → str              CC=3    pure ■
+              PURITY: 2/4 pure  BOTTLENECK: generate(CC=4)
+
+  Src [IO]: str → ?
+              → evolve(prompt:str, output_dir:Optional[str]) → EvolutionResult CC=20   mutation  !! ▶
+              → _phase_additional(target_dir:str)       CC=1    pure
+              → _generate_docs(target_dir:str)          CC=4    IO
+              → _generate_api_docs(target_dir:str)      CC=3    IO ■
+              PURITY: 1/4 pure  BOTTLENECK: evolve(CC=20)
+
+  Src [NLP]: ContractAI → str
+              → generate(contract:ContractAI) → GeneratedSDK CC=4    pure ▶
+              → _generate_types(contract:ContractAI) → str CC=3    mutation
+              → _generate_entity_type(entity:EntityDefinition) → List[str] CC=7    mutation
+              → _format_field_comment(field:FieldDefinition) → str CC=7    mutation ■
+              PURITY: 1/4 pure  BOTTLENECK: _generate_entity_type(CC=7)
+
+  Src [IO]: str → str
+              → evolve(prompt:str, output_dir:Optional[str]) → EvolutionResult CC=20   mutation  !! ▶
+              → _phase_contract(prompt:str, target_dir:str) → Optional[dict] CC=5    IO
+              → _generate_contract(prompt:str) → Optional[dict] CC=5    pure
+              → _extract_app_name(prompt:str) → str     CC=2    pure ■
+              PURITY: 2/4 pure  BOTTLENECK: evolve(CC=20)
+
+  Reclapp [Unknown]: ? → str
+              → main()                                  CC=2    IO ▶
+              → print(message:object) → None            CC=2    pure
+              → _strip_rich_markup(text:str) → str      CC=1    pure ■
+              PURITY: 2/3 pure  BOTTLENECK: main(CC=2)
+
+
+TRANSFORMS (fan-out ≥10):
+  cmd_setup(config:SetupConfig)                           fan=32   !! mutation-heavy
+  llm_status()                                            fan=30   !! mutation-heavy
+  generate(contract:dict[str, Any], output_dir:Optional[str]) → CodeGenerationResult fan=29   !! side-effects
+  cmd_list(args:argparse.Namespace) → int                 fan=27   !! side-effects
+  _run_e2e_tests(target_dir:str) → tuple[int, int, str]   fan=26   !! side-effects
+  evolve(prompt:str, output_dir:Optional[str]) → EvolutionResult fan=24   !! side-effects
+  _phase_service(target_dir:str) → bool                   fan=22   !! side-effects
+  cmd_analyze(args:argparse.Namespace) → int              fan=22   !! side-effects
+  detect_stack() → DetectedStack                          fan=21   !! side-effects
+  run_task(task_id:str) → None                            fan=20   !! side-effects
+  cmd_generate(args:argparse.Namespace) → int             fan=19   fan=19
+  llm_priority_set_provider(provider:str, priority:int, preserve_order:bool, step:int) fan=18   fan=18
+  run() → Dict[str, Any]                                  fan=18   PIPELINE:CLIRunner.entry
+  cmd_refactor(args:argparse.Namespace) → int             fan=18   fan=18
+  generate(contract_path:str, output:str, verbose:bool, engine:str) fan=17   fan=17
+
+CONTRACTS:
+  Pipeline: Reclapp-contracts
+    main()
+      IN:  ()
+      OUT: None
+
+    cli(args:Optional[list[str]]) → int
+      IN:  args:Optional[list[str]]
+      OUT: int
+
+    cmd_validate(args:argparse.Namespace) → int
+      IN:  args:argparse.Namespace
+      OUT: int
+      SIDE-EFFECT: IO(read_text, dump, loads)
+      INVARIANT: raises on invalid input
+
+    parse_contract_markdown(content:str) → ContractMarkdown
+      IN:  content:str
+      OUT: ContractMarkdown
+
+    _parse_entities_section(body:str) → list[MarkdownEntityDefinition]
+      IN:  body:str
+      OUT: list[MarkdownEntityDefinition]
+      SIDE-EFFECT: pure
+
+    _parse_entity_content(name:str, content:str) → MarkdownEntityDefinition
+      IN:  name:str, content:str
+      OUT: MarkdownEntityDefinition
+      SIDE-EFFECT: IO(loads)
+
+    _parse_yaml_fields(content:str) → list[EntityField]
+      IN:  content:str
+      OUT: list[EntityField]
+      SIDE-EFFECT: pure
+
+    _parse_field_type(type_str:str) → str
+      IN:  type_str:str
+      OUT: str
+
+  Pipeline: Reclapp-contracts
+    cmd_parse(args:argparse.Namespace) → int
+      IN:  args:argparse.Namespace
+      OUT: int
+      SIDE-EFFECT: IO(read_text, dumps)
+
+    parse_contract_markdown(content:str) → ContractMarkdown
+      IN:  content:str
+      OUT: ContractMarkdown
+
+    _parse_entities_section(body:str) → list[MarkdownEntityDefinition]
+      IN:  body:str
+      OUT: list[MarkdownEntityDefinition]
+      SIDE-EFFECT: pure
+
+    _parse_entity_content(name:str, content:str) → MarkdownEntityDefinition
+      IN:  name:str, content:str
+      OUT: MarkdownEntityDefinition
+      SIDE-EFFECT: IO(loads)
+
+    _parse_yaml_fields(content:str) → list[EntityField]
+      IN:  content:str
+      OUT: list[EntityField]
+      SIDE-EFFECT: pure
+
+    _parse_field_type(type_str:str) → str
+      IN:  type_str:str
+      OUT: str
+
+  Pipeline: Reclapp
+    generate_contract_from_code(llm_client:Optional[Any]) → Optional[dict]
+      IN:  llm_client:Optional[Any]
+      OUT: Optional[dict]
+      SIDE-EFFECT: IO(loads, read_text)
+      SMELL: CC=15 → split
+
+    get_full_state() → GitState
+      IN:  ()
+      OUT: GitState
+
+    detect_stack() → DetectedStack
+      IN:  ()
+      OUT: DetectedStack
+      SIDE-EFFECT: IO(loads, read_text, read_text)
+      SMELL: CC=34 → split
+
+    list(directory:str, format:str, verbose:bool)
+      IN:  directory:str, format:str, verbose:bool
+      OUT: None
+      SIDE-EFFECT: pure
+
+    _get_core_main()
+      IN:  ()
+      OUT: None
+      SIDE-EFFECT: pure
+
+  Pipeline: Tools
+    run() → dict
+      IN:  ()
+      OUT: dict
+      SIDE-EFFECT: IO(print)
+
+    print_todo()
+      IN:  ()
+      OUT: None
+
+    yaml(type_name:str, description:str, data:dict)
+      IN:  type_name:str, description:str, data:dict
+      OUT: None
+      SIDE-EFFECT: IO(print, print)
+
+    _format_yaml(data:dict, indent:int) → list[str]
+      IN:  data:dict, indent:int
+      OUT: list[str]
+      SIDE-EFFECT: pure
+
+    _format_value(value:Any) → str
+      IN:  value:Any
+      OUT: str
+
+  Pipeline: Reclapp
+    parse_file(file_path:str, content:str) → List[CodeChunk]
+      IN:  file_path:str, content:str
+      OUT: List[CodeChunk]
+      SIDE-EFFECT: pure
+
+    _parse_python(file_path:str, content:str, parent_id:str) → List[CodeChunk]
+      IN:  file_path:str, content:str, parent_id:str
+      OUT: List[CodeChunk]
+      SIDE-EFFECT: pure
+
+    _extract_local_dependencies(code:str) → List[str]
+      IN:  code:str
+      OUT: List[str]
+      SIDE-EFFECT: pure
+
+    list(directory:str, format:str, verbose:bool)
+      IN:  directory:str, format:str, verbose:bool
+      OUT: None
+      SIDE-EFFECT: pure
+
+    _get_core_main()
+      IN:  ()
+      OUT: None
+      SIDE-EFFECT: pure
+
+  Pipeline: Reclapp
+    llm_model_list(provider:str)
+      IN:  provider:str
+      OUT: None
+
+    llm_config_list(provider:str)
+      IN:  provider:str
+      OUT: None
+      SIDE-EFFECT: pure
+
+    _load_litellm_yaml() → dict
+      IN:  ()
+      OUT: dict
+      SIDE-EFFECT: IO(open)
+
+    _get_litellm_config_path() → Path
+      IN:  ()
+      OUT: Path
+
+  Pipeline: Tools
+    main()
+      IN:  ()
+      OUT: None
+
+    cmd_setup(config:SetupConfig)
+      IN:  config:SetupConfig
+      OUT: None
+      SIDE-EFFECT: IO(mkdir, print, print); global(llm_providers, report)
+      SMELL: CC=18 → split
+
+    print(message:object) → None
+      IN:  message:object
+      OUT: None
+
+    _strip_rich_markup(text:str) → str
+      IN:  text:str
+      OUT: str
+
+  Pipeline: Src
+    generate(contract:ContractAI) → GeneratedSDK
+      IN:  contract:ContractAI
+      OUT: GeneratedSDK
+
+    _generate_client(contract:ContractAI) → str
+      IN:  contract:ContractAI
+      OUT: str
+      SIDE-EFFECT: pure
+
+    _generate_entity_client_methods(entity:EntityDefinition) → List[str]
+      IN:  entity:EntityDefinition
+      OUT: List[str]
+      SIDE-EFFECT: pure
+
+    _pluralize(word:str) → str
+      IN:  word:str
+      OUT: str
+
+  Pipeline: Src
+    evolve(prompt:str, output_dir:Optional[str]) → EvolutionResult
+      IN:  prompt:str, output_dir:Optional[str]
+      OUT: EvolutionResult
+      SIDE-EFFECT: mutates self._contract
+      SMELL: CC=20 → split
+
+    _phase_additional(target_dir:str)
+      IN:  target_dir:str
+      OUT: None
+
+    _generate_docs(target_dir:str)
+      IN:  target_dir:str
+      OUT: None
+      SIDE-EFFECT: IO(write_text)
+
+    _generate_api_docs(target_dir:str)
+      IN:  target_dir:str
+      OUT: None
+      SIDE-EFFECT: IO(write_text)
+
+  Pipeline: Src
+    generate(contract:ContractAI) → GeneratedSDK
+      IN:  contract:ContractAI
+      OUT: GeneratedSDK
+
+    _generate_types(contract:ContractAI) → str
+      IN:  contract:ContractAI
+      OUT: str
+      SIDE-EFFECT: pure
+
+    _generate_entity_type(entity:EntityDefinition) → List[str]
+      IN:  entity:EntityDefinition
+      OUT: List[str]
+      SIDE-EFFECT: pure
+
+    _format_field_comment(field:FieldDefinition) → str
+      IN:  field:FieldDefinition
+      OUT: str
+      SIDE-EFFECT: pure
+
+  Pipeline: Src
+    evolve(prompt:str, output_dir:Optional[str]) → EvolutionResult
+      IN:  prompt:str, output_dir:Optional[str]
+      OUT: EvolutionResult
+      SIDE-EFFECT: mutates self._contract
+      SMELL: CC=20 → split
+
+    _phase_contract(prompt:str, target_dir:str) → Optional[dict]
+      IN:  prompt:str, target_dir:str
+      OUT: Optional[dict]
+      SIDE-EFFECT: IO(mkdir, write_text, dumps)
+
+    _generate_contract(prompt:str) → Optional[dict]
+      IN:  prompt:str
+      OUT: Optional[dict]
+
+    _extract_app_name(prompt:str) → str
+      IN:  prompt:str
+      OUT: str
+
+  Pipeline: Reclapp
+    main()
+      IN:  ()
+      OUT: None
+      SIDE-EFFECT: IO(mkdir, print, print)
+
+    print(message:object) → None
+      IN:  message:object
+      OUT: None
+
+    _strip_rich_markup(text:str) → str
+      IN:  text:str
+      OUT: str
+
+
+DATA_TYPES (by cross-function usage) [371 annotated, 0 inferred / 412 functions]:
+  str                  consumed:231 produced:59   !! HUB-TYPE → split interface
+  bool                 consumed:38  produced:24   !! HUB-TYPE → split interface
+  int                  consumed:27  produced:16   !! HUB-TYPE → split interface
+  dict                 consumed:23  produced:12   !! HUB-TYPE → split interface
+  GenerateOptions      consumed:12  produced:2    !! HUB-TYPE → split interface
+  argparse.Namespace   consumed:13  produced:0    !! HUB-TYPE → split interface
+  CodeChunk            consumed:2   produced:9  
+  LLMResponse          consumed:0   produced:11   output-heavy
+  list[LLMModelInfo]   consumed:1   produced:10   output-heavy
+  ValidationStage      consumed:2   produced:8  
+  list[str]            consumed:2   produced:8  
+  ContractAI           consumed:7   produced:1    input-heavy (read-only flow)
+  LLMProvider          consumed:3   produced:2  
+  str, Any             consumed:2   produced:3  
+  EntityDefinition     consumed:5   produced:0    input-heavy (read-only flow)
+  Path                 consumed:3   produced:1    narrow scope
+  dict[str, Any]       consumed:4   produced:0    narrow scope
+  object               consumed:3   produced:0    narrow scope
+  MultiLevelState      consumed:2   produced:1    narrow scope
+  FieldDefinition      consumed:3   produced:0    narrow scope
+
+  HUB TYPES (consumed ≥10):
+    str → 231 consumers → split into:
+      - (analyze consumers to suggest sub-interfaces)
+    bool → 38 consumers → split into:
+      - (analyze consumers to suggest sub-interfaces)
+    int → 27 consumers → split into:
+      - (analyze consumers to suggest sub-interfaces)
+    dict → 23 consumers → split into:
+      - replace with typed alternatives (dataclass/TypedDict)
+    GenerateOptions → 12 consumers → split into:
+      - (analyze consumers to suggest sub-interfaces)
+    argparse.Namespace → 13 consumers → split into:
+      - (analyze consumers to suggest sub-interfaces)
+
+SIDE_EFFECTS:
+  IO:        main, generate_json_schemas, main, llm_status, llm_set_provider, llm_set_model, llm_key_set, llm_key_unset, llm_config, _load_litellm_yaml
+  Mutation:  _collect_models, lifecycle, generate, _get_core_main, list, prompts, analyze, refactor, parse, validate
+  Pure:      _is_running_pytest, generate_json_schema, _load_module_from_path, _schema_filename, _strip_rich_markup, _Console.print, Panel.fit, find_node, find_npm, setup_node_env
+
+  PIPELINE PURITY:
+    Reclapp-contracts ██░░ 50% pure
+    Reclapp-contracts █░░░ 33% pure
+    Reclapp         ░░░░ 20% pure
+    Tools           █░░░ 40% pure
+    Reclapp         ░░░░ 0% pure
+    Reclapp         ██░░ 50% pure
+    Tools           ███░ 75% pure
+    Src             ██░░ 50% pure
+    Src             █░░░ 25% pure
+    Src             █░░░ 25% pure
+    Src             ██░░ 50% pure
+    Reclapp         ██░░ 66% pure

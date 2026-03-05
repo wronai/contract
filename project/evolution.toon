@@ -1,0 +1,58 @@
+# code2llm/evolution | 412 func | 34f | 2026-03-05
+
+NEXT[10] (ranked by impact):
+  [1] !! SPLIT           src/python/reclapp/evolution/evolution_manager.py
+      WHY: 1563L, 3 classes, max CC=25
+      EFFORT: ~4h  IMPACT: 39075
+
+  [2] !! SPLIT           src/python/reclapp/cli/main.py
+      WHY: 1122L, 0 classes, max CC=21
+      EFFORT: ~4h  IMPACT: 23562
+
+  [3] !! SPLIT           reclapp/cli.py
+      WHY: 1247L, 2 classes, max CC=13
+      EFFORT: ~4h  IMPACT: 16211
+
+  [4] !! SPLIT-FUNC      GitAnalyzer.detect_stack  CC=34  fan=21
+      WHY: CC=34 exceeds 15
+      EFFORT: ~1h  IMPACT: 714
+
+  [5] !! SPLIT-FUNC      EvolutionManager._run_e2e_tests  CC=25  fan=26
+      WHY: CC=25 exceeds 15
+      EFFORT: ~1h  IMPACT: 650
+
+  [6] !  SPLIT-FUNC      cmd_setup  CC=18  fan=32
+      WHY: CC=18 exceeds 15
+      EFFORT: ~1h  IMPACT: 576
+
+  [7] !  SPLIT-FUNC      cmd_list  CC=21  fan=27
+      WHY: CC=21 exceeds 15
+      EFFORT: ~1h  IMPACT: 567
+
+  [8] !  SPLIT-FUNC      CodeGenerator.generate  CC=18  fan=29
+      WHY: CC=18 exceeds 15
+      EFFORT: ~1h  IMPACT: 522
+
+  [9] !  SPLIT-FUNC      EvolutionManager.evolve  CC=20  fan=24
+      WHY: CC=20 exceeds 15
+      EFFORT: ~1h  IMPACT: 480
+
+  [10] !  SPLIT-FUNC      EvolutionManager._phase_service  CC=20  fan=22
+      WHY: CC=20 exceeds 15
+      EFFORT: ~1h  IMPACT: 440
+
+
+RISKS[3]:
+  ⚠ Splitting src/python/reclapp/evolution/evolution_manager.py may break 35 import paths
+  ⚠ Splitting reclapp/cli.py may break 50 import paths
+  ⚠ Splitting src/python/reclapp/cli/main.py may break 19 import paths
+
+METRICS-TARGET:
+  CC̄:          4.2 → ≤2.9
+  max-CC:      34 → ≤17
+  god-modules: 12 → 0
+  high-CC(≥15): 15 → ≤7
+  hub-types:   0 → ≤0
+
+HISTORY:
+  prev CC̄=4.2 → now CC̄=4.2

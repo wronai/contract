@@ -1,0 +1,1375 @@
+# contract | 277f 87358L | javascript:11/typescript:188/python:78
+# Keys: M=modules, D=details, i=imports, c=classes, f=functions, m=methods
+M[277]:
+  .eslintrc.cjs,38
+  api/src/server.ts,437
+  apps/booking-system/contracts/main.reclapp.ts,77
+  apps/inventory-system/contracts/main.reclapp.ts,94
+  apps/my-app/contracts/main.reclapp.ts,45
+  archive/typescript-setup/cmdSetup.js,119
+  bin/commands/evolution.js,810
+  bin/reclapp,1388
+  bin/reclapp-chat,303
+  contracts/dsl-loader.ts,674
+  contracts/dsl-types.ts,565
+  contracts/examples/risk-monitoring-agent.ts,458
+  contracts/executor.ts,727
+  contracts/generate_json.py,69
+  contracts/index.ts,75
+  contracts/summary.py,14
+  contracts/types.ts,451
+  contracts/user.py,39
+  contracts/validator.ts,577
+  core/ai-contract/index.ts,527
+  core/causal/verification-loop.ts,519
+  core/cqrs/index.ts,300
+  core/eventstore/index.ts,266
+  core/mcp/index.ts,558
+  core/ontology/types.ts,273
+  core/planner/index.ts,474
+  core/verification/index.ts,593
+  dsl/ast/types.ts,385
+  dsl/parser/index.ts,146
+  dsl/parser/markdown.ts,574
+  dsl/parser/mini.ts,360
+  dsl/validator/index.ts,382
+  dsl/writer/markdown.ts,422
+  examples/b2b-onboarding/contracts/onboarding.reclapp.ts,178
+  examples/b2b-risk-monitoring/contracts/risk-agent.ts,469
+  examples/contract-ai/blog-contract.ts,208
+  examples/contract-ai/crm-contract.ts,340
+  examples/contract-ai/ecommerce-contract.ts,301
+  examples/contract-ai/task-manager-contract.ts,264
+  examples/crm/contracts/crm-typescript-validation.reclapp.ts,436
+  examples/desktop-electron/contracts/investment.reclapp.ts,473
+  examples/e-commerce/contracts/main.reclapp.ts,252
+  examples/full-lifecycle/01-simple-notes.ts,51
+  examples/full-lifecycle/02-todo-app.ts,61
+  examples/full-lifecycle/03-inventory.ts,59
+  examples/full-lifecycle/04-booking.ts,63
+  examples/full-lifecycle/05-hr-system.ts,62
+  examples/full-lifecycle/06-blog-platform.ts,60
+  examples/full-lifecycle/07-invoice-system.ts,61
+  examples/full-lifecycle/08-support-tickets.ts,61
+  examples/full-lifecycle/09-event-management.ts,64
+  examples/full-lifecycle/10-project-tracker.ts,63
+  examples/iot-monitoring/contracts/iot-agent.ts,419
+  examples/monitoring/contracts/contractor-monitoring.reclapp.ts,207
+  examples/multi-agent/contracts/orchestrator-agent.ts,364
+  examples/reporting/contracts/analytics.reclapp.ts,215
+  examples/saas-starter/contracts/main.reclapp.ts,426
+  examples/web-dashboard/contracts/analytics.reclapp.ts,253
+  frontend-sdk/types.ts,44
+  frontend-sdk/types/entities.ts,95
+  frontend-sdk/types/index.ts,6
+  frontend-sdk/types/llm.ts,32
+  frontend/src/main.tsx,597
+  generator/cli.ts,732
+  generator/core/contract-generator.ts,1341
+  generator/core/generator.ts,1672
+  generator/core/simple-generator.ts,276
+  generator/index.ts,27
+  generator/shared/type-mappers.ts,130
+  generator/targets/api.ts,6
+  generator/targets/cicd.ts,6
+  generator/targets/database.ts,6
+  generator/targets/docker.ts,6
+  generator/targets/frontend.ts,6
+  generator/targets/kubernetes.ts,6
+  generator/templates/api.ts,494
+  generator/templates/database.ts,45
+  generator/templates/docker.ts,106
+  generator/templates/frontend.ts,189
+  generator/templates/index.ts,39
+  generator/utils/index.ts,26
+  jest.config.js,78
+  lib/chat-core.js,468
+  lib/rcl-utils.js,216
+  modules/data-provider/index.ts,235
+  modules/mock/index.ts,365
+  reclapp-contracts/reclapp_contracts/__init__.py,36
+  reclapp-contracts/reclapp_contracts/models/__init__.py,96
+  reclapp-contracts/reclapp_contracts/models/contract.py,145
+  reclapp-contracts/reclapp_contracts/models/definition.py,244
+  reclapp-contracts/reclapp_contracts/models/generation.py,132
+  reclapp-contracts/reclapp_contracts/models/validation.py,142
+  reclapp-contracts/reclapp_contracts/parser/__init__.py,19
+  reclapp-contracts/reclapp_contracts/parser/markdown_parser.py,498
+  reclapp-contracts/reclapp_contracts/validation/__init__.py,70
+  reclapp-contracts/reclapp_contracts/validation/pipeline.py,188
+  reclapp-contracts/reclapp_contracts/validation/stages.py,340
+  reclapp-llm/reclapp_llm/__init__.py,45
+  reclapp-llm/reclapp_llm/anthropic.py,90
+  reclapp-llm/reclapp_llm/groq.py,103
+  reclapp-llm/reclapp_llm/litellm.py,85
+  reclapp-llm/reclapp_llm/manager.py,371
+  reclapp-llm/reclapp_llm/ollama.py,150
+  reclapp-llm/reclapp_llm/openai.py,103
+  reclapp-llm/reclapp_llm/openrouter.py,89
+  reclapp-llm/reclapp_llm/provider.py,82
+  reclapp-llm/reclapp_llm/together.py,101
+  reclapp-llm/reclapp_llm/windsurf.py,151
+  reclapp/__init__.py,22
+  reclapp/cli.py,972
+  scripts/generate_schemas.py,35
+  sitecustomize.py,22
+  src/cli/commands/generate-ai.ts,222
+  src/cli/index.ts,8
+  src/core/contract-ai/analysis/code-analyzer.ts,999
+  src/core/contract-ai/analysis/index.ts,26
+  src/core/contract-ai/analysis/project-state.ts,352
+  src/core/contract-ai/analysis/refactoring-contract.ts,429
+  src/core/contract-ai/cli/cli-runner.ts,289
+  src/core/contract-ai/cli/index.ts,8
+  src/core/contract-ai/code-generator/index.ts,9
+  src/core/contract-ai/code-generator/llm-generator.ts,509
+  src/core/contract-ai/code-generator/prompt-templates/api.ts,202
+  src/core/contract-ai/code-generator/prompt-templates/frontend.ts,247
+  src/core/contract-ai/code-generator/prompt-templates/index.ts,8
+  src/core/contract-ai/code-generator/prompt-templates/tests.ts,75
+  src/core/contract-ai/converter/index.ts,5
+  src/core/contract-ai/converter/to-contract-ai.ts,175
+  src/core/contract-ai/evolution/code-rag.ts,712
+  src/core/contract-ai/evolution/contract-extractor.ts,376
+  src/core/contract-ai/evolution/doc-generator.ts,207
+  src/core/contract-ai/evolution/evolution-manager.ts,3506
+  src/core/contract-ai/evolution/fallback-templates.ts,348
+  src/core/contract-ai/evolution/git-analyzer.ts,262
+  src/core/contract-ai/evolution/index.ts,21
+  src/core/contract-ai/evolution/llm-orchestrator.ts,254
+  src/core/contract-ai/evolution/llm-prompts.ts,151
+  src/core/contract-ai/evolution/service-manager.ts,216
+  src/core/contract-ai/evolution/shell-renderer.ts,407
+  src/core/contract-ai/evolution/state-analyzer.ts,384
+  src/core/contract-ai/evolution/task-executor.ts,302
+  src/core/contract-ai/evolution/task-handlers.ts,246
+  src/core/contract-ai/evolution/task-queue.ts,139
+  src/core/contract-ai/evolution/test-generator.ts,249
+  src/core/contract-ai/feedback/code-corrector.ts,281
+  src/core/contract-ai/feedback/feedback-generator.ts,248
+  src/core/contract-ai/feedback/generation-log.ts,332
+  src/core/contract-ai/feedback/index.ts,11
+  src/core/contract-ai/feedback/iteration-manager.ts,191
+  src/core/contract-ai/generator/contract-generator.ts,379
+  src/core/contract-ai/generator/contract-validator.ts,481
+  src/core/contract-ai/generator/index.ts,10
+  src/core/contract-ai/generator/prompt-builder.ts,186
+  src/core/contract-ai/index.ts,44
+  src/core/contract-ai/llm/context-generator.ts,414
+  src/core/contract-ai/llm/index.ts,17
+  src/core/contract-ai/llm/llm-config.ts,209
+  src/core/contract-ai/llm/llm-manager.ts,270
+  src/core/contract-ai/llm/llm-provider.ts,379
+  src/core/contract-ai/llm/ollama-client.ts,199
+  src/core/contract-ai/llm/parallel-executor.ts,542
+  src/core/contract-ai/llm/pydantic-validator.ts,361
+  src/core/contract-ai/parser/index.ts,13
+  src/core/contract-ai/parser/markdown-parser.ts,310
+  src/core/contract-ai/sdk/index.ts,11
+  src/core/contract-ai/sdk/sdk-generator.ts,551
+  src/core/contract-ai/setup/dependency-checker.ts,530
+  src/core/contract-ai/setup/index.ts,8
+  src/core/contract-ai/templates/api/server.template.ts,50
+  src/core/contract-ai/templates/contracts/index.ts,61
+  src/core/contract-ai/templates/frontend/react-app.template.ts,176
+  src/core/contract-ai/templates/index.ts,226
+  src/core/contract-ai/templates/tests/e2e-native.template.ts,107
+  src/core/contract-ai/types/contract-markdown.ts,171
+  src/core/contract-ai/types/definition.ts,379
+  src/core/contract-ai/types/generation.ts,277
+  src/core/contract-ai/types/index.ts,313
+  src/core/contract-ai/types/validation.ts,367
+  src/core/contract-ai/validation/index.ts,47
+  src/core/contract-ai/validation/pipeline-orchestrator.ts,212
+  src/core/contract-ai/validation/stages/assertion-validator.ts,253
+  src/core/contract-ai/validation/stages/index.ts,13
+  src/core/contract-ai/validation/stages/quality-checker.ts,189
+  src/core/contract-ai/validation/stages/runtime-validator.ts,335
+  src/core/contract-ai/validation/stages/schema-validator.ts,91
+  src/core/contract-ai/validation/stages/security-scanner.ts,240
+  src/core/contract-ai/validation/stages/static-analyzer.ts,160
+  src/core/contract-ai/validation/stages/syntax-validator.ts,199
+  src/core/contract-ai/validation/stages/test-runner.ts,300
+  src/core/index.ts,8
+  src/index.ts,8
+  src/python/reclapp/__init__.py,68
+  src/python/reclapp/analysis/__init__.py,32
+  src/python/reclapp/analysis/code_rag.py,599
+  src/python/reclapp/analysis/git_analyzer.py,335
+  src/python/reclapp/cli/__init__.py,8
+  src/python/reclapp/cli/__main__.py,8
+  src/python/reclapp/cli/executor.py,161
+  src/python/reclapp/cli/main.py,914
+  src/python/reclapp/cli/runner.py,206
+  src/python/reclapp/evolution/__init__.py,32
+  src/python/reclapp/evolution/evolution_manager.py,1216
+  src/python/reclapp/evolution/generators.py,485
+  src/python/reclapp/evolution/shell_renderer.py,263
+  src/python/reclapp/evolution/state_analyzer.py,249
+  src/python/reclapp/evolution/task_queue.py,163
+  src/python/reclapp/generator/__init__.py,34
+  src/python/reclapp/generator/base.py,56
+  src/python/reclapp/generator/code_generator.py,569
+  src/python/reclapp/generator/contract_generator.py,267
+  src/python/reclapp/generator/prompt_builder.py,114
+  src/python/reclapp/llm/__init__.py,61
+  src/python/reclapp/llm/manager.py,2
+  src/python/reclapp/llm/provider.py,2
+  src/python/reclapp/llm/windsurf.py,2
+  src/python/reclapp/models/__init__.py,91
+  src/python/reclapp/parser/__init__.py,20
+  src/python/reclapp/parser/markdown_parser.py,9
+  src/python/reclapp/sdk/__init__.py,14
+  src/python/reclapp/sdk/sdk_generator.py,497
+  src/python/reclapp/testing/__init__.py,28
+  src/python/reclapp/testing/api_tester.py,174
+  src/python/reclapp/testing/e2e_generator.py,408
+  src/python/reclapp/validation/__init__.py,50
+  src/python/reclapp/validation/pipeline.py,2
+  src/types/js-yaml.d.ts,4
+  studio/chat-shell.js,165
+  studio/projects/test-autogen/contracts/main.reclapp.ts,14
+  studio/server.js,746
+  tests/e2e/causal-loop.test.ts,415
+  tests/e2e/cli.test.ts,139
+  tests/e2e/contract-ai-cli.test.ts,165
+  tests/e2e/contracts.test.ts,590
+  tests/e2e/mcp-protocol.test.ts,562
+  tests/e2e/onboarding.test.ts,159
+  tests/e2e/setup.ts,220
+  tests/e2e/shell-interaction.test.ts,145
+  tests/e2e/studio.test.ts,311
+  tests/integration/contract-ai-flow.test.ts,188
+  tests/integration/markdown-ai-plan.test.ts,44
+  tests/integration/mvp-workflow.test.ts,207
+  tests/integration/setup.ts,2
+  tests/python/test_cli.py,184
+  tests/python/test_click_wrapper_separation.py,96
+  tests/python/test_clickmd_output.py,58
+  tests/python/test_evolution.py,258
+  tests/python/test_generator.py,336
+  tests/python/test_integration.py,303
+  tests/python/test_llm.py,309
+  tests/python/test_models.py,499
+  tests/python/test_parser.py,365
+  tests/python/test_reverse_integrity.py,78
+  tests/python/test_shell_interaction.py,335
+  tests/python/test_validation.py,316
+  tests/python/test_windsurf_client.py,41
+  tests/setup.test.js,216
+  tests/setup.ts,45
+  tests/unit/ai-contract.test.ts,292
+  tests/unit/contract-ai.test.ts,262
+  tests/unit/contract-generator.test.ts,63
+  tests/unit/contract-minimal.test.ts,165
+  tests/unit/core-generator.test.ts,171
+  tests/unit/eventstore.test.ts,210
+  tests/unit/fallback-templates.test.ts,44
+  tests/unit/markdown-parser.test.ts,78
+  tests/unit/mini-parser.test.ts,446
+  tests/unit/parser.test.ts,112
+  tests/unit/pydantic-schema-validation.test.ts,19
+  tests/unit/schema-feedback.test.ts,52
+  tests/unit/schema-stage.test.ts,28
+  tests/unit/simple-generator.test.ts,147
+  tests/unit/stage-contracts.test.ts,20
+  tests/unit/validator.test.ts,251
+  tests/unit/verification.test.ts,251
+  tools/env-configurator/server.ts,436
+  tools/reclapp-setup/setup.py,578
+  tools/reclapp-setup/test_setup.py,281
+D:
+  api/src/server.ts:
+    i: express,cors,ws,http,path,../..{/core/cqrs,/core/eventstore,/core/planner,/dsl/parser,/dsl/validator}
+    e: AppState,seedData,initializeState,createServer,setupWebSocket,storeSeedData
+    createServer(port: number)->{ app: express.Application; start: () => void }
+    initializeState()->AppState
+    setupWebSocket(wss: WebSocketServer;state: AppState)->void
+    seedData(state: AppState;options?)->Promise<void>
+    storeSeedData(state: AppState;seedData: { customers: Customer[]; contractors: Contractor[]; riskEvents: RiskEvent[] })->Promise<void>
+  archive/typescript-setup/cmdSetup.js:
+    e: cmdSetup
+    cmdSetup(args;options)
+    askUser(question)
+  bin/commands/evolution.js:
+    i: path,fs
+    e: cmdEvolution
+    cmdEvolution(args;options)
+  bin/reclapp:
+    i: path,fs,./commands/evolution
+    e: loadEnvFromFile,cmdGenerate,cmdDev,cmdConvert,cmdTasks,loadContract,cmdGenerateAI,generateTypeScriptContract
+    loadEnvFromFile()
+    loadContract(contractPath)
+    cmdGenerate(contractPath;options)
+    startDocker(outputDir)
+    cmdDev(contractPath;options)
+    cmdRun(contractPath;options)
+    cmdTest(contractPath;options)
+    cmdDeploy(contractPath;options)
+  bin/reclapp-chat:
+    i: readline,fs,path,../lib/chat-core
+    e: color,main
+    color(c;text)
+    main()
+  contracts/dsl-loader.ts:
+    i: fs,path,./dsl-types
+    e: parseYaml,main,LoadResult,LoadOptions,loadContract,detectFormat,convertToTypeScript,autoFixContract
+    Logger: constructor(1),shouldLog(1),debug(1),info(1),warn(1)
+    ReclappParser: constructor(2),parse(0),parseSection(0),parseKeyword(0),parseBlock(0)
+    detectFormat(filePath: string)->ContractFormat
+    parseYaml(source: string)->Partial<ReclappContract>
+    loadContract(filePath: string;options: LoadOptions)->Promise<LoadResult>
+    autoFixContract(contract: Partial<ReclappContract>;errors: ValidationError[];logger: Logger)->string[]
+    convertToTypeScript(contract: ReclappContract)->ConversionResult
+    main(args: string[])
+  contracts/dsl-types.ts:
+    e: NavigationItem,CorsConfig,SearchConfig,FieldType,validateContract,Dashboard,DatabaseConfig,DashboardWidget
+    defineApp(name: string;version: string)->AppMetadata
+    defineEntity(name: string;fields: EntityField[])->Entity
+    defineEvent(name: string;fields: EntityField[])->Event
+    definePipeline(config: Pipeline)->Pipeline
+    defineAlert(config: Alert)->Alert
+    defineDashboard(config: Dashboard)->Dashboard
+    defineWorkflow(config: Workflow)->Workflow
+    defineApi(config: ApiConfig)->ApiConfig
+  contracts/executor.ts:
+    i: .{/types,/validator}
+    e: AppliedIntervention,ExecutionContext,Anomaly,ModelAdjustment,PredictionComparison,ActionResponse,createExecutor,ExecutionMetrics
+    ContractExecutor: constructor(1),execute(1),executeStep(1),retryStep(2),requestAction(1)
+    RateLimiter: constructor(1),allow(0)
+    createExecutor(contract: AgentContract)->ContractExecutor
+  contracts/generate_json.py:
+    i: inspect,json,sys,importlib.util,pathlib.Path,typing.{Any,Dict,List,Tuple,Type}
+    e: generate_json_schemas,main
+    _load_module_from_path(path:Path)->Any
+    _collect_models(module:Any)->List[Type[BaseModel]]
+    _schema_filename(model:Type[BaseModel])->str
+    generate_json_schemas(base_dir:Path;out_dir:Path)->List[Tuple[Type[BaseModel], Path]]
+    main()->None
+  contracts/summary.py:
+    i: pydantic.{BaseModel,Field}
+    e: Summary
+    Summary:   # Represents an aggregated system summary.
+  contracts/types.ts:
+    e: VerificationThresholds,Intervention,NegotiationProtocol,AgentContractBuilder,Permission,Field,WorkflowStep,FieldType
+    AgentContractBuilder: constructor(2),description(1),author(1),addEntity(1),workflow(1)
+    createEntity(config: {   name: string;   description?: string;   fields: Field[];   causalInfluences?: CausalInfluence[];   interventions?: Intervention[]; })->Entity
+    createWorkflow(config: {   name: string;   steps: WorkflowStep[];   safety?: Partial<SafetyRails>;   schedule?: string; })->Workflow
+    createVerification(config: {   metrics: VerificationMetric[];   thresholds?: Partial<VerificationThresholds>;   learningConfig?: Partial<LearningConfig>; })->Verification
+    defineContract(name: string;version?)->AgentContractBuilder
+  contracts/user.py:
+    i: datetime,pydantic.{BaseModel,EmailStr,Field},typing.Optional,uuid.UUID
+    e: User
+    User:   # Represents a user record.
+  contracts/validator.ts:
+    i: ./types
+    e: ValidationResult,Issue,addIssue,SafeParseResult,validateContract,fail,Schema,FieldSchema
+    isRecord(value: unknown)
+    fail(issues: Issue[])->SafeParseResult<T>
+    ok(data: T)->SafeParseResult<T>
+    addIssue(issues: Issue[];path: (string | number)[];message: string;code: string)->void
+    asNumber(value: unknown)->number | undefined
+    asString(value: unknown)->string | undefined
+    asBoolean(value: unknown)->boolean | undefined
+    validateContract(contract: unknown)->ValidationResult
+  core/ai-contract/index.ts:
+    e: NegotiationProtocol,ContractLimits,Permission,AIAction,ClarificationQuestion,AuditRequirement,ApprovalRequest,createContractEnforcer
+    AIContractEnforcer: constructor(1),evaluateAction(1),isProhibited(1),requiresApproval(1),isAllowedAutonomously(1)
+    createContractEnforcer(contract?)->AIContractEnforcer
+  core/causal/verification-loop.ts:
+    i: ../ontology/types
+    e: ModelAdjustment,PredictedEffect,FeedbackEntry,CausalLoopConfig,createCausalVerificationLoop,HumanCausalFeedback,CausalCorrection,EffectResult
+    CausalVerificationLoop: constructor(2),predict(1),calculateExpectedEffects(1),propagateEffects(2),observe(4)
+    createCausalVerificationLoop(model: CausalModel;config?)->CausalVerificationLoop
+  core/cqrs/index.ts:
+    i: ../eventstore
+    e: ProjectionEngine,CommandHandler,QueryHandler,CommandBus,CommandContext,QueryResult,CQRSContainer,QueryContext
+    CommandBus: constructor(1),register(2),dispatch(1),loadAggregate(1)
+    QueryBus: constructor(1),register(2),execute(1)
+    ReadModelRegistry: register(1),get(1),getAll(0)
+    InMemoryReadModel: constructor(1),get(1),getAll(1),query(1),set(2)
+    ProjectionEngine: constructor(1),register(1),start(1),stop(1),createProjectionState(1)
+  core/eventstore/index.ts:
+    i: events
+    e: createEventStore,SubscriptionOptions,IEventStore,EventStoreDBClient,AppendResult,ReadResult,EventMetadata,EventHandler
+    InMemoryEventStore: append(3),read(3),readAll(2),subscribe(3),getLatestVersion(1)
+    EventStoreDBClient: constructor(1),append(3),read(3),readAll(2),subscribe(3)
+    createEventStore(config: { type: 'memory' | 'eventstoredb'; connectionString?: string })->IEventStore
+  core/mcp/index.ts:
+    e: MCPTool,MCPServerConfig,MCPToolDefinition,createMCPServer,MCPPromptDefinition,MCPResource,MCPError,MCPResourceHandler
+    ReclappMCPServer: constructor(0),registerBuiltinResources(0),registerResource(1),registerBuiltinTools(0),registerTool(1)
+    createMCPServer()->ReclappMCPServer
+  core/planner/index.ts:
+    i: ../../dsl/ast/types
+    e: ExecutionEdge,ExecutionContext,ExecutionNode,NodeType,createExecutor,ExecutionResult,NodeExecutor,ExecutionPlan
+    ExecutionPlanner: buildGraph(1),createPlan(1),processEntity(3),processPipeline(4),processAlert(3)
+    GraphExecutor: registerHandler(2),execute(1),executeStage(3),executeNode(3)
+    createPlanner()->ExecutionPlanner
+    createExecutor()->GraphExecutor
+  core/verification/index.ts:
+    i: ..{/eventstore,/planner}
+    e: StateConsistencyDetector,AnomalyType,AnomalyDetector,ValueRangeDetector,HumanFeedback,TimingAnomalyDetector,Adjustment,Recommendation
+    VerificationEngine: constructor(0),initializeDetectors(0),verify(3),calculateIntentMatch(2),checkOutcomes(2)
+    ValueRangeDetector: detect(3)
+    MissingDataDetector: detect(3)
+    StateConsistencyDetector: detect(3)
+    TimingAnomalyDetector: detect(3)
+    createVerificationEngine()->VerificationEngine
+  dsl/parser/index.ts:
+    i: peggy,fs,path,../ast/types
+    e: getSuggestions,formatPeggyError,getParser,parseFile,validateSyntax,formatAST,parse
+    getParser()->peggy.Parser
+    parse(source: string)->ParseResult
+    parseFile(filePath: string)->ParseResult
+    formatPeggyError(error: any)->ParseError
+    getSuggestions(source: string;position: number)->string[]
+    formatAST(ast: Program)->string
+    validateSyntax(source: string)->{ valid: boolean; errors: string[] }
+  dsl/parser/markdown.ts:
+    i: fs
+    e: Message,AlertDef,AppInfo,parseMarkdownFile,parseMarkdownContract,EnvVar,ApiConfig,MarkdownParser
+    MarkdownParser: constructor(1),parse(0),createEmptyIR(0),parseHeader(0),parseYamlBlocks(1)
+    parseMarkdownContract(content: string)->ParseResult
+    parseMarkdownFile(filePath: string)->ParseResult
+    irToContract(ir: IR)->any
+    mapFieldType(typeStr: string)->string
+  dsl/parser/mini.ts:
+    i: peggy,fs,path
+    e: parseMiniFile,parseMini,formatValue,formatFieldType,resolveFieldType,miniToIR,formatArrayOrValue,transformWorkflow
+    getMiniParser()->peggy.Parser
+    parseMini(source: string)->MiniParseResult
+    parseMiniFile(filePath: string)->MiniParseResult
+    miniToIR(ast: any)->any
+    transformEntity(entity: any)->any
+    resolveFieldType(type: any)->string
+    capitalizeType(type: string)->string
+    transformWorkflow(workflow: any)->any
+  dsl/validator/index.ts:
+    i: ../ast/types
+    e: validate,buildSemanticModel,Validator
+    Validator: validate(1),buildSemanticModel(1),collectDeclarations(1),registerEntity(1),registerEvent(1)
+    validate(ast: Program)->ValidationResult
+    buildSemanticModel(ast: Program)->SemanticModel
+  dsl/writer/markdown.ts:
+    i: ../parser/markdown
+    e: writeMarkdownContract,humanizeTitle,contractToIR,WriteOptions,mapTypeToRcl
+    writeMarkdownContract(ir: IR;conversation: Message[];options: WriteOptions)->string
+    contractToIR(contract: any)->IR
+    mapTypeToRcl(type: string;fieldName?)->string
+    humanizeTitle(name: string)->string
+  frontend/src/main.tsx:
+    i: react,react-dom/client
+    e: StatCard,DashboardSummary,handleParse,fetchSummary,fetchRiskEvents,RiskEvent,handleValidate,handlePlan
+    fetchSummary()->Promise<DashboardSummary>
+    fetchCustomers()->Promise<Customer[]>
+    fetchRiskEvents()->Promise<RiskEvent[]>
+    StatCard()
+    getTabFromURL()
+    handleTabChange(tab: string)
+    handleParse()
+    handleValidate()
+  generator/cli.ts:
+    i: fs,path,./core/generator
+    e: generateTemplateContract,printHelp,cmdListTemplates,cmdInit,ParsedArgs,parseContract,printHeader,cmdGenerate
+    color(text: string;c: keyof typeof colors)->string
+    printHeader()->void
+    printHelp()->void
+    parseArgs(args: string[])->ParsedArgs
+    parseContract(content: string)->any
+    cmdGenerate(file: string;options: ParsedArgs['options'])->Promise<void>
+    cmdValidate(file: string;options: ParsedArgs['options'])->Promise<void>
+    cmdListTemplates()->void
+  generator/core/contract-generator.ts:
+    i: fs,path,..{/shared/type-mappers,/templates/index},../../contracts/dsl-types
+    e: ContractGenerator,GenerationResult,GeneratedFile,ContractGeneratorOptions,generateFromContract
+    ContractGenerator: constructor(2),generate(0),generateApi(0),generateServerTs(0),generateEntityRoutes(1)
+    generateFromContract(contract: ReclappContract;output: string;options?)->Promise<GenerationResult>
+  generator/core/generator.ts:
+    i: ..{/shared/type-mappers,/templates/index},../../dsl/ast/types
+    e: GenerationSummary,GeneratorResult,GeneratedFile,GeneratorOptions,GeneratorError,Generator
+    Generator: constructor(2),generate(0),getEntities(0),getEvents(0),getPipelines(0)
+  generator/core/simple-generator.ts:
+    i: path,fs,../templates,../../contracts/dsl-types
+    e: GeneratedFile,generateFromContract,SimpleGenerator
+    SimpleGenerator: constructor(2),generate(0),addFile(2),generateApi(0),generateFrontend(0)
+    generateFromContract(contract: ReclappContract;outputDir: string;options: { verbose?: boolean })->Promise<number>
+  generator/shared/type-mappers.ts:
+    e: norm,sqlDefault,getInputType,isSystemFieldName,fieldTypeToMongoose,fieldTypeToZod,fieldTypeToTs,fieldTypeToSql
+    norm(type: string)->string
+    fieldTypeToTs(type: string;isArray)->string
+    fieldTypeToSql(type: string)->string
+    fieldTypeToMongoose(type: string)->string
+    fieldTypeToZod(type: string;isArray)->string
+    getInputType(type: string)->string
+    isSystemFieldName(name: string)->boolean
+    sqlDefault(value: any;_type: string)->string
+  generator/targets/api.ts:
+    e: ApiGenerator
+    ApiGenerator: 
+  generator/targets/cicd.ts:
+    e: CiCdGenerator
+    CiCdGenerator: 
+  generator/targets/database.ts:
+    e: DatabaseGenerator
+    DatabaseGenerator: 
+  generator/targets/docker.ts:
+    e: DockerGenerator
+    DockerGenerator: 
+  generator/targets/frontend.ts:
+    e: FrontendGenerator
+    FrontendGenerator: 
+  generator/targets/kubernetes.ts:
+    e: KubernetesGenerator
+    KubernetesGenerator: 
+  generator/templates/api.ts:
+    e: isFieldRequired,generateSampleData,TemplateContext,kebab,tsType,isSystemFieldName,modelTemplate,apiTsConfig
+    serverTemplate(ctx: TemplateContext)->string
+    routeTemplate(entityName: string;fields: Array<{ name: string; type: string; nullable?: boolean; array?: boolean; annotations?: any; [key: string]: any }>;authRequired: boolean)->string
+    modelTemplate(entityName: string;fields: Array<{ name: string; type: string; nullable?: boolean; annotations?: any; [key: string]: any }>)->string
+    apiPackageJson(name: string;version: string;authEnabled: boolean)->string
+    authMiddlewareTemplate()->string
+    apiTsConfig()->string
+    kebab(s: string)->string
+    camel(s: string)->string
+  generator/templates/database.ts:
+    e: sqlType,sqlMigration,snake
+    sqlMigration(appName: string;entities: Array<{ name: string; fields: Array<{ name: string; type: string; nullable?: boolean }> }>)->string
+    snake(s: string)->string
+    sqlType(t: string)->string
+  generator/templates/docker.ts:
+    i: ./api
+    e: frontendDockerfile,gitignore,nginxConfig,apiDockerfile,envExample,dockerCompose
+    apiDockerfile()->string
+    frontendDockerfile()->string
+    nginxConfig()->string
+    dockerCompose(appName: string)->string
+    envExample(appName: string)->string
+    gitignore()->string
+  generator/templates/frontend.ts:
+    i: ./api
+    e: frontendTsConfig,appTemplate,componentTemplate,indexHtml,postcssConfig,kebab,indexCss,FrontendContext
+    appTemplate(ctx: FrontendContext)->string
+    mainTemplate()->string
+    componentTemplate(entityName: string;fields: Array<{ name: string; type: string; nullable?: boolean }>)->string
+    hooksTemplate(entities: Array<{ name: string }>)->string
+    indexCss()->string
+    frontendPackageJson(name: string;version: string)->string
+    viteConfig()->string
+    indexHtml(appName: string)->string
+  generator/templates/index.ts:
+    e: indent,toPascalCase,toSnakeCase,capitalize,pluralize,toKebabCase,toCamelCase,toConstantCase
+    indent(code: string;spaces: number)->string
+    capitalize(str: string)->string
+    pluralize(str: string)->string
+    toCamelCase(str: string)->string
+    toPascalCase(str: string)->string
+    toKebabCase(str: string)->string
+    toSnakeCase(str: string)->string
+    toConstantCase(str: string)->string
+  generator/utils/index.ts:
+    i: fs,path
+    e: ensureDir,readFile,parseJson,writeFile,fileExists,formatJson
+    ensureDir(path: string)->void
+    writeFile(path: string;content: string)->void
+    readFile(path: string)->string
+    fileExists(path: string)->boolean
+    formatJson(obj: any)->string
+    parseJson(content: string)->T
+  lib/chat-core.js:
+    i: fs,path,http,./rcl-utils
+    e: DEFAULT_OLLAMA_HOST,DEFAULT_MODEL,SYSTEM_PROMPT,ReclappChat,normalizeMiniRclSource
+    ReclappChat: constructor(0),chat(1),callOllama(1),coerceToRclString(1),isLikelyRcl(1)
+    normalizeMiniRclSource(source)
+  lib/rcl-utils.js:
+    i: http
+    e: callOllama,extractContract,convertLegacyJsonContractToRcl,isLikelyRcl,coerceToRclString
+    callOllama(messages;host;model)
+    coerceToRclString(value)
+    isLikelyRcl(contract)
+    convertLegacyJsonContractToRcl(obj)
+    extractContract(response)
+  modules/data-provider/index.ts:
+    i: fs,path
+    e: Address,Contractor,DataProviderConfig,getDataProvider,SourceConfig,loadAllData,loadCustomers,createSourceFromDSL
+    DataProvider: constructor(1),loadCustomers(0),loadContractors(0),loadRiskEvents(0),loadAll(0)
+    getDataProvider(config?)->DataProvider
+    loadCustomers(config?)->Promise<Customer[]>
+    loadContractors(config?)->Promise<Contractor[]>
+    loadRiskEvents(config?)->Promise<RiskEvent[]>
+    loadAllData(config?)->Promise<{
+  customers: Customer[];
+  contractors: Contractor[];
+  riskEvents: RiskEvent[];
+}>
+    createSourceFromDSL(name: string;config: SourceConfig)->() => Promise<any>
+    applyMapping(data: any;mapping: Record<string; string>)->any
+    getNestedValue(obj: any;path: string)->any
+  modules/mock/index.ts:
+    e: Address,Contractor,BoardMember,Company,SeedData,generateSeedData,customerToEvents,CompanyStatus
+    MockDataGenerator: generateId(1),generateNIP(0),generateKRS(0),generateREGON(0),generateAddress(0)
+    generateSeedData(options?)->SeedData
+    customerToEvents(customer: Customer)->DomainEvent[]
+    riskEventToDomainEvent(riskEvent: RiskEvent)->DomainEvent
+  reclapp-contracts/reclapp_contracts/models/contract.py:
+    i: datetime,definition.DefinitionLayer,generation.GenerationLayer,pydantic.{BaseModel,Field},typing.{Literal,Optional},validation.ValidationLayer
+    e: ContractMetadata,ContractAI,is_valid_contract,has_definition_layer,has_generation_layer,has_validation_layer,create_minimal_contract
+    ContractMetadata:   # Contract metadata
+    ContractAI:   # Contract AI - complete specification...
+    is_valid_contract(obj:object)->bool
+    has_definition_layer(contract:dict)->bool
+    has_generation_layer(contract:dict)->bool
+    has_validation_layer(contract:dict)->bool
+    create_minimal_contract(name:str;version:str='1.0.0';entities:Optional[list[dict]]=None)->ContractAI
+  reclapp-contracts/reclapp_contracts/models/definition.py:
+    i: enum.Enum,pydantic.{BaseModel,Field},typing.{Any,Literal,Optional,Union}
+    e: BasicFieldType,ExtendedFieldType,RelationType,FieldAnnotations,FieldDefinition,RelationDefinition,IndexDefinition,EntityDefinition
+    BasicFieldType:   # Basic field types supported by Contra...
+    ExtendedFieldType:   # Extended field types with validation
+    RelationType:   # Relation types between entities
+    FieldAnnotations:   # r
+    FieldDefinition:   # Entity field definition
+  reclapp-contracts/reclapp_contracts/models/generation.py:
+    i: enum.Enum,pydantic.{BaseModel,Field},typing.{Any,Literal,Optional}
+    e: InstructionPriority,Instruction,PatternType,Pattern,ConstraintType,Constraint,BackendTechStack,FrontendTechStack
+    InstructionPriority:   # Instruction priority levels
+    Instruction:   # Generation instruction for LLM
+    PatternType:   # Design pattern types
+    Pattern:   # Design pattern specification
+    ConstraintType:   # Constraint types
+  reclapp-contracts/reclapp_contracts/models/validation.py:
+    i: enum.Enum,pydantic.{BaseModel,Field},typing.{Any,Literal,Optional}
+    e: AssertionType,Assertion,TestType,TestDefinition,StaticRule,QualityGate,AcceptanceCriteria,ValidationLayer
+    AssertionType:   # Assertion types for validation
+    Assertion:   # Validation assertion
+    TestType:   # Test types
+    TestDefinition:   # Test definition
+    StaticRule:   # r
+  reclapp-contracts/reclapp_contracts/parser/markdown_parser.py:
+    i: json,re,yaml,pydantic.{BaseModel,Field},typing.{Any,Literal,Optional}
+    e: EntityField,MarkdownEntityDefinition,ApiEndpoint,MarkdownAssertion,TestCase,AcceptanceScenario,AcceptanceTest,ContractFrontmatter
+    EntityField:   # Entity field from markdown table
+    MarkdownEntityDefinition:   # Entity definition parsed from markdown
+    ApiEndpoint:   # API endpoint definition
+    MarkdownAssertion:   # Business rule assertion
+    TestCase:   # API test case
+    parse_contract_markdown(content:str)->ContractMarkdown
+    _extract_frontmatter(content:str)->tuple[ContractFrontmatter, str]
+    _parse_app_section(body:str)->AppDefinition
+    _parse_entities_section(body:str)->list[MarkdownEntityDefinition]
+    _parse_entity_content(name:str;content:str)->MarkdownEntityDefinition
+    _parse_yaml_fields(content:str)->list[EntityField]
+    _parse_markdown_table(content:str)->list[EntityField]
+    _parse_field_type(type_str:str)->str
+  reclapp-contracts/reclapp_contracts/validation/__init__.py:
+    i: pipeline,stages.{create_assertion_validator,create_schema_validator,create_static_analyzer,create_syntax_validator}
+    e: create_default_pipeline
+    create_default_pipeline(options:dict=None)->"ValidationPipeline"
+  reclapp-contracts/reclapp_contracts/validation/pipeline.py:
+    i: asyncio,time,pydantic.{BaseModel,Field},typing.{Any,Callable,Optional}
+    e: StageError,StageResult,PipelineResult,GeneratedCode,ValidationContext,ValidationStage,PipelineOptions,CRITICAL_STAGES
+    StageError:   # Error from a validation stage
+    StageResult:   # Result from a single validation stage
+    PipelineResult:   # Result from the complete validation p...
+    GeneratedCode:   # Generated code structure
+    ValidationContext:   # Context passed between validation stages
+  reclapp-contracts/reclapp_contracts/validation/stages.py:
+    i: re,subprocess,pipeline.{StageError,StageResult,ValidationContext,ValidationStage},typing.Any
+    e: create_syntax_validator,create_schema_validator,create_assertion_validator,create_static_analyzer,create_test_runner,create_quality_checker,create_security_scanner,create_runtime_validator
+    create_syntax_validator()->ValidationStage
+    _check_js_syntax(filename:str;content:str)->list[StageError]
+    _check_python_syntax(filename:str;content:str)->list[StageError]
+    create_schema_validator()->ValidationStage
+    create_assertion_validator()->ValidationStage
+    create_static_analyzer()->ValidationStage
+    create_test_runner()->ValidationStage
+    create_quality_checker()->ValidationStage
+  reclapp-llm/reclapp_llm/anthropic.py:
+    i: os,time,httpx,provider.{GenerateOptions,LLMModelInfo,LLMProvider,LLMResponse},pydantic.BaseModel,typing.Optional
+    e: AnthropicConfig,AnthropicClient
+    AnthropicConfig:   # Anthropic configuration
+    AnthropicClient: __init__(1),name(0),model(0),is_available(0),list_models(0)  # Anthropic LLM Client
+  reclapp-llm/reclapp_llm/groq.py:
+    i: os,time,httpx,provider.{GenerateOptions,LLMModelInfo,LLMProvider,LLMResponse},pydantic.BaseModel,typing.Optional
+    e: GroqConfig,GroqClient
+    GroqConfig:   # Groq configuration
+    GroqClient: __init__(1),name(0),model(0),is_available(0),list_models(0)  # Groq LLM Client
+  reclapp-llm/reclapp_llm/litellm.py:
+    i: os,time,litellm,provider.{GenerateOptions,LLMModelInfo,LLMProvider,LLMResponse},pydantic.BaseModel,typing.Optional
+    e: LiteLLMConfig,LiteLLMClient
+    LiteLLMConfig:   # LiteLLM configuration
+    LiteLLMClient: __init__(1),name(0),model(0),is_available(0),list_models(0)  # LiteLLM Universal Client
+  reclapp-llm/reclapp_llm/manager.py:
+    i: os,ollama.{OllamaClient,OllamaConfig},pathlib.Path,provider.{GenerateOptions,LLMModelInfo,LLMProvider,LLMProviderStatus,LLMResponse},typing.Optional
+    e: ProviderInfo,LLMManager
+    ProviderInfo: __init__(3)  # Information about a configured provider
+    LLMManager: __init__(1),is_available(0),is_ready(0),get_provider(0),primary_provider(0)  # LLM Manager with multi-provider support.
+  reclapp-llm/reclapp_llm/ollama.py:
+    i: os,time,httpx,provider.{GenerateOptions,LLMModelInfo,LLMProvider,LLMResponse},pydantic.BaseModel,typing.Optional
+    e: OllamaConfig,OllamaClient
+    OllamaConfig:   # Ollama configuration
+    OllamaClient: __init__(1),name(0),model(0),is_available(0),list_models(0)  # Ollama LLM Client
+  reclapp-llm/reclapp_llm/openai.py:
+    i: os,time,httpx,provider.{GenerateOptions,LLMModelInfo,LLMProvider,LLMResponse},pydantic.BaseModel,typing.Optional
+    e: OpenAIConfig,OpenAIClient
+    OpenAIConfig:   # OpenAI configuration
+    OpenAIClient: __init__(1),name(0),model(0),is_available(0),list_models(0)  # OpenAI LLM Client
+  reclapp-llm/reclapp_llm/openrouter.py:
+    i: os,time,httpx,provider.{GenerateOptions,LLMModelInfo,LLMProvider,LLMResponse},pydantic.BaseModel,typing.Optional
+    e: OpenRouterConfig,OpenRouterClient
+    OpenRouterConfig: 
+    OpenRouterClient: __init__(1),name(0),model(0),is_available(0),list_models(0)
+  reclapp-llm/reclapp_llm/provider.py:
+    i: abc.{ABC,abstractmethod},enum.Enum,pydantic.{BaseModel,Field},typing.{Any,Literal,Optional}
+    e: LLMProviderStatus,GenerateOptions,LLMResponse,LLMModelInfo,LLMProvider
+    LLMProviderStatus:   # Provider status
+    GenerateOptions:   # Options for LLM generation
+    LLMResponse:   # Response from LLM generation
+    LLMModelInfo:   # Information about an available model
+    LLMProvider: name(0),model(0),is_available(0),list_models(0),generate(1)  # Abstract base class for LLM providers.
+  reclapp-llm/reclapp_llm/together.py:
+    i: os,time,httpx,provider.{GenerateOptions,LLMModelInfo,LLMProvider,LLMResponse},pydantic.BaseModel,typing.Optional
+    e: TogetherConfig,TogetherClient
+    TogetherConfig:   # Together AI configuration
+    TogetherClient: __init__(1),name(0),model(0),is_available(0),list_models(0)  # Together AI LLM Client
+  reclapp-llm/reclapp_llm/windsurf.py:
+    i: os,time,httpx,provider.{GenerateOptions,LLMModelInfo,LLMProvider,LLMResponse},pydantic.BaseModel,typing.Optional
+    e: WindsurfConfig,WindsurfClient
+    WindsurfConfig:   # Configuration for Windsurf client
+    WindsurfClient: __init__(1),name(0),model(0),is_available(0),list_models(0)  # Windsurf/Codeium LLM provider.
+  reclapp/cli.py:
+    i: os,re,sys,subprocess,shutil,builtins,clickmd,yaml,pathlib.Path,typing.Optional
+    e: _RICH_TAG_RE,Panel,PROJECT_ROOT,BIN_DIR,LIFECYCLE_SCRIPT,NODE_CLI,find_node,find_npm
+    _Console: print(1)
+    Panel: fit(2)
+    _strip_rich_markup(text:str)->str
+    find_node()->Optional[str]
+    find_npm()->Optional[str]
+    setup_node_env()->dict
+    main(ctx;prompt:Optional[str];output:str;port:int;verbose:bool;keep_running:bool;...+1)
+    lifecycle(prompt:str;output:str;port:int;verbose:bool;keep_running:bool;log_file:Optional[str])
+    generate(contract_path:str;output:str;verbose:bool;engine:str)
+    _get_core_main()
+  scripts/generate_schemas.py:
+    i: json,argparse,sys,pathlib.Path,pydantic.BaseModel,reclapp_contracts.models.{ContractAI,DefinitionLayer},typing.{Any,Dict,Type}
+    e: generate_json_schema,main
+    generate_json_schema(model:Type[BaseModel])->Dict[str, Any]
+    main()
+  sitecustomize.py:
+    i: os,sys
+    _is_running_pytest()->bool
+  src/cli/commands/generate-ai.ts:
+    i: fs,path
+    e: printHelp,generateAI,loadContract,writeGeneratedFiles,parseArgs,GenerateAIOptions
+    parseArgs(args: string[])->GenerateAIOptions
+    printHelp()->void
+    generateAI(options: GenerateAIOptions)->Promise<void>
+    loadContract(filePath: string)->Promise<any>
+    writeGeneratedFiles(files: Array<{ path: string; content: string }>;outputDir: string)->Promise<void>
+  src/core/contract-ai/analysis/code-analyzer.ts:
+    i: fs,path
+    e: AnalysisReport,FunctionInfo,FileInfo,EntityInfo,DuplicateGroup,CodeAnalyzer,EntityField,EnumInfo
+    CodeAnalyzer: constructor(1),analyze(0),findSourceFiles(0),analyzeFile(1),parseCSharpJava(3)
+  src/core/contract-ai/analysis/project-state.ts:
+    i: fs,path,./code-analyzer
+    e: EndpointInfo,ProjectStateGenerator,DependencyInfo,ModuleInfo,EntityInfo,HotspotInfo,ProjectState
+    ProjectStateGenerator: constructor(2),generate(0),extractModules(0),extractEntities(0),extractEndpoints(0)
+  src/core/contract-ai/analysis/refactoring-contract.ts:
+    i: ./code-analyzer
+    e: RefactoringType,RefactoringContractGenerator,RefactoringIssue,RefactoringContract
+    RefactoringContractGenerator: constructor(2),generate(0),identifyIssues(0),createIssue(5),generateLLMContext(3)
+  src/core/contract-ai/cli/cli-runner.ts:
+    i: ..{/evolution/shell-renderer,/evolution/task-queue}
+    e: CLITaskResult,CLITask,CLIRunner,CLIRunnerOptions,CLIRunnerResult,createCLIRunner
+    CLIRunner: constructor(1),header(0),addTask(1),addTasks(1),log(1)
+    createCLIRunner(name: string;version: string;options?)->CLIRunner
+  src/core/contract-ai/code-generator/llm-generator.ts:
+    i: .{/prompt-templates/api,/prompt-templates/frontend,/prompt-templates/tests},..{/generator/contract-generator,/types}
+    e: SyntaxError,CodeGeneratorOptions,createLLMCodeGenerator,LLMClient,LLMCodeGenerator
+    LLMCodeGenerator: constructor(1),setLLMClient(1),getLLMClient(0),registerTemplate(2),generate(1)
+    createLLMCodeGenerator(options?)->LLMCodeGenerator
+  src/core/contract-ai/code-generator/prompt-templates/api.ts:
+    i: ../../types
+    e: PromptTemplate,ApiPromptTemplate,createApiPromptTemplate
+    ApiPromptTemplate: buildPrompt(1),getRequiredFiles(1),getSystemPrompt(0),formatTechStack(1),formatEntities(1)
+    createApiPromptTemplate()->ApiPromptTemplate
+  src/core/contract-ai/code-generator/prompt-templates/frontend.ts:
+    i: ./api,../../types
+    e: createFrontendPromptTemplate,FrontendPromptTemplate
+    FrontendPromptTemplate: buildPrompt(1),getRequiredFiles(1),getSystemPrompt(0),formatTechStack(1),formatEntitiesWithComponents(1)
+    createFrontendPromptTemplate()->FrontendPromptTemplate
+  src/core/contract-ai/code-generator/prompt-templates/tests.ts:
+    i: ../../types
+    e: PromptTemplate,createTestsPromptTemplate,TestsPromptTemplate
+    TestsPromptTemplate: buildPrompt(1),getRequiredFiles(1),getSystemPrompt(0)
+    createTestsPromptTemplate()->TestsPromptTemplate
+  src/core/contract-ai/converter/to-contract-ai.ts:
+    i: ..{/types,/types/contract-markdown}
+    e: ContractMarkdown,convertEntity,convertToContractAI,mapFieldType,extractResources,capitalize,mapDatabaseType,extractInstructions
+    convertToContractAI(contract: ContractMarkdown)->ContractAI & { app: any; entities: any[] }
+    convertEntity(entity: MarkdownEntityDefinition)->ContractAI['definition']['entities'][0]
+    mapFieldType(type: string)->string
+    mapDatabaseType(type: string)->'sqlite' | 'postgresql' | 'mysql' | 'mongodb' | 'in-memory'
+    extractResources(contract: ContractMarkdown)->any[]
+    extractInstructions(contract: ContractMarkdown)->any[]
+    capitalize(str: string)->string
+  src/core/contract-ai/evolution/code-rag.ts:
+    i: fs,path,child_process,../generator/contract-generator
+    e: SearchResult,HierarchicalRetriever,CodeIndex,SemanticChunker,CodeChunk,HierarchicalLevel,CodeRAG,CodeIndexer
+    SemanticChunker: constructor(1),parseFile(2),parseTypeScript(3),parsePython(3),detectLanguage(1)
+    CodeIndexer: constructor(1),indexDirectory(2),generateSummary(1),scanDirectory(2),getIndex(0)
+    HierarchicalRetriever: constructor(2),search(2),searchFiles(2),scoreChunk(2),traceCallPath(3)
+    CodeRAG: constructor(1),index(1),ask(1),findUsages(1),getStructure(0)
+  src/core/contract-ai/evolution/contract-extractor.ts:
+    i: ../types
+    e: extractEntitiesFromPrompt,capitalize,getEntityFields,getEntityRelations,createMinimalContract,isValidEntityName,singularize
+    createMinimalContract(prompt: string)->ContractAI
+    extractEntitiesFromPrompt(prompt: string)->Array<{ name: string; fields: any[]; relations: any[] }>
+    getEntityFields(entityName: string;_prompt: string)->any[]
+    getEntityRelations(entityName: string;allEntities: Set<string>)->any[]
+    capitalize(str: string)->string
+    singularize(str: string)->string
+    isValidEntityName(name: string)->boolean
+  src/core/contract-ai/evolution/doc-generator.ts:
+    i: fs,path,./shell-renderer,..{/generator/contract-generator,/templates/contracts,/types}
+    e: DocGenerator,DocGeneratorOptions
+    DocGenerator: constructor(2),generateReadme(1),getFallbackReadme(1)
+  src/core/contract-ai/evolution/evolution-manager.ts:
+    i: child_process,fs,path,net,.{/code-rag,/shell-renderer,/task-queue},..{/generator/contract-generator,/templates,/types}
+    e: PromptBuilder,Task,FileChange,LogEntry,TaskStatus,StateDiscrepancy,ServiceStatus,EvolutionManager
+    EvolutionManager: constructor(1),initCodeRAG(0),askCode(1),findSymbolUsages(1),getCodeStructure(0)
+    createEvolutionManager(options?)->EvolutionManager
+  src/core/contract-ai/evolution/fallback-templates.ts:
+    i: ../types,../templates/api/server.template,../templates/frontend/react-app.template,../templates/tests/e2e-native.template
+    e: FallbackOptions,FallbackTemplates
+    FallbackTemplates: generate(2),generateServer(2),generatePackageJson(0),generateTsConfig(0),parseFiles(1)
+  src/core/contract-ai/evolution/git-analyzer.ts:
+    i: child_process,fs,path,..{/generator/contract-generator,/types}
+    e: GitState,GitAnalyzer
+    GitAnalyzer: constructor(1),isGitRepo(0),getBranch(0),getLastCommit(0),getRecentCommits(1)
+  src/core/contract-ai/evolution/llm-orchestrator.ts:
+    i: fs,path,.{/fallback-templates,/shell-renderer},..{/generator/contract-generator,/templates/contracts,/types}
+    e: GenerationResult,LLMOrchestratorOptions,LLMOrchestrator
+    LLMOrchestrator: constructor(2),setClient(1),getClient(0),isAvailable(0),withTimeout(2)
+  src/core/contract-ai/evolution/llm-prompts.ts:
+    i: ..{/templates/contracts,/types}
+    e: EvolutionTrigger,PromptBuilder,PromptContext
+    PromptBuilder: buildSystemPrompt(0),buildUserPrompt(2),buildContractDrivenPrompt(3),buildFixPrompt(2)
+  src/core/contract-ai/evolution/service-manager.ts:
+    i: child_process,fs,path
+    e: ServiceManagerOptions,ServiceStatus,LogCallback,ServiceManager
+    ServiceManager: constructor(1),setLogCallback(1),getStatus(0),start(0),stop(0)
+  src/core/contract-ai/evolution/shell-renderer.ts:
+    e: renderMarkdown,ShellRenderer,getRenderer
+    ShellRenderer: constructor(1),enableLog(0),getLog(0),clearLog(0),log(1)
+    getRenderer()->ShellRenderer
+    renderMarkdown(text: string)->void
+  src/core/contract-ai/evolution/state-analyzer.ts:
+    i: fs,path,../types
+    e: StateDiscrepancy,StateAnalyzer,MultiLevelState
+    StateAnalyzer: constructor(2),setPort(1),analyzeContract(0),analyzeSourceCode(0),scanDir(2)
+  src/core/contract-ai/evolution/task-executor.ts:
+    i: child_process,fs,path,events
+    e: TaskExecutor,RingBuffer,TaskExecutorOptions,TaskState,ExecutorTask,createTaskExecutor
+    RingBuffer: constructor(1),append(1),getAll(0),clear(0)
+    TaskExecutor: constructor(1),addTask(2),addTasksFromFile(1),processQueue(0),executeTask(1)
+    createTaskExecutor(options?)->TaskExecutor
+  src/core/contract-ai/evolution/task-handlers.ts:
+    i: fs,path,.{/shell-renderer,/task-queue},../types
+    e: handleRunTests,handleValidateApi,TaskContext,PlanValidation,handleMultiLevelAnalysis,handleGenerateFrontend,handleValidatePlan,handleFolders
+    handleFolders(ctx: TaskContext)->Promise<TaskResult>
+    handleStateFile(ctx: TaskContext;writeSnapshot: () => void)->Promise<TaskResult>
+    handleContractSave(ctx: TaskContext;writeSnapshot: () => void)->Promise<TaskResult>
+    handleValidatePlan(ctx: TaskContext;validate: () => PlanValidation)->Promise<TaskResult>
+    handleValidateApi(ctx: TaskContext)->Promise<TaskResult>
+    handleLayer2Validation(ctx: TaskContext;validate: () => Layer2Result)->Promise<TaskResult>
+    handleMultiLevelAnalysis(ctx: TaskContext;analyze: () => Promise<MultiLevelAnalysis>)->Promise<TaskResult>
+    handleInstallAndStart(ctx: TaskContext;startService: () => Promise<void>)->Promise<TaskResult>
+  src/core/contract-ai/evolution/task-queue.ts:
+    i: ./shell-renderer
+    e: Task,TaskQueue,TaskStatus
+    TaskQueue: constructor(1),add(2),start(1),done(1),fail(2)
+  src/core/contract-ai/evolution/test-generator.ts:
+    i: fs,path,.{/fallback-templates,/shell-renderer},..{/generator/contract-generator,/templates/contracts,/types}
+    e: TestGeneratorOptions,TestRunResult,TestGenerator
+    TestGenerator: constructor(2),generateTestFiles(1),generateTestConfig(1),getFallbackTestConfig(0),generateApiE2ETests(3)
+  src/core/contract-ai/feedback/code-corrector.ts:
+    i: ./feedback-generator,..{/generator/contract-generator,/types}
+    e: ContractHint,CodeCorrector,createCodeCorrector,ValidationFeedback,CorrectorOptions,ValidationIssue
+    CodeCorrector: constructor(1),setLLMClient(1),correct(3),inferTargetFromPath(1),correctFile(4)
+    createCodeCorrector(options?)->CodeCorrector
+  src/core/contract-ai/feedback/feedback-generator.ts:
+    i: ../types
+    e: ValidationFeedback,createFeedbackGenerator,ValidationIssue,FeedbackGenerator
+    FeedbackGenerator: generateFeedback(2),buildCorrectionPrompt(3),extractIssues(1),generateSummary(1),extractContractHints(2)
+    createFeedbackGenerator()->FeedbackGenerator
+  src/core/contract-ai/feedback/generation-log.ts:
+    i: fs,path,../types
+    e: LogWriterOptions,createGenerationLogWriter,GenerationLogWriter,GenerationLogEntry
+    GenerationLogWriter: constructor(1),writeLog(1),buildHeader(2),buildMetadata(4),buildRunSection(1)
+    createGenerationLogWriter(options: LogWriterOptions)->GenerationLogWriter
+  src/core/contract-ai/feedback/iteration-manager.ts:
+    i: .{/code-corrector,/feedback-generator},..{/code-generator/llm-generator,/types,/validation/pipeline-orchestrator}
+    e: IterationResult,IterationManager,createIterationManager,IterationHistoryEntry,IterationManagerOptions
+    IterationManager: constructor(1),validateAndCorrect(4),meetsAcceptanceCriteria(2),correctCode(4)
+    createIterationManager(options?)->IterationManager
+  src/core/contract-ai/generator/contract-generator.ts:
+    i: .{/contract-validator,/prompt-builder},..{/llm/pydantic-validator,/types}
+    e: ContractGenerator,LLMPrompt,ContractGeneratorOptions,ContractGenerationResult,LLMClient,FeedbackLevel,createContractGenerator
+    ContractGenerator: constructor(1),setLLMClient(1),generate(1),tryCreateSchemaValidator(0),mapSchemaErrors(1)
+    createContractGenerator(options?)->ContractGenerator
+  src/core/contract-ai/generator/contract-validator.ts:
+    i: ../types
+    e: ERROR_CODES,createContractValidator,ContractValidator
+    ContractValidator: validate(1),validateDefinitionLayer(1),validateGenerationLayer(1),validateValidationLayer(1),validateCrossLayerConsistency(1)
+    createContractValidator()->ContractValidator
+  src/core/contract-ai/generator/prompt-builder.ts:
+    i: ../types
+    e: ContractPromptBuilder,createPromptBuilder
+    ContractPromptBuilder: buildSystemPrompt(0),buildUserPrompt(1),buildCorrectionPrompt(3),buildExampleContracts(0)
+    createPromptBuilder()->ContractPromptBuilder
+  src/core/contract-ai/llm/context-generator.ts:
+    i: fs,path,.{/llm-manager,/llm-provider},../types
+    e: ContextGenerator,ContextInfo,GenerationStep,GenerationPlan
+    ContextGenerator: constructor(2),createPlan(1),executeStep(1),executePlan(2),generateContract(1)
+  src/core/contract-ai/llm/llm-config.ts:
+    i: ./llm-provider
+    e: generateEnvTemplate,buildProviderConfigs,LLMEnvConfig,loadConfigFromEnv
+    loadConfigFromEnv()->LLMEnvConfig
+    buildProviderConfigs(envConfig: LLMEnvConfig)->LLMConfig[]
+    generateEnvTemplate()->string
+  src/core/contract-ai/llm/llm-manager.ts:
+    i: ./llm-provider
+    e: TaskContext,LLMManagerConfig,createLLMManagerFromEnv,ProviderStatus,LLMManager,createFreeModelsManager
+    LLMManager: constructor(1),initializeProviders(0),checkAvailability(0),getBestProvider(1),chat(3)
+    createLLMManagerFromEnv()->LLMManager
+    createFreeModelsManager()->LLMManager
+  src/core/contract-ai/llm/llm-provider.ts:
+    e: LLMMessage,OpenRouterProvider,ILLMProvider,createProvider,OpenAIResponse,WindsurfProvider,LLMConfig,LLMResponse
+    OllamaProvider: isAvailable(0),chat(2)
+    LiteLLMProvider: isAvailable(0),chat(2)
+    OpenRouterProvider: isAvailable(0),chat(2)
+    WindsurfProvider: isAvailable(0),chat(2)
+    createProvider(config: LLMConfig)->ILLMProvider
+  src/core/contract-ai/llm/ollama-client.ts:
+    i: http,https,../generator/contract-generator
+    e: OllamaConfig,OllamaGenerateRequest,OllamaGenerateResponse,OllamaClient,checkOllamaAvailable,LLMClient,createOllamaClient,GenerateOptions
+    OllamaClient: constructor(1),isAvailable(0),hasModel(1),generate(1),httpGet(1)
+    createOllamaClient(config?)->OllamaClient
+    checkOllamaAvailable(host?)->Promise<boolean>
+  src/core/contract-ai/llm/parallel-executor.ts:
+    i: events,./llm-provider
+    e: BatchRequest,createFreeModelsExecutor,WorkerPool,ParallelExecutor,ParallelExecutorConfig,ProviderStats,ParallelTask,createParallelExecutor
+    WorkerPool: constructor(1),addWorker(2),getWorker(1),getAllWorkers(0),getStats(1)
+    TaskQueue: enqueue(1),dequeue(0),size(0),isEmpty(0),clear(0)
+    ParallelExecutor: constructor(1),addProvider(1),addProviders(1),submitTask(1),submitBatch(1)
+    createParallelExecutor(configs: LLMConfig[];options?)->ParallelExecutor
+    createFreeModelsExecutor()->ParallelExecutor
+  src/core/contract-ai/llm/pydantic-validator.ts:
+    i: fs,path
+    e: SchemaValidationResult,JSONSchema,ValidationError,createPydanticValidator,PydanticValidator
+    PydanticValidator: constructor(1),normalizeSchemaName(1),loadSchemas(0),loadSchemasFromDir(1),getSchema(1)
+    createPydanticValidator(schemasDir?)->Promise<PydanticValidator>
+  src/core/contract-ai/parser/markdown-parser.ts:
+    i: js-yaml,../types/contract-markdown
+    e: parseRulesSection,ContractFrontmatter,parseAppSection,parseTestsSection,parseFieldType,parseEntitiesSection,ContractMarkdown,validateContract
+    parseContractMarkdown(content: string)->ContractMarkdown
+    extractFrontmatter(content: string)->{ 
+  frontmatter: ContractFrontmatter; 
+  body: string 
+}
+    parseAppSection(body: string)->ContractMarkdown['app']
+    parseEntitiesSection(body: string)->MarkdownEntityDefinition[]
+    parseEntityContent(name: string;content: string)->MarkdownEntityDefinition
+    parseMarkdownTable(content: string)->EntityField[]
+    parseFieldType(typeStr: string)->FieldType
+    parseApiSection(body: string)->ContractMarkdown['api']
+  src/core/contract-ai/sdk/sdk-generator.ts:
+    i: ../types
+    e: GeneratedSDK,createSDKGenerator,SDKGeneratorOptions,SDKGenerator
+    SDKGenerator: constructor(1),generate(1),generateTypes(1),generateEntityType(1),generateInputTypes(1)
+    createSDKGenerator(options?)->SDKGenerator
+  src/core/contract-ai/setup/dependency-checker.ts:
+    i: child_process,fs,path,os
+    e: EnvironmentReport,SetupTask,DependencyStatus,DependencyCheck,InstallGuide,DependencyPriority,checkEnvironment,Dependency
+    DependencyChecker: constructor(0),checkDependency(1),checkAll(0),generateReport(0),generateSetupTasks(1)
+    checkEnvironment()->Promise<EnvironmentReport>
+    printEnvironmentStatus()->Promise<void>
+  src/core/contract-ai/templates/contracts/index.ts:
+    i: fs,path
+    e: StageContract,loadStageContract,getStageRequirements
+    loadStageContract(stage: string)->StageContract | null
+    getStageRequirements(stage: string)->string
+  src/core/contract-ai/templates/index.ts:
+    i: fs,path
+    e: TemplateMatch,Template,TemplateRAG,TemplateQuery,TemplateVariable
+    TemplateRAG: constructor(1),loadTemplates(0),search(1),get(1),getByCategory(1)
+  src/core/contract-ai/types/index.ts:
+    i: .{/definition,/generation,/validation}
+    e: StageResult,PipelineResult,ContractValidationResult,hasDefinitionLayer,touchContract,GeneratedFile,hasGenerationLayer,ContractAI
+    isValidContractAI(obj: unknown)
+    hasDefinitionLayer(contract: Partial<ContractAI>)->boolean
+    hasGenerationLayer(contract: Partial<ContractAI>)->boolean
+    hasValidationLayer(contract: Partial<ContractAI>)->boolean
+    createEmptyContract(appName: string;version: string)->ContractAI
+    touchContract(contract: ContractAI)->ContractAI
+  src/core/contract-ai/validation/index.ts:
+    i: 
+    e: createDefaultValidationPipeline
+    createDefaultValidationPipeline(options: Partial<PipelineOptions>)->ValidationPipelineOrchestrator
+  src/core/contract-ai/validation/pipeline-orchestrator.ts:
+    i: ../types
+    e: StageResult,PipelineOptions,ValidationPipelineOrchestrator,ValidationContext,ValidationStage,createValidationPipeline
+    ValidationPipelineOrchestrator: constructor(1),registerStage(1),registerStages(1),validate(2),runStage(2)
+    createValidationPipeline(options?)->ValidationPipelineOrchestrator
+  src/core/contract-ai/validation/stages/assertion-validator.ts:
+    i: ../pipeline-orchestrator,../../types
+    e: AssertionValidator,createAssertionValidator
+    AssertionValidator: getFileForAssertion(1),validator(1),checkAssertion(2),checkFileExists(2),checkFileContains(3)
+    createAssertionValidator()->AssertionValidator
+  src/core/contract-ai/validation/stages/quality-checker.ts:
+    i: ../pipeline-orchestrator,../../types
+    e: QualityChecker,createQualityChecker
+    QualityChecker: validator(1),checkThreshold(3),calculateLinesOfCode(1),calculateAverageComplexity(1),calculateDuplicationRatio(1)
+    createQualityChecker()->QualityChecker
+  src/core/contract-ai/validation/stages/runtime-validator.ts:
+    i: child_process,http,../pipeline-orchestrator,../../types
+    e: ContainerInfo,createRuntimeValidator,EndpointTestResult,RuntimeValidator
+    RuntimeValidator: validator(1),isDockerAvailable(0),hasDockerfile(1),buildAndRun(1),waitForHealthy(1)
+    createRuntimeValidator()->RuntimeValidator
+  src/core/contract-ai/validation/stages/schema-validator.ts:
+    i: ../pipeline-orchestrator,../..{/llm/pydantic-validator,/types}
+    e: createSchemaValidator,SchemaValidator
+    SchemaValidator: extractFileFromSchemaPath(2),validator(1)
+    createSchemaValidator()->SchemaValidator
+  src/core/contract-ai/validation/stages/security-scanner.ts:
+    i: ../pipeline-orchestrator,../../types
+    e: createSecurityScanner,SecurityScanner
+    SecurityScanner: validator(1),runSecurityCheck(2),checkHardcodedSecrets(2),checkSqlInjection(1),checkXss(1)
+    createSecurityScanner()->SecurityScanner
+  src/core/contract-ai/validation/stages/static-analyzer.ts:
+    i: ../pipeline-orchestrator,../../types
+    e: createStaticAnalyzer,StaticAnalyzer
+    StaticAnalyzer: validator(1),checkRule(2),runBuiltInRules(1)
+    createStaticAnalyzer()->StaticAnalyzer
+  src/core/contract-ai/validation/stages/syntax-validator.ts:
+    i: ../pipeline-orchestrator,../../types
+    e: SyntaxValidator,createSyntaxValidator
+    SyntaxValidator: validator(1),checkBasicSyntax(2),checkRequiredFiles(1),fileExists(2),generateNameVariants(1)
+    createSyntaxValidator()->SyntaxValidator
+  src/core/contract-ai/validation/stages/test-runner.ts:
+    i: child_process,fs,path,../pipeline-orchestrator,../../types
+    e: JestResult,TestRunner,TestFileResult,createTestRunner
+    TestRunner: validator(1),generateTestFiles(2),generateTestFile(2),generateTestCase(3),parseMethod(1)
+    createTestRunner()->TestRunner
+  src/python/reclapp/analysis/code_rag.py:
+    i: base64,os,re,dataclasses.{dataclass,field},pathlib.Path,typing.{Any,Dict,List,Literal}
+    e: CodeChunk,SearchResult,HierarchicalLevel,CodeIndex,SemanticChunker,CodeIndexer,HierarchicalRetriever,CodeRAG
+    CodeChunk:   # A semantic unit of code (file, class,...
+    SearchResult:   # Search result with score
+    HierarchicalLevel:   # Level in code hierarchy
+    CodeIndex:   # Index structure for code chunks
+    SemanticChunker: __init__(1),parse_file(2),_parse_python(3),_parse_typescript(3),_detect_language(1)  # Parse files and extract semantic chun...
+  src/python/reclapp/analysis/git_analyzer.py:
+    i: json,subprocess,dataclasses.{dataclass,field},pathlib.Path,pydantic.BaseModel,typing.{Any,Literal,Optional}
+    e: CommitInfo,GitStatus,FileEntry,DetectedStack,GitState,GitAnalyzer
+    CommitInfo:   # Git commit information
+    GitStatus:   # Git status (modified, untracked, stag...
+    FileEntry:   # File or directory entry
+    DetectedStack:   # Detected technology stack
+    GitState:   # Complete Git repository state
+  src/python/reclapp/cli/executor.py:
+    i: asyncio,os,re,time,datetime,typing.{Any,Dict,List,Optional,Set}
+    e: ExecutorTask,TaskExecutor
+    ExecutorTask: __init__(4)  # Task definition for the executor
+    TaskExecutor: __init__(2),add_task(3),add_tasks_from_file(1),run_task(1),wait_for_all(0)  # Executes commands from a task file or...
+  src/python/reclapp/cli/main.py:
+    i: argparse,asyncio,sys,pathlib.Path,typing.{Any,Optional}
+    e: create_parser,cmd_evolve,show_interactive_menu,show_file,check_health,show_logs,cmd_generate,cmd_parse
+    create_parser()->argparse.ArgumentParser
+    cmd_evolve(args:Any)->int
+    show_interactive_menu(manager:Any;args:Any;port:int)
+    show_file(path:str)
+    check_health(port:int)
+    show_logs(output_dir:str)
+    cmd_generate(args:Any)->int
+    cmd_parse(args:Any)->int
+  src/python/reclapp/cli/runner.py:
+    i: asyncio,time,evolution.shell_renderer.ShellRenderer,evolution.task_queue.TaskQueue,typing
+    e: CLITaskResult,CLIRunner
+    CLITaskResult: __init__(4)  # Result of a single CLI task
+    CLIRunner: __init__(5),header(0),add_task(5),log(1),yaml(3)  # Standardized runner for CLI commands.
+  src/python/reclapp/evolution/evolution_manager.py:
+    i: asyncio,json,os,signal,subprocess,time,glob,uuid,pathlib.Path,typing.Any
+    e: T,EvolutionOptions,EvolutionResult,EvolutionManager
+    EvolutionOptions:   # Evolution manager options
+    EvolutionResult:   # Result of evolution run
+    EvolutionManager: __init__(1),set_llm_client(1),evolve(2),_setup_tasks(0),_phase_setup(1)  # Evolution manager with auto-healing c...
+  src/python/reclapp/evolution/generators.py:
+    i: json,pathlib.Path,typing.{Any,Optional}
+    e: EvolutionGenerators
+    EvolutionGenerators: __init__(2),set_contract(1),generate_database(1),generate_frontend(1),generate_dockerfile(1)  # Template generators for evolution pip...
+  src/python/reclapp/evolution/shell_renderer.py:
+    i: re,sys,clickmd.renderer.{COLORS,_ClickmdRenderer},typing.{Literal,Optional}
+    e: ShellRenderer
+    ShellRenderer: __init__(1),renderer(0),enable_log(0),get_log(0),clear_log(0)  # Renders colorized output in terminal.
+  src/python/reclapp/evolution/state_analyzer.py:
+    i: json,dataclasses.{dataclass,field},enum.Enum,pathlib.Path,typing.{Any,Optional}
+    e: StateLevel,DiscrepancyType,StateDiscrepancy,ContractState,CodeState,RuntimeState,MultiLevelState,StateAnalyzer
+    StateLevel:   # State analysis levels
+    DiscrepancyType:   # Types of state discrepancies
+    StateDiscrepancy: to_dict(0)  # A discrepancy between expected and ac...
+    ContractState:   # State extracted from contract
+    CodeState:   # State extracted from generated code
+  src/python/reclapp/evolution/task_queue.py:
+    i: datetime,enum.Enum,pydantic.{BaseModel,Field},typing.{Literal,Optional}
+    e: Task,TaskQueue
+    Task:   # Task definition
+    TaskQueue: __init__(1),renderer(0),add(2),start(1),done(1)  # Task queue with status tracking and Y...
+  src/python/reclapp/generator/base.py:
+    i: abc.{ABC,abstractmethod},llm.LLMProvider,pydantic.BaseModel,typing.{Any,Generic,Optional,TypeVar}
+    e: BaseGenerator
+    BaseGenerator: __init__(2),options(0),llm_client(0),verbose(0),set_llm_client(1)  # Abstract base class for generators.
+  src/python/reclapp/generator/code_generator.py:
+    i: json,re,time,llm.LLMProvider,pathlib.Path,pydantic.{BaseModel,Field},typing.{Any,Literal,Optional}
+    e: GeneratedFile,CodeGeneratorOptions,CodeGenerationResult,CodeGenerator
+    GeneratedFile:   # A generated file
+    CodeGeneratorOptions:   # Code generator options
+    CodeGenerationResult:   # Result of code generation
+    CodeGenerator: __init__(1),generate(2),_generate_package_json(2),_generate_index_file(2),_generate_entity_model(2)  # Code generator using LLM.
+  src/python/reclapp/generator/contract_generator.py:
+    i: json,re,time,llm.{GenerateOptions,LLMProvider},pydantic.{BaseModel,Field},typing.{Any,Literal,Optional}
+    e: ContractGeneratorOptions,ContractValidationError,ContractGenerationResult,ContractGenerator
+    ContractGeneratorOptions:   # Contract generator options
+    ContractValidationError:   # Contract validation error
+    ContractGenerationResult:   # Result of contract generation
+    ContractGenerator: __init__(1),generate(1),_build_initial_prompt(1),_build_correction_prompt(4),_call_llm(1)  # Contract AI generator with self-corre...
+  src/python/reclapp/generator/prompt_builder.py:
+    i: pydantic.BaseModel,typing.{Any,Optional}
+    e: PromptTemplate,PromptBuilder
+    PromptTemplate:   # Prompt template definition
+    PromptBuilder: __init__(0),_register_default_templates(0),register_template(1),get_template(1),build_contract_prompt(1)  # Builds prompts for LLM generation.
+  src/python/reclapp/sdk/sdk_generator.py:
+    i: models.{ContractAI,EntityDefinition,FieldDefinition},pydantic.BaseModel,typing.{Any,Dict,List,Literal,Optional}
+    e: SDKGeneratorOptions,GeneratedSDK,SDKGenerator
+    SDKGeneratorOptions:   # Options for SDK generation
+    GeneratedSDK:   # Generated SDK output
+    SDKGenerator: __init__(1),generate(1),_generate_types(1),_generate_entity_type(1),_generate_input_types(1)  # Generate TypeScript SDK from Contract...
+  src/python/reclapp/testing/api_tester.py:
+    i: asyncio,time,httpx,pydantic.BaseModel,typing.{Any,Dict,List,Literal,Optional}
+    e: EndpointTest,APITestResult,APITester
+    EndpointTest:   # Definition of an endpoint test
+    APITestResult:   # Result of an API test
+    APITester: __init__(2),_get_client(0),close(0),run_test(1),run_tests(1)  # Lightweight API tester using httpx.
+  src/python/reclapp/testing/e2e_generator.py:
+    i: models.{ContractAI,EntityDefinition},pathlib.Path,pydantic.BaseModel,typing.{Any,Dict,List,Literal,Optional}
+    e: E2ETestConfig,GeneratedTest,TestSuite,E2ETestGenerator
+    E2ETestConfig:   # Configuration for E2E test generation
+    GeneratedTest:   # A generated test file
+    TestSuite:   # Complete test suite
+    E2ETestGenerator: __init__(1),generate(1),_generate_playwright_config(0),_generate_health_tests_ts(0),_generate_api_tests_ts(1)  # Generate Playwright E2E tests from Co...
+  studio/chat-shell.js:
+    i: readline,path,../lib/chat-core
+    e: color,main
+    color(c;text)
+    main()
+  studio/server.js:
+    i: express,cors,fs,path,http,net,..{/lib/chat-core,/lib/rcl-utils}
+    e: callOllama,validateContract,buildFixPrompt,saveSessionLog,generateTypeScriptFromRCL,scanProjects,validateContractSyntax
+    callOllama(messages)
+    saveSessionLog(history;contract)
+    validateContractSyntax(contract)
+    buildFixPrompt(contract;errors)
+    generateTypeScriptFromRCL(rcl)
+    validateContract(contract)
+    scanProjects()
+  tests/e2e/causal-loop.test.ts:
+    i: ../..{/core/causal/verification-loop,/core/ontology/types}
+    createTestCausalModel()->CausalModel
+  tests/e2e/cli.test.ts:
+    i: child_process,fs,path
+    e: run
+    run(args: string)->string
+  tests/e2e/contract-ai-cli.test.ts:
+    i: child_process,path,fs
+    e: runCLI,cleanupOutput
+    runCLI(args: string;timeout)->{ stdout: string; stderr: string; exitCode: number }
+    cleanupOutput()
+  tests/e2e/setup.ts:
+    i: ../.
+    e: TestContext,getTestContext,assertExecutionSuccess,assertValidParseResult,expectEventually,waitFor,assertValidationPassed,setupTestContext
+    setupTestContext()->Promise<TestContext>
+    teardownTestContext()->Promise<void>
+    getTestContext()->TestContext
+    waitFor(condition: () => Promise<boolean>;timeout: number;interval: number)->Promise<void>
+    expectEventually(getValue: () => Promise<T>;matcher: (value: T) => boolean;timeout: number)->Promise<void>
+    assertValidParseResult(result: any)->void
+    assertValidationPassed(result: any)->void
+    assertExecutionSuccess(result: any)->void
+  tests/e2e/shell-interaction.test.ts:
+    i: child_process,fs,path,os
+    e: runReclapp,cleanupDir,createTempDir
+    createTempDir(prefix: string)->string
+    cleanupDir(dir: string)->void
+    runReclapp(args: string)->string
+  tests/e2e/studio.test.ts:
+    i: @jest/globals,child_process,http,path
+    e: isStudioRunning,request
+    request(method: string;path: string;body?)->Promise<{ status: number; data: any }>
+    isStudioRunning()->Promise<boolean>
+  tests/python/test_cli.py:
+    i: pytest,sys,asyncio,click.testing.CliRunner,pathlib.Path,reclapp.cli.main,unittest.mock.{MagicMock,patch}
+    e: runner,sample_contract_md,TestCLIBasic,TestEvolveCommand,TestGenerateCommand,TestValidateCommand,TestListCommand,TestPromptsCommand
+    TestCLIBasic: test_help(1),test_version(1)
+    TestEvolveCommand: test_evolve_help(1),test_evolve_requires_prompt(1),test_evolve_python_engine(2)
+    TestGenerateCommand: test_generate_help(1),test_generate_missing_file(1),test_generate_markdown_contract(3)
+    TestValidateCommand: test_validate_help(1)
+    TestListCommand: test_list_help(1)
+    runner()
+    sample_contract_md(tmp_path)
+  tests/python/test_click_wrapper_separation.py:
+    i: os,subprocess,sys,pathlib.Path
+    e: test_click_wrapper_evolve_python_does_not_fallback_to_node,test_click_wrapper_generate_python_markdown_does_not_fallback_to_node,test_click_wrapper_lifecycle_runs_python_engine_not_bash_or_node
+    _run_snippet(snippet:str)->subprocess.CompletedProcess[str]
+    test_click_wrapper_evolve_python_does_not_fallback_to_node()
+    test_click_wrapper_generate_python_markdown_does_not_fallback_to_node()
+    test_click_wrapper_lifecycle_runs_python_engine_not_bash_or_node()
+  tests/python/test_clickmd_output.py:
+    i: sys,clickmd,reclapp_wrapper_cli,click.testing.CliRunner,clickmd.renderer.get_renderer,importlib.util,io.StringIO,pathlib.Path
+    e: test_clickmd_renderer_renders_fenced_yaml_with_ansi,test_clickmd_echo_detects_markdown_and_renders_to_file,test_reclapp_prompt_starts_with_markdown_header
+    _TTYStringIO: isatty(0)
+    test_clickmd_renderer_renders_fenced_yaml_with_ansi()
+    test_clickmd_echo_detects_markdown_and_renders_to_file()
+    test_reclapp_prompt_starts_with_markdown_header(monkeypatch)
+  tests/python/test_evolution.py:
+    i: pytest,datetime,sys,io.StringIO,reclapp.evolution
+    e: TestTask,TestTaskQueue,TestShellRenderer,TestYamlHighlighting,TestEvolutionOptions,TestEvolutionResult,TestEvolutionManager,TestEvolutionIntegration
+    TestTask: test_basic_task(0),test_task_with_status(0),test_task_with_dates(0)
+    TestTaskQueue: test_create_queue(0),test_add_task(0),test_add_task_with_id(0),test_start_task(0),test_done_task(0)
+    TestShellRenderer: test_create_renderer(0),test_create_silent_renderer(0),test_heading(1),test_heading_silent(1),test_codeblock(1)
+    TestYamlHighlighting: test_highlight_comment(1),test_highlight_key_value(1)
+    TestEvolutionOptions: test_default_options(0),test_custom_options(0)
+  tests/python/test_generator.py:
+    i: pytest,json,sys,reclapp.generator.{CodeGenerator,CodeGeneratorOptions,ContractGenerationResult,ContractGenerator,ContractGeneratorOptions},unittest.mock.{AsyncMock,MagicMock}
+    e: sample_contract,mock_llm_client,TestContractGeneratorOptions,TestContractValidationError,TestContractGenerationResult,TestContractGenerator,TestCodeGeneratorOptions,TestGeneratedFile
+    TestContractGeneratorOptions: test_default_options(0),test_custom_options(0)
+    TestContractValidationError: test_basic_error(0),test_warning(0)
+    TestContractGenerationResult: test_success_result(1),test_failed_result(0)
+    TestContractGenerator: test_create_generator(0),test_set_llm_client(1),test_generate_success(1),test_generate_without_client(0),test_validate_contract_valid(1)
+    TestCodeGeneratorOptions: test_default_options(0),test_custom_options(0)
+    sample_contract()
+    mock_llm_client()
+  tests/python/test_integration.py:
+    i: pytest,json,sys,pathlib.Path,reclapp.models
+    e: sample_markdown,sample_contract_dict,TestParserIntegration,TestGeneratorIntegration,TestValidationIntegration,TestEvolutionIntegration,TestEndToEnd,TestModelsIntegration
+    TestParserIntegration: test_parse_full_contract(1),test_parse_and_validate(1)
+    TestGeneratorIntegration: test_generate_from_contract(2),test_generate_writes_files(2)
+    TestValidationIntegration: test_validate_generated_code(1),test_pipeline_detects_issues(0)
+    TestEvolutionIntegration: test_evolution_full_pipeline(1),test_task_queue_integration(0)
+    TestEndToEnd: test_markdown_to_code(2),test_contract_validation_generation(2)
+    sample_markdown()
+    sample_contract_dict()
+  tests/python/test_llm.py:
+    i: pytest,sys,reclapp.llm.{GenerateOptions,LLMProvider,LLMResponse,OllamaClient,OllamaConfig},unittest.mock.{AsyncMock,MagicMock,patch}
+    e: TestClientInitialization,TestLLMManagerAdvanced,TestGenerateOptions,TestLLMResponse,TestOllamaConfig,TestOllamaClientMocked,TestLLMModelInfo,TestLLMManagerMocked
+    TestClientInitialization: test_openai_init(0),test_anthropic_init(0),test_groq_init(0),test_together_init(0),test_litellm_init(0)
+    TestLLMManagerAdvanced: test_priority_selection(0),test_fallback_logic(0),test_preferred_provider_env(0)
+    TestGenerateOptions: test_default_options(0),test_custom_options(0)
+    TestLLMResponse: test_basic_response(0),test_full_response(0)
+    TestOllamaConfig: test_default_config(0),test_custom_config(0)
+  tests/python/test_models.py:
+    i: pytest,datetime,sys,reclapp.models
+    e: TestFieldTypes,TestFieldAnnotations,TestFieldDefinition,TestRelationDefinition,TestEntityDefinition,TestEventDefinition,TestWorkflowDefinition,TestApiDefinition
+    TestFieldTypes: test_basic_field_types(0),test_extended_field_types(0),test_relation_types(0)
+    TestFieldAnnotations: test_empty_annotations(0),test_full_annotations(0)
+    TestFieldDefinition: test_simple_field(0),test_field_with_annotations(0)
+    TestRelationDefinition: test_simple_relation(0),test_relation_with_foreign_key(0)
+    TestEntityDefinition: test_simple_entity(0),test_entity_with_relations(0)
+  tests/python/test_parser.py:
+    i: pytest,sys,reclapp.parser.{ContractFrontmatter,ContractMarkdown,MarkdownEntityDefinition,parse_contract_markdown,validate_contract},reclapp.parser.markdown_parser.{ApiEndpoint,EntityField,_extract_section}
+    e: SAMPLE_CONTRACT,TestFrontmatter,TestAppDefinition,TestEntityParsing,TestApiParsing,TestRulesParsing,TestTechStackParsing,TestTestsParsing
+    TestFrontmatter: test_parse_frontmatter(0),test_generation_config(0),test_runtime_config(0),test_missing_frontmatter_returns_default(0)
+    TestAppDefinition: test_parse_domain(0),test_parse_type(0),test_parse_users(0),test_parse_features(0)
+    TestEntityParsing: test_parse_entity_count(0),test_parse_entity_name(0),test_parse_entity_description(0),test_parse_entity_fields(0),test_parse_field_types(0)
+    TestApiParsing: test_parse_base_url(0),test_parse_endpoints_count(0),test_parse_endpoint_methods(0),test_parse_endpoint_paths(0)
+    TestRulesParsing: test_parse_assertions(0),test_assertion_name(0),test_assertion_severity(0)
+  tests/python/test_reverse_integrity.py:
+    i: pytest,sys,os,click.testing.CliRunner,pathlib.Path,reclapp.cli.main,unittest.mock.{MagicMock,patch}
+    e: runner,test_reverse_markdown_content,test_reverse_with_ai_plan
+    runner()
+    test_reverse_markdown_content(runner;tmp_path)
+    test_reverse_with_ai_plan(runner;tmp_path)
+  tests/python/test_shell_interaction.py:
+    i: pytest,asyncio,json,subprocess,tempfile,shutil,sys,pathlib.Path,reclapp.evolution.{EvolutionManager,EvolutionOptions}
+    e: TestShellRenderer,TestCodeGeneration,TestStateAnalyzer,TestCLIShellInteraction,TestTypeScriptComparison,TestTaskQueueIntegration
+    TestShellRenderer: test_heading(1),test_info(1),test_success(1),test_error(1),test_warning(1)  # Test shell rendering output
+    TestCodeGeneration: temp_output_dir(0),test_evolution_generates_files(1),test_evolution_creates_contract(1),test_evolution_creates_state_files(1),test_evolution_creates_tests(1)  # Test code generation output
+    TestStateAnalyzer: temp_output_dir(0),test_state_analyzer_creates_snapshot(1),test_state_analyzer_detects_discrepancies(1)  # Test multi-level state analysis
+    TestCLIShellInteraction: test_cli_help(0),test_cli_evolve_help(0)  # Test CLI shell commands
+    TestTypeScriptComparison: temp_dirs(0),test_python_generates_same_structure(1),test_contract_structure_matches(1)  # Compare Python output with TypeScript...
+  tests/python/test_validation.py:
+    i: pytest,sys,reclapp.validation
+    e: sample_contract,sample_code,TestStageResult,TestStageError,TestPipelineResult,TestValidationContext,TestValidationStage,TestSyntaxValidator
+    TestStageResult: test_basic_result(0),test_result_with_errors(0)
+    TestStageError: test_basic_error(0),test_full_error(0)
+    TestPipelineResult: test_passed_result(0),test_failed_result(0)
+    TestValidationContext: test_basic_context(2)
+    TestValidationStage: test_stage_definition(0)
+    sample_contract()
+    sample_code()
+  tests/python/test_windsurf_client.py:
+    i: asyncio,os,reclapp.llm.provider.GenerateOptions,reclapp.llm.windsurf.{WindsurfClient,WindsurfConfig}
+    e: test_windsurf
+    test_windsurf()
+  tests/setup.test.js:
+    i: node:test,node:assert,child_process,fs,path,os
+    e: cleanupTempDir,runSetup,createTempDir
+    runSetup()
+    createTempDir()
+    cleanupTempDir(dir)
+  tests/unit/ai-contract.test.ts:
+    i: ../../core/ai-contract
+    e: createContract,createAction
+    createAction(overrides: Partial<AIAction>)->AIAction
+    createContract(overrides: Partial<AIContract>)->AIContract
+  tests/unit/validator.test.ts:
+    i: ../..{/dsl/ast/types,/dsl/validator}
+    e: createField,createEntity,createProgram
+    createProgram(statements: any[])->Program
+    createEntity(name: string;fields: any[])->EntityDeclaration
+    createField(name: string;type: string;annotations: any[])->FieldDeclaration
+  tests/unit/verification.test.ts:
+    i: ../..{/core/planner,/core/verification}
+    e: createPlan,createIntent,createResult
+    createIntent(overrides: Partial<Intent>)->Intent
+    createPlan(nodeCount: number)->ExecutionPlan
+    createResult(success: boolean;completedNodes: number)->ExecutionResult
+  tools/env-configurator/server.ts:
+    i: express,fs,path
+    e: getVariableType,escapeHtml,EnvVariable,parseEnvExample,getVariableDescription,isRequired,saveEnvFile,parseEnvFile
+    parseEnvFile(filePath: string)->Map<string, string>
+    parseEnvExample()->EnvCategory[]
+    getVariableType(key: string)->EnvVariable['type']
+    getVariableDescription(key: string)->string
+    isRequired(key: string)->boolean
+    saveEnvFile(variables: Record<string; string>)->void
+    generateHTML(categories: EnvCategory[])->string
+    escapeHtml(str: string)->string
+  tools/reclapp-setup/setup.py:
+    i: asyncio,json,os,platform,subprocess,sys,time,dataclasses.field,enum.Enum,pathlib.Path
+    e: TaskStatus,Priority,LLMProviderStatus,LLMProvider,Dependency,SetupTask,TaskResult,EnvironmentReport
+    TaskStatus: 
+    Priority: 
+    LLMProviderStatus: 
+    LLMProvider: to_dict(0)
+    Dependency: 
+    check_llm_providers()->list[LLMProvider]
+    cmd_setup(config:SetupConfig)
+    main()
+  tools/reclapp-setup/test_setup.py:
+    i: asyncio,json,os,tempfile,pytest,pathlib.Path,setup.CLIRunner,unittest.mock.{AsyncMock,MagicMock,patch}
+    e: TestModels,TestDependencyChecker,TestLLMProviders,TestCLIRunner,TestIntegration,TestFeatureParity
+    TestModels: test_llm_provider_available(0),test_llm_provider_not_configured(0),test_setup_task_defaults(0),test_task_result_success(0),test_task_result_failure(0)
+    TestDependencyChecker: test_check_node_installed(0),test_check_missing_dependency(0),test_generate_report(0)
+    TestLLMProviders: test_check_ollama_available(0),test_check_windsurf_not_configured(0)
+    TestCLIRunner: test_runner_initialization(0),test_add_task(0),test_run_single_task(0),test_run_with_skip(0),test_run_failing_task(0)
+    TestIntegration: test_full_setup_dry_run(0),test_yaml_formatting(0),test_yaml_nested_formatting(0)

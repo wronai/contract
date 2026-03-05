@@ -1,0 +1,1521 @@
+version: '1'
+project:
+  name: contract
+  repo: /home/tom/github/wronai/contract
+  language: python
+  analyzed_at: '2026-03-05T21:28:08Z'
+  tool: code2llm
+  stats:
+    files: 34
+    lines: 20461
+    functions: 412
+    classes: 149
+health:
+  cc_avg: 4.2
+  critical_count: 45
+  critical_limit: 10
+  duplicates: 6
+  cycles: 0
+  alerts:
+  - type: cc_exceeded
+    target: GitAnalyzer.detect_stack
+    value: 34
+    limit: 15
+    severity: critical
+  - type: high_fan_out
+    target: cmd_setup
+    value: 32
+    limit: 10
+    severity: critical
+  - type: high_fan_out
+    target: llm_status
+    value: 30
+    limit: 10
+    severity: critical
+  - type: high_fan_out
+    target: CodeGenerator.generate
+    value: 29
+    limit: 10
+    severity: critical
+  - type: cc_exceeded
+    target: _parse_tech_section
+    value: 28
+    limit: 15
+    severity: critical
+  - type: high_fan_out
+    target: cmd_list
+    value: 27
+    limit: 10
+    severity: critical
+  - type: high_fan_out
+    target: EvolutionManager._run_e2e_tests
+    value: 26
+    limit: 10
+    severity: critical
+  - type: cc_exceeded
+    target: EvolutionManager._run_e2e_tests
+    value: 25
+    limit: 15
+    severity: critical
+  - type: high_fan_out
+    target: EvolutionManager.evolve
+    value: 24
+    limit: 10
+    severity: critical
+  - type: high_fan_out
+    target: EvolutionManager._phase_service
+    value: 22
+    limit: 10
+    severity: critical
+  - type: high_fan_out
+    target: cmd_analyze
+    value: 22
+    limit: 10
+    severity: critical
+  - type: high_fan_out
+    target: GitAnalyzer.detect_stack
+    value: 21
+    limit: 10
+    severity: critical
+  - type: high_fan_out
+    target: TaskExecutor.run_task
+    value: 20
+    limit: 10
+    severity: critical
+  - type: cc_exceeded
+    target: cmd_list
+    value: 21
+    limit: 15
+    severity: error
+  - type: cc_exceeded
+    target: _parse_markdown_table
+    value: 20
+    limit: 15
+    severity: error
+  - type: cc_exceeded
+    target: EvolutionManager.evolve
+    value: 20
+    limit: 15
+    severity: error
+  - type: cc_exceeded
+    target: EvolutionManager._phase_service
+    value: 20
+    limit: 15
+    severity: error
+  - type: high_fan_out
+    target: cmd_generate
+    value: 19
+    limit: 10
+    severity: error
+  - type: high_fan_out
+    target: llm_priority_set_provider
+    value: 18
+    limit: 10
+    severity: error
+  - type: high_fan_out
+    target: CLIRunner.run
+    value: 18
+    limit: 10
+    severity: error
+modules:
+- path: src/python/reclapp/analysis/git_analyzer.py
+  lines: 413
+  classes: 6
+  methods: 12
+  cc_max: 34
+  inbound_deps: 0
+  exports:
+  - name: CommitInfo
+    type: class
+    cc_avg: 0.0
+  - name: GitStatus
+    type: class
+    cc_avg: 0.0
+  - name: FileEntry
+    type: class
+    cc_avg: 0.0
+  - name: DetectedStack
+    type: class
+    cc_avg: 0.0
+  - name: GitState
+    type: class
+    cc_avg: 0.0
+  - name: GitAnalyzer
+    type: class
+    cc_avg: 7.0
+    methods:
+    - name: get_file_structure
+      cc: 6
+      fan_out: 11
+    - name: detect_stack
+      cc: 34
+      flag: split
+      fan_out: 21
+    - name: generate_contract_from_code
+      cc: 15
+      flag: split
+      fan_out: 14
+- path: reclapp-contracts/reclapp_contracts/parser/markdown_parser.py
+  lines: 718
+  classes: 18
+  methods: 19
+  cc_max: 28
+  inbound_deps: 1
+  exports:
+  - name: EntityField
+    type: class
+    cc_avg: 0.0
+  - name: MarkdownEntityDefinition
+    type: class
+    cc_avg: 0.0
+  - name: ApiEndpoint
+    type: class
+    cc_avg: 0.0
+  - name: MarkdownAssertion
+    type: class
+    cc_avg: 0.0
+  - name: TestCase
+    type: class
+    cc_avg: 0.0
+  - name: AcceptanceScenario
+    type: class
+    cc_avg: 0.0
+  - name: AcceptanceTest
+    type: class
+    cc_avg: 0.0
+  - name: ContractFrontmatter
+    type: class
+    cc_avg: 0.0
+  - name: BackendTech
+    type: class
+    cc_avg: 0.0
+  - name: FrontendTech
+    type: class
+    cc_avg: 0.0
+  - name: DatabaseTech
+    type: class
+    cc_avg: 0.0
+  - name: TechStack
+    type: class
+    cc_avg: 0.0
+  - name: AppDefinition
+    type: class
+    cc_avg: 0.0
+  - name: ApiDefinition
+    type: class
+    cc_avg: 0.0
+  - name: RulesDefinition
+    type: class
+    cc_avg: 0.0
+  - name: TestsDefinition
+    type: class
+    cc_avg: 0.0
+  - name: ContractMarkdown
+    type: class
+    cc_avg: 0.0
+  - name: ContractValidationResult
+    type: class
+    cc_avg: 0.0
+  - name: parse_contract_markdown
+    type: function
+    cc: 1
+  - name: validate_contract
+    type: function
+    cc: 11
+- path: src/python/reclapp/evolution/evolution_manager.py
+  lines: 1563
+  classes: 3
+  methods: 35
+  cc_max: 25
+  inbound_deps: 0
+  exports:
+  - name: EvolutionOptions
+    type: class
+    cc_avg: 0.0
+  - name: EvolutionResult
+    type: class
+    cc_avg: 0.0
+  - name: EvolutionManager
+    type: class
+    cc_avg: 5.1
+    methods:
+    - name: evolve
+      cc: 20
+      flag: split
+      fan_out: 24
+    - name: _phase_service
+      cc: 20
+      flag: split
+      fan_out: 22
+    - name: _phase_verification
+      cc: 6
+      fan_out: 14
+    - name: _generate_database
+      cc: 6
+      fan_out: 11
+    - name: _with_llm_heartbeat
+      cc: 8
+      fan_out: 15
+    - name: _run_e2e_tests
+      cc: 25
+      flag: split
+      fan_out: 26
+    - name: _auto_fix_code
+      cc: 9
+      fan_out: 14
+- path: src/python/reclapp/cli/main.py
+  lines: 1122
+  classes: 0
+  methods: 19
+  cc_max: 21
+  inbound_deps: 0
+  exports:
+  - name: create_parser
+    type: function
+    cc: 1
+    fan_out: 14
+  - name: cmd_evolve
+    type: function
+    cc: 11
+    fan_out: 10
+  - name: show_interactive_menu
+    type: function
+    cc: 15
+    flag: split
+    fan_out: 11
+  - name: show_file
+    type: function
+    cc: 2
+  - name: check_health
+    type: function
+    cc: 2
+  - name: show_logs
+    type: function
+    cc: 3
+  - name: cmd_generate
+    type: function
+    cc: 11
+    fan_out: 19
+  - name: cmd_parse
+    type: function
+    cc: 4
+    fan_out: 11
+  - name: cmd_validate
+    type: function
+    cc: 7
+    fan_out: 15
+  - name: cmd_setup
+    type: function
+    cc: 2
+    fan_out: 11
+  - name: cmd_tasks
+    type: function
+    cc: 3
+    fan_out: 10
+  - name: cmd_status
+    type: function
+    cc: 1
+  - name: cmd_list
+    type: function
+    cc: 21
+    flag: split
+    fan_out: 27
+  - name: cmd_prompts
+    type: function
+    cc: 8
+    fan_out: 10
+  - name: cmd_analyze
+    type: function
+    cc: 3
+    fan_out: 22
+  - name: cmd_refactor
+    type: function
+    cc: 5
+    fan_out: 18
+  - name: cmd_stop
+    type: function
+    cc: 4
+  - name: cli
+    type: function
+    cc: 13
+    fan_out: 15
+  - name: main
+    type: function
+    cc: 1
+- path: reclapp-contracts/reclapp_contracts/validation/pipeline.py
+  lines: 255
+  classes: 8
+  methods: 6
+  cc_max: 19
+  inbound_deps: 0
+  exports:
+  - name: StageError
+    type: class
+    cc_avg: 0.0
+  - name: StageResult
+    type: class
+    cc_avg: 0.0
+  - name: PipelineResult
+    type: class
+    cc_avg: 0.0
+  - name: GeneratedCode
+    type: class
+    cc_avg: 0.0
+  - name: ValidationContext
+    type: class
+    cc_avg: 0.0
+  - name: ValidationStage
+    type: class
+    cc_avg: 0.0
+  - name: PipelineOptions
+    type: class
+    cc_avg: 0.0
+  - name: ValidationPipeline
+    type: class
+    cc_avg: 4.8
+    methods:
+    - name: validate
+      cc: 19
+      flag: split
+      fan_out: 10
+- path: src/python/reclapp/generator/code_generator.py
+  lines: 742
+  classes: 4
+  methods: 14
+  cc_max: 19
+  inbound_deps: 0
+  exports:
+  - name: GeneratedFile
+    type: class
+    cc_avg: 0.0
+  - name: CodeGeneratorOptions
+    type: class
+    cc_avg: 0.0
+  - name: CodeGenerationResult
+    type: class
+    cc_avg: 0.0
+  - name: CodeGenerator
+    type: class
+    cc_avg: 4.4
+    methods:
+    - name: generate
+      cc: 18
+      flag: split
+      fan_out: 29
+    - name: _generate_with_llm
+      cc: 5
+      fan_out: 11
+    - name: _build_llm_prompt
+      cc: 4
+      fan_out: 11
+    - name: _parse_llm_response
+      cc: 19
+      flag: split
+      fan_out: 12
+- path: src/python/reclapp/cli/runner.py
+  lines: 265
+  classes: 2
+  methods: 8
+  cc_max: 18
+  inbound_deps: 0
+  exports:
+  - name: CLITaskResult
+    type: class
+    cc_avg: 1.0
+  - name: CLIRunner
+    type: class
+    cc_avg: 4.4
+    methods:
+    - name: run
+      cc: 18
+      flag: split
+      fan_out: 18
+- path: tools/reclapp-setup/setup.py
+  lines: 713
+  classes: 12
+  methods: 14
+  cc_max: 18
+  inbound_deps: 0
+  exports:
+  - name: TaskStatus
+    type: class
+    cc_avg: 0.0
+  - name: Priority
+    type: class
+    cc_avg: 0.0
+  - name: LLMProviderStatus
+    type: class
+    cc_avg: 0.0
+  - name: LLMProvider
+    type: class
+    cc_avg: 6.0
+  - name: Dependency
+    type: class
+    cc_avg: 0.0
+  - name: SetupTask
+    type: class
+    cc_avg: 0.0
+  - name: TaskResult
+    type: class
+    cc_avg: 0.0
+  - name: EnvironmentReport
+    type: class
+    cc_avg: 0.0
+  - name: SetupConfig
+    type: class
+    cc_avg: 0.0
+  - name: CLITask
+    type: class
+    cc_avg: 0.0
+  - name: CLIRunner
+    type: class
+    cc_avg: 4.5
+    methods:
+    - name: print_todo
+      cc: 12
+    - name: run
+      cc: 8
+      fan_out: 12
+  - name: DependencyChecker
+    type: class
+    cc_avg: 8.5
+    methods:
+    - name: generate_report
+      cc: 13
+      fan_out: 10
+  - name: check_llm_providers
+    type: function
+    cc: 12
+    fan_out: 10
+  - name: cmd_setup
+    type: function
+    cc: 18
+    flag: split
+    fan_out: 32
+  - name: main
+    type: function
+    cc: 4
+- path: src/python/reclapp/evolution/task_queue.py
+  lines: 207
+  classes: 2
+  methods: 12
+  cc_max: 17
+  inbound_deps: 0
+  exports:
+  - name: Task
+    type: class
+    cc_avg: 0.0
+  - name: TaskQueue
+    type: class
+    cc_avg: 3.9
+    methods:
+    - name: get_stats
+      cc: 11
+    - name: _print_todo_list
+      cc: 17
+      flag: split
+- path: reclapp/cli.py
+  lines: 1247
+  classes: 2
+  methods: 50
+  cc_max: 13
+  inbound_deps: 11
+  exports:
+  - name: _Console
+    type: class
+    cc_avg: 2.0
+  - name: Panel
+    type: class
+    cc_avg: 2.0
+  - name: find_node
+    type: function
+    cc: 4
+  - name: find_npm
+    type: function
+    cc: 4
+  - name: setup_node_env
+    type: function
+    cc: 3
+  - name: main
+    type: function
+    cc: 5
+  - name: lifecycle
+    type: function
+    cc: 1
+  - name: generate
+    type: function
+    cc: 6
+    fan_out: 17
+  - name: list
+    type: function
+    cc: 1
+  - name: prompts
+    type: function
+    cc: 1
+    fan_out: 10
+  - name: analyze
+    type: function
+    cc: 1
+  - name: refactor
+    type: function
+    cc: 1
+  - name: parse
+    type: function
+    cc: 1
+  - name: validate
+    type: function
+    cc: 1
+  - name: prompts_old
+    type: function
+    cc: 4
+  - name: tasks
+    type: function
+    cc: 1
+  - name: setup
+    type: function
+    cc: 1
+  - name: stop
+    type: function
+    cc: 1
+  - name: evolve
+    type: function
+    cc: 9
+    fan_out: 17
+  - name: reverse
+    type: function
+    cc: 5
+    fan_out: 12
+  - name: status
+    type: function
+    cc: 1
+  - name: llm
+    type: function
+    cc: 1
+  - name: llm_status
+    type: function
+    cc: 12
+    fan_out: 30
+  - name: llm_models
+    type: function
+    cc: 12
+    fan_out: 15
+  - name: llm_set_provider
+    type: function
+    cc: 5
+    fan_out: 10
+  - name: llm_set_model
+    type: function
+    cc: 6
+    fan_out: 11
+  - name: llm_key
+    type: function
+    cc: 1
+  - name: llm_key_set
+    type: function
+    cc: 6
+    fan_out: 10
+  - name: llm_key_unset
+    type: function
+    cc: 4
+    fan_out: 10
+  - name: llm_test
+    type: function
+    cc: 5
+    fan_out: 12
+  - name: llm_config
+    type: function
+    cc: 3
+  - name: llm_config_list
+    type: function
+    cc: 7
+    fan_out: 14
+  - name: llm_priority
+    type: function
+    cc: 1
+  - name: llm_priority_set_provider
+    type: function
+    cc: 9
+    fan_out: 18
+  - name: llm_priority_set_model
+    type: function
+    cc: 4
+  - name: llm_model
+    type: function
+    cc: 1
+  - name: llm_model_list
+    type: function
+    cc: 1
+  - name: llm_model_add
+    type: function
+    cc: 6
+    fan_out: 11
+  - name: llm_model_remove
+    type: function
+    cc: 9
+    fan_out: 11
+  - name: llm_model_remove_provider
+    type: function
+    cc: 13
+    fan_out: 17
+  - name: llm_fallbacks
+    type: function
+    cc: 1
+  - name: llm_fallbacks_list
+    type: function
+    cc: 6
+  - name: llm_fallbacks_add
+    type: function
+    cc: 5
+    fan_out: 10
+  - name: llm_fallbacks_remove
+    type: function
+    cc: 8
+- path: src/python/reclapp/analysis/code_rag.py
+  lines: 789
+  classes: 8
+  methods: 32
+  cc_max: 13
+  inbound_deps: 0
+  exports:
+  - name: CodeChunk
+    type: class
+    cc_avg: 0.0
+  - name: SearchResult
+    type: class
+    cc_avg: 0.0
+  - name: HierarchicalLevel
+    type: class
+    cc_avg: 0.0
+  - name: CodeIndex
+    type: class
+    cc_avg: 0.0
+  - name: SemanticChunker
+    type: class
+    cc_avg: 5.2
+    methods:
+    - name: parse_file
+      cc: 6
+      fan_out: 13
+    - name: _parse_python
+      cc: 13
+      fan_out: 16
+    - name: _parse_typescript
+      cc: 11
+      fan_out: 14
+  - name: CodeIndexer
+    type: class
+    cc_avg: 3.8
+    methods:
+    - name: index_directory
+      cc: 12
+  - name: HierarchicalRetriever
+    type: class
+    cc_avg: 7.0
+    methods:
+    - name: _search_files
+      cc: 11
+      fan_out: 10
+    - name: _score_chunk
+      cc: 11
+    - name: get_hierarchy
+      cc: 13
+      fan_out: 15
+  - name: CodeRAG
+    type: class
+    cc_avg: 3.2
+    methods:
+    - name: ask
+      cc: 11
+- path: src/python/reclapp/generator/contract_generator.py
+  lines: 358
+  classes: 4
+  methods: 8
+  cc_max: 13
+  inbound_deps: 0
+  exports:
+  - name: ContractGeneratorOptions
+    type: class
+    cc_avg: 0.0
+  - name: ContractValidationError
+    type: class
+    cc_avg: 0.0
+  - name: ContractGenerationResult
+    type: class
+    cc_avg: 0.0
+  - name: ContractGenerator
+    type: class
+    cc_avg: 4.9
+    methods:
+    - name: generate
+      cc: 11
+      fan_out: 17
+    - name: _validate_contract
+      cc: 13
+- path: reclapp-llm/reclapp_llm/manager.py
+  lines: 455
+  classes: 2
+  methods: 21
+  cc_max: 11
+  inbound_deps: 0
+  exports:
+  - name: ProviderInfo
+    type: class
+    cc_avg: 1.0
+  - name: LLMManager
+    type: class
+    cc_avg: 3.7
+    methods:
+    - name: initialize
+      cc: 10
+      fan_out: 16
+    - name: _load_env_file
+      cc: 11
+      fan_out: 14
+- path: src/python/reclapp/cli/executor.py
+  lines: 197
+  classes: 2
+  methods: 7
+  cc_max: 11
+  inbound_deps: 0
+  exports:
+  - name: ExecutorTask
+    type: class
+    cc_avg: 2.0
+  - name: TaskExecutor
+    type: class
+    cc_avg: 5.3
+    methods:
+    - name: add_tasks_from_file
+      cc: 6
+      fan_out: 11
+    - name: run_task
+      cc: 6
+      fan_out: 20
+    - name: print_summary
+      cc: 11
+- path: src/python/reclapp/evolution/state_analyzer.py
+  lines: 321
+  classes: 8
+  methods: 11
+  cc_max: 11
+  inbound_deps: 0
+  exports:
+  - name: StateLevel
+    type: class
+    cc_avg: 0.0
+  - name: DiscrepancyType
+    type: class
+    cc_avg: 0.0
+  - name: StateDiscrepancy
+    type: class
+    cc_avg: 1.0
+  - name: ContractState
+    type: class
+    cc_avg: 0.0
+  - name: CodeState
+    type: class
+    cc_avg: 0.0
+  - name: RuntimeState
+    type: class
+    cc_avg: 0.0
+  - name: MultiLevelState
+    type: class
+    cc_avg: 2.5
+  - name: StateAnalyzer
+    type: class
+    cc_avg: 4.8
+    methods:
+    - name: _analyze_contract
+      cc: 4
+      fan_out: 10
+    - name: _analyze_code
+      cc: 11
+      fan_out: 11
+- path: reclapp-contracts/reclapp_contracts/validation/stages.py
+  lines: 457
+  classes: 0
+  methods: 10
+  cc_max: 10
+  inbound_deps: 1
+  exports:
+  - name: create_syntax_validator
+    type: function
+    cc: 1
+  - name: create_schema_validator
+    type: function
+    cc: 1
+    fan_out: 10
+  - name: create_assertion_validator
+    type: function
+    cc: 1
+  - name: create_static_analyzer
+    type: function
+    cc: 1
+  - name: create_test_runner
+    type: function
+    cc: 1
+  - name: create_quality_checker
+    type: function
+    cc: 1
+    fan_out: 11
+  - name: create_security_scanner
+    type: function
+    cc: 1
+  - name: create_runtime_validator
+    type: function
+    cc: 1
+- path: src/python/reclapp/evolution/shell_renderer.py
+  lines: 336
+  classes: 1
+  methods: 22
+  cc_max: 10
+  inbound_deps: 0
+  exports:
+  - name: ShellRenderer
+    type: class
+    cc_avg: 3.4
+    methods:
+    - name: _highlight_yaml
+      cc: 10
+    - name: _highlight_log
+      cc: 10
+- path: reclapp-llm/reclapp_llm/ollama.py
+  lines: 189
+  classes: 2
+  methods: 9
+  cc_max: 9
+  inbound_deps: 0
+  exports:
+  - name: OllamaConfig
+    type: class
+    cc_avg: 0.0
+  - name: OllamaClient
+    type: class
+    cc_avg: 3.3
+- path: src/python/reclapp/sdk/sdk_generator.py
+  lines: 632
+  classes: 3
+  methods: 17
+  cc_max: 9
+  inbound_deps: 0
+  exports:
+  - name: SDKGeneratorOptions
+    type: class
+    cc_avg: 0.0
+  - name: GeneratedSDK
+    type: class
+    cc_avg: 0.0
+  - name: SDKGenerator
+    type: class
+    cc_avg: 3.7
+- path: reclapp-llm/reclapp_llm/groq.py
+  lines: 130
+  classes: 2
+  methods: 7
+  cc_max: 8
+  inbound_deps: 0
+  exports:
+  - name: GroqConfig
+    type: class
+    cc_avg: 0.0
+  - name: GroqClient
+    type: class
+    cc_avg: 2.7
+    methods:
+    - name: generate
+      cc: 8
+      fan_out: 11
+- path: reclapp-llm/reclapp_llm/litellm.py
+  lines: 112
+  classes: 2
+  methods: 7
+  cc_max: 8
+  inbound_deps: 0
+  exports:
+  - name: LiteLLMConfig
+    type: class
+    cc_avg: 0.0
+  - name: LiteLLMClient
+    type: class
+    cc_avg: 2.1
+    methods:
+    - name: generate
+      cc: 8
+      fan_out: 11
+- path: reclapp-llm/reclapp_llm/openai.py
+  lines: 130
+  classes: 2
+  methods: 7
+  cc_max: 8
+  inbound_deps: 0
+  exports:
+  - name: OpenAIConfig
+    type: class
+    cc_avg: 0.0
+  - name: OpenAIClient
+    type: class
+    cc_avg: 2.7
+    methods:
+    - name: generate
+      cc: 8
+      fan_out: 11
+- path: reclapp-llm/reclapp_llm/openrouter.py
+  lines: 111
+  classes: 2
+  methods: 7
+  cc_max: 8
+  inbound_deps: 0
+  exports:
+  - name: OpenRouterConfig
+    type: class
+    cc_avg: 0.0
+  - name: OpenRouterClient
+    type: class
+    cc_avg: 2.4
+    methods:
+    - name: generate
+      cc: 8
+      fan_out: 11
+- path: reclapp-llm/reclapp_llm/windsurf.py
+  lines: 194
+  classes: 2
+  methods: 9
+  cc_max: 8
+  inbound_deps: 0
+  exports:
+  - name: WindsurfConfig
+    type: class
+    cc_avg: 0.0
+  - name: WindsurfClient
+    type: class
+    cc_avg: 2.8
+    methods:
+    - name: generate
+      cc: 8
+      fan_out: 14
+- path: reclapp-llm/reclapp_llm/together.py
+  lines: 127
+  classes: 2
+  methods: 7
+  cc_max: 7
+  inbound_deps: 0
+  exports:
+  - name: TogetherConfig
+    type: class
+    cc_avg: 0.0
+  - name: TogetherClient
+    type: class
+    cc_avg: 2.6
+    methods:
+    - name: generate
+      cc: 7
+      fan_out: 11
+- path: contracts/generate_json.py
+  lines: 101
+  classes: 0
+  methods: 5
+  cc_max: 6
+  inbound_deps: 0
+  exports:
+  - name: generate_json_schemas
+    type: function
+    cc: 6
+    fan_out: 12
+  - name: main
+    type: function
+    cc: 2
+- path: reclapp-contracts/reclapp_contracts/models/contract.py
+  lines: 200
+  classes: 2
+  methods: 5
+  cc_max: 6
+  inbound_deps: 0
+  exports:
+  - name: ContractMetadata
+    type: class
+    cc_avg: 0.0
+  - name: ContractAI
+    type: class
+    cc_avg: 0.0
+  - name: is_valid_contract
+    type: function
+    cc: 4
+  - name: has_definition_layer
+    type: function
+    cc: 6
+  - name: has_generation_layer
+    type: function
+    cc: 3
+  - name: has_validation_layer
+    type: function
+    cc: 3
+  - name: create_minimal_contract
+    type: function
+    cc: 5
+    fan_out: 12
+- path: reclapp-llm/reclapp_llm/anthropic.py
+  lines: 117
+  classes: 2
+  methods: 7
+  cc_max: 6
+  inbound_deps: 0
+  exports:
+  - name: AnthropicConfig
+    type: class
+    cc_avg: 0.0
+  - name: AnthropicClient
+    type: class
+    cc_avg: 2.0
+    methods:
+    - name: generate
+      cc: 6
+      fan_out: 10
+- path: src/python/reclapp/evolution/generators.py
+  lines: 596
+  classes: 1
+  methods: 10
+  cc_max: 6
+  inbound_deps: 0
+  exports:
+  - name: EvolutionGenerators
+    type: class
+    cc_avg: 2.4
+    methods:
+    - name: generate_database
+      cc: 6
+      fan_out: 11
+- path: sitecustomize.py
+  lines: 30
+  classes: 0
+  methods: 1
+  cc_max: 5
+  inbound_deps: 0
+- path: reclapp-llm/reclapp_llm/provider.py
+  lines: 104
+  classes: 5
+  methods: 5
+  cc_max: 4
+  inbound_deps: 0
+  exports:
+  - name: LLMProviderStatus
+    type: class
+    cc_avg: 0.0
+  - name: GenerateOptions
+    type: class
+    cc_avg: 0.0
+  - name: LLMResponse
+    type: class
+    cc_avg: 0.0
+  - name: LLMModelInfo
+    type: class
+    cc_avg: 0.0
+  - name: LLMProvider
+    type: class
+    cc_avg: 2.0
+- path: reclapp-contracts/reclapp_contracts/validation/__init__.py
+  lines: 81
+  classes: 0
+  methods: 1
+  cc_max: 2
+  inbound_deps: 0
+  exports:
+  - name: create_default_pipeline
+    type: function
+    cc: 2
+    fan_out: 10
+- path: scripts/generate_schemas.py
+  lines: 47
+  classes: 0
+  methods: 2
+  cc_max: 2
+  inbound_deps: 0
+  exports:
+  - name: generate_json_schema
+    type: function
+    cc: 1
+  - name: main
+    type: function
+    cc: 2
+    fan_out: 10
+- path: src/python/reclapp/generator/base.py
+  lines: 76
+  classes: 1
+  methods: 6
+  cc_max: 2
+  inbound_deps: 0
+  exports:
+  - name: BaseGenerator
+    type: class
+    cc_avg: 1.3
+- path: contracts/summary.py
+  lines: 20
+  classes: 1
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+  exports:
+  - name: Summary
+    type: class
+    cc_avg: 0.0
+- path: contracts/user.py
+  lines: 46
+  classes: 1
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+  exports:
+  - name: User
+    type: class
+    cc_avg: 0.0
+- path: reclapp-contracts/reclapp_contracts/__init__.py
+  lines: 40
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+- path: reclapp-contracts/reclapp_contracts/models/__init__.py
+  lines: 106
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+- path: reclapp-contracts/reclapp_contracts/models/definition.py
+  lines: 347
+  classes: 18
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+  exports:
+  - name: BasicFieldType
+    type: class
+    cc_avg: 0.0
+  - name: ExtendedFieldType
+    type: class
+    cc_avg: 0.0
+  - name: RelationType
+    type: class
+    cc_avg: 0.0
+  - name: FieldAnnotations
+    type: class
+    cc_avg: 0.0
+  - name: FieldDefinition
+    type: class
+    cc_avg: 0.0
+  - name: RelationDefinition
+    type: class
+    cc_avg: 0.0
+  - name: IndexDefinition
+    type: class
+    cc_avg: 0.0
+  - name: EntityDefinition
+    type: class
+    cc_avg: 0.0
+  - name: EventDefinition
+    type: class
+    cc_avg: 0.0
+  - name: WorkflowStepType
+    type: class
+    cc_avg: 0.0
+  - name: WorkflowStepDefinition
+    type: class
+    cc_avg: 0.0
+  - name: WorkflowDefinition
+    type: class
+    cc_avg: 0.0
+  - name: ApiEndpointDefinition
+    type: class
+    cc_avg: 0.0
+  - name: ApiResourceDefinition
+    type: class
+    cc_avg: 0.0
+  - name: ApiAuthentication
+    type: class
+    cc_avg: 0.0
+  - name: ApiDefinition
+    type: class
+    cc_avg: 0.0
+  - name: AppDefinition
+    type: class
+    cc_avg: 0.0
+  - name: DefinitionLayer
+    type: class
+    cc_avg: 0.0
+- path: reclapp-contracts/reclapp_contracts/models/generation.py
+  lines: 185
+  classes: 11
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+  exports:
+  - name: InstructionPriority
+    type: class
+    cc_avg: 0.0
+  - name: Instruction
+    type: class
+    cc_avg: 0.0
+  - name: PatternType
+    type: class
+    cc_avg: 0.0
+  - name: Pattern
+    type: class
+    cc_avg: 0.0
+  - name: ConstraintType
+    type: class
+    cc_avg: 0.0
+  - name: Constraint
+    type: class
+    cc_avg: 0.0
+  - name: BackendTechStack
+    type: class
+    cc_avg: 0.0
+  - name: FrontendTechStack
+    type: class
+    cc_avg: 0.0
+  - name: DatabaseTechStack
+    type: class
+    cc_avg: 0.0
+  - name: TechStack
+    type: class
+    cc_avg: 0.0
+  - name: GenerationLayer
+    type: class
+    cc_avg: 0.0
+- path: reclapp-contracts/reclapp_contracts/models/validation.py
+  lines: 194
+  classes: 8
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+  exports:
+  - name: AssertionType
+    type: class
+    cc_avg: 0.0
+  - name: Assertion
+    type: class
+    cc_avg: 0.0
+  - name: TestType
+    type: class
+    cc_avg: 0.0
+  - name: TestDefinition
+    type: class
+    cc_avg: 0.0
+  - name: StaticRule
+    type: class
+    cc_avg: 0.0
+  - name: QualityGate
+    type: class
+    cc_avg: 0.0
+  - name: AcceptanceCriteria
+    type: class
+    cc_avg: 0.0
+  - name: ValidationLayer
+    type: class
+    cc_avg: 0.0
+- path: reclapp-contracts/reclapp_contracts/parser/__init__.py
+  lines: 23
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+- path: reclapp-llm/reclapp_llm/__init__.py
+  lines: 53
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+- path: reclapp/__init__.py
+  lines: 30
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+- path: src/python/reclapp/__init__.py
+  lines: 83
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+- path: src/python/reclapp/analysis/__init__.py
+  lines: 38
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+- path: src/python/reclapp/cli/__init__.py
+  lines: 12
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+- path: src/python/reclapp/cli/__main__.py
+  lines: 11
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+- path: src/python/reclapp/evolution/__init__.py
+  lines: 36
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+- path: src/python/reclapp/generator/__init__.py
+  lines: 38
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+- path: src/python/reclapp/llm/__init__.py
+  lines: 69
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+- path: src/python/reclapp/llm/manager.py
+  lines: 2
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+- path: src/python/reclapp/llm/provider.py
+  lines: 2
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+- path: src/python/reclapp/llm/windsurf.py
+  lines: 2
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+- path: src/python/reclapp/models/__init__.py
+  lines: 98
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+- path: src/python/reclapp/parser/__init__.py
+  lines: 24
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+- path: src/python/reclapp/parser/markdown_parser.py
+  lines: 10
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+- path: src/python/reclapp/sdk/__init__.py
+  lines: 17
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+- path: src/python/reclapp/validation/__init__.py
+  lines: 56
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+- path: src/python/reclapp/validation/pipeline.py
+  lines: 2
+  classes: 0
+  methods: 0
+  cc_max: 0
+  inbound_deps: 0
+hotspots:
+- name: cmd_setup
+  fan_out: 32
+  note: Orchestrates 32 calls
+- name: llm_status
+  fan_out: 30
+  note: Show LLM providers status and configuration.
+- name: CodeGenerator.generate
+  fan_out: 29
+  note: "Generate application code from contract.\n\nArgs:\n    contract: ContractAI\
+    \ specifi"
+- name: cmd_list
+  fan_out: 27
+  note: Execute the list command - find and display contracts
+- name: EvolutionManager._run_e2e_tests
+  fan_out: 26
+  note: Run E2E tests and return (passed, failed, output)
+- name: EvolutionManager.evolve
+  fan_out: 24
+  note: Run the full evolution pipeline with auto-healing.
+- name: EvolutionManager._phase_service
+  fan_out: 22
+  note: 'Phase 4: Install deps and start service'
+- name: cmd_analyze
+  fan_out: 22
+  note: Analysis pipeline, 22 stages
+- name: GitAnalyzer.detect_stack
+  fan_out: 21
+  note: Detect technology stack from repository files
+- name: TaskExecutor.run_task
+  fan_out: 20
+  note: Execute a single task using subprocess
+refactoring:
+  priorities:
+  - action: Split _parse_tech_section (CC=28 → target CC<10)
+    impact: high
+    effort: low
+    module: markdown_parser.py
+  - action: Split GitAnalyzer.detect_stack (CC=34 → target CC<10)
+    impact: high
+    effort: low
+    module: git_analyzer.py
+  - action: Split EvolutionManager._run_e2e_tests (CC=25 → target CC<10)
+    impact: high
+    effort: low
+    module: evolution_manager.py
+  - action: Split god module reclapp-contracts/reclapp_contracts/parser/markdown_parser.py
+      (718L, 18 classes)
+    impact: high
+    effort: high
+  - action: Split god module src/python/reclapp/evolution/evolution_manager.py (1563L,
+      3 classes)
+    impact: high
+    effort: high
+  - action: Split god module src/python/reclapp/cli/main.py (1122L, 0 classes)
+    impact: high
+    effort: high
+  - action: Split god module src/python/reclapp/generator/code_generator.py (742L,
+      4 classes)
+    impact: high
+    effort: high
+  - action: Split god module tools/reclapp-setup/setup.py (713L, 12 classes)
+    impact: high
+    effort: high
+  - action: Split god module reclapp/cli.py (1247L, 2 classes)
+    impact: high
+    effort: high
+  - action: Split god module src/python/reclapp/analysis/code_rag.py (789L, 8 classes)
+    impact: high
+    effort: high
+  - action: Split god module src/python/reclapp/sdk/sdk_generator.py (632L, 3 classes)
+    impact: high
+    effort: high
+  - action: Split god module src/python/reclapp/evolution/generators.py (596L, 1 classes)
+    impact: high
+    effort: high
+  - action: Split ValidationPipeline.validate (CC=19 → target CC<10)
+    impact: medium
+    effort: low
+    module: pipeline.py
+  - action: Split _parse_markdown_table (CC=20 → target CC<10)
+    impact: medium
+    effort: low
+    module: markdown_parser.py
+  - action: Split CodeGenerator.generate (CC=18 → target CC<10)
+    impact: medium
+    effort: low
+    module: code_generator.py
+evolution:
+- date: '2026-03-05'
+  cc_avg: 4.2
+  critical: 45
+  lines: 20461
+  note: Automated analysis

@@ -1,0 +1,377 @@
+flowchart TD
+    subgraph contracts_generate_json
+        contracts__generate_json___load_module_from_path["_load_module_from_path"]
+        contracts__generate_json___collect_models["_collect_models"]
+        contracts__generate_json___schema_filename["_schema_filename"]
+        contracts__generate_json__generate_json_schemas["generate_json_schemas"]
+        contracts__generate_json__main["main"]
+    end
+    subgraph reclapp_contracts_reclapp_contracts
+        reclapp-contracts__create_syntax_validator["create_syntax_validator"]
+        reclapp-contracts___check_js_syntax("_check_js_syntax CC=10")
+        reclapp-contracts___check_python_syntax["_check_python_syntax"]
+        reclapp-contracts__create_schema_validator["create_schema_validator"]
+        reclapp-contracts__create_assertion_validator["create_assertion_validator"]
+        reclapp-contracts__create_static_analyzer["create_static_analyzer"]
+        reclapp-contracts__create_test_runner["create_test_runner"]
+        reclapp-contracts__create_quality_checker["create_quality_checker"]
+        reclapp-contracts__create_security_scanner["create_security_scanner"]
+        reclapp-contracts__create_runtime_validator["create_runtime_validator"]
+        reclapp-contracts__create_default_pipeline["create_default_pipeline"]
+        reclapp-contracts____init__["__init__"]
+        reclapp-contracts__register_stage["register_stage"]
+        reclapp-contracts__register_stages["register_stages"]
+        reclapp-contracts__validate{{validate CC=19}}
+        reclapp-contracts___run_stage["_run_stage"]
+        reclapp-contracts__get_stage_names["get_stage_names"]
+        reclapp-contracts__parse_contract_markdown["parse_contract_markdown"]
+        reclapp-contracts___extract_frontmatter["_extract_frontmatter"]
+        reclapp-contracts___parse_app_section("_parse_app_section CC=9")
+        reclapp-contracts___parse_entities_section["_parse_entities_section"]
+        reclapp-contracts___parse_entity_content["_parse_entity_content"]
+        reclapp-contracts___parse_yaml_fields("_parse_yaml_fields CC=10")
+        reclapp-contracts___parse_markdown_table{{_parse_markdown_table CC=20}}
+        reclapp-contracts___parse_field_type["_parse_field_type"]
+        reclapp-contracts___parse_api_section["_parse_api_section"]
+        reclapp-contracts___parse_endpoint_tables("_parse_endpoint_tables CC=10")
+        reclapp-contracts___parse_rules_section("_parse_rules_section CC=9")
+        reclapp-contracts___parse_tech_section{{_parse_tech_section CC=28}}
+        reclapp-contracts___parse_tests_section("_parse_tests_section CC=10")
+        reclapp-contracts___parse_gherkin["_parse_gherkin"]
+        reclapp-contracts___extract_section["_extract_section"]
+        reclapp-contracts___extract_field["_extract_field"]
+        reclapp-contracts___extract_list_from_field["_extract_list_from_field"]
+        reclapp-contracts___extract_checkbox_list["_extract_checkbox_list"]
+        reclapp-contracts__validate_contract("validate_contract CC=11")
+        reclapp-contracts__is_valid_contract["is_valid_contract"]
+        reclapp-contracts__has_definition_layer["has_definition_layer"]
+        reclapp-contracts__has_generation_layer["has_generation_layer"]
+        reclapp-contracts__has_validation_layer["has_validation_layer"]
+        reclapp-contracts__create_minimal_contract["create_minimal_contract"]
+    end
+    subgraph reclapp_llm_reclapp_llm
+        reclapp-llm____init__["__init__"]
+        reclapp-llm__is_available["is_available"]
+        reclapp-llm__list_models["list_models"]
+        reclapp-llm__generate("generate CC=8")
+        reclapp-llm__close["close"]
+        reclapp-llm____aenter__["__aenter__"]
+        reclapp-llm____aexit__["__aexit__"]
+        reclapp-llm____init__["__init__"]
+        reclapp-llm__is_available["is_available"]
+        reclapp-llm__list_models["list_models"]
+        reclapp-llm__generate["generate"]
+        reclapp-llm__close["close"]
+        reclapp-llm____aenter__["__aenter__"]
+        reclapp-llm____aexit__["__aexit__"]
+        reclapp-llm____init__["__init__"]
+        reclapp-llm__is_available["is_available"]
+        reclapp-llm__list_models["list_models"]
+        reclapp-llm__has_model("has_model CC=9")
+        reclapp-llm__generate("generate CC=8")
+        reclapp-llm___sleep["_sleep"]
+        reclapp-llm__close["close"]
+        reclapp-llm____aenter__["__aenter__"]
+        reclapp-llm____aexit__["__aexit__"]
+        reclapp-llm____init__["__init__"]
+        reclapp-llm__is_available["is_available"]
+        reclapp-llm__list_models["list_models"]
+        reclapp-llm__generate("generate CC=8")
+        reclapp-llm__close["close"]
+        reclapp-llm____aenter__["__aenter__"]
+        reclapp-llm____aexit__["__aexit__"]
+        reclapp-llm__is_available["is_available"]
+        reclapp-llm__list_models["list_models"]
+        reclapp-llm__generate["generate"]
+        reclapp-llm__has_model["has_model"]
+        reclapp-llm__get_code_models["get_code_models"]
+        reclapp-llm____init__["__init__"]
+        reclapp-llm__is_available["is_available"]
+        reclapp-llm__list_models["list_models"]
+        reclapp-llm__generate("generate CC=8")
+        reclapp_llm__reclapp_llm__groq__GroqClient__close["close"]
+        reclapp-llm____aenter__["__aenter__"]
+        reclapp-llm____aexit__["__aexit__"]
+        reclapp-llm____init__["__init__"]
+        reclapp-llm__is_available["is_available"]
+        reclapp-llm__list_models["list_models"]
+        reclapp-llm__has_model["has_model"]
+        reclapp-llm__generate("generate CC=8")
+        reclapp-llm___get_headers["_get_headers"]
+        reclapp-llm__close["close"]
+        reclapp-llm____aenter__["__aenter__"]
+        reclapp-llm____aexit__["__aexit__"]
+        reclapp-llm____init__["__init__"]
+        reclapp-llm__is_available["is_available"]
+        reclapp-llm__list_models["list_models"]
+        reclapp-llm__generate("generate CC=8")
+        reclapp-llm__close["close"]
+        reclapp-llm____aenter__["__aenter__"]
+        reclapp-llm____aexit__["__aexit__"]
+        reclapp-llm____init__["__init__"]
+        reclapp-llm__is_available["is_available"]
+    end
+    subgraph reclapp_cli
+        reclapp__cli___strip_rich_markup["_strip_rich_markup"]
+        reclapp__cli___Console__print["print"]
+        reclapp__cli__Panel__fit["fit"]
+        reclapp__cli__find_node["find_node"]
+        reclapp__cli__find_npm["find_npm"]
+        reclapp__cli__setup_node_env["setup_node_env"]
+        reclapp__cli__main["main"]
+        reclapp__cli__lifecycle["lifecycle"]
+        reclapp__cli__generate["generate"]
+        reclapp__cli___get_core_main["_get_core_main"]
+        reclapp__cli__list["list"]
+        reclapp__cli__prompts["prompts"]
+        reclapp__cli__analyze["analyze"]
+        reclapp__cli__refactor["refactor"]
+        reclapp__cli__parse["parse"]
+        reclapp__cli__validate["validate"]
+        reclapp__cli__prompts_old["prompts_old"]
+        reclapp__cli__tasks["tasks"]
+        reclapp__cli__setup["setup"]
+        reclapp__cli__stop["stop"]
+        reclapp__cli__evolve("evolve CC=9")
+        reclapp__cli__reverse["reverse"]
+        reclapp__cli__status["status"]
+        reclapp__cli__llm["llm"]
+        reclapp__cli__llm_status("llm_status CC=12")
+        reclapp__cli__llm_models("llm_models CC=12")
+        reclapp__cli__llm_set_provider["llm_set_provider"]
+        reclapp__cli__llm_set_model["llm_set_model"]
+        reclapp__cli__llm_key["llm_key"]
+        reclapp__cli__llm_key_set["llm_key_set"]
+        reclapp__cli__llm_key_unset["llm_key_unset"]
+        reclapp__cli__llm_test["llm_test"]
+        reclapp__cli__llm_config["llm_config"]
+        reclapp__cli__llm_config_list["llm_config_list"]
+        reclapp__cli___get_litellm_config_path["_get_litellm_config_path"]
+        reclapp__cli___load_litellm_yaml("_load_litellm_yaml CC=8")
+        reclapp__cli___save_litellm_yaml["_save_litellm_yaml"]
+        reclapp__cli___infer_provider_from_litellm_model["_infer_provider_from_litellm_model"]
+        reclapp__cli__llm_priority["llm_priority"]
+        reclapp__cli__llm_priority_set_provider("llm_priority_set_provider CC=9")
+        reclapp__cli__llm_priority_set_model["llm_priority_set_model"]
+        reclapp__cli__llm_model["llm_model"]
+        reclapp__cli__llm_model_list["llm_model_list"]
+        reclapp__cli__llm_model_add["llm_model_add"]
+        reclapp__cli__llm_model_remove("llm_model_remove CC=9")
+        reclapp__cli__llm_model_remove_provider("llm_model_remove_provider CC=13")
+        reclapp__cli__llm_fallbacks["llm_fallbacks"]
+        reclapp__cli__llm_fallbacks_list["llm_fallbacks_list"]
+        reclapp__cli__llm_fallbacks_add["llm_fallbacks_add"]
+        reclapp__cli__llm_fallbacks_remove("llm_fallbacks_remove CC=8")
+    end
+    subgraph scripts_generate_schemas
+        scripts__generate_schemas__generate_json_schema["generate_json_schema"]
+        scripts__generate_schemas__main["main"]
+    end
+    subgraph sitecustomize
+        sitecustomize___is_running_pytest["_is_running_pytest"]
+    end
+    subgraph src_python
+        src____init__["__init__"]
+        src__set_llm_client["set_llm_client"]
+        src__require_llm_client["require_llm_client"]
+        src___estimate_tokens["_estimate_tokens"]
+        src___log["_log"]
+        src__generate["generate"]
+        src____init__["__init__"]
+        src__generate("generate CC=11")
+        src___build_initial_prompt["_build_initial_prompt"]
+        src___build_correction_prompt["_build_correction_prompt"]
+        src___call_llm["_call_llm"]
+        src___parse_contract_from_response["_parse_contract_from_response"]
+        src___validate_contract("_validate_contract CC=13")
+        src___estimate_tokens["_estimate_tokens"]
+        src____init__["__init__"]
+        src__generate{{generate CC=18}}
+        src___generate_package_json["_generate_package_json"]
+        src___generate_index_file["_generate_index_file"]
+        src___generate_entity_model["_generate_entity_model"]
+        src___generate_route_file["_generate_route_file"]
+        src___generate_tsconfig["_generate_tsconfig"]
+        src___map_field_type["_map_field_type"]
+        src___write_files["_write_files"]
+        src___estimate_tokens["_estimate_tokens"]
+        src___generate_with_llm["_generate_with_llm"]
+        src___get_system_prompt["_get_system_prompt"]
+        src___build_llm_prompt["_build_llm_prompt"]
+        src___parse_llm_response{{_parse_llm_response CC=19}}
+        src____init__["__init__"]
+        src___run_git["_run_git"]
+        src__is_git_repo["is_git_repo"]
+        src__get_branch["get_branch"]
+        src__get_last_commit["get_last_commit"]
+        src__get_recent_commits["get_recent_commits"]
+        src__get_status("get_status CC=8")
+        src__get_remotes["get_remotes"]
+        src__get_file_structure["get_file_structure"]
+        src__detect_stack{{detect_stack CC=34}}
+        src__get_full_state["get_full_state"]
+        src__generate_contract_from_code{{generate_contract_from_code CC=15}}
+        src____init__["__init__"]
+        src____init__["__init__"]
+        src__header["header"]
+        src__add_task["add_task"]
+        src__python__reclapp__cli__runner__CLIRunner__log["log"]
+        src__python__reclapp__cli__runner__CLIRunner__yaml["yaml"]
+        src__print_todo["print_todo"]
+        src__python__reclapp__cli__runner__CLIRunner__run{{run CC=18}}
+        src____init__["__init__"]
+        src__parse_file["parse_file"]
+        src___parse_python("_parse_python CC=13")
+        src___parse_typescript("_parse_typescript CC=11")
+        src___detect_language["_detect_language"]
+        src___generate_id["_generate_id"]
+        src___extract_imports["_extract_imports"]
+        src___extract_exports["_extract_exports"]
+        src___extract_signature["_extract_signature"]
+        src___extract_local_dependencies["_extract_local_dependencies"]
+        src____init__["__init__"]
+        src__index_directory("index_directory CC=12")
+    end
+    subgraph tools_reclapp_setup
+        tools__reclapp_setup__setup__LLMProvider__to_dict["to_dict"]
+        tools__reclapp_setup__setup__CLIRunner____init__["__init__"]
+        tools__reclapp_setup__setup__CLIRunner__add_task["add_task"]
+        tools__reclapp_setup__setup__CLIRunner__log["log"]
+        tools__reclapp_setup__setup__CLIRunner__yaml["yaml"]
+        tools___format_yaml("_format_yaml CC=8")
+        tools___format_value["_format_value"]
+        tools__reclapp_setup__setup__CLIRunner__print_todo("print_todo CC=12")
+        tools__reclapp_setup__setup__CLIRunner__run("run CC=8")
+        tools__check_dependency["check_dependency"]
+        tools__generate_report("generate_report CC=13")
+        tools__reclapp_setup__setup__check_llm_providers("check_llm_providers CC=12")
+        tools__reclapp_setup__setup__cmd_setup{{cmd_setup CC=18}}
+        tools__reclapp_setup__setup__main["main"]
+    end
+    scripts__generate_schemas__main --> reclapp__cli___Console__print
+    scripts__generate_schemas__main --> scripts__generate_schemas__generate_json_schema
+    contracts__generate_json__generate_json_schemas --> contracts__generate_json___load_module_from_path
+    contracts__generate_json__generate_json_schemas --> contracts__generate_json___collect_models
+    contracts__generate_json__generate_json_schemas --> contracts__generate_json___schema_filename
+    contracts__generate_json__main --> contracts__generate_json__generate_json_schemas
+    contracts__generate_json__main --> reclapp__cli___Console__print
+    reclapp__cli___Console__print --> reclapp__cli___strip_rich_markup
+    reclapp__cli__lifecycle --> reclapp__cli___get_core_main
+    reclapp__cli__generate --> reclapp__cli___get_core_main
+    reclapp__cli__generate --> reclapp__cli__find_node
+    reclapp__cli__list --> reclapp__cli___get_core_main
+    reclapp__cli__prompts --> reclapp__cli___get_core_main
+    reclapp__cli__analyze --> reclapp__cli___get_core_main
+    reclapp__cli__refactor --> reclapp__cli___get_core_main
+    reclapp__cli__parse --> reclapp__cli___get_core_main
+    reclapp__cli__validate --> reclapp__cli___get_core_main
+    reclapp__cli__tasks --> reclapp__cli___get_core_main
+    reclapp__cli__setup --> reclapp__cli___get_core_main
+    reclapp__cli__stop --> reclapp__cli___get_core_main
+    reclapp__cli__evolve --> reclapp__cli___get_core_main
+    reclapp__cli__evolve --> reclapp__cli__find_node
+    reclapp__cli__reverse --> reclapp__cli__find_node
+    reclapp__cli__reverse --> reclapp__cli__setup_node_env
+    reclapp__cli__status --> reclapp__cli___get_core_main
+    reclapp__cli__llm_config_list --> reclapp__cli___load_litellm_yaml
+    reclapp__cli__llm_config_list --> reclapp__cli___infer_provider_from_litellm_model
+    reclapp__cli___load_litellm_yaml --> reclapp__cli___get_litellm_config_path
+    reclapp__cli___save_litellm_yaml --> reclapp__cli___get_litellm_config_path
+    reclapp__cli__llm_priority_set_provider --> reclapp__cli___load_litellm_yaml
+    reclapp__cli__llm_priority_set_provider --> reclapp__cli___save_litellm_yaml
+    reclapp__cli__llm_priority_set_provider --> reclapp__cli___infer_provider_from_litellm_model
+    reclapp__cli__llm_priority_set_model --> reclapp__cli___load_litellm_yaml
+    reclapp__cli__llm_priority_set_model --> reclapp__cli___save_litellm_yaml
+    reclapp__cli__llm_priority_set_model --> reclapp__cli___get_litellm_config_path
+    reclapp__cli__llm_model_list --> reclapp__cli__llm_config_list
+    reclapp__cli__llm_model_add --> reclapp__cli___load_litellm_yaml
+    reclapp__cli__llm_model_add --> reclapp__cli___save_litellm_yaml
+    reclapp__cli__llm_model_remove --> reclapp__cli___load_litellm_yaml
+    reclapp__cli__llm_model_remove --> reclapp__cli___save_litellm_yaml
+    reclapp__cli__llm_model_remove --> reclapp__cli___get_litellm_config_path
+    reclapp__cli__llm_model_remove_provider --> reclapp__cli___load_litellm_yaml
+    reclapp__cli__llm_model_remove_provider --> reclapp__cli___save_litellm_yaml
+    reclapp__cli__llm_model_remove_provider --> reclapp__cli___infer_provider_from_litellm_model
+    reclapp__cli__llm_fallbacks_list --> reclapp__cli___load_litellm_yaml
+    reclapp__cli__llm_fallbacks_add --> reclapp__cli___load_litellm_yaml
+    reclapp__cli__llm_fallbacks_add --> reclapp__cli___save_litellm_yaml
+    reclapp__cli__llm_fallbacks_add --> reclapp__cli___get_litellm_config_path
+    reclapp__cli__llm_fallbacks_remove --> reclapp__cli___load_litellm_yaml
+    reclapp__cli__llm_fallbacks_remove --> reclapp__cli___save_litellm_yaml
+    reclapp__cli__llm_fallbacks_remove --> reclapp__cli___get_litellm_config_path
+    reclapp-contracts__create_syntax_validator --> reclapp-contracts___check_js_syntax
+    reclapp-contracts__create_syntax_validator --> reclapp-contracts___check_python_syntax
+    reclapp-contracts__create_default_pipeline --> reclapp-contracts__create_syntax_validator
+    reclapp-contracts__create_default_pipeline --> reclapp-contracts__create_schema_validator
+    reclapp-contracts__create_default_pipeline --> reclapp-contracts__create_assertion_validator
+    reclapp-contracts__create_default_pipeline --> reclapp-contracts__create_static_analyzer
+    reclapp-contracts__create_default_pipeline --> reclapp-contracts__create_test_runner
+    reclapp-contracts__create_default_pipeline --> reclapp-contracts__create_quality_checker
+    reclapp-contracts__create_default_pipeline --> reclapp-contracts__create_security_scanner
+    reclapp-contracts__create_default_pipeline --> reclapp-contracts__create_runtime_validator
+    reclapp-contracts__validate --> reclapp__cli___Console__print
+    reclapp-contracts__parse_contract_markdown --> reclapp-contracts___extract_frontmatter
+    reclapp-contracts__parse_contract_markdown --> reclapp-contracts___parse_app_section
+    reclapp-contracts__parse_contract_markdown --> reclapp-contracts___parse_entities_section
+    reclapp-contracts__parse_contract_markdown --> reclapp-contracts___parse_api_section
+    reclapp-contracts__parse_contract_markdown --> reclapp-contracts___parse_rules_section
+    reclapp-contracts__parse_contract_markdown --> reclapp-contracts___parse_tech_section
+    reclapp-contracts__parse_contract_markdown --> reclapp-contracts___parse_tests_section
+    reclapp-contracts___parse_app_section --> reclapp-contracts___extract_checkbox_list
+    reclapp-contracts___parse_app_section --> reclapp-contracts___extract_section
+    reclapp-contracts___parse_app_section --> reclapp-contracts___extract_field
+    reclapp-contracts___parse_app_section --> reclapp-contracts___extract_list_from_field
+    reclapp-contracts___parse_entities_section --> reclapp-contracts___extract_section
+    reclapp-contracts___parse_entities_section --> reclapp-contracts___parse_entity_content
+    reclapp-contracts___parse_entity_content --> reclapp-contracts___parse_markdown_table
+    reclapp-contracts___parse_entity_content --> reclapp-contracts___parse_yaml_fields
+    reclapp-contracts___parse_api_section --> reclapp-contracts___parse_endpoint_tables
+    reclapp-contracts___parse_api_section --> reclapp-contracts___extract_section
+    reclapp-contracts___parse_rules_section --> reclapp-contracts___extract_section
+    reclapp-contracts___parse_tech_section --> reclapp-contracts___extract_section
+    reclapp-contracts___parse_tests_section --> reclapp-contracts___extract_section
+    reclapp-contracts___parse_tests_section --> reclapp-contracts___parse_gherkin
+    reclapp-contracts___extract_list_from_field --> reclapp-contracts___extract_field
+    reclapp-contracts__is_valid_contract --> reclapp-contracts__has_definition_layer
+    reclapp-contracts__is_valid_contract --> reclapp-contracts__has_generation_layer
+    reclapp-contracts__is_valid_contract --> reclapp-contracts__has_validation_layer
+    reclapp-llm__generate_with_fallback --> reclapp__cli__list
+    src___log --> reclapp__cli___Console__print
+    src__get_remotes --> reclapp__cli__list
+    tools__reclapp_setup__setup__main --> tools__reclapp_setup__setup__cmd_setup
+    src___extract_imports --> reclapp__cli__list
+    src___extract_exports --> reclapp__cli__list
+    src___extract_local_dependencies --> reclapp__cli__list
+    src__find_usages --> reclapp__cli__list
+    src__heading --> reclapp__cli___Console__print
+    src__codeblock --> reclapp__cli___Console__print
+    src__text --> reclapp__cli___Console__print
+    src__success --> reclapp__cli___Console__print
+    src__error --> reclapp__cli___Console__print
+    src__warning --> reclapp__cli___Console__print
+    src__info --> reclapp__cli___Console__print
+    src__wait_for_all --> reclapp__cli__list
+    src__print_summary --> reclapp__cli__list
+    src__python__reclapp__cli__main__cmd_evolve --> reclapp__cli___Console__print
+    src__show_interactive_menu --> reclapp__cli___Console__print
+    src__python__reclapp__cli__main__show_file --> reclapp__cli___Console__print
+    src__python__reclapp__cli__main__check_health --> reclapp__cli___Console__print
+    src__python__reclapp__cli__main__show_logs --> reclapp__cli___Console__print
+    src__python__reclapp__cli__main__cmd_generate --> reclapp__cli___Console__print
+    src__python__reclapp__cli__main__cmd_generate --> reclapp-contracts__parse_contract_markdown
+    src__python__reclapp__cli__main__cmd_parse --> reclapp-contracts__parse_contract_markdown
+    src__python__reclapp__cli__main__cmd_validate --> reclapp-contracts__parse_contract_markdown
+    src__python__reclapp__cli__main__cmd_validate --> reclapp-contracts__validate_contract
+    src__python__reclapp__cli__main__cli --> src__python__reclapp__cli__main__create_parser
+    src__python__reclapp__cli__main__cli --> src__python__reclapp__cli__main__cmd_evolve
+    src__python__reclapp__cli__main__cli --> src__python__reclapp__cli__main__cmd_generate
+    src__python__reclapp__cli__main__cli --> src__python__reclapp__cli__main__cmd_validate
+    src__python__reclapp__cli__main__cli --> src__python__reclapp__cli__main__cmd_status
+    src__python__reclapp__cli__main__cli --> src__python__reclapp__cli__main__cmd_list
+    src__python__reclapp__cli__main__cli --> src__python__reclapp__cli__main__cmd_prompts
+    src__python__reclapp__cli__main__main --> src__python__reclapp__cli__main__cli
+
+    classDef highCC fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    classDef medCC fill:#ffd43b,stroke:#f08c00,color:#000
+    class reclapp-contracts__validate,reclapp-contracts___parse_markdown_table,reclapp-contracts___parse_tech_section,src__generate,src___parse_llm_response,src__detect_stack,src__generate_contract_from_code,tools__reclapp_setup__setup__cmd_setup,src__python__reclapp__cli__runner__CLIRunner__run,src__evolve,src___phase_service,src___run_e2e_tests,src__show_interactive_menu,src__python__reclapp__cli__main__cmd_list,src___print_todo_list highCC
+    class reclapp__cli__evolve,reclapp__cli__llm_status,reclapp__cli__llm_models,reclapp__cli___load_litellm_yaml,reclapp__cli__llm_priority_set_provider,reclapp__cli__llm_model_remove,reclapp__cli__llm_model_remove_provider,reclapp__cli__llm_fallbacks_remove,reclapp-contracts___check_js_syntax,reclapp-llm__generate,reclapp-contracts___parse_app_section,reclapp-contracts___parse_yaml_fields,reclapp-contracts___parse_endpoint_tables,reclapp-contracts___parse_rules_section,reclapp-contracts___parse_tests_section,reclapp-contracts__validate_contract,reclapp-llm__has_model,reclapp-llm__generate,reclapp-llm__generate,reclapp-llm__generate,reclapp-llm__generate,reclapp-llm__generate,reclapp-llm__initialize,reclapp-llm___load_env_file,src__generate,src___validate_contract,src__get_status,tools___format_yaml,tools__reclapp_setup__setup__CLIRunner__print_todo,tools__reclapp_setup__setup__CLIRunner__run medCC

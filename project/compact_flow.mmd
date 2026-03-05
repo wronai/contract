@@ -1,0 +1,15 @@
+flowchart TD
+    contracts_generate_json["contracts.generate_json<br/>5 funcs"]
+    reclapp_contracts_reclapp_contracts["reclapp-contracts.reclapp_contracts<br/>41 funcs"]
+    reclapp_llm_reclapp_llm["reclapp-llm.reclapp_llm<br/>86 funcs"]
+    reclapp_cli["reclapp.cli<br/>50 funcs"]
+    scripts_generate_schemas["scripts.generate_schemas<br/>2 funcs"]
+    src_python["src.python<br/>213 funcs"]
+    tools_reclapp_setup["tools.reclapp-setup<br/>14 funcs"]
+    src_python ==>|83| reclapp_cli
+    tools_reclapp_setup ==>|13| reclapp_cli
+    reclapp_contracts_reclapp_contracts ==>|6| reclapp_cli
+    src_python ==>|4| reclapp_contracts_reclapp_contracts
+    scripts_generate_schemas -->|3| reclapp_cli
+    contracts_generate_json -->|2| reclapp_cli
+    reclapp_llm_reclapp_llm -->|1| reclapp_cli

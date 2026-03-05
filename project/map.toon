@@ -1,0 +1,532 @@
+# contract | 60f 14679L | python:60
+# Keys: M=modules, D=details, i=imports, c=classes, f=functions, m=methods
+M[60]:
+  contracts/generate_json.py,101
+  contracts/summary.py,20
+  contracts/user.py,46
+  reclapp/__init__.py,30
+  reclapp-contracts/reclapp_contracts/__init__.py,40
+  reclapp-contracts/reclapp_contracts/models/__init__.py,106
+  reclapp-contracts/reclapp_contracts/models/contract.py,200
+  reclapp-contracts/reclapp_contracts/models/definition.py,347
+  reclapp-contracts/reclapp_contracts/models/generation.py,185
+  reclapp-contracts/reclapp_contracts/models/validation.py,194
+  reclapp-contracts/reclapp_contracts/parser/__init__.py,23
+  reclapp-contracts/reclapp_contracts/parser/markdown_parser.py,718
+  reclapp-contracts/reclapp_contracts/validation/__init__.py,81
+  reclapp-contracts/reclapp_contracts/validation/pipeline.py,255
+  reclapp-contracts/reclapp_contracts/validation/stages.py,457
+  reclapp-llm/reclapp_llm/__init__.py,53
+  reclapp-llm/reclapp_llm/anthropic.py,117
+  reclapp-llm/reclapp_llm/groq.py,130
+  reclapp-llm/reclapp_llm/litellm.py,112
+  reclapp-llm/reclapp_llm/manager.py,455
+  reclapp-llm/reclapp_llm/ollama.py,189
+  reclapp-llm/reclapp_llm/openai.py,130
+  reclapp-llm/reclapp_llm/openrouter.py,111
+  reclapp-llm/reclapp_llm/provider.py,104
+  reclapp-llm/reclapp_llm/together.py,127
+  reclapp-llm/reclapp_llm/windsurf.py,194
+  reclapp/cli.py,1247
+  scripts/generate_schemas.py,47
+  sitecustomize.py,30
+  src/python/reclapp/__init__.py,83
+  src/python/reclapp/analysis/__init__.py,38
+  src/python/reclapp/analysis/code_rag.py,789
+  src/python/reclapp/analysis/git_analyzer.py,413
+  src/python/reclapp/cli/__init__.py,12
+  src/python/reclapp/cli/__main__.py,11
+  src/python/reclapp/cli/executor.py,197
+  src/python/reclapp/cli/main.py,1122
+  src/python/reclapp/cli/runner.py,265
+  src/python/reclapp/evolution/__init__.py,36
+  src/python/reclapp/evolution/evolution_manager.py,1563
+  src/python/reclapp/evolution/generators.py,596
+  src/python/reclapp/evolution/shell_renderer.py,336
+  src/python/reclapp/evolution/state_analyzer.py,321
+  src/python/reclapp/evolution/task_queue.py,207
+  src/python/reclapp/generator/__init__.py,38
+  src/python/reclapp/generator/base.py,76
+  src/python/reclapp/generator/code_generator.py,742
+  src/python/reclapp/generator/contract_generator.py,358
+  src/python/reclapp/llm/__init__.py,69
+  src/python/reclapp/llm/manager.py,2
+  src/python/reclapp/llm/provider.py,2
+  src/python/reclapp/llm/windsurf.py,2
+  src/python/reclapp/models/__init__.py,98
+  src/python/reclapp/parser/__init__.py,24
+  src/python/reclapp/parser/markdown_parser.py,10
+  src/python/reclapp/sdk/__init__.py,17
+  src/python/reclapp/sdk/sdk_generator.py,632
+  src/python/reclapp/validation/__init__.py,56
+  src/python/reclapp/validation/pipeline.py,2
+  tools/reclapp-setup/setup.py,713
+D:
+  src/python/reclapp/analysis/git_analyzer.py:
+    e: CommitInfo,GitStatus,FileEntry,DetectedStack,GitState,GitAnalyzer
+    CommitInfo(BaseModel):  # Git commit information...
+    GitStatus(BaseModel):  # Git status (modified, untracked, staged files)...
+    FileEntry(BaseModel):  # File or directory entry...
+    DetectedStack(BaseModel):  # Detected technology stack...
+    GitState(BaseModel):  # Complete Git repository state...
+    GitAnalyzer: __init__(1),_run_git(0),is_git_repo(0),get_branch(0),get_last_commit(0),get_recent_commits(1),get_status(0),get_remotes(0),get_file_structure(0),detect_stack(0),get_full_state(0),generate_contract_from_code(1)  # Analyzes Git repositories for state, tech stack detection, a...
+  reclapp-contracts/reclapp_contracts/parser/markdown_parser.py:
+    e: EntityField,MarkdownEntityDefinition,ApiEndpoint,MarkdownAssertion,TestCase,AcceptanceScenario,AcceptanceTest,ContractFrontmatter,BackendTech,FrontendTech,DatabaseTech,TechStack,AppDefinition,ApiDefinition,RulesDefinition,TestsDefinition,ContractMarkdown,ContractValidationResult,parse_contract_markdown,_extract_frontmatter,_parse_app_section,_parse_entities_section,_parse_entity_content,_parse_yaml_fields,_parse_markdown_table,_parse_field_type,_parse_api_section,_parse_endpoint_tables,_parse_rules_section,_parse_tech_section,_parse_tests_section,_parse_gherkin,_extract_section,_extract_field,_extract_list_from_field,_extract_checkbox_list,validate_contract
+    EntityField(BaseModel):  # Entity field from markdown table...
+    MarkdownEntityDefinition(BaseModel):  # Entity definition parsed from markdown...
+    ApiEndpoint(BaseModel):  # API endpoint definition...
+    MarkdownAssertion(BaseModel):  # Business rule assertion...
+    TestCase(BaseModel):  # API test case...
+    AcceptanceScenario(BaseModel):  # Gherkin scenario...
+    AcceptanceTest(BaseModel):  # Gherkin feature with scenarios...
+    ContractFrontmatter(BaseModel):  # YAML frontmatter from contract.md...
+    BackendTech(BaseModel):  # Backend technology configuration...
+    FrontendTech(BaseModel):  # Frontend technology configuration...
+    DatabaseTech(BaseModel):  # Database configuration...
+    TechStack(BaseModel):  # Complete tech stack...
+    AppDefinition(BaseModel):  # App definition from markdown...
+    ApiDefinition(BaseModel):  # API definition from markdown...
+    RulesDefinition(BaseModel):  # Business rules definition...
+    TestsDefinition(BaseModel):  # Tests definition...
+    ContractMarkdown(BaseModel):  # Complete parsed contract markdown...
+    ContractValidationResult(BaseModel):  # Validation result...
+    parse_contract_markdown(content)
+    _extract_frontmatter(content)
+    _parse_app_section(body)
+    _parse_entities_section(body)
+    _parse_entity_content(name;content)
+    _parse_yaml_fields(content)
+    _parse_markdown_table(content)
+    _parse_field_type(type_str)
+    _parse_api_section(body)
+    _parse_endpoint_tables(section)
+    _parse_rules_section(body)
+    _parse_tech_section(body;frontmatter)
+    _parse_tests_section(body)
+    _parse_gherkin(content)
+    _extract_section(body;header)
+    _extract_field(section;label)
+    _extract_list_from_field(section;label)
+    _extract_checkbox_list(section)
+    validate_contract(contract)
+  src/python/reclapp/evolution/evolution_manager.py:
+    e: EvolutionOptions,EvolutionResult,EvolutionManager
+    EvolutionOptions(BaseModel):  # Evolution manager options...
+    EvolutionResult(BaseModel):  # Result of evolution run...
+    EvolutionManager: __init__(1),set_llm_client(1),evolve(2),_setup_tasks(0),_phase_setup(1),_phase_contract(2),_phase_code_generation(2),_phase_service(1),_phase_tests(1),_phase_additional(1),_phase_verification(1),_generate_database(1),_generate_frontend(1),_generate_dockerfile(1),_generate_cicd(1),_generate_docs(1),_generate_api_docs(1),_generate_test_fixtures(1),_generate_test_config(1),_save_evolution_log(1),_find_npm(0),_with_llm_heartbeat(4),_kill_port(1),_check_health(1),_stop_service(0),_generate_e2e_tests(1),_run_e2e_tests(1),_auto_fix_code(3),_extract_code_block(2),_generate_contract(1),_extract_app_name(1),_extract_entities(1),_generate_code(2),_validate_code(1),get_task_queue(0)  # Evolution manager with auto-healing code generation.
+
+Full p...
+  src/python/reclapp/cli/main.py:
+    e: create_parser,cmd_evolve,show_interactive_menu,show_file,check_health,show_logs,cmd_generate,cmd_parse,cmd_validate,cmd_setup,cmd_tasks,cmd_status,cmd_list,cmd_prompts,cmd_analyze,cmd_refactor,cmd_stop,cli,main
+    create_parser()
+    cmd_evolve(args)
+    show_interactive_menu(manager;args;port)
+    show_file(path)
+    check_health(port)
+    show_logs(output_dir)
+    cmd_generate(args)
+    cmd_parse(args)
+    cmd_validate(args)
+    cmd_setup(args)
+    cmd_tasks(args)
+    cmd_status(args)
+    cmd_list(args)
+    cmd_prompts(args)
+    cmd_analyze(args)
+    cmd_refactor(args)
+    cmd_stop(args)
+    cli(args)
+    main()
+  reclapp-contracts/reclapp_contracts/validation/pipeline.py:
+    e: StageError,StageResult,PipelineResult,GeneratedCode,ValidationContext,ValidationStage,PipelineOptions,ValidationPipeline
+    StageError(BaseModel):  # Error from a validation stage...
+    StageResult(BaseModel):  # Result from a single validation stage...
+    PipelineResult(BaseModel):  # Result from the complete validation pipeline...
+    GeneratedCode(BaseModel):  # Generated code structure...
+    ValidationContext(BaseModel):  # Context passed between validation stages...
+    ValidationStage(BaseModel):  # Validation stage definition...
+    PipelineOptions(BaseModel):  # Pipeline configuration options...
+    ValidationPipeline: __init__(4),register_stage(1),register_stages(1),validate(2),_run_stage(2),get_stage_names(0)  # 8-stage validation pipeline orchestrator.
+
+Example:
+    pipe...
+  src/python/reclapp/generator/code_generator.py:
+    e: GeneratedFile,CodeGeneratorOptions,CodeGenerationResult,CodeGenerator
+    GeneratedFile(BaseModel):  # A generated file...
+    CodeGeneratorOptions(BaseModel):  # Code generator options...
+    CodeGenerationResult(BaseModel):  # Result of code generation...
+    CodeGenerator(<ast.Subscript object at 0x77f43b781d50>): __init__(1),generate(2),_generate_package_json(2),_generate_index_file(2),_generate_entity_model(2),_generate_route_file(3),_generate_tsconfig(0),_map_field_type(1),_write_files(2),_estimate_tokens(1),_generate_with_llm(2),_get_system_prompt(0),_build_llm_prompt(1),_parse_llm_response(1)  # Code generator using LLM.
+
+Generates application code from C...
+  tools/reclapp-setup/setup.py:
+    e: TaskStatus,Priority,LLMProviderStatus,LLMProvider,Dependency,SetupTask,TaskResult,EnvironmentReport,SetupConfig,CLITask,CLIRunner,DependencyChecker,check_llm_providers,cmd_setup,main
+    TaskStatus(str,Enum):
+    Priority(str,Enum):
+    LLMProviderStatus(str,Enum):
+    LLMProvider(BaseModel): to_dict(0)
+    Dependency(BaseModel):
+    SetupTask(BaseModel):
+    TaskResult(BaseModel):
+    EnvironmentReport(BaseModel):
+    SetupConfig(BaseModel):
+    CLITask(BaseModel):
+    CLIRunner: __init__(3),add_task(3),log(1),yaml(3),_format_yaml(2),_format_value(1),print_todo(0),run(0)
+    DependencyChecker: check_dependency(1),generate_report(0)
+    check_llm_providers()
+    cmd_setup(config)
+    main()
+  src/python/reclapp/cli/runner.py:
+    e: CLITaskResult,CLIRunner
+    CLITaskResult: __init__(4)  # Result of a single CLI task...
+    CLIRunner: __init__(5),header(0),add_task(5),log(1),yaml(3),print_todo(0),run(0)  # Standardized runner for CLI commands.
+
+Provides consistent o...
+  src/python/reclapp/evolution/task_queue.py:
+    e: Task,TaskQueue
+    Task(BaseModel):  # Task definition...
+    TaskQueue: __init__(1),add(2),start(1),done(1),fail(2),skip(1),get_task(1),get_stats(0),print(1),_find_task(1),_print_todo_list(1),get_icon(0)  # Task queue with status tracking and YAML output.
+
+Example:
+ ...
+  reclapp/cli.py:
+    e: _Console,Panel,_strip_rich_markup,find_node,find_npm,setup_node_env,main,lifecycle,generate,_get_core_main,list,prompts,analyze,refactor,parse,validate,prompts_old,tasks,setup,stop,evolve,reverse,status,llm,llm_status,llm_models,llm_set_provider,llm_set_model,llm_key,llm_key_set,llm_key_unset,llm_test,llm_config,llm_config_list,_get_litellm_config_path,_load_litellm_yaml,_save_litellm_yaml,_infer_provider_from_litellm_model,llm_priority,llm_priority_set_provider,llm_priority_set_model,llm_model,llm_model_list,llm_model_add,llm_model_remove,llm_model_remove_provider,llm_fallbacks,llm_fallbacks_list,llm_fallbacks_add,llm_fallbacks_remove
+    _Console: print(1)
+    Panel: fit(1)
+    _strip_rich_markup(text)
+    find_node()
+    find_npm()
+    setup_node_env()
+    main(ctx;prompt;output;port;verbose;keep_running;log_file;version)
+    lifecycle(prompt;output;port;verbose;keep_running;log_file)
+    generate(contract_path;output;verbose;engine)
+    _get_core_main()
+    list(directory;format;verbose)
+    prompts(action;name;verbose)
+    analyze(directory;output;verbose)
+    refactor(contract;directory;dry_run;verbose)
+    parse(contract;verbose)
+    validate(contract;verbose)
+    prompts_old(level;verbose)
+    tasks(file;workers;verbose)
+    setup(output;verbose)
+    stop(verbose)
+    evolve(prompt;output;port;keep_running;verbose;no_menu;log_file;engine)
+    reverse(target_dir;output;verbose)
+    status(verbose)
+    llm()
+    llm_status()
+    llm_models(provider)
+    llm_set_provider(provider)
+    llm_set_model(provider;model)
+    llm_key()
+    llm_key_set(provider;api_key)
+    llm_key_unset(provider)
+    llm_test(provider;model)
+    llm_config(ctx)
+    llm_config_list(provider)
+    _get_litellm_config_path()
+    _load_litellm_yaml()
+    _save_litellm_yaml(data)
+    _infer_provider_from_litellm_model(litellm_model)
+    llm_priority()
+    llm_priority_set_provider(provider;priority;preserve_order;step)
+    llm_priority_set_model(model_name;priority)
+    llm_model()
+    llm_model_list(provider)
+    llm_model_add(model_name;litellm_model;api_base;api_key;priority;rate_limit)
+    llm_model_remove(model_name)
+    llm_model_remove_provider(provider)
+    llm_fallbacks()
+    llm_fallbacks_list()
+    llm_fallbacks_add(model_name)
+    llm_fallbacks_remove(model_name)
+  src/python/reclapp/generator/contract_generator.py:
+    e: ContractGeneratorOptions,ContractValidationError,ContractGenerationResult,ContractGenerator
+    ContractGeneratorOptions(BaseModel):  # Contract generator options...
+    ContractValidationError(BaseModel):  # Contract validation error...
+    ContractGenerationResult(BaseModel):  # Result of contract generation...
+    ContractGenerator(<ast.Subscript object at 0x77f43b885e10>): __init__(1),generate(1),_build_initial_prompt(1),_build_correction_prompt(4),_call_llm(1),_parse_contract_from_response(1),_validate_contract(1),_estimate_tokens(1)  # Contract AI generator with self-correction loop.
+
+Generates ...
+  src/python/reclapp/analysis/code_rag.py:
+    e: CodeChunk,SearchResult,HierarchicalLevel,CodeIndex,SemanticChunker,CodeIndexer,HierarchicalRetriever,CodeRAG
+    CodeChunk(BaseModel):  # A semantic unit of code (file, class, function, etc.)...
+    SearchResult(BaseModel):  # Search result with score...
+    HierarchicalLevel(BaseModel):  # Level in code hierarchy...
+    CodeIndex:  # Index structure for code chunks...
+    SemanticChunker: __init__(1),parse_file(2),_parse_python(3),_parse_typescript(3),_detect_language(1),_generate_id(3),_extract_imports(2),_extract_exports(2),_extract_signature(2),_extract_local_dependencies(1)  # Parse files and extract semantic chunks (functions, classes,...
+    CodeIndexer: __init__(1),index_directory(2),_generate_summary(1),_scan_directory(2),get_index(0),get_chunk(1),get_chunks_by_file(1),get_chunks_by_symbol(1),get_callers(1),get_callees(1)  # Index codebase for search and navigation.
+
+Example:
+    inde...
+    HierarchicalRetriever: __init__(2),search(2),_search_files(2),_score_chunk(2),trace_call_path(3),get_hierarchy(0)  # Search code hierarchically:
+- Level 1: Find relevant files/m...
+    CodeRAG: __init__(1),index(1),ask(1),find_usages(1),get_structure(0),export_index(0)  # Complete Code RAG system for intelligent code navigation.
+
+E...
+  reclapp-llm/reclapp_llm/manager.py:
+    e: ProviderInfo,LLMManager
+    ProviderInfo: __init__(3)  # Information about a configured provider...
+    LLMManager: __init__(1),is_ready(0),get_provider(0),initialize(0),_load_env_file(0),_init_ollama(0),_init_openrouter(0),_init_openai(0),_init_anthropic(0),_init_groq(0),_init_together(0),_init_litellm(0),_init_windsurf(0),add_provider(2),generate(2),generate_with_fallback(2),get_status(0),close(0),__aenter__(0),__aexit__(0)  # LLM Manager with multi-provider support.
+
+Manages multiple L...
+  src/python/reclapp/evolution/state_analyzer.py:
+    e: StateLevel,DiscrepancyType,StateDiscrepancy,ContractState,CodeState,RuntimeState,MultiLevelState,StateAnalyzer
+    StateLevel(str,Enum):  # State analysis levels...
+    DiscrepancyType(str,Enum):  # Types of state discrepancies...
+    StateDiscrepancy: to_dict(0)  # A discrepancy between expected and actual state...
+    ContractState:  # State extracted from contract...
+    CodeState:  # State extracted from generated code...
+    RuntimeState:  # State extracted from running service...
+    MultiLevelState: is_consistent(0),to_dict(0)  # Combined multi-level state...
+    StateAnalyzer: __init__(2),analyze(1),_load_contract(0),_analyze_contract(1),_analyze_code(0),_analyze_runtime(0),_find_discrepancies(1),write_state_snapshot(1)  # Analyzes state across contract, code, and runtime levels.
+
+M...
+  src/python/reclapp/cli/executor.py:
+    e: ExecutorTask,TaskExecutor
+    ExecutorTask: __init__(4)  # Task definition for the executor...
+    TaskExecutor: __init__(2),add_task(3),add_tasks_from_file(1),run_task(1),wait_for_all(0),print_summary(0)  # Executes commands from a task file or manually added.
+Suppor...
+  reclapp-contracts/reclapp_contracts/validation/stages.py:
+    e: create_syntax_validator,_check_js_syntax,_check_python_syntax,create_schema_validator,create_assertion_validator,create_static_analyzer,create_test_runner,create_quality_checker,create_security_scanner,create_runtime_validator
+    create_syntax_validator()
+    _check_js_syntax(filename;content)
+    _check_python_syntax(filename;content)
+    create_schema_validator()
+    create_assertion_validator()
+    create_static_analyzer()
+    create_test_runner()
+    create_quality_checker()
+    create_security_scanner()
+    create_runtime_validator()
+  src/python/reclapp/evolution/shell_renderer.py:
+    e: ShellRenderer
+    ShellRenderer: __init__(1),enable_log(0),get_log(0),clear_log(0),save_log(1),_log(1),_get_clickmd(0),_try_md(1),_try_echo(1),heading(2),codeblock(2),text(1),success(1),error(1),warning(1),info(1),_highlight_line(2),_highlight_yaml(1),_highlight_json(1),_highlight_bash(1),_highlight_js(1),_highlight_log(1)  # Renders colorized output in terminal.
+
+Uses clickmd.Markdown...
+  reclapp-llm/reclapp_llm/ollama.py:
+    e: OllamaConfig,OllamaClient
+    OllamaConfig(BaseModel):  # Ollama configuration...
+    OllamaClient(LLMProvider): __init__(1),is_available(0),list_models(0),has_model(1),generate(1),_sleep(1),close(0),__aenter__(0),__aexit__(0)  # Ollama LLM Client
+
+Example:
+    client = OllamaClient()
+    ...
+  src/python/reclapp/sdk/sdk_generator.py:
+    e: SDKGeneratorOptions,GeneratedSDK,SDKGenerator
+    SDKGeneratorOptions(BaseModel):  # Options for SDK generation...
+    GeneratedSDK(BaseModel):  # Generated SDK output...
+    SDKGenerator: __init__(1),generate(1),_generate_types(1),_generate_entity_type(1),_generate_input_types(1),_generate_api_response_types(1),_generate_zod_schemas(1),_generate_entity_schema(1),_generate_client(1),_generate_entity_client_methods(1),_generate_hooks(1),_generate_entity_hooks(1),_generate_index(1),_field_type_to_ts(1),_field_type_to_zod(1),_format_field_comment(1),_pluralize(1)  # Generate TypeScript SDK from ContractAI specification.
+
+Gene...
+  reclapp-llm/reclapp_llm/openrouter.py:
+    e: OpenRouterConfig,OpenRouterClient
+    OpenRouterConfig(BaseModel):
+    OpenRouterClient(LLMProvider): __init__(1),is_available(0),list_models(0),generate(1),close(0),__aenter__(0),__aexit__(0)
+  reclapp-llm/reclapp_llm/litellm.py:
+    e: LiteLLMConfig,LiteLLMClient
+    LiteLLMConfig(BaseModel):  # LiteLLM configuration...
+    LiteLLMClient(LLMProvider): __init__(1),is_available(0),list_models(0),generate(1),close(0),__aenter__(0),__aexit__(0)  # LiteLLM Universal Client...
+  reclapp-llm/reclapp_llm/groq.py:
+    e: GroqConfig,GroqClient
+    GroqConfig(BaseModel):  # Groq configuration...
+    GroqClient(LLMProvider): __init__(1),is_available(0),list_models(0),generate(1),close(0),__aenter__(0),__aexit__(0)  # Groq LLM Client...
+  reclapp-llm/reclapp_llm/windsurf.py:
+    e: WindsurfConfig,WindsurfClient
+    WindsurfConfig(BaseModel):  # Configuration for Windsurf client...
+    WindsurfClient(LLMProvider): __init__(1),is_available(0),list_models(0),has_model(1),generate(1),_get_headers(0),close(0),__aenter__(0),__aexit__(0)  # Windsurf/Codeium LLM provider.
+
+Windsurf provides a local pr...
+  reclapp-llm/reclapp_llm/openai.py:
+    e: OpenAIConfig,OpenAIClient
+    OpenAIConfig(BaseModel):  # OpenAI configuration...
+    OpenAIClient(LLMProvider): __init__(1),is_available(0),list_models(0),generate(1),close(0),__aenter__(0),__aexit__(0)  # OpenAI LLM Client...
+  reclapp-llm/reclapp_llm/together.py:
+    e: TogetherConfig,TogetherClient
+    TogetherConfig(BaseModel):  # Together AI configuration...
+    TogetherClient(LLMProvider): __init__(1),is_available(0),list_models(0),generate(1),close(0),__aenter__(0),__aexit__(0)  # Together AI LLM Client...
+  contracts/generate_json.py:
+    e: _load_module_from_path,_collect_models,_schema_filename,generate_json_schemas,main
+    _load_module_from_path(path)
+    _collect_models(module)
+    _schema_filename(model)
+    generate_json_schemas(base_dir;out_dir)
+    main()
+  reclapp-llm/reclapp_llm/anthropic.py:
+    e: AnthropicConfig,AnthropicClient
+    AnthropicConfig(BaseModel):  # Anthropic configuration...
+    AnthropicClient(LLMProvider): __init__(1),is_available(0),list_models(0),generate(1),close(0),__aenter__(0),__aexit__(0)  # Anthropic LLM Client...
+  reclapp-contracts/reclapp_contracts/models/contract.py:
+    e: ContractMetadata,ContractAI,is_valid_contract,has_definition_layer,has_generation_layer,has_validation_layer,create_minimal_contract
+    ContractMetadata(BaseModel):  # Contract metadata
+
+Example:
+    metadata = ContractMetadata(...
+    ContractAI(BaseModel):  # Contract AI - complete specification for LLM code generation...
+    is_valid_contract(obj)
+    has_definition_layer(contract)
+    has_generation_layer(contract)
+    has_validation_layer(contract)
+    create_minimal_contract(name;version;entities)
+  src/python/reclapp/evolution/generators.py:
+    e: EvolutionGenerators
+    EvolutionGenerators: __init__(2),set_contract(1),generate_database(1),generate_frontend(1),generate_dockerfile(1),generate_cicd(1),generate_docs(1),generate_test_fixtures(1),generate_test_config(1),generate_e2e_tests(1)  # Template generators for evolution pipeline.
+
+Generates addit...
+  sitecustomize.py:
+    e: _is_running_pytest
+    _is_running_pytest()
+  reclapp-llm/reclapp_llm/provider.py:
+    e: LLMProviderStatus,GenerateOptions,LLMResponse,LLMModelInfo,LLMProvider
+    LLMProviderStatus(str,Enum):  # Provider status...
+    GenerateOptions(BaseModel):  # Options for LLM generation...
+    LLMResponse(BaseModel):  # Response from LLM generation...
+    LLMModelInfo(BaseModel):  # Information about an available model...
+    LLMProvider(ABC): is_available(0),list_models(0),generate(1),has_model(1),get_code_models(1)  # Abstract base class for LLM providers.
+
+Implementations must...
+  scripts/generate_schemas.py:
+    e: generate_json_schema,main
+    generate_json_schema(model)
+    main()
+  reclapp-contracts/reclapp_contracts/validation/__init__.py:
+    e: create_default_pipeline
+    create_default_pipeline(options)
+  src/python/reclapp/generator/base.py:
+    e: BaseGenerator
+    BaseGenerator(ABC,<ast.Subscript object at 0x77f43b7f69d0>): __init__(2),set_llm_client(1),require_llm_client(0),_estimate_tokens(1),_log(1),generate(0)  # Abstract base class for generators.
+
+Provides common functio...
+  reclapp/__init__.py:
+  reclapp-contracts/reclapp_contracts/__init__.py:
+  reclapp-contracts/reclapp_contracts/models/__init__.py:
+  contracts/user.py:
+    e: User
+    User(BaseModel):  # Represents a user record...
+  contracts/summary.py:
+    e: Summary
+    Summary(BaseModel):  # Represents an aggregated system summary...
+  reclapp-contracts/reclapp_contracts/models/generation.py:
+    e: InstructionPriority,Instruction,PatternType,Pattern,ConstraintType,Constraint,BackendTechStack,FrontendTechStack,DatabaseTechStack,TechStack,GenerationLayer
+    InstructionPriority(str,Enum):  # Instruction priority levels...
+    Instruction(BaseModel):  # Generation instruction for LLM
+
+Example:
+    instruction = I...
+    PatternType(str,Enum):  # Design pattern types...
+    Pattern(BaseModel):  # Design pattern specification
+
+Example:
+    pattern = Pattern...
+    ConstraintType(str,Enum):  # Constraint types...
+    Constraint(BaseModel):  # Generation constraint
+
+Example:
+    constraint = Constraint(...
+    BackendTechStack(BaseModel):  # Backend technology stack configuration...
+    FrontendTechStack(BaseModel):  # Frontend technology stack configuration...
+    DatabaseTechStack(BaseModel):  # Database technology stack configuration...
+    TechStack(BaseModel):  # Complete technology stack configuration
+
+Example:
+    tech_s...
+    GenerationLayer(BaseModel):  # Layer 2: Generation - defines HOW LLM should generate code
+
+...
+  reclapp-contracts/reclapp_contracts/parser/__init__.py:
+  reclapp-contracts/reclapp_contracts/models/definition.py:
+    e: BasicFieldType,ExtendedFieldType,RelationType,FieldAnnotations,FieldDefinition,RelationDefinition,IndexDefinition,EntityDefinition,EventDefinition,WorkflowStepType,WorkflowStepDefinition,WorkflowDefinition,ApiEndpointDefinition,ApiResourceDefinition,ApiAuthentication,ApiDefinition,AppDefinition,DefinitionLayer
+    BasicFieldType(str,Enum):  # Basic field types supported by Contract AI...
+    ExtendedFieldType(str,Enum):  # Extended field types with validation...
+    RelationType(str,Enum):  # Relation types between entities...
+    FieldAnnotations(BaseModel):  # Field annotations defining validation and behavior
+
+Example:...
+    FieldDefinition(BaseModel):  # Entity field definition
+
+Example:
+    field = FieldDefinitio...
+    RelationDefinition(BaseModel):  # Relation definition between entities
+
+Example:
+    relation ...
+    IndexDefinition(BaseModel):  # Database index definition...
+    EntityDefinition(BaseModel):  # Domain entity definition
+
+Example:
+    entity = EntityDefini...
+    EventDefinition(BaseModel):  # Domain event definition
+
+Example:
+    event = EventDefinitio...
+    WorkflowStepType(str,Enum):  # Workflow step types...
+    WorkflowStepDefinition(BaseModel):  # Workflow step definition...
+    WorkflowDefinition(BaseModel):  # Workflow definition
+
+Example:
+    workflow = WorkflowDefinit...
+    ApiEndpointDefinition(BaseModel):  # Custom endpoint definition...
+    ApiResourceDefinition(BaseModel):  # API resource definition...
+    ApiAuthentication(BaseModel):  # API authentication configuration...
+    ApiDefinition(BaseModel):  # API definition
+
+Example:
+    api = ApiDefinition(
+        ve...
+    AppDefinition(BaseModel):  # Application definition
+
+Example:
+    app = AppDefinition(
+  ...
+    DefinitionLayer(BaseModel):  # Layer 1: Definition - defines WHAT to implement
+
+Example:
+  ...
+  reclapp-llm/reclapp_llm/__init__.py:
+  src/python/reclapp/__init__.py:
+  src/python/reclapp/generator/__init__.py:
+  src/python/reclapp/analysis/__init__.py:
+  src/python/reclapp/models/__init__.py:
+  src/python/reclapp/cli/__init__.py:
+  src/python/reclapp/cli/__main__.py:
+  reclapp-contracts/reclapp_contracts/models/validation.py:
+    e: AssertionType,Assertion,TestType,TestDefinition,StaticRule,QualityGate,AcceptanceCriteria,ValidationLayer
+    AssertionType(str,Enum):  # Assertion types for validation...
+    Assertion(BaseModel):  # Validation assertion
+
+Example:
+    assertion = Assertion(
+  ...
+    TestType(str,Enum):  # Test types...
+    TestDefinition(BaseModel):  # Test definition
+
+Example:
+    test = TestDefinition(
+       ...
+    StaticRule(BaseModel):  # Static analysis rule
+
+Example:
+    rule = StaticRule(
+      ...
+    QualityGate(BaseModel):  # Quality gate definition
+
+Example:
+    gate = QualityGate(
+  ...
+    AcceptanceCriteria(BaseModel):  # Acceptance criteria for generated code
+
+Example:
+    accepta...
+    ValidationLayer(BaseModel):  # Layer 3: Validation - defines HOW to verify and WHEN ready
+
+...
+  src/python/reclapp/llm/manager.py:
+  src/python/reclapp/llm/__init__.py:
+  src/python/reclapp/llm/provider.py:
+  src/python/reclapp/llm/windsurf.py:
+  src/python/reclapp/parser/__init__.py:
+  src/python/reclapp/parser/markdown_parser.py:
+  src/python/reclapp/evolution/__init__.py:
+  src/python/reclapp/validation/__init__.py:
+  src/python/reclapp/validation/pipeline.py:
+  src/python/reclapp/sdk/__init__.py:

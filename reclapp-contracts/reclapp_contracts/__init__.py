@@ -4,7 +4,7 @@ Reclapp Contracts Module
 Data models, parsers, and validation logic for Reclapp Contract AI.
 """
 
-__version__ = "2.4.1"
+__version__ = "2.4.2"
 
 from .models import (
     ContractAI,

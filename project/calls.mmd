@@ -1,0 +1,224 @@
+flowchart LR
+    subgraph contracts_generate_json
+        contracts__generate_json___load_module_from_path["_load_module_from_path"]
+        contracts__generate_json__generate_json_schemas["generate_json_schemas"]
+        contracts__generate_json___schema_filename["_schema_filename"]
+        contracts__generate_json__main["main"]
+        contracts__generate_json___collect_models["_collect_models"]
+    end
+    subgraph reclapp_contracts_reclapp_contracts
+        reclapp-contracts__create_syntax_validator["create_syntax_validator"]
+        reclapp-contracts___parse_endpoint_tables["_parse_endpoint_tables"]
+        reclapp-contracts___extract_section["_extract_section"]
+        reclapp-contracts___parse_tests_section["_parse_tests_section"]
+        reclapp-contracts___parse_yaml_fields["_parse_yaml_fields"]
+        reclapp-contracts__create_runtime_validator["create_runtime_validator"]
+        reclapp-contracts___parse_gherkin["_parse_gherkin"]
+        reclapp-contracts___parse_markdown_table["_parse_markdown_table"]
+        reclapp-contracts___parse_entities_section["_parse_entities_section"]
+        reclapp-contracts__create_static_analyzer["create_static_analyzer"]
+        reclapp-contracts__create_default_pipeline["create_default_pipeline"]
+        reclapp-contracts__has_definition_layer["has_definition_layer"]
+        reclapp-contracts___extract_checkbox_list["_extract_checkbox_list"]
+        reclapp-contracts__parse_contract_markdown["parse_contract_markdown"]
+        reclapp-contracts___check_js_syntax["_check_js_syntax"]
+        reclapp-contracts__has_validation_layer["has_validation_layer"]
+        reclapp-contracts__create_assertion_validator["create_assertion_validator"]
+        reclapp-contracts___parse_api_section["_parse_api_section"]
+        reclapp-contracts__create_schema_validator["create_schema_validator"]
+        reclapp-contracts__is_valid_contract["is_valid_contract"]
+        reclapp-contracts__create_test_runner["create_test_runner"]
+        reclapp-contracts__create_quality_checker["create_quality_checker"]
+        reclapp-contracts__validate["validate"]
+        reclapp-contracts__create_security_scanner["create_security_scanner"]
+        reclapp-contracts___parse_rules_section["_parse_rules_section"]
+        reclapp-contracts___extract_frontmatter["_extract_frontmatter"]
+        reclapp-contracts___parse_app_section["_parse_app_section"]
+        reclapp-contracts___check_python_syntax["_check_python_syntax"]
+        reclapp-contracts___parse_entity_content["_parse_entity_content"]
+        reclapp-contracts__has_generation_layer["has_generation_layer"]
+        reclapp-contracts___extract_field["_extract_field"]
+        reclapp-contracts___parse_tech_section["_parse_tech_section"]
+        reclapp-contracts___extract_list_from_field["_extract_list_from_field"]
+    end
+    subgraph reclapp_llm_reclapp_llm
+        reclapp-llm__generate_with_fallback["generate_with_fallback"]
+    end
+    subgraph reclapp_cli
+        reclapp__cli__parse["parse"]
+        reclapp__cli__llm_priority_set_model["llm_priority_set_model"]
+        reclapp__cli__generate["generate"]
+        reclapp__cli__prompts["prompts"]
+        reclapp__cli__llm_fallbacks_remove["llm_fallbacks_remove"]
+        reclapp__cli__llm_config_list["llm_config_list"]
+        reclapp__cli__analyze["analyze"]
+        reclapp__cli__llm_model_list["llm_model_list"]
+        reclapp__cli__llm_priority_set_provider["llm_priority_set_provider"]
+        reclapp__cli__llm_model_remove["llm_model_remove"]
+        reclapp__cli__find_node["find_node"]
+        reclapp__cli__stop["stop"]
+        reclapp__cli__reverse["reverse"]
+        reclapp__cli__lifecycle["lifecycle"]
+        reclapp__cli__llm_fallbacks_list["llm_fallbacks_list"]
+        reclapp__cli___save_litellm_yaml["_save_litellm_yaml"]
+        reclapp__cli__status["status"]
+        reclapp__cli___get_core_main["_get_core_main"]
+        reclapp__cli___Console__print["print"]
+        reclapp__cli__llm_fallbacks_add["llm_fallbacks_add"]
+        reclapp__cli__evolve["evolve"]
+        reclapp__cli___get_litellm_config_path["_get_litellm_config_path"]
+        reclapp__cli___strip_rich_markup["_strip_rich_markup"]
+        reclapp__cli__llm_model_remove_provider["llm_model_remove_provider"]
+        reclapp__cli__setup["setup"]
+        reclapp__cli__list["list"]
+        reclapp__cli___load_litellm_yaml["_load_litellm_yaml"]
+        reclapp__cli__llm_model_add["llm_model_add"]
+        reclapp__cli__setup_node_env["setup_node_env"]
+        reclapp__cli__validate["validate"]
+        reclapp__cli__tasks["tasks"]
+        reclapp__cli__refactor["refactor"]
+    end
+    subgraph scripts_generate_schemas
+        scripts__generate_schemas__main["main"]
+        scripts__generate_schemas__generate_json_schema["generate_json_schema"]
+    end
+    subgraph src_python
+        src__warning["warning"]
+        src___extract_imports["_extract_imports"]
+        src__codeblock["codeblock"]
+        src__python__reclapp__cli__main__cmd_parse["cmd_parse"]
+        src__wait_for_all["wait_for_all"]
+        src__python__reclapp__cli__main__cmd_validate["cmd_validate"]
+        src__python__reclapp__cli__main__show_logs["show_logs"]
+        src__show_interactive_menu["show_interactive_menu"]
+        src__python__reclapp__cli__main__show_file["show_file"]
+        src__heading["heading"]
+        src___extract_local_dependencies["_extract_local_dependencies"]
+        src__python__reclapp__cli__main__check_health["check_health"]
+        src__info["info"]
+        src__error["error"]
+        src___extract_exports["_extract_exports"]
+        src__python__reclapp__cli__main__cli["cli"]
+        src__print_summary["print_summary"]
+        src__success["success"]
+        src__get_remotes["get_remotes"]
+        src__find_usages["find_usages"]
+        src__python__reclapp__cli__main__cmd_generate["cmd_generate"]
+        src__python__reclapp__cli__main__create_parser["create_parser"]
+        src__python__reclapp__cli__main__main["main"]
+        src__text["text"]
+        src___log["_log"]
+        src__python__reclapp__cli__main__cmd_evolve["cmd_evolve"]
+    end
+    subgraph tools_reclapp_setup
+        tools__reclapp_setup__setup__main["main"]
+        tools__reclapp_setup__setup__cmd_setup["cmd_setup"]
+    end
+    scripts__generate_schemas__main --> reclapp__cli___Console__print
+    scripts__generate_schemas__main --> scripts__generate_schemas__generate_json_schema
+    contracts__generate_json__generate_json_schemas --> contracts__generate_json___load_module_from_path
+    contracts__generate_json__generate_json_schemas --> contracts__generate_json___collect_models
+    contracts__generate_json__generate_json_schemas --> contracts__generate_json___schema_filename
+    contracts__generate_json__main --> contracts__generate_json__generate_json_schemas
+    contracts__generate_json__main --> reclapp__cli___Console__print
+    reclapp__cli___Console__print --> reclapp__cli___strip_rich_markup
+    reclapp__cli__lifecycle --> reclapp__cli___get_core_main
+    reclapp__cli__generate --> reclapp__cli___get_core_main
+    reclapp__cli__generate --> reclapp__cli__find_node
+    reclapp__cli__list --> reclapp__cli___get_core_main
+    reclapp__cli__prompts --> reclapp__cli___get_core_main
+    reclapp__cli__analyze --> reclapp__cli___get_core_main
+    reclapp__cli__refactor --> reclapp__cli___get_core_main
+    reclapp__cli__parse --> reclapp__cli___get_core_main
+    reclapp__cli__validate --> reclapp__cli___get_core_main
+    reclapp__cli__tasks --> reclapp__cli___get_core_main
+    reclapp__cli__setup --> reclapp__cli___get_core_main
+    reclapp__cli__stop --> reclapp__cli___get_core_main
+    reclapp__cli__evolve --> reclapp__cli___get_core_main
+    reclapp__cli__reverse --> reclapp__cli__find_node
+    reclapp__cli__reverse --> reclapp__cli__setup_node_env
+    reclapp__cli__status --> reclapp__cli___get_core_main
+    reclapp__cli__llm_config_list --> reclapp__cli___load_litellm_yaml
+    reclapp__cli___load_litellm_yaml --> reclapp__cli___get_litellm_config_path
+    reclapp__cli___save_litellm_yaml --> reclapp__cli___get_litellm_config_path
+    reclapp__cli__llm_priority_set_provider --> reclapp__cli___load_litellm_yaml
+    reclapp__cli__llm_priority_set_provider --> reclapp__cli___save_litellm_yaml
+    reclapp__cli__llm_priority_set_model --> reclapp__cli___load_litellm_yaml
+    reclapp__cli__llm_priority_set_model --> reclapp__cli___save_litellm_yaml
+    reclapp__cli__llm_model_list --> reclapp__cli__llm_config_list
+    reclapp__cli__llm_model_add --> reclapp__cli___load_litellm_yaml
+    reclapp__cli__llm_model_remove --> reclapp__cli___load_litellm_yaml
+    reclapp__cli__llm_model_remove --> reclapp__cli___save_litellm_yaml
+    reclapp__cli__llm_model_remove_provider --> reclapp__cli___load_litellm_yaml
+    reclapp__cli__llm_model_remove_provider --> reclapp__cli___save_litellm_yaml
+    reclapp__cli__llm_fallbacks_list --> reclapp__cli___load_litellm_yaml
+    reclapp__cli__llm_fallbacks_add --> reclapp__cli___load_litellm_yaml
+    reclapp__cli__llm_fallbacks_add --> reclapp__cli___save_litellm_yaml
+    reclapp__cli__llm_fallbacks_remove --> reclapp__cli___load_litellm_yaml
+    reclapp__cli__llm_fallbacks_remove --> reclapp__cli___save_litellm_yaml
+    reclapp-contracts__create_syntax_validator --> reclapp-contracts___check_js_syntax
+    reclapp-contracts__create_syntax_validator --> reclapp-contracts___check_python_syntax
+    reclapp-contracts__create_default_pipeline --> reclapp-contracts__create_syntax_validator
+    reclapp-contracts__create_default_pipeline --> reclapp-contracts__create_schema_validator
+    reclapp-contracts__create_default_pipeline --> reclapp-contracts__create_assertion_validator
+    reclapp-contracts__create_default_pipeline --> reclapp-contracts__create_static_analyzer
+    reclapp-contracts__create_default_pipeline --> reclapp-contracts__create_test_runner
+    reclapp-contracts__create_default_pipeline --> reclapp-contracts__create_quality_checker
+    reclapp-contracts__create_default_pipeline --> reclapp-contracts__create_security_scanner
+    reclapp-contracts__create_default_pipeline --> reclapp-contracts__create_runtime_validator
+    reclapp-contracts__validate --> reclapp__cli___Console__print
+    reclapp-contracts__parse_contract_markdown --> reclapp-contracts___extract_frontmatter
+    reclapp-contracts__parse_contract_markdown --> reclapp-contracts___parse_app_section
+    reclapp-contracts__parse_contract_markdown --> reclapp-contracts___parse_entities_section
+    reclapp-contracts__parse_contract_markdown --> reclapp-contracts___parse_api_section
+    reclapp-contracts__parse_contract_markdown --> reclapp-contracts___parse_rules_section
+    reclapp-contracts__parse_contract_markdown --> reclapp-contracts___parse_tech_section
+    reclapp-contracts__parse_contract_markdown --> reclapp-contracts___parse_tests_section
+    reclapp-contracts___parse_app_section --> reclapp-contracts___extract_checkbox_list
+    reclapp-contracts___parse_app_section --> reclapp-contracts___extract_section
+    reclapp-contracts___parse_app_section --> reclapp-contracts___extract_field
+    reclapp-contracts___parse_app_section --> reclapp-contracts___extract_list_from_field
+    reclapp-contracts___parse_entities_section --> reclapp-contracts___extract_section
+    reclapp-contracts___parse_entities_section --> reclapp-contracts___parse_entity_content
+    reclapp-contracts___parse_entity_content --> reclapp-contracts___parse_markdown_table
+    reclapp-contracts___parse_entity_content --> reclapp-contracts___parse_yaml_fields
+    reclapp-contracts___parse_api_section --> reclapp-contracts___parse_endpoint_tables
+    reclapp-contracts___parse_api_section --> reclapp-contracts___extract_section
+    reclapp-contracts___parse_rules_section --> reclapp-contracts___extract_section
+    reclapp-contracts___parse_tech_section --> reclapp-contracts___extract_section
+    reclapp-contracts___parse_tests_section --> reclapp-contracts___extract_section
+    reclapp-contracts___parse_tests_section --> reclapp-contracts___parse_gherkin
+    reclapp-contracts___extract_list_from_field --> reclapp-contracts___extract_field
+    reclapp-contracts__is_valid_contract --> reclapp-contracts__has_definition_layer
+    reclapp-contracts__is_valid_contract --> reclapp-contracts__has_generation_layer
+    reclapp-contracts__is_valid_contract --> reclapp-contracts__has_validation_layer
+    reclapp-llm__generate_with_fallback --> reclapp__cli__list
+    src___log --> reclapp__cli___Console__print
+    src__get_remotes --> reclapp__cli__list
+    tools__reclapp_setup__setup__main --> tools__reclapp_setup__setup__cmd_setup
+    src___extract_imports --> reclapp__cli__list
+    src___extract_exports --> reclapp__cli__list
+    src___extract_local_dependencies --> reclapp__cli__list
+    src__find_usages --> reclapp__cli__list
+    src__heading --> reclapp__cli___Console__print
+    src__codeblock --> reclapp__cli___Console__print
+    src__text --> reclapp__cli___Console__print
+    src__success --> reclapp__cli___Console__print
+    src__error --> reclapp__cli___Console__print
+    src__warning --> reclapp__cli___Console__print
+    src__info --> reclapp__cli___Console__print
+    src__wait_for_all --> reclapp__cli__list
+    src__print_summary --> reclapp__cli__list
+    src__python__reclapp__cli__main__cmd_evolve --> reclapp__cli___Console__print
+    src__show_interactive_menu --> reclapp__cli___Console__print
+    src__python__reclapp__cli__main__show_file --> reclapp__cli___Console__print
+    src__python__reclapp__cli__main__check_health --> reclapp__cli___Console__print
+    src__python__reclapp__cli__main__show_logs --> reclapp__cli___Console__print
+    src__python__reclapp__cli__main__cmd_generate --> reclapp__cli___Console__print
+    src__python__reclapp__cli__main__cmd_parse --> reclapp-contracts__parse_contract_markdown
+    src__python__reclapp__cli__main__cmd_validate --> reclapp-contracts__parse_contract_markdown
+    src__python__reclapp__cli__main__cli --> src__python__reclapp__cli__main__create_parser
+    src__python__reclapp__cli__main__cli --> src__python__reclapp__cli__main__cmd_evolve
+    src__python__reclapp__cli__main__cli --> src__python__reclapp__cli__main__cmd_generate
+    src__python__reclapp__cli__main__cli --> src__python__reclapp__cli__main__cmd_validate
+    src__python__reclapp__cli__main__main --> src__python__reclapp__cli__main__cli

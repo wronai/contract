@@ -1,6 +1,6 @@
 {
   "name": "reclapp",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "description": "AI-Native Declarative Platform for B2B Applications with Causal Verification",
   "main": "dist/api/src/server.js",
   "bin": {
@@ -39,7 +39,7 @@
     "b2b"
   ],
   "author": "Softreck",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.18.2",
@@ -73,5 +73,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/wronai/contract"
-  }
+  },
+  "contributors": [
+    "Tom Sapletta <tom@sapletta.com>"
+  ]
 }
