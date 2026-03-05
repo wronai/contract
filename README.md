@@ -5,6 +5,15 @@
 [![License](https://img.shields.io/badge/license-Apache-green.svg)](LICENSE) 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
+[![GitHub stars](https://img.shields.io/github/stars/wronai/contract?style=social)](https://github.com/wronai/contract/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/wronai/contract?style=social)](https://github.com/wronai/contract/network/members)
+[![GitHub issues](https://img.shields.io/github/issues/wronai/contract)](https://github.com/wronai/contract/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/wronai/contract)](https://github.com/wronai/contract/pulls)
+[![Tests](https://img.shields.io/github/actions/workflow/status/wronai/contract/test.yml?label=tests)](https://github.com/wronai/contract/actions)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Type checking: mypy](https://img.shields.io/badge/type%20checking-mypy-blue.svg)](http://mypy-lang.org/)
+[![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos%20%7C%20windows-lightgrey)](https://github.com/wronai/contract)
+[![Dependencies](https://img.shields.io/badge/dependencies-llm%20%7C%20cli-blue)](https://github.com/wronai/contract)
 
 > **AI-Native Declarative Platform** for building autonomous B2B applications with causal reasoning, verification loops, and production-ready safety rails.
 
@@ -125,5 +134,9 @@ Reclapp is split into several packages for better maintenance:
 ---
 
 **Reclapp** - *AI-Native Declarative Platform for Autonomous B2B Applications*
+
+## Author
+
+Created by **Tom Sapletta** - [info@softreck.com](mailto:info@softreck.com)
 
 Made with ❤️ by [Softreck](https://softreck.com)
